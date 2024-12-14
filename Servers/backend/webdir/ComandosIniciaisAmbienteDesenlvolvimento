@@ -1,0 +1,12 @@
+Um em cada janela separada
+
+    # docker run -t -i -p 5000:5000 -v "C:\Users\andre\Documents\NetBeansProjects\missoes2023\Missoes2023\Missoes2024\GrupoInovaFiscaliza\webrotas\OSMR\data\sudeste:/data/sudeste" osrm/osrm-backend osrm-routed --algorithm mld /data/sudeste/sudeste-latest.osrm
+
+    Agora inicializar o ghopprt
+
+    python Server.py
+
+
+    python Test.py
+
+

@@ -1,0 +1,112 @@
+import WebRota as wr
+###########################################################################################################################
+def GeraHeader():
+    header = """
+        <!DOCTYPE html>
+        <html lang="pt">
+        <head>
+            <base target="_top">
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            
+            <title>Web Rotas</title>
+            
+            <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+                <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+            <style>
+                html, body { width: 100%;height: 100%;margin: 0;padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+
+        <div id="map" style="width: 100vw; height: 100vh;"></div>
+        <div id="gpsInfo" style="font-family: Arial, sans-serif; font-size: 16px; z-index: 1000; position: absolute; 
+                                top: 10px; left: 50px;    background-color: white;"></div>
+                  
+
+        <script>
+            
+        """
+    return header
+###########################################################################################################################
+def GeraFooter():
+    footer = """
+           </script>
+        </body>
+        </html>
+    """        
+    return footer
+###########################################################################################################################
+def GeraMapaLeaflet(mapa,RouteDetail):
+    wr.wLog(f"GeraMapaLeaflet - {mapa}")
+
+ 
+    header = GeraHeader()
+    footer = GeraFooter()
+    tilesMap = """
+            var map = L.map('map').setView([-22.9035, -43.1034], 13);
+            
+            var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            });
+            
+            var tiles2 =L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', 
+            {
+                maxZoom: 19,
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            });
+            
+            // Adiciona camada de tiles com elevação (exemplo: OpenTopoMap)
+            var tiles3 =L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                maxZoom: 10,
+                attribution: '© OpenTopoMap contributors'
+            }).addTo(map);
+            
+            // Adiciona a camada padrão (OpenStreetMap)
+            tiles.addTo(map);
+            // Cria o controle de camadas
+            var baseLayers = {
+                "OpenStreetMap": tiles,
+                "Satelite": tiles2,
+                "Topografia": tiles3
+            };
+
+            // Adiciona o controle de camadas ao mapa
+            // Adiciona o controle de camadas ao mapa no canto inferior direito
+            L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(map);
+            L.control.scale({
+               metric: true, // Mostrar em metros
+               imperial: false, // Desativar milhas
+                position: 'bottomleft' // Posição da escala
+            }).addTo(map);
+            </script>
+            <!-- ------------------------------------------------------------------------------------------- -->                        
+            <script src="{{ url_for('static', filename='StaticResources.js') }}"></script>                        
+            <script src="{{ url_for('static', filename='UtilMap.js') }}"></script>
+            <!-- ------------------------------------------------------------------------------------------- -->   
+            <script>
+            // Cria o marcador inicial no centro do mapa
+            // const gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map).bindPopup("Sua localização");
+            """    
+        
+    code = """
+            
+    """     
+    
+    texto = header + tilesMap + RouteDetail.mapcode  + code + footer
+   
+    # Abre o arquivo em modo de escrita, sobrescrevendo o conteúdo
+    with open(mapa, "w", encoding="utf-8") as arquivo:
+       arquivo.write(texto)
+    return
+###########################################################################################################################

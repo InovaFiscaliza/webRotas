@@ -1,0 +1,74 @@
+
+body {
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+    width: 100%;
+    overflow-x: scroll;
+}
+
+
+
+@media (orientation: landscape) {
+    /* estilos para orientação paisagem */
+
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family:  Arial, sans-serif;
+}
+
+button[type="submit"] {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #333;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.button-meu{
+    padding: 10px 20px;
+    width: 150px;
+    text-align: center;
+    border: none;
+    border-radius: 5px;
+    background-color: #333;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#mensagem {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px;
+    background-color: #f2f2f2;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.elemEscurece{
+    border-radius: 5px;
+    background: linear-gradient(to right, hsl(195, 24%, 90%), hsl(193, 11%, 85%));
+    filter: brightness(1.0);
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer / Edge */
+    user-select: none;
+}
+
+.elemEscurece:active{
+    border-radius: 8px;
+    filter: brightness(0.8); /* diminui o brilho em 20% */
+
+}
+
+

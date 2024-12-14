@@ -1,0 +1,25 @@
+server {
+    listen 80;
+
+    server_name  localhost;
+
+    location / {
+        proxy_pass   http://backend:8000;
+    }
+
+}
+
+server {
+    listen 443 ssl;
+
+    server_name  localhost;
+
+    ssl                  on;
+    ssl_certificate      /etc/nginx/fullchain.pem; 
+    ssl_certificate_key  /etc/nginx/privkey.pem;
+
+    location / {
+        proxy_pass   http://backend:8000;
+    }
+
+}
