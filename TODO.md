@@ -20,7 +20,7 @@
 ## ASPECTOS PRIORITÁRIOS (penso):
 
 1. **Definir Ponto Inicial da Rota**:Talvez evoluir o HTML, criando um painel que apresenta a ordem de execução da rota, possibilitando definir o seu ponto inicial (por meio de um dropdown). Como a rota azul é estática, e isso o JS do HTML offline não vai recalcular, imagino que uma saída seria criar uma "rota fechada", que começa e termina no mesmo ponto, passando por todos os outros.Algo como: `P1 > P2 > P3 > P4 > P1`. Se o cara indicar `P3` como ponto inicial, então seria `P3 > P4 > P1 > P2 > P3` e por aí vai... O que quero sugerir é que o HTML continue estático e seja funcional, mesmo sem o servidor rodando ao fundo.
-2. **Inserir Tag nos Ícones dos Pontos de Interesse**:P1, P2, P3, etc.  (Tag implementado esperando avaliação)
+2. **Inserir Tag nos Ícones dos Pontos de Interesse**:P1, P2, P3, etc.   (Tag implementado esperando avaliação) 
 3. **Alterar Ícone com Proximidade**:
    Criar código em JS que mude o ícone dos pontos quando o veículo se aproximar deles.
 
