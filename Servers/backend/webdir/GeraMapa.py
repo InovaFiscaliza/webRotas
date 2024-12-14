@@ -67,10 +67,10 @@ def GeraMapaLeaflet(mapa,RouteDetail):
             });
             
             // Adiciona camada de tiles com elevação (exemplo: OpenTopoMap)
-            var tiles3 =L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                maxZoom: 10,
-                attribution: '© OpenTopoMap contributors'
-            }).addTo(map);
+            // var tiles3 =L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            //     maxZoom: 10,
+            //     attribution: '© OpenTopoMap contributors'
+            // }).addTo(map);
             
             // Adiciona a camada padrão (OpenStreetMap)
             tiles.addTo(map);
@@ -78,7 +78,6 @@ def GeraMapaLeaflet(mapa,RouteDetail):
             var baseLayers = {
                 "OpenStreetMap": tiles,
                 "Satelite": tiles2,
-                "Topografia": tiles3
             };
 
             // Adiciona o controle de camadas ao mapa
