@@ -1,3 +1,4 @@
+rem Comandos iniciais para salvar o osmosis_webrota.tar
 rem podman run --rm -v .:/data yagajs/osmosis osmosis --read-pbf file="/data/brazil/brazil-latest.osm.pbf" --bounding-polygon file="/data/exclusion.poly" completeWays=no --write-pbf file="/data/filtro/filtro-latest.osm.pbf"
 rem podman commit d7e1629f274f  osmosis_webrota
 rem podman save -o osmosis_webrota.tar osmosis_webrota
