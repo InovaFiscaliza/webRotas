@@ -1193,7 +1193,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
     RouteDetail.mapcode += "var markerVet = [];";
     for ponto in pontosvisita:
         lat, lon = ponto
-        RouteDetail.mapcode += f"         markerVet.push(L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(iMarquerAzul));\n"   
+        RouteDetail.mapcode += f"         markerVet.push(L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(iMarquerAzul).bindPopup('P{i}'));\n"   
         if(i==0):
            (latfI,lonfI) = pontosvisita[i] 
         if(i==(len(pontosvisita) -1)):
@@ -1269,7 +1269,7 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5):
     RouteDetail.mapcode += "var markerVet = [];";
     for i, (lat, lon) in enumerate(route_coords):
         # RouteDetail.mapcode += f"         const marker{i+1} = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(iMarquerAzul);\n"             
-        RouteDetail.mapcode += f"         markerVet.push(L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(iMarquerAzul));\n"             
+        RouteDetail.mapcode += f"         markerVet.push(L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(iMarquerAzul).bindPopup('P{i}'));\n"             
         if(i==0):
            (latfI,lonfI) = route_coords[i] 
         if(i==(num_points-1)):
