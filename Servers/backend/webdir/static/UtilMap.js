@@ -103,9 +103,83 @@ function createSvgIconAzulHalf(number) {
     return createCustomSvgIcon(number,[12, 20],[6, 20],"#007bff");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function ElevationColor(elevation) {
+    // Limita a elevação ao intervalo 0-8900
+    elevation = Math.max(0, Math.min(8900, elevation));
+
+    // Normaliza a elevação para o intervalo 0-1
+    const normalized = elevation / 8900;
+
+    // Converte a normalização em cores do arco-íris
+    const hue = (1 - normalized) * 240; // 240° (azul) a 0° (vermelho)
+    return hslToHex(hue, 100, 50); // Saturação 100%, Luminosidade 50%
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função auxiliar: converte HSL para HEX
+function hslToHex(h, s, l) {
+    s /= 100;
+    l /= 100;
+
+    const k = n => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = n =>
+        l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+
+    const r = Math.round(255 * f(0));
+    const g = Math.round(255 * f(8));
+    const b = Math.round(255 * f(4));
+
+    return `#${r.toString(16).padStart(2, "0")}${g
+        .toString(16)
+        .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function getElevationSync(latitude, longitude){
+    getElevation(latitude, longitude)
+    .then(elevation => {
+        if (elevation !== null) {
+            console.log(`Elevation - ${elevation}`)
+            return elevation;
+        } else {
+            return 0;
+        }
+    });
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+async function getElevation(latitude, longitude) {
+    const apiUrl = `https://api.open-elevation.com/api/v1/lookup?locations=${latitude},${longitude}`;
+    
+    try {
+        const response = await fetch(apiUrl); // Faz a requisição à API
+        if (!response.ok) {
+            throw new Error(`Erro ao buscar elevação: ${response.statusText}`);
+        }
+
+        const data = await response.json(); // Converte a resposta para JSON
+        if (data.results && data.results.length > 0) {
+            return data.results[0].elevation; // Retorna a elevação
+        } else {
+            throw new Error("Nenhum dado de elevação encontrado.");
+        }
+    } catch (error) {
+        console.error("Erro ao obter elevação:", error.message);
+        return null; // Retorna `null` em caso de erro
+    }
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function createSvgIconColorAltitude(number,lat,lon) {  
+    color = ElevationColor(getElevationSync(lat, lon));
+    return createCustomSvgIcon(number,[25, 41],[12, 41],color);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function createSvgIconColorAltitudeHalf(number,lat,lon) {  
+    color = ElevationColor(getElevationSync(lat, lon));
+    return createCustomSvgIcon(number,[12, 20],[6, 20],"#007bff");
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconVerde(number) {  
 
-    return createCustomSvgIcon(number,[25, 41],[12, 41],"#007b22");
+    return createCustomSvgIcon(number,[25, 41],[12, 41],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconVerdeHalf(number) {  
