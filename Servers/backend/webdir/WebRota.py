@@ -1192,8 +1192,9 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
     i=0
     RouteDetail.mapcode += "var markerVet = [];";
     for ponto in pontosvisita:
-        lat, lon = ponto
-        RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
+        lat, lon = ponto           
+        # RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
+        RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{lat},{lon}));\n"   
         RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full');\n"   
         RouteDetail.mapcode += f"         markerVet.push(markerbufTemp);\n"   
         if(i==0):
