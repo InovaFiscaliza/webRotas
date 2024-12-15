@@ -1164,12 +1164,23 @@ def RouteCompAbrangencia(user,cidade,uf,distanciaPontos,regioes):
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
     RouteDetail.GeraMapPolylineCaminho()
           
+    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,pontosvisita,'CompAbrangencia')      
+    return fileMap,fileNameStatic,fileKml
+################################################################################
+def GeraArquivosSaida(RouteDetail,pontosvisita,tipoServico):
     buf = TimeStringTmp()   
-    fileMap = f"MapaCompAbrangencia{buf}.html"     
+    fileMap = f"Mapa{tipoServico}{buf}.html"     
     fileName = f"templates/{fileMap}"
     gm.GeraMapaLeaflet(fileName,RouteDetail)
-
-    return fileMap
+    
+    fileMapStatic = f"Mapa{tipoServico}Static{buf}.html"     
+    fileNameStaticF = f"templates/{fileMapStatic}"
+    gm.GeraMapaLeaflet(fileNameStaticF,RouteDetail,static=True)
+    
+    fileKml = f"Mapa{tipoServico}{buf}.kml"     
+    fileKmlF = f"templates/{fileKml}"    
+    GerarKml(pontosvisita,fileKmlF)    
+    return fileMap,fileMapStatic,fileKml
 ################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita):
     wLog("PlotaPontosVisita")
@@ -1232,12 +1243,8 @@ def RoutePontosVisita(user,pontosvisita,regioes):
     
     # servidor temp     python3 -m http.server 8080
     #           
-    buf = TimeStringTmp()   
-    fileMap = f"MapaPontosVisita{buf}.html"     
-    fileName = f"templates/{fileMap}"
-    gm.GeraMapaLeaflet(fileName,RouteDetail)
-
-    return fileMap
+    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,pontosvisita,'PontosVisita')
+    return fileMap,fileNameStatic,fileKml
 ###########################################################################################################################
 def RouteDriveTest(user,central_point,regioes,radius_km=5):
     # Coordenadas do ponto central (latitude, longitude)
@@ -1293,12 +1300,8 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5):
     
     # servidor temp     python3 -m http.server 8080
     #           
-    buf = TimeStringTmp()   
-    fileMap = f"MapaDriveTest{buf}.html"     
-    fileName = f"templates/{fileMap}"
-    gm.GeraMapaLeaflet(fileName,RouteDetail)
-
-    return fileMap
+    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,route_coords,'DriveTest')
+    return fileMap,fileNameStatic,fileKml
 ###########################################################################################################################
 def main():
     # Coordenadas do ponto central (latitude, longitude)

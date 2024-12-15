@@ -46,10 +46,17 @@ def GeraFooter():
     """        
     return footer
 ###########################################################################################################################
-def GeraMapaLeaflet(mapa,RouteDetail):
+def AbrirArquivoComoString(caminho_arquivo):
+    try:
+        with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
+            return arquivo.read()  # Lê todo o conteúdo do arquivo como uma string
+    except FileNotFoundError:
+        return f"Erro: O arquivo '{caminho_arquivo}' não foi encontrado."
+    except Exception as e:
+        return f"Erro: {e}"
+###########################################################################################################################    
+def GeraMapaLeafletOld(mapa,RouteDetail):
     wr.wLog(f"GeraMapaLeaflet - {mapa}")
-
- 
     header = GeraHeader()
     footer = GeraFooter()
     tilesMap = """
@@ -89,7 +96,7 @@ def GeraMapaLeaflet(mapa,RouteDetail):
                 position: 'bottomleft' // Posição da escala
             }).addTo(map);
             </script>
-            <!-- ------------------------------------------------------------------------------------------- -->                        
+            <!-- ------------------------------------------------------------------------------------------- -->                
             <script src="{{ url_for('static', filename='StaticResources.js') }}"></script>                        
             <script src="{{ url_for('static', filename='UtilMap.js') }}"></script>
             <!-- ------------------------------------------------------------------------------------------- -->   
@@ -103,6 +110,73 @@ def GeraMapaLeaflet(mapa,RouteDetail):
     """     
     
     texto = header + tilesMap + RouteDetail.mapcode  + code + footer
+   
+    # Abre o arquivo em modo de escrita, sobrescrevendo o conteúdo
+    with open(mapa, "w", encoding="utf-8") as arquivo:
+       arquivo.write(texto)
+    return
+###########################################################################################################################    
+def GeraMapaLeaflet(mapa,RouteDetail,static=False):
+    wr.wLog(f"GeraMapaLeaflet - {mapa}")
+    if static:
+       staticResources = AbrirArquivoComoString("static/StaticResources.js")  
+       utilMap = AbrirArquivoComoString("static/UtilMap.js")
+    else:
+       staticResources = "<script src=\"{{ url_for('static', filename='StaticResources.js') }}\"></script> "    
+       utilMap = "<script src=\"{{ url_for('static', filename='UtilMap.js') }}\"></script>"
+             
+    header = GeraHeader()
+    footer = GeraFooter()
+    tilesMap0 = """
+            var map = L.map('map').setView([-22.9035, -43.1034], 13);
+            
+            var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            });
+            
+            var tiles2 =L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', 
+            {
+                maxZoom: 19,
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            });
+            
+            // Adiciona camada de tiles com elevação (exemplo: OpenTopoMap)
+            // var tiles3 =L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            //     maxZoom: 10,
+            //     attribution: '© OpenTopoMap contributors'
+            // }).addTo(map);
+            
+            // Adiciona a camada padrão (OpenStreetMap)
+            tiles.addTo(map);
+            // Cria o controle de camadas
+            var baseLayers = {
+                "OpenStreetMap": tiles,
+                "Satelite": tiles2,
+            };
+
+            // Adiciona o controle de camadas ao mapa
+            // Adiciona o controle de camadas ao mapa no canto inferior direito
+            L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(map);
+            L.control.scale({
+               metric: true, // Mostrar em metros
+               imperial: false, // Desativar milhas
+                position: 'bottomleft' // Posição da escala
+            }).addTo(map);
+            </script>
+            
+            """    
+    tilesMap1 = """
+            <script>
+            // Cria o marcador inicial no centro do mapa
+            // const gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map).bindPopup("Sua localização");
+            """
+    if static:
+       tilesMap =  tilesMap0 + " <script> "+ staticResources + utilMap + "</script>" + tilesMap1 
+    else:
+       tilesMap =  tilesMap0 + staticResources + utilMap  + tilesMap1       
+    
+    texto = header + tilesMap + RouteDetail.mapcode  + footer
    
     # Abre o arquivo em modo de escrita, sobrescrevendo o conteúdo
     with open(mapa, "w", encoding="utf-8") as arquivo:

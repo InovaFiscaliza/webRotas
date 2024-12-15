@@ -19,7 +19,10 @@ def enviar_json(payload, url):
         response = requests.post(url, json=payload)
         # Verifica se a requisição foi bem-sucedida
         if response.status_code == 200:
-            print("Requisição bem-sucedida:", response.json())
+            print("-----------------------------------------------")
+            print("Requisição bem-sucedida:")
+            print(response.json())
+            print("-----------------------------------------------")
             url = response.json().get("Url", None)
             if url:
                webbrowser.open(url)
@@ -77,7 +80,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 regioesBuf =  [
@@ -158,7 +161,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência

@@ -1,7 +1,7 @@
 import os
 import WebRota as wr
 import datetime
-from flask import Flask,render_template,request, jsonify # pip install flask
+from flask import Flask,render_template,request, jsonify, send_file # pip install flask
 from flask_compress import Compress  # pip install flask_compress
 from flask_cors import CORS # pip install flask-cors
 
@@ -98,6 +98,8 @@ def SalvaDataArq(data):
         print(f"Erro ao salvar os dados: {e}")
         return jsonify({"error": "Erro ao salvar os dados"}), 500
 ################################################################################
+# pyinstaller --onefile --add-data "C:\\Users\\andre\\miniconda3\\envs\\webrotas/Lib/site-packages/flask;flask" Server.py
+################################################################################
 def ProcessaRequisicoesAoServidor(data):
   wr.wLog("Executando em paralelo requisição ao servidor")
   with app.app_context():
@@ -121,9 +123,12 @@ def ProcessaRequisicoesAoServidor(data):
        # Processa os dados (exemplo: exibe no console)
        print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}")
        central_point = [latitude, longitude] 
-       fileName=wr.RouteDriveTest(user,central_point,regioes,radius_km=raio)
+       fileName,fileNameStatic,fileKml=wr.RouteDriveTest(user,central_point,regioes,radius_km=raio)
        # Retorna uma resposta de confirmação
-       return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}"}), 200
+       return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
+                       "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
+                       "Kml":f"http://127.0.0.1:5001/download/{fileKml}"}
+                      ), 200
     #---------------------------------------------------------------------------------------------
     TipoReq = data["TipoRequisicao"]
     if TipoReq=="PontosVisita":
@@ -139,9 +144,12 @@ def ProcessaRequisicoesAoServidor(data):
 
        # Processa os dados (exemplo: exibe no console)
        print(f"pontosvisita: {pontosvisita},  Regiões Evitar: {regioes}")
-       fileName=wr.RoutePontosVisita(user,pontosvisita,regioes)
+       fileName,fileNameStatic,fileKml=wr.RoutePontosVisita(user,pontosvisita,regioes)
        # Retorna uma resposta de confirmação
-       return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}"}), 200
+       return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
+                       "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
+                       "Kml":f"http://127.0.0.1:5001/download/{fileKml}"}
+                      ), 200
     #---------------------------------------------------------------------------------------------
     TipoReq = data["TipoRequisicao"]
     if TipoReq=="Abrangencia":
@@ -160,9 +168,12 @@ def ProcessaRequisicoesAoServidor(data):
 
        # Processa os dados (exemplo: exibe no console)
        print(f"Cidade: {cidade},Uf: {uf}, distancia_pontos: {distanciaPontos} m, Regiões Evitar: {regioes}")
-       fileName=wr.RouteCompAbrangencia(user,cidade,uf,distanciaPontos,regioes)
+       fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(user,cidade,uf,distanciaPontos,regioes)
        # Retorna uma resposta de confirmação
-       return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}"}), 200
+       return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
+                       "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
+                       "Kml":f"http://127.0.0.1:5001/download/{fileKml}"}
+                      ), 200
     #---------------------------------------------------------------------------------------------    
     return jsonify({"ErroPedido": "ErroPedido"}), 200
 ################################################################################
@@ -170,6 +181,15 @@ from concurrent.futures import ThreadPoolExecutor
 executor = ThreadPoolExecutor(max_workers=40)
 ListaTarefas = []
 ################################################################################
+@app.route('/download/<filename>')
+def download_file(filename):
+    # Caminho absoluto ou relativo para o arquivo
+    caminho_arquivo = f"templates/{filename}"
+    try:
+        return send_file(caminho_arquivo, as_attachment=True)
+    except Exception as e:
+        return f"Erro ao enviar o arquivo: {e}"
+################################################################################    
 @app.route('/webrotas', methods=['POST'])
 def process_location():
     # Obtém o JSON da requisição
