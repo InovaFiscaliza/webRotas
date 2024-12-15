@@ -1043,7 +1043,7 @@ function createColorTable() {
     compassDiv.style.display = 'flex';
     compassDiv.style.alignItems = 'center';
     compassDiv.style.justifyContent = 'center';
-    compassDiv.style.borderRadius = '0%';        // Bordas arredondadas
+    compassDiv.style.borderRadius = '2%';        // Bordas arredondadas
     compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
     compassDiv.style.zIndex = 1000;
     
