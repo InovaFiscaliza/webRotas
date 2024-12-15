@@ -200,9 +200,26 @@ def ReverseGeocode(lat, lon):
 # lon = -43.370423
 # print(ReverseGeocode(lat, lon))
 ###########################################################################################################################
+def InverterCoordenadas(lat_lon_coords):
+    """
+    Inverte coordenadas do formato (latitude, longitude) para (longitude, latitude).
+
+    Args:
+        lat_lon_coords (list of tuple): Lista de coordenadas no formato (latitude, longitude).
+
+    Returns:
+        list of tuple: Lista de coordenadas no formato (longitude, latitude).
+    """
+    lon_lat_coords = [(lon, lat) for lat, lon in lat_lon_coords]
+    return lon_lat_coords
 
 ###########################################################################################################################
-def GerarKml(coordenadas, filename="rota.kml"):
+def GerarKml(coord, filename="rota.kml"):
+    import simplekml
+
+    # Inverter coordenadas para o formato correto
+    coordenadas = InverterCoordenadas(coord)
+
     # Criar um objeto KML
     kml = simplekml.Kml()
 
@@ -213,27 +230,16 @@ def GerarKml(coordenadas, filename="rota.kml"):
     linha.style.linestyle.color = simplekml.Color.red  # Cor da linha
     linha.style.linestyle.width = 3  # Largura da linha
 
+    # Adicionar pontos nos vértices
+    for lon, lat in coordenadas:
+        ponto = kml.newpoint(name=f"Ponto ({lon:.4f}, {lat:.4f})", coords=[(lon, lat)])
+        ponto.style.iconstyle.icon.href = "http://maps.google.com/mapfiles/kml/paddle/blu-circle.png"  # Ícone azul
+        ponto.style.iconstyle.color = simplekml.Color.blue  # Cor do ícone do ponto (opcional)
+
     # Salvar o arquivo KML
     kml.save(filename)
+    print(f"Arquivo {filename} gerado com sucesso!")
 
-    # Para garantir que as coordenadas apareçam em linhas separadas no arquivo KML
-    with open(filename, 'r') as file:
-        content = file.read()
-    
-    # Remover todas as coordenadas da linha
-    start = content.index('<coordinates>') + len('<coordinates>')
-    end = content.index('</coordinates>')
-    coords_string = content[start:end].strip()
-    
-    # Adicionar quebras de linha entre as coordenadas
-    coords_string = '\n'.join([line.strip() for line in coords_string.split(' ')])
-
-    # Escrever de volta o conteúdo com as coordenadas formatadas
-    with open(filename, 'w') as file:
-        content = content.replace(content[start:end], '\n' + coords_string + '\n')
-        file.write(content)
-
-    wLog(f"Arquivo {filename} gerado com sucesso!")
 ###########################################################################################################################
 ServerTec = "OSMR"
 # ServerTec = "GHopper"
