@@ -105,10 +105,11 @@ function createSvgIconAzulHalf(number) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function ElevationColor(elevation) {
     // Limita a elevação ao intervalo 0-8900
-    elevation = Math.max(0, Math.min(8900, elevation));
+    max_elevation = 1000
+    elevation = Math.max(0, Math.min(max_elevation, elevation));
 
     // Normaliza a elevação para o intervalo 0-1
-    const normalized = elevation / 8900;
+    const normalized = elevation / max_elevation;
 
     // Converte a normalização em cores do arco-íris
     const hue = (1 - normalized) * 240; // 240° (azul) a 0° (vermelho)
@@ -167,13 +168,13 @@ async function getElevation(latitude, longitude) {
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconColorAltitude(number,lat,lon) {  
-    color = ElevationColor(getElevationSync(lat, lon));
+function createSvgIconColorAltitude(number,altitude) {  
+    color = ElevationColor(altitude);
     return createCustomSvgIcon(number,[25, 41],[12, 41],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconColorAltitudeHalf(number,lat,lon) {  
-    color = ElevationColor(getElevationSync(lat, lon));
+function createSvgIconColorAltitudeHalf(number,altitude) {  
+    color = ElevationColor(altitude);
     return createCustomSvgIcon(number,[12, 20],[6, 20],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////

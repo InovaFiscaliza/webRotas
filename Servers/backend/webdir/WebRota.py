@@ -200,27 +200,59 @@ def ReverseGeocode(lat, lon):
 # lon = -43.370423
 # print(ReverseGeocode(lat, lon))
 ###########################################################################################################################
-import rasterio
-from rasterio.transform import rowcol
+import numpy as np
 ###########################################################################################################################
-def ObterElevacao(tif_path, lat, lon):
+def load_etopo2(file_path):
     """
-    Obtém a elevação de uma latitude e longitude usando um arquivo GeoTIFF.
-
-    Args:
-        tif_path (str): Caminho para o arquivo GeoTIFF.
-        lat (float): Latitude da coordenada.
-        lon (float): Longitude da coordenada.
-
-    Returns:
-        float: Valor da elevação na posição especificada.
+    Carrega o arquivo ETOPO2 em um array NumPy.
     """
-    with rasterio.open(tif_path) as src:
-        # Transformar lat/lon para índices de linha e coluna no raster
-        row, col = rowcol(src.transform, lon, lat)
-        # Obter o valor da elevação no raster
-        elevacao = src.read(1)[row, col]  # Lê a primeira banda
-        return elevacao
+    nrows, ncols = 5400, 10800
+    total_elements = nrows * ncols
+
+    # Leia os dados binários
+    data = np.fromfile(file_path, dtype=np.int16)
+
+    # Verifique o tamanho do array lido
+    if len(data) > total_elements:
+        print("Aviso: Dados extras detectados no arquivo.")
+        data = data[:total_elements]  # Cortar os dados extras
+    elif len(data) < total_elements:
+        raise ValueError("O arquivo não contém dados suficientes para o grid especificado.")
+
+    # Ajuste o fator de escala se necessário (ex: divide por 10 para considerar a escala em metros)
+    data = data * (378/12525)  # Ajuste para o fator correto (pode ser 10, 100, etc.)
+
+    # Reshape para a grade
+    return data.reshape((nrows, ncols)), (nrows, ncols)
+###########################################################################################################################
+def get_altitude(data, grid_size, lat, lon):              
+    """
+    Retorna a altitude para uma dada latitude e longitude.
+    """
+    nrows, ncols = grid_size
+    lat_idx = int((90 - lat) * (nrows / 180))
+    lon_idx = int((180 + lon) * (ncols / 360))
+
+    # Validar índices
+    if 0 <= lat_idx < nrows and 0 <= lon_idx < ncols:
+        return data[lat_idx, lon_idx]
+    else:
+        raise ValueError("Coordenadas fora dos limites do grid.")
+###########################################################################################################################
+def AltitudeEtopo2(lat,lon):
+    file_path = "../../OpenElevation/data/etopo2.i2"
+    
+    # Carregar o arquivo
+    data, grid_size = load_etopo2(file_path)
+    
+    # Coordenadas de exemplo
+    latitude = lat
+    longitude = lon
+    
+    # Obter altitude
+    altitude = get_altitude(data, grid_size, latitude, longitude)
+    wLog(f"A altitude em ({latitude}, {longitude}) é {altitude} metros.")
+    return altitude;
 ###########################################################################################################################
 # Exemplo de uso
 # arquivo_tif = "caminho_para_seu_arquivo.tif"
@@ -268,7 +300,7 @@ def GerarKml(coord, filename="rota.kml"):
 
     # Salvar o arquivo KML
     kml.save(filename)
-    print(f"Arquivo {filename} gerado com sucesso!")
+    wLog(f"Arquivo {filename} gerado com sucesso!")
 
 ###########################################################################################################################
 ServerTec = "OSMR"
@@ -1239,10 +1271,11 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
     i=0
     RouteDetail.mapcode += "var markerVet = [];";
     for ponto in pontosvisita:
-        lat, lon = ponto           
+        lat, lon = ponto        
+        altitude = AltitudeEtopo2(lat,lon)   
         # RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
-        RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{lat},{lon}));\n"   
-        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full');\n"   
+        RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"   
+        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n"   
         RouteDetail.mapcode += f"         markerVet.push(markerbufTemp);\n"   
         if(i==0):
            (latfI,lonfI) = pontosvisita[i] 
@@ -1256,6 +1289,8 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
 
     RouteDetail.mapcode +="           const defaultIcon = markerVet[1].getIcon();\n"      
     return RouteDetail
+
+
 ################################################################################
 def RoutePontosVisita(user,pontosvisita,regioes):
     
@@ -1310,8 +1345,11 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5):
     # Coordenadas da rota (exemplo de uma rota circular simples)   
     num_points=8
     route_coords = GeneratePointsAround(latitude=central_point[0], longitude=central_point[1], radius_km=radius_km, num_points=num_points)
-
+    
+    RouteDetail = PlotaPontosVisita(RouteDetail,route_coords)
+     
     # Adicionar a rota no mapa
+    """
     RouteDetail.mapcode += "var markerVet = [];";
     for i, (lat, lon) in enumerate(route_coords):
         RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
@@ -1329,6 +1367,7 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5):
             RouteDetail=GenerateRouteMap(RouteDetail,lati,loni,latf,lonf)
     RouteDetail.mapcode +="           const defaultIcon = markerVet[1].getIcon();"        
     # map,RouteDetail=GenerateRouteMap(map,RouteDetail,latfI,lonfI,latfF,lonfF) # retorno ao ponto inicial
+    """
  
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
     RouteDetail.GeraMapPolylineCaminho()
