@@ -105,7 +105,7 @@ function createSvgIconAzulHalf(number) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function ElevationColor(elevation) {
     // Limita a elevação ao intervalo 0-8900
-    max_elevation = 1000
+    max_elevation = globalMaxElevation;
     elevation = Math.max(0, Math.min(max_elevation, elevation));
 
     // Normaliza a elevação para o intervalo 0-1
@@ -1023,6 +1023,50 @@ function createAtivaGps() {
     // Adiciona a bússola ao corpo da página
     document.body.appendChild(compassDiv);
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function createColorTable() {
+    // Cria a div para a bússola
+    const compassDiv = document.createElement('div');
+    
+    // Define os estilos inline da bússola
+    compassDiv.style.position = 'absolute';
+    compassDiv.style.top = '80px';
+    compassDiv.style.left = '10px';
+    compassDiv.style.width = '150px';              // Largura da bússola
+    compassDiv.style.height = '500px';             // Altura da bússola
+    compassDiv.style.backgroundImage = 'url("/static/elevation_table.png")';  
+    // compassDiv.style.backgroundImage = 'url("data:@file/png;base64,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")';
+    compassDiv.style.backgroundSize = '150px 500px';    // Redimensiona a imagem para cobrir a div
+    compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
+    compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
+    compassDiv.style.backgroundColor = 'white'; 
+    compassDiv.style.display = 'flex';
+    compassDiv.style.alignItems = 'center';
+    compassDiv.style.justifyContent = 'center';
+    compassDiv.style.borderRadius = '0%';        // Bordas arredondadas
+    compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
+    compassDiv.style.zIndex = 1000;
+    
+  
+    const icon = document.createElement('i');
+    
+    // Estilos inline do ícone
+    // icon.style.fontSize = '20px';
+    // icon.style.color = '#fff';
+    //icon.style.transform = 'rotate(0deg)';        // Alinhado ao norte
+
+    // Adiciona um evento de clique à bússola
+    compassDiv.addEventListener('click', function() {
+        // alert('Você clicou na bússola!');         // Alerta ou função quando clicado
+
+    });
+
+    // Adiciona o ícone dentro da bússola
+    // compassDiv.appendChild(icon);
+
+    // Adiciona a bússola ao corpo da página
+    document.body.appendChild(compassDiv);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateControls()
@@ -1030,6 +1074,7 @@ function CreateControls()
     HeadingNorte=0;
     createCompassIcon();
     createAtivaGps();
+    createColorTable();
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////

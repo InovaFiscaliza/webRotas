@@ -200,6 +200,101 @@ def ReverseGeocode(lat, lon):
 # lon = -43.370423
 # print(ReverseGeocode(lat, lon))
 ###########################################################################################################################
+###########################################################################################################################
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+import matplotlib.colors as mcolors
+###########################################################################################################################
+# Função para converter HSL para HEX
+def hsl_to_hex(h, s, l):
+    s /= 100
+    l /= 100
+
+    k = lambda n: (n + h / 30) % 12
+    a = s * min(l, 1 - l)
+    f = lambda n: l - a * max(-1, min(k(n) - 3, min(9 - k(n), 1)))
+
+    r = round(255 * f(0))
+    g = round(255 * f(8))
+    b = round(255 * f(4))
+
+    return f'#{r:02x}{g:02x}{b:02x}'
+###########################################################################################################################
+# Função para calcular a cor com base na elevação
+def elevation_color(elevation, max_elevation=1000):
+    # Limita a elevação ao intervalo 0-1000
+    elevation = max(0, min(max_elevation, elevation))
+    
+    # Normaliza a elevação para o intervalo 0-1
+    normalized = elevation / max_elevation
+    
+    # Calcula o valor do matiz (hue) entre azul (240°) e vermelho (0°)
+    hue = (1 - normalized) * 240
+    
+    return hsl_to_hex(hue, 100, 50)
+###########################################################################################################################
+def generate_elevations(step, max_elevation):
+    """
+    Gera uma lista de elevações com um intervalo definido pelo passo.
+    
+    Parâmetros:
+    step (int): O passo em metros entre cada elevação.
+    max_elevation (int): A elevação máxima que a sequência pode atingir.
+    
+    Retorna:
+    list: Uma lista de elevações com o passo definido até a elevação máxima.
+    """
+    # Cria uma lista de elevacões começando de 0 até o valor máximo, com o passo definido
+    elevations = list(range(0, max_elevation + step, step))
+    
+    # Se a elevação máxima já está na lista, a removemos para evitar duplicação
+    if elevations[-1] > max_elevation:
+        elevations.pop()
+    
+    return elevations
+###########################################################################################################################
+# Função para gerar a imagem com a tabela
+import matplotlib.pyplot as plt
+###########################################################################################################################
+def generate_elevation_table_png(output_filename='elevation_table.png',max_elevation=1500):
+    # Definir as elevacões e gerar as cores associadas
+    # elevations = [0, 50, 100, 150, 200, 250, 300, 8900]
+    num_itensdisplay = 18
+    max_elev=max_elevation
+    elevationSteps = int(max_elev/num_itensdisplay)
+    elevationItens = int(max_elev/elevationSteps)
+    elevations = generate_elevations(elevationSteps, max_elev)
+    # print(elevations)
+    colors = [elevation_color(elevation,max_elevation=max_elev) for elevation in elevations]
+    
+    # Tamanho da imagem
+    img_width = 150
+    img_height = 600
+    font = ImageFont.truetype("arial.ttf", 8) 
+    
+    # Criar uma nova imagem em branco
+    img = Image.new('RGB', (img_width, img_height), color='white')
+    draw = ImageDraw.Draw(img)
+    
+    # Tamanho da célula da tabela
+    # cell_height = 10      
+    cell_height = int(img_height/elevationItens)
+    cell_width = int(img_width * 0.7)
+    
+    # Desenhar a tabela
+    for i, (elevation, color) in enumerate(zip(elevations, colors)):
+        # Desenhar a linha de elevação
+        draw.rectangle([0, i * cell_height, cell_width, (i + 1) * cell_height], fill=color)
+        draw.text((cell_width + 10, i * cell_height + 10), f'{elevation} m', fill='black', font=font)
+    
+    # Salvar a imagem
+    # plt.figure(facecolor='black') 
+    # plt.imshow(img)
+    # plt.axis('off')  # Remover as barras de eixo
+    # plt.show()
+    img.save(output_filename)
+    wLog(f'Tabelas de cores de altitudes salva como {output_filename}')
+###########################################################################################################################
 import numpy as np
 ###########################################################################################################################
 def load_etopo2(file_path):

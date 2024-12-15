@@ -124,12 +124,14 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     else:
        staticResources = "<script src=\"{{ url_for('static', filename='StaticResources.js') }}\"></script> "    
        utilMap = "<script src=\"{{ url_for('static', filename='UtilMap.js') }}\"></script>"
-             
+       
+    globalMaxElevation = 1500   
+    wr.generate_elevation_table_png(output_filename='static/elevation_table.png',max_elevation=globalMaxElevation)         
     header = GeraHeader()
     footer = GeraFooter()
     tilesMap0 = """
             var map = L.map('map').setView([-22.9035, -43.1034], 13);
-            
+            var globalMaxElevation = """ + str(globalMaxElevation) +""";
             var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
