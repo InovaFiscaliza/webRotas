@@ -103,15 +103,61 @@ function createSvgIconAzulHalf(number) {
     return createCustomSvgIcon(number,[12, 20],[6, 20],"#007bff");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function createSvgIconVerde(number) {  
+
+    return createCustomSvgIcon(number,[25, 41],[12, 41],"#007b22");
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function createSvgIconVerdeHalf(number) {  
+
+    return createCustomSvgIcon(number,[12, 20],[6, 20],"#007b22");
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function createSvg(iconSz, iconColor, text) {
+    const width = iconSz[0];
+    const height = iconSz[1];
+
+    // Tamanhos base do SVG original
+    const baseWidth = 25;
+    const baseHeight = 41;
+
+    // Calcula fatores de escala
+    const scaleX = width / baseWidth;
+    const scaleY = height / baseHeight;
+
+    // Recalcula o path com base no fator de escala
+    const dynamicPath = `
+        M${12.5 * scaleX} 0
+        C${19.4 * scaleX} 0 ${25 * scaleX} ${5.6 * scaleY} ${25 * scaleX} ${12.5 * scaleY}
+        C${25 * scaleX} ${19.4 * scaleY} ${12.5 * scaleX} ${41 * scaleY} ${12.5 * scaleX} ${41 * scaleY}
+        C${12.5 * scaleX} ${41 * scaleY} 0 ${19.4 * scaleY} 0 ${12.5 * scaleY}
+        C0 ${5.6 * scaleY} ${5.6 * scaleX} 0 ${12.5 * scaleX} 0Z
+    `.trim();
+
+    // Retorna o SVG ajustado
+    return `
+        <svg id="iconSvg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" 
+             xmlns="http://www.w3.org/2000/svg">
+            <path d="${dynamicPath}" fill="${iconColor}"/> 
+            <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="${Math.min(width, height) * 0.55}" 
+                  fill="white" font-weight="bold">${text}</text>
+        </svg>`;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function createCustomSvgIcon(text,iconSz,iconAnc,iconColor) {  
-    return L.divIcon({
-        className: '', // Sem classe adicional
-        html: `<svg id="iconSvg" width="${iconSz[0]}" height="${iconSz[1]}" viewBox="0 0 ${iconSz[0]} ${iconSz[1]}" 
+    /*
+    datHtml = `<svg id="iconSvg" width="${iconSz[0]}" height="${iconSz[1]}" viewBox="0 0 ${iconSz[0]} ${iconSz[1]}" 
                xmlns="http://www.w3.org/2000/svg">
                <path d="M12.5 0C19.4 0 25 5.6 25 12.5C25 19.4 12.5 41 12.5 41C12.5 41 0 19.4 0 12.5C0 5.6 5.6 0 12.5 0Z" 
                fill="${iconColor}"/> <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="12" 
                fill="white" font-weight="bold">${text}</text>
-               </svg>`,
+               </svg>`; 
+    */
+    datHtml = createSvg(iconSz, iconColor, text)           
+    return L.divIcon({
+        className: '', // Sem classe adicional
+        html: datHtml,
         iconSize: iconSz, // Tamanho do ícone
         iconAnchor: iconAnc // Ponto de ancoragem (centro)
     });
@@ -133,6 +179,7 @@ function onMarkerClick(e) {
             currentMarker.setIcon(createSvgIconAzul(String(markerId)));   
             currentMarker._icon.setAttribute('clicado', "0");
         }      
+        currentMarker._icon.setAttribute('tamanho', "full");
     }
     else
     {
@@ -143,6 +190,7 @@ function onMarkerClick(e) {
             currentMarker.setIcon(createSvgIconAzulHalf(String(markerId)));
             currentMarker._icon.setAttribute('clicado', "0");
         }
+        currentMarker._icon.setAttribute('tamanho', "half");
     }
     currentMarker._icon.setAttribute('data-id', String(markerId));
     AtualizaGps();
@@ -690,12 +738,31 @@ if (navigator.geolocation)
 // Definindo o intervalo de 300ms
 let timer = setInterval(AtualizaGps, 1000);
 //////////////////////////////////////////////////////////////////////////////////////////////////////  
-function SelIconHalf(marker,clicked,iMarquer)
+function SelIconHalf(marker)
 {
-    if (marker.getIcon()==clickedIcon || marker.getIcon()==clickedIconHalf)
-        marker.setIcon(clicked);
+    markerOld = marker;
+    size = markerOld._icon.getAttribute('tamanho');
+    clicado = markerOld._icon.getAttribute('clicado');
+    markerId = markerOld._icon.getAttribute('data-id');
+    if (clicado=="1")
+        if (size=="full")
+           marker.setIcon(clickedIcon);
+        else 
+           marker.setIcon(clickedIconHalf);
     else
-       marker.setIcon(iMarquer);    
+       if (size=="full")
+           marker.setIcon(createSvgIconAzul(String(markerId)));
+       else 
+           marker.setIcon(createSvgIconAzulHalf(String(markerId))); 
+    CopyMarkerAttribs(markerOld,marker);    
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function CopyMarkerAttribs(MarkerOrigin,MarkerDest)
+{
+    MarkerDest._icon.setAttribute('data-id',MarkerOrigin._icon.getAttribute('data-id'));
+    MarkerDest._icon.setAttribute('clicado',MarkerOrigin._icon.getAttribute('clicado'));
+    MarkerDest._icon.setAttribute('tamanho',MarkerOrigin._icon.getAttribute('tamanho'));
+    MarkerDest._icon.setAttribute('altitude',MarkerOrigin._icon.getAttribute('altitude'));
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function AjustaTamanhoMarquers(div)
@@ -713,17 +780,17 @@ function AjustaTamanhoMarquers(div)
     if (div==0)
     {
         if (TipoRoute == 'DriveTest')
-            markerCentral.setIcon(iMarquerVerde); 
+            markerCentral.setIcon(createSvgIconVerde("x")); 
         markerVet.forEach(marker => {
-            SelIconHalf(marker,clickedIcon,iMarquerAzul)
+            SelIconHalf(marker)
         });
     }    
     else
     {
         if (TipoRoute == 'DriveTest')
-            markerCentral.setIcon(iMarquerVerdeHalf);
+            markerCentral.setIcon(createSvgIconVerdeHalf("x"));
         markerVet.forEach(marker => {
-            SelIconHalf(marker,clickedIconHalf,iMarquerAzulHalf)
+            SelIconHalf(marker)
         });
     }
 

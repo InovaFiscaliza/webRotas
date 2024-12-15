@@ -1194,7 +1194,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
     for ponto in pontosvisita:
         lat, lon = ponto
         RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
-        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0');\n"   
+        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full');\n"   
         RouteDetail.mapcode += f"         markerVet.push(markerbufTemp);\n"   
         if(i==0):
            (latfI,lonfI) = pontosvisita[i] 
@@ -1270,9 +1270,11 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5):
     # Adicionar a rota no mapa
     RouteDetail.mapcode += "var markerVet = [];";
     for i, (lat, lon) in enumerate(route_coords):
-        RouteDetail.mapcode += f"         markerVet.push(L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i})));\n"             
-         
-        # RouteDetail.mapcode += f"         markerVet.push(L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(iMarquerAzul).bindPopup('P{i}'));\n"             
+        RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
+        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full');\n"   
+        RouteDetail.mapcode += f"         markerVet.push(markerbufTemp);\n"   
+        
+        # RouteDetail.mapcode += f"         markerVet.push(L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i})));\n"                       
         if(i==0):
            (latfI,lonfI) = route_coords[i] 
         if(i==(num_points-1)):
