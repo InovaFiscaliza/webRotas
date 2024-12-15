@@ -174,12 +174,12 @@ function createSvgIconColorAltitude(number,lat,lon) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconColorAltitudeHalf(number,lat,lon) {  
     color = ElevationColor(getElevationSync(lat, lon));
-    return createCustomSvgIcon(number,[12, 20],[6, 20],"#007bff");
+    return createCustomSvgIcon(number,[12, 20],[6, 20],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconVerde(number) {  
 
-    return createCustomSvgIcon(number,[25, 41],[12, 41],color);
+    return createCustomSvgIcon(number,[25, 41],[12, 41],"#007b22");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconVerdeHalf(number) {  
@@ -812,22 +812,34 @@ if (navigator.geolocation)
 // Definindo o intervalo de 300ms
 let timer = setInterval(AtualizaGps, 1000);
 //////////////////////////////////////////////////////////////////////////////////////////////////////  
-function SelIconHalf(marker)
+function SelIconHalf(marker,flagHeadingNorte)
 {
     markerOld = marker;
     size = markerOld._icon.getAttribute('tamanho');
     clicado = markerOld._icon.getAttribute('clicado');
     markerId = markerOld._icon.getAttribute('data-id');
     if (clicado=="1")
-        if (size=="full")
+        if (flagHeadingNorte==0)
+        {    
            marker.setIcon(clickedIcon);
+           marker._icon.getAttribute('tamanho',"full");
+        }   
         else 
+        { 
            marker.setIcon(clickedIconHalf);
+           marker._icon.getAttribute('tamanho',"half");
+        }   
     else
-       if (size=="full")
+       if (flagHeadingNorte==0)
+       { 
            marker.setIcon(createSvgIconAzul(String(markerId)));
+           marker._icon.getAttribute('tamanho',"full");
+       }   
        else 
+       { 
            marker.setIcon(createSvgIconAzulHalf(String(markerId))); 
+           marker._icon.getAttribute('tamanho',"half");
+       }    
     CopyMarkerAttribs(markerOld,marker);    
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -835,7 +847,7 @@ function CopyMarkerAttribs(MarkerOrigin,MarkerDest)
 {
     MarkerDest._icon.setAttribute('data-id',MarkerOrigin._icon.getAttribute('data-id'));
     MarkerDest._icon.setAttribute('clicado',MarkerOrigin._icon.getAttribute('clicado'));
-    MarkerDest._icon.setAttribute('tamanho',MarkerOrigin._icon.getAttribute('tamanho'));
+    // MarkerDest._icon.setAttribute('tamanho',MarkerOrigin._icon.getAttribute('tamanho'));
     MarkerDest._icon.setAttribute('altitude',MarkerOrigin._icon.getAttribute('altitude'));
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -851,20 +863,20 @@ function AjustaTamanhoMarquers(div)
     */
     if(markerVet==null)
         return null;
-    if (div==0)
+    if (div===0)
     {
         if (TipoRoute == 'DriveTest')
             markerCentral.setIcon(createSvgIconVerde("x")); 
         markerVet.forEach(marker => {
-            SelIconHalf(marker)
-        });
+               SelIconHalf(marker,div);
+            });
     }    
     else
     {
         if (TipoRoute == 'DriveTest')
             markerCentral.setIcon(createSvgIconVerdeHalf("x"));
         markerVet.forEach(marker => {
-            SelIconHalf(marker)
+            SelIconHalf(marker,div);
         });
     }
 
@@ -882,12 +894,6 @@ function RodaMapaPorCss(angle) // Não funciona bem
       mapElement.style.transformOrigin = 'center';  // Define o ponto de rotação
       gpsMarker.setIcon(gpsIcon);
       AjustaTamanhoMarquers(HeadingNorte);
-      /*       Testando outras formas de rotacionar mapa 
-      mapElement.style.width = '100vw';
-      mapElement.style.height = '100vh';      
-      mapElement.style.transformOrigin = `${markerPosition.x}px ${markerPosition.y}px`;
-      mapElement.style.transform = `rotate(${0}deg) `; 
-      */
    }
    else
    { 
@@ -896,13 +902,6 @@ function RodaMapaPorCss(angle) // Não funciona bem
       gpsMarker.setLatLng([latitude, longitude]);
       gpsMarker.setIcon(gpsIconHalf);
       AjustaTamanhoMarquers(HeadingNorte);
-      /*  Testando outras formas de rotacionar mapa      
-      mapElement.style.width = '4000px';
-      mapElement.style.height = '4000px';      
-      mapElement.style.overflow= 'visible';
-      mapElement.style.transformOrigin = `${markerPosition.x}px ${markerPosition.y}px`;
-      mapElement.style.transform = `rotate(${angle}deg) `;  
-      */
    }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
