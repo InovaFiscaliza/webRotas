@@ -200,6 +200,36 @@ def ReverseGeocode(lat, lon):
 # lon = -43.370423
 # print(ReverseGeocode(lat, lon))
 ###########################################################################################################################
+import rasterio
+from rasterio.transform import rowcol
+###########################################################################################################################
+def ObterElevacao(tif_path, lat, lon):
+    """
+    Obtém a elevação de uma latitude e longitude usando um arquivo GeoTIFF.
+
+    Args:
+        tif_path (str): Caminho para o arquivo GeoTIFF.
+        lat (float): Latitude da coordenada.
+        lon (float): Longitude da coordenada.
+
+    Returns:
+        float: Valor da elevação na posição especificada.
+    """
+    with rasterio.open(tif_path) as src:
+        # Transformar lat/lon para índices de linha e coluna no raster
+        row, col = rowcol(src.transform, lon, lat)
+        # Obter o valor da elevação no raster
+        elevacao = src.read(1)[row, col]  # Lê a primeira banda
+        return elevacao
+###########################################################################################################################
+# Exemplo de uso
+# arquivo_tif = "caminho_para_seu_arquivo.tif"
+# latitude = -23.55052  # São Paulo
+# longitude = -46.633308
+
+# elevacao = obter_elevacao(arquivo_tif, latitude, longitude)
+# print(f"A elevação em ({latitude}, {longitude}) é {elevacao} metros.")
+###########################################################################################################################
 def InverterCoordenadas(lat_lon_coords):
     """
     Inverte coordenadas do formato (latitude, longitude) para (longitude, latitude).
