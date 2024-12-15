@@ -137,7 +137,7 @@ payload = {
     "raio": 10,
     "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -171,4 +171,4 @@ payload = {
     "regioes": regioesBuf
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")

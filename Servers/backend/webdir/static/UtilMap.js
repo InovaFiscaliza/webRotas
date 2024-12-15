@@ -37,12 +37,15 @@ const clickedIconHalf = L.icon({
     className: 'clicked-marker' // Adiciona uma classe para diferenciar visualmente
 });
 
+/*
 var iMarquerVerde = L.icon({
     iconUrl: '/static/MarkerVerde.png', // Icone clicado
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     className: 'marker' // Adiciona uma classe para diferenciar visualmente
 });
+*/
+var iMarquerVerde = createCustomSvgIcon("o",[25, 41],[12, 41],"#007b22");
 
 var iMarquerAzul = L.icon({
     iconUrl: '/static/MarkerAzul.png', // Icone clicado
@@ -82,27 +85,66 @@ function ChangeMarquerIconSize(marker,div, newSize,newAnchor)
     // Atualizar o ícone do marcador
     marker.setIcon(newIcon);
 } */
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função para criar um icone svg numerado
+function createSvgIcon(number) {  
+
+    return createCustomSvgIcon(number,[25, 41],[12, 41],"#007bff");
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function createSvgIconAzul(number) {  
+
+    return createCustomSvgIcon(number,[25, 41],[12, 41],"#007bff");
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function createSvgIconAzulHalf(number) {  
+
+    return createCustomSvgIcon(number,[12, 20],[6, 20],"#007bff");
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function createCustomSvgIcon(text,iconSz,iconAnc,iconColor) {  
+    return L.divIcon({
+        className: '', // Sem classe adicional
+        html: `<svg id="iconSvg" width="${iconSz[0]}" height="${iconSz[1]}" viewBox="0 0 ${iconSz[0]} ${iconSz[1]}" 
+               xmlns="http://www.w3.org/2000/svg">
+               <path d="M12.5 0C19.4 0 25 5.6 25 12.5C25 19.4 12.5 41 12.5 41C12.5 41 0 19.4 0 12.5C0 5.6 5.6 0 12.5 0Z" 
+               fill="${iconColor}"/> <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="12" 
+               fill="white" font-weight="bold">${text}</text>
+               </svg>`,
+        iconSize: iconSz, // Tamanho do ícone
+        iconAnchor: iconAnc // Ponto de ancoragem (centro)
+    });
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////        
 function onMarkerClick(e) {
     const currentMarker = e.target;
-
+    const markerId = currentMarker._icon.getAttribute('data-id');
+    const clicado = currentMarker._icon.getAttribute('clicado');
+    console.log(`Marquer clicado - ID - ${markerId} - Clicado - ${clicado}`)
     // Verifica o ícone atual e troca para o outro
     if (HeadingNorte==0)
     {    
-        if (currentMarker.getIcon() === iMarquerAzul) {
+        console.log(`aqui`)
+        if (clicado === "0") {
             currentMarker.setIcon(clickedIcon);
+            currentMarker._icon.setAttribute('clicado', "1");
         } else {
-            currentMarker.setIcon(iMarquerAzul);
-        }
+            currentMarker.setIcon(createSvgIconAzul(String(markerId)));   
+            currentMarker._icon.setAttribute('clicado', "0");
+        }      
     }
     else
     {
-        if (currentMarker.getIcon() === iMarquerAzulHalf) {
+        if (clicado === "0") {
             currentMarker.setIcon(clickedIconHalf);
+            currentMarker._icon.setAttribute('clicado', "1");
         } else {
-            currentMarker.setIcon(iMarquerAzulHalf);
+            currentMarker.setIcon(createSvgIconAzulHalf(String(markerId)));
+            currentMarker._icon.setAttribute('clicado', "0");
         }
     }
+    currentMarker._icon.setAttribute('data-id', String(markerId));
     AtualizaGps();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
