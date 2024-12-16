@@ -349,6 +349,96 @@ def AltitudeEtopo2(lat,lon):
     wLog(f"A altitude em ({latitude}, {longitude}) é {altitude} metros.")
     return altitude;
 ###########################################################################################################################
+def AltitudeEtopo2New(lat,lon):
+    latitude = lat
+    longitude = lon
+    
+    # Obter altitude
+    altitude = get_altitudeNetCDF(latitude, longitude)
+    wLog(f"A altitude em ({latitude}, {longitude}) é {altitude} metros.")
+    return altitude;
+###########################################################################################################################
+import xarray as xr  # pip install xarray netCDF4 numpy
+import numpy as np
+###########################################################################################################################
+import os
+###########################################################################################################################
+def get_nc_file_paths(directory):
+    """
+    Constrói uma lista de caminhos para todos os arquivos .nc em um diretório dado.
+    
+    Args:
+        directory (str): Caminho para o diretório onde os arquivos NetCDF estão localizados.
+    
+    Returns:
+        list: Lista de caminhos para os arquivos NetCDF encontrados.
+    """
+    file_paths = []
+    
+    # Percorre o diretório e verifica os arquivos com extensão .nc
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".nc"):
+                file_paths.append(os.path.join(root, file))
+    
+    # Ordena os arquivos para garantir consistência
+    file_paths.sort()
+    
+    return file_paths
+###########################################################################################################################
+def get_altitudeNetCDF(lat, lon):
+    """
+    Retorna a altitude correspondente para uma dada latitude e longitude
+    a partir de arquivos NetCDF.
+    
+    Args:
+        lat (float): Latitude em graus.
+        lon (float): Longitude em graus.
+    
+    Returns:
+        float: Altitude correspondente em metros.
+    """
+    file_paths = get_nc_file_paths("../../OpenElevation/data")
+    print("Arquivos encontrados:")
+    for path in file_paths:
+        print(path)
+
+    # Corrigir longitude para formato 0° a 360° se necessário
+    # if lon < 0:
+    #     lon = 360 + lon
+
+    for file_path in file_paths:
+        try:
+            # Abre o arquivo NetCDF
+            ds = xr.open_dataset(file_path)
+            
+            # Verifica se a latitude e longitude estão dentro do intervalo do arquivo
+            lat_range = ds['lat'].values
+            lon_range = ds['lon'].values
+            
+            print(f"Latitude: {lat}, Longitude: {lon}")
+            print(f"Latitude range: {lat_range.min()} to {lat_range.max()}")
+            print(f"Longitude range: {lon_range.min()} to {lon_range.max()}")
+            
+            if lat_range.min() <= lat <= lat_range.max() and lon_range.min() <= lon <= lon_range.max():
+                # Localiza o índice mais próximo das coordenadas
+                lat_idx = np.abs(lat_range - lat).argmin()
+                lon_idx = np.abs(lon_range - lon).argmin()
+
+                print(f"Índice da latitude: {lat_idx}, Índice da longitude: {lon_idx}")
+
+                # Extrai a altitude correspondente
+                altitude = ds['bed'].isel(lat=lat_idx, lon=lon_idx).values
+                
+                ds.close()
+                return altitude
+
+        except Exception as e:
+            print(f"Erro ao processar o arquivo {file_path}: {e}")
+    
+    raise ValueError("Coordenadas fora do alcance dos arquivos fornecidos.")
+
+###########################################################################################################################
 # Exemplo de uso
 # arquivo_tif = "caminho_para_seu_arquivo.tif"
 # latitude = -23.55052  # São Paulo

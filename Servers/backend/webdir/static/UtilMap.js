@@ -242,6 +242,7 @@ function onMarkerClick(e) {
     const currentMarker = e.target;
     const markerId = currentMarker._icon.getAttribute('data-id');
     const clicado = currentMarker._icon.getAttribute('clicado');
+    const altitude = currentMarker._icon.getAttribute('altitude');
     console.log(`Marquer clicado - ID - ${markerId} - Clicado - ${clicado}`)
     // Verifica o ícone atual e troca para o outro
     if (HeadingNorte==0)
@@ -251,7 +252,9 @@ function onMarkerClick(e) {
             currentMarker.setIcon(clickedIcon);
             currentMarker._icon.setAttribute('clicado', "1");
         } else {
-            currentMarker.setIcon(createSvgIconAzul(String(markerId)));   
+            // aaaaaaaaaaaaaaaa createSvgIconColorAltitude
+            // currentMarker.setIcon(createSvgIconAzul(String(markerId)));   
+            currentMarker.setIcon(createSvgIconColorAltitude(String(markerId),String(altitude))); 
             currentMarker._icon.setAttribute('clicado', "0");
         }      
         currentMarker._icon.setAttribute('tamanho', "full");
@@ -262,12 +265,14 @@ function onMarkerClick(e) {
             currentMarker.setIcon(clickedIconHalf);
             currentMarker._icon.setAttribute('clicado', "1");
         } else {
-            currentMarker.setIcon(createSvgIconAzulHalf(String(markerId)));
+            // currentMarker.setIcon(createSvgIconAzulHalf(String(markerId)));
+            currentMarker.setIcon(createSvgIconColorAltitudeHalf(String(markerId),String(altitude))); 
             currentMarker._icon.setAttribute('clicado', "0");
         }
         currentMarker._icon.setAttribute('tamanho', "half");
     }
     currentMarker._icon.setAttribute('data-id', String(markerId));
+    currentMarker._icon.setAttribute('altitude', String(altitude));
     AtualizaGps();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -819,6 +824,7 @@ function SelIconHalf(marker,flagHeadingNorte)
     size = markerOld._icon.getAttribute('tamanho');
     clicado = markerOld._icon.getAttribute('clicado');
     markerId = markerOld._icon.getAttribute('data-id');
+    altitude = markerOld._icon.getAttribute('altitude');
     if (clicado=="1")
         if (flagHeadingNorte==0)
         {    
@@ -833,12 +839,15 @@ function SelIconHalf(marker,flagHeadingNorte)
     else
        if (flagHeadingNorte==0)
        { 
-           marker.setIcon(createSvgIconAzul(String(markerId)));
+           // aaaaaaaaaaaaaa createSvgIconColorAltitude
+           // marker.setIcon(createSvgIconAzul(String(markerId)));
+           marker.setIcon(createSvgIconColorAltitude(String(markerId),String(altitude)));
            marker._icon.setAttribute('tamanho',"full");
        }   
        else 
        { 
-           marker.setIcon(createSvgIconAzulHalf(String(markerId))); 
+           // marker.setIcon(createSvgIconAzulHalf(String(markerId))); 
+           marker.setIcon(createSvgIconColorAltitudeHalf(String(markerId),String(altitude)));
            marker._icon.setAttribute('tamanho',"half");
        }    
     CopyMarkerAttribs(markerOld,marker);    

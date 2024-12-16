@@ -11,6 +11,6 @@ print(f"Altitude {lat},{lon} - {alt}")
 
 ###########################################################################################################################
 # Gerar a imagem
-wr.generate_elevation_table_png(output_filename='elevation_table.png',max_elevation=1500)
+# wr.generate_elevation_table_png(output_filename='elevation_table.png',max_elevation=1500)
 
 
