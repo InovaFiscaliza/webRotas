@@ -44,3 +44,5 @@ Servers/backend/webdir/templates/MapaPontosVisita2024-12-14_12-55-55.html
 Servers/Osmosis/TempData/exclusion_Andre.poly.old
 /Servers/OpenElevation/data/etopo2.i2
 /Servers/OpenElevation/data/
+/Servers/OSMR/data/TempData/
+/Servers/OSMR/data/brazil/
