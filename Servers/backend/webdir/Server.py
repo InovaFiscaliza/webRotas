@@ -119,7 +119,7 @@ def ProcessaRequisicoesAoServidor(data):
        latitude = data["latitude"]
        longitude = data["longitude"]
        raio = data["raio"]
-       regioes = regioes = data.get("regioes", []) 
+       regioes = data.get("regioes", []) 
        # Processa os dados (exemplo: exibe no console)
        print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}")
        central_point = [latitude, longitude] 
