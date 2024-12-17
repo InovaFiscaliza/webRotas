@@ -1573,7 +1573,7 @@ def calcula_bounding_box_pontos(pontos, margem_km=50):
     return lat_min,lat_max,lon_min,lon_max
 
 ###########################################################################################################################
-def RouteDriveTest(user,central_point,regioes,radius_km=5):
+def RouteDriveTest(user,central_point,regioes,radius_km=5, num_points=8):
     # Coordenadas do ponto central (latitude, longitude)
     # central_point = [40.712776, -74.005974]  # Exemplo: Nova York
     #central_point = [-22.90941986104239, -43.16486081793237] # Santos Dumont
@@ -1585,7 +1585,7 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5):
     UserData.nome=user
    
     # Coordenadas da rota (exemplo de uma rota circular simples)   
-    num_points=8
+
     pontosvisita = GeneratePointsAround(latitude=central_point[0], longitude=central_point[1], radius_km=radius_km, num_points=num_points)
     
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)

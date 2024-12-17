@@ -120,10 +120,11 @@ def ProcessaRequisicoesAoServidor(data):
        longitude = data["longitude"]
        raio = data["raio"]
        regioes = data.get("regioes", []) 
+       numeropontos = data["numeropontos"]
        # Processa os dados (exemplo: exibe no console)
        print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}")
        central_point = [latitude, longitude] 
-       fileName,fileNameStatic,fileKml=wr.RouteDriveTest(user,central_point,regioes,radius_km=raio)
+       fileName,fileNameStatic,fileKml=wr.RouteDriveTest(user,central_point,regioes,radius_km=raio,num_points=numeropontos)
        # Retorna uma resposta de confirmação
        return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
                        "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",

@@ -83,16 +83,7 @@ payload = {
 # enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
-regioesBuf =  [
-        {
-            "nome": "RegiaoRoteada",
-            "coord": [
-                [-22.119370738072256, -43.86488365809091],     
-                [-22.43163538572464, -42.64472010435383],        
-                [-23.110840610574822, -42.687929943524956],       
-                [-23.163819659811587, -43.5500691155584],         
-            ]
-        },        
+regioesBuf =  [       
         {
             "nome": "!Jacare",
             "coord": [
@@ -138,9 +129,10 @@ payload = {
     "latitude": -22.910555413451096,        
     "longitude": -43.16360553394545,
     "raio": 10,
+    "numeropontos":21,
     "regioes": regioesBuf
 }
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -174,4 +166,4 @@ payload = {
     "regioes": regioesBuf
 }
 
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
