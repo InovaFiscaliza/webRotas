@@ -1396,21 +1396,19 @@ def ServerSetupJavaScript(RouteDetail):
 def RouteCompAbrangencia(user,cidade,uf,distanciaPontos,regioes):
     
     UserData.nome=user
+    
+    polMunicipio= GetBoundMunicipio(cidade, uf)
+    pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
+    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
     
-
     RouteDetail = ServerSetupJavaScript(RouteDetail)   
        
     RouteDetail.mapcode += f"    const TipoRoute = 'CompAbrangencia';\n"   
-    
-    polMunicipio= GetBoundMunicipio(cidade, uf)
-    # print("Depurando polMunicipio")
-    # print(polMunicipio)
     RouteDetail = DesenhaMunicipio(RouteDetail,cidade,polMunicipio)
     
     wLog("Ordenando e processando Pontos de Visita:")
-    pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
     pontosvisita = OrdenarPontos(pontosvisita) 
     RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita)
     
@@ -1457,10 +1455,14 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
     RouteDetail.mapcode += "var markerVet = [];";
     for ponto in pontosvisita:
         lat, lon = ponto        
+        
+        
+        
         altitude = AltitudeEtopo2(lat,lon)   
         # RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
         RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"   
-        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n"   
+        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n"         
+        RouteDetail.mapcode += f"         markerbufTemp.bindTooltip('Altitude: {altitude}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"   
         RouteDetail.mapcode += f"         markerVet.push(markerbufTemp);\n"   
         if(i==0):
            (latfI,lonfI) = pontosvisita[i] 
@@ -1480,6 +1482,8 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
 def RoutePontosVisita(user,pontosvisita,regioes):
     
     UserData.nome=user
+    
+    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
            
@@ -1495,8 +1499,7 @@ def RoutePontosVisita(user,pontosvisita,regioes):
     RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita)
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
     RouteDetail.GeraMapPolylineCaminho()
-    # GerarKml(coordenadasrota, filename="rota.kml")
-    
+
     # servidor temp     python3 -m http.server 8080
     #           
     fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,pontosvisita,'PontosVisita')

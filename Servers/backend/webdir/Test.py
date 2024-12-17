@@ -140,7 +140,7 @@ payload = {
     "raio": 10,
     "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -161,7 +161,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-#venviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência
@@ -174,4 +174,4 @@ payload = {
     "regioes": regioesBuf
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
