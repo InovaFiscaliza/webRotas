@@ -1502,6 +1502,74 @@ def RoutePontosVisita(user,pontosvisita,regioes):
     fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,pontosvisita,'PontosVisita')
     return fileMap,fileNameStatic,fileKml
 ###########################################################################################################################
+import math
+###########################################################################################################################
+def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita,distancia_km=50):
+    lat_min,lat_max,lon_min,lon_max = calcula_bounding_box_pontos(pontosvisita, margem_km=50)
+    # 1 grau de latitude = 111 km
+    graus_lat = distancia_km / 111.0
+    lat_min = lat_min- graus_lat;
+    lat_max = lat_max+ graus_lat;    
+    lon_min = lon_min- graus_lat;   
+    lon_max = lon_max+ graus_lat;   
+    NewRegioes = []
+    
+    regioesglobal = {
+            "nome": "regiaoBoundingbox",
+            "coord": [
+                [lat_max, lon_min],     
+                [lat_max, lon_max],        
+                [lat_min, lon_max],       
+                [lat_min, lon_min],         
+            ]
+        }   
+
+    NewRegioes.append(regioesglobal)
+    for regiao in regioes:
+        nome = regiao.get("nome", "SemNome").replace(" ", "_")
+        coordenadas = regiao.get("coord", [])
+        regiaook = {"nome" : nome, "coord": coordenadas}
+        NewRegioes.append(regiaook)
+    return NewRegioes
+###########################################################################################################################
+def calcula_bounding_box_pontos(pontos, margem_km=50):
+    """
+    Calcula um bounding box expandido em torno de um grupo de pontos.
+
+    Args:
+        pontos (list): Lista de coordenadas [(lat, lon), ...].
+        margem_km (float): Margem adicional em km ao redor do grupo de pontos.
+
+    Returns:
+        dict: Limites do bounding box (lat_min, lat_max, lon_min, lon_max).
+    """
+    if not pontos:
+        raise ValueError("A lista de pontos não pode estar vazia.")
+    
+    # Determina os limites mínimos e máximos de latitude e longitude
+    lat_min = min(p[0] for p in pontos)
+    lat_max = max(p[0] for p in pontos)
+    lon_min = min(p[1] for p in pontos)
+    lon_max = max(p[1] for p in pontos)
+
+    # Latitude média para ajustar a conversão de longitude
+    lat_media = (lat_min + lat_max) / 2
+
+    # 1 grau de latitude é aproximadamente 111 km
+    desloc_lat = margem_km / 111.0
+
+    # 1 grau de longitude varia com o cosseno da latitude
+    desloc_lon = margem_km / (111.0 * math.cos(math.radians(lat_media)))
+
+    # Adiciona a margem
+    lat_min -= desloc_lat
+    lat_max += desloc_lat
+    lon_min -= desloc_lon
+    lon_max += desloc_lon
+
+    return lat_min,lat_max,lon_min,lon_max
+
+###########################################################################################################################
 def RouteDriveTest(user,central_point,regioes,radius_km=5):
     # Coordenadas do ponto central (latitude, longitude)
     # central_point = [40.712776, -74.005974]  # Exemplo: Nova York
@@ -1512,6 +1580,13 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5):
     #central_point = [-22.9864182585604, -43.37041245345915] 
     
     UserData.nome=user
+   
+    # Coordenadas da rota (exemplo de uma rota circular simples)   
+    num_points=8
+    pontosvisita = GeneratePointsAround(latitude=central_point[0], longitude=central_point[1], radius_km=radius_km, num_points=num_points)
+    
+    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
+    
     PreparaServidorRoteamento(regioes)
     
     RouteDetail = ClRouteDetailList()
@@ -1527,32 +1602,8 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5):
     # Adicionar uma marca no ponto central
     RouteDetail.mapcode += f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map).bindPopup('Ponto Central'); \n"
     RouteDetail.mapcode += "     markerCentral.setIcon(iMarquerVerde);\n"
-    # Coordenadas da rota (exemplo de uma rota circular simples)   
-    num_points=8
-    route_coords = GeneratePointsAround(latitude=central_point[0], longitude=central_point[1], radius_km=radius_km, num_points=num_points)
-    
-    RouteDetail = PlotaPontosVisita(RouteDetail,route_coords)
-     
-    # Adicionar a rota no mapa
-    """
-    RouteDetail.mapcode += "var markerVet = [];";
-    for i, (lat, lon) in enumerate(route_coords):
-        RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
-        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full');\n"   
-        RouteDetail.mapcode += f"         markerVet.push(markerbufTemp);\n"   
-        
-        # RouteDetail.mapcode += f"         markerVet.push(L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i})));\n"                       
-        if(i==0):
-           (latfI,lonfI) = route_coords[i] 
-        if(i==(num_points-1)):
-           (latfF,lonfF) = route_coords[i]            
-        if(i>0):
-            (lati,loni) = route_coords[i-1]
-            (latf,lonf) = route_coords[i]       
-            RouteDetail=GenerateRouteMap(RouteDetail,lati,loni,latf,lonf)
-    RouteDetail.mapcode +="           const defaultIcon = markerVet[1].getIcon();"        
-    # map,RouteDetail=GenerateRouteMap(map,RouteDetail,latfI,lonfI,latfF,lonfF) # retorno ao ponto inicial
-    """
+
+    RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita)
  
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
     RouteDetail.GeraMapPolylineCaminho()
@@ -1560,7 +1611,7 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5):
     
     # servidor temp     python3 -m http.server 8080
     #           
-    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,route_coords,'DriveTest')
+    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,pontosvisita,'DriveTest')
     return fileMap,fileNameStatic,fileKml
 ###########################################################################################################################
 def main():
