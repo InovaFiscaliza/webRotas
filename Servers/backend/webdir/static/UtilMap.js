@@ -1070,7 +1070,9 @@ function createColorTable() {
         // Alerta ou função quando clicado
         if (ElevationTableOpen == false) 
         {
-            compassDiv.style.backgroundImage = 'url("/static/elevation_table.png")';  
+            // compassDiv.style.backgroundImage = 'url("/static/elevation_table.png")';  
+            compassDiv.style.backgroundImage = imgElevationTable ;  
+            
             ElevationTableOpen=true;
             compassDiv.style.width = '150px';            
             compassDiv.style.height = '500px';   

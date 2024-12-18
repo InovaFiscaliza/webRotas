@@ -115,18 +115,41 @@ def GeraMapaLeafletOld(mapa,RouteDetail):
     with open(mapa, "w", encoding="utf-8") as arquivo:
        arquivo.write(texto)
     return
+###########################################################################################################################
+def WriteToFile(file_path, content):
+    """
+    Escreve uma string em um arquivo, sobrescrevendo o conteúdo existente.
+
+    :param file_path: Caminho do arquivo onde a string será escrita.
+    :param content: String a ser escrita no arquivo.
+    """
+    try:
+        with open(file_path, 'w') as file:  # Modo 'w' para sobrescrever o arquivo
+            file.write(content)
+        print(f"Conteúdo gravado com sucesso no arquivo: {file_path}")
+    except Exception as e:
+        print(f"Erro ao gravar no arquivo: {e}")
 ###########################################################################################################################    
 def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     wr.wLog(f"GeraMapaLeaflet - {mapa}")
+    
+    globalMaxElevation = 1500   
+    wr.generate_elevation_table_png(output_filename='static/elevation_table.png',max_elevation=globalMaxElevation)      
+    base64ElevationTable = wr.FileToDataUrlBase64('static/elevation_table.png')
+    content = f"imgElevationTable = 'url(\"${base64ElevationTable}\")'"
+    WriteToFile('static/tmpStaticResources.js', content)
+    
     if static:
+       tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = AbrirArquivoComoString("static/StaticResources.js")  
        utilMap = AbrirArquivoComoString("static/UtilMap.js")
+       
     else:
+       tmpstaticResources = "<script src=\"{{ url_for('static', filename='tmpStaticResources.js') }}\"></script>" 
        staticResources = "<script src=\"{{ url_for('static', filename='StaticResources.js') }}\"></script> "    
        utilMap = "<script src=\"{{ url_for('static', filename='UtilMap.js') }}\"></script>"
        
-    globalMaxElevation = 1500   
-    wr.generate_elevation_table_png(output_filename='static/elevation_table.png',max_elevation=globalMaxElevation)         
+       
     header = GeraHeader()
     footer = GeraFooter()
     tilesMap0 = """
@@ -174,9 +197,9 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
             // const gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map).bindPopup("Sua localização");
             """
     if static:
-       tilesMap =  tilesMap0 + " <script> "+ staticResources + utilMap + "</script>" + tilesMap1 
+       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources+ staticResources + utilMap + "</script>" + tilesMap1 
     else:
-       tilesMap =  tilesMap0 + staticResources + utilMap  + tilesMap1       
+       tilesMap =  tilesMap0 +tmpstaticResources+  staticResources + utilMap  + tilesMap1       
     
     texto = header + tilesMap + RouteDetail.mapcode  + footer
    
