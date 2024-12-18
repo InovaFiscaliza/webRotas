@@ -1201,12 +1201,17 @@ function createDivOrdenaPontos() {
     compassDiv.appendChild(select);
 
     // Adiciona opções ao select
-    ['Um', 'Dois', 'Três', 'Quatro', 'Cinco'].forEach((text, index) => {
+    ['P1', 'P2', 'P3', 'P4', 'P5'].forEach((text, index) => {
         const option = document.createElement('option');
         option.value = index + 1;
         option.textContent = text;
         select.appendChild(option);
     });
+    
+    const option = document.createElement('option');
+    option.value = 1;
+    option.textContent = "P1";
+    select.appendChild(option);
 
     // Cria os botões
     const buttonsContainer = document.createElement('div');
