@@ -1433,6 +1433,41 @@ def GeraArquivosSaida(RouteDetail,pontosvisita,tipoServico):
     GerarKml(pontosvisita,fileKmlF)    
     return fileMap,fileMapStatic,fileKml
 ################################################################################
+import base64
+import mimetypes
+################################################################################
+def FileToDataUrlBase64(file_path):
+    """
+    Gera a URL no formato data:@file/<extension>;base64,<data>
+
+    :param file_path: Caminho para o arquivo.
+    :return: String no formato data URL.
+    """
+    try:
+        # Detecta o tipo MIME do arquivo
+        mime_type, _ = mimetypes.guess_type(file_path)
+        
+        # Se não conseguir detectar o tipo MIME, usa binário como padrão
+        if not mime_type:
+            mime_type = "application/octet-stream"
+
+        # Lê o conteúdo do arquivo e o codifica em base64
+        with open(file_path, "rb") as file:
+            encoded_data = base64.b64encode(file.read()).decode("utf-8")
+
+        # Monta a URL no formato data
+        data_url = f"data:{mime_type};base64,{encoded_data}"
+
+        return data_url
+    except Exception as e:
+        raise ValueError(f"Erro ao processar o arquivo: {e}")
+################################################################################
+# Exemplo de uso
+# file_path = "caminho_para_o_arquivo.png"
+# data_url = file_to_data_url(file_path)
+# print(data_url)
+
+################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita):
     wLog("PlotaPontosVisita")
     i=0
