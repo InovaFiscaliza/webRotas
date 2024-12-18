@@ -2,7 +2,7 @@
 
 ## Entradas:
 
-- **Polígono do Mapa**:Criar uma rotina que o defina automaticamente. (p.e.: os limites de LAT e LONG formam um polígono, extrapolam-se esses limites em 50 km para N, S, E e W, e usa esse mapa como referência). Importante aqui é ter um cache que analise os pontos de interesse e verifique se eles estão contidos nos mapas em cache.
+- **Polígono do Mapa**:Criar uma rotina que o defina automaticamente. (p.e.: os limites de LAT e LONG formam um polígono, extrapolam-se esses limites em 50 km para N, S, E e W, e usa esse mapa como referência). Importante aqui é ter um cache que analise os pontos de interesse e verifique se eles estão contidos nos mapas em cache. (implantada)
 - **Polígonos de Exclusão**:Criar a possibilidade de inserir diretamente os vértices (num JSON, como é hoje) ou receber um KML com um ou mais polígonos desenhados ali no Google Earth, por exemplo.
 - **Polígono de Interesse da Localidade**:
   Criar a possibilidade de passar o nome da localidade (num JSON, como é hoje) ou um KML. Verificar o formato exportado pelo Mosaico, por exemplo, com o contorno protegido (se é que isso existe).
@@ -10,7 +10,7 @@
 ## Saídas:
 
 - HTML (já implantada)
-- KML
+- KML (implantada)
 - Arquivo para importar em ferramentas de navegação (explorar MapsME, MyMaps etc)
 
 ---
@@ -20,7 +20,7 @@
 ## ASPECTOS PRIORITÁRIOS (penso):
 
 1. **Definir Ponto Inicial da Rota**:Talvez evoluir o HTML, criando um painel que apresenta a ordem de execução da rota, possibilitando definir o seu ponto inicial (por meio de um dropdown). Como a rota azul é estática, e isso o JS do HTML offline não vai recalcular, imagino que uma saída seria criar uma "rota fechada", que começa e termina no mesmo ponto, passando por todos os outros.Algo como: `P1 > P2 > P3 > P4 > P1`. Se o cara indicar `P3` como ponto inicial, então seria `P3 > P4 > P1 > P2 > P3` e por aí vai... O que quero sugerir é que o HTML continue estático e seja funcional, mesmo sem o servidor rodando ao fundo.
-2. **Inserir Tag nos Ícones dos Pontos de Interesse**:P1, P2, P3, etc.   (Tag implementado esperando avaliação) 
+2. **Inserir Tag nos Ícones dos Pontos de Interesse**:P1, P2, P3, etc.   (Tag implementado esperando avaliação)
 3. **Alterar Ícone com Proximidade**:
    Criar código em JS que mude o ícone dos pontos quando o veículo se aproximar deles.
 
