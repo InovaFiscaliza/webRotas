@@ -1140,8 +1140,14 @@ function createDivOrdemPontos() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createDivOrdenaPontos() {
     // Cria a div principal
-    const compassDiv = document.createElement('div');
 
+    if (document.getElementById('divOrdenaPontos')) {
+        console.log('A div já está aberta.');
+        return; // Sai da função se a div já existir
+    }
+
+    const compassDiv = document.createElement('div');
+    compassDiv.id = 'divOrdenaPontos';
     // Define os estilos da div principal
     compassDiv.style.position = 'absolute';
     compassDiv.style.top = '50%';
