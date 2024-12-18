@@ -14,3 +14,5 @@ print(f"Altitude {lat},{lon} - {alt}")
 # wr.generate_elevation_table_png(output_filename='elevation_table.png',max_elevation=1500)
 
 
+teste=wr.FileToDataUrlBase64("static/GpsAtivo.png")
+print(teste)
