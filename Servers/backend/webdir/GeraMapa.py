@@ -136,7 +136,7 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     globalMaxElevation = 1500   
     wr.generate_elevation_table_png(output_filename='static/elevation_table.png',max_elevation=globalMaxElevation)      
     base64ElevationTable = wr.FileToDataUrlBase64('static/elevation_table.png')
-    content = f"imgElevationTable = 'url(\"${base64ElevationTable}\")'"
+    content = f"imgElevationTable = 'url(\"{base64ElevationTable}\")';"
     WriteToFile('static/tmpStaticResources.js', content)
     
     if static:
