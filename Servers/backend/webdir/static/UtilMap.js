@@ -1111,7 +1111,7 @@ function createDivOrdemPontos() {
     compassDiv.style.alignItems = 'center';
     compassDiv.style.justifyContent = 'center';
     compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
-    compassDiv.style.zIndex = 1000;
+    compassDiv.style.zIndex = 999;
     
   
     const icon = document.createElement('i');
@@ -1156,6 +1156,7 @@ function createDivOrdenaPontos() {
     compassDiv.style.resize = 'both';
     compassDiv.style.overflow = 'auto';
     compassDiv.style.cursor = 'move'; // Cursor de movimento para o arrasto
+    compassDiv.style.zIndex = 1000;
 
     document.body.appendChild(compassDiv);
 
@@ -1210,7 +1211,7 @@ function createDivOrdenaPontos() {
     
     const option = document.createElement('option');
     option.value = 1;
-    option.textContent = "P1";
+    option.textContent = "P6";
     select.appendChild(option);
 
     // Cria os botões
