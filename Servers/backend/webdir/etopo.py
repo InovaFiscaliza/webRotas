@@ -4,7 +4,7 @@ import WebRota as wr
 
 lat = -22.919802062945383
 lon = -43.043920503331314 
-alt=wr.AltitudeEtopo2(lat,lon)
+alt=wr.AltitudeAnatelServer(lat,lon)
 
 print(f"Altitude {lat},{lon} - {alt}")
 
@@ -14,5 +14,5 @@ print(f"Altitude {lat},{lon} - {alt}")
 # wr.generate_elevation_table_png(output_filename='elevation_table.png',max_elevation=1500)
 
 
-teste=wr.FileToDataUrlBase64("static/GpsAtivo.png")
-print(teste)
+# teste=wr.FileToDataUrlBase64("static/GpsAtivo.png")
+# print(teste)

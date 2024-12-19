@@ -38,7 +38,7 @@ def enviar_json(payload, url):
 # Brasilia -15.799106031104461, -47.89308359907858
 # Manaus -3.095001128771412, -60.00810128271529
 # Xique-Xique -10.82612742003356, -42.724560509335504
-
+"""
 regioesBuf =  [
         {
             "nome": "RegiaoRoteada",
@@ -50,11 +50,13 @@ regioesBuf =  [
             ]
         }   
     ]
-    
+"""
+regioesBuf = []    
 
 payload = {
     "User": "Alessandro",
     "TipoRequisicao": "PontosVisita",
+    "PontoInicial": [2.802119889276001, -60.68869135518992,"Anatel Roraima"],            # Anatel Roraima 2.802119889276001, -60.68869135518992
     "pontosvisita": [
         [2.812482, -60.670263],
         [2.840826, -60.692496],
@@ -80,7 +82,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 regioesBuf =  [       
@@ -126,6 +128,7 @@ regioesBuf =  [
 payload = {
     "User": "Andre",
     "TipoRequisicao": "DriveTest",
+    "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
     "latitude": -22.910555413451096,        
     "longitude": -43.16360553394545,
     "raio": 10,
@@ -140,6 +143,7 @@ enviar_json(payload, "http://localhost:5001/webrotas")
 payload = {
     "User": "Rodrigo",
     "TipoRequisicao": "PontosVisita",
+    "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
     "pontosvisita": [
         [-22.90510838815471, -43.105772903105354],
         [-22.917360518277434, -43.089637952126694],
@@ -153,17 +157,18 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência
 payload = {
     "User": "Fabio",
     "TipoRequisicao": "Abrangencia",
+    "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
     "cidade": "Niterói",
     "uf": "RJ",
     "distancia_pontos": "2000",  # distancia entre pontos em metros
     "regioes": regioesBuf
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")

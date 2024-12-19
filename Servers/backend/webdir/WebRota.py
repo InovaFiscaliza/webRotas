@@ -80,7 +80,8 @@ class ClRouteDetailList:
         self.waypnts = [] 
         self.instructions = [] 
         self.coordinates = []
-        self.mapcode = ""    
+        self.mapcode = ""  
+        self.pontoinicial = None    
     #---------------------------------------------------    
     def NewPiece(self, lat, lon,street):   
        self.list.append(ClRouteDetail(lat, lon,street))
@@ -357,6 +358,36 @@ def AltitudeEtopo2New(lat,lon):
     altitude = get_altitudeNetCDF(latitude, longitude)
     wLog(f"A altitude em ({latitude}, {longitude}) é {altitude} metros.")
     return altitude;
+###########################################################################################################################
+def AltitudeAnatelServer(latitude, longitude):
+    return 0
+
+    """
+    Retorna a altitude (elevation) de uma localização a partir das coordenadas latitude e longitude.
+    
+    Args:
+        latitude (float): Latitude da localização.
+        longitude (float): Longitude da localização.
+    
+    Returns:
+        float: Altitude em metros.
+    """
+    url = f"https://fiscalizacao.anatel.gov.br/api/v1/lookup?locations={latitude},{longitude}"
+    print (url)
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Extraindo a altitude do resultado
+        elevation = data['results'][0]['elevation']
+        return elevation
+    except requests.RequestException as e:
+        print(f"Erro ao acessar a API: {e}")
+        return 0
+    except (KeyError, IndexError) as e:
+        print(f"Erro ao processar os dados da resposta: {e}")
+        return 0
 ###########################################################################################################################
 import xarray as xr  # pip install xarray netCDF4 numpy
 import numpy as np
@@ -831,13 +862,14 @@ def calcular_distancia_haversine(ponto1, ponto2):
     return distancia
 ################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
-def OrdenarPontos(pontosvisita):
-    ordenados = [pontosvisita.pop(0)]  # Iniciar a lista com o primeiro ponto
+def OrdenarPontos(pontosvisita,pontoinicial):
+    ordenados = [(pontoinicial[0],pontoinicial[1])]  # Iniciar a lista com o ponto inicial
     while pontosvisita:
         ultimo_ponto = ordenados[-1]
         proximo_ponto = min(pontosvisita, key=lambda p: Haversine(ultimo_ponto[0], ultimo_ponto[1], p[0], p[1]))
         ordenados.append(proximo_ponto)
         pontosvisita.remove(proximo_ponto)
+    del ordenados[0]  # Remove o primeiro elemento, usado apenas como referência de inicial da ordenação    
     return ordenados
 ################################################################################
 import os
@@ -1393,7 +1425,7 @@ def ServerSetupJavaScript(RouteDetail):
        RouteDetail.mapcode += f"    const ServerTec = 'GHopper';\n"
     return RouteDetail
 ################################################################################
-def RouteCompAbrangencia(user,cidade,uf,distanciaPontos,regioes):
+def RouteCompAbrangencia(user,pontoinicial,cidade,uf,distanciaPontos,regioes):
     
     UserData.nome=user
     
@@ -1402,6 +1434,7 @@ def RouteCompAbrangencia(user,cidade,uf,distanciaPontos,regioes):
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
+    RouteDetail.pontoinicial=pontoinicial
     
     RouteDetail = ServerSetupJavaScript(RouteDetail)   
        
@@ -1409,7 +1442,7 @@ def RouteCompAbrangencia(user,cidade,uf,distanciaPontos,regioes):
     RouteDetail = DesenhaMunicipio(RouteDetail,cidade,polMunicipio)
     
     wLog("Ordenando e processando Pontos de Visita:")
-    pontosvisita = OrdenarPontos(pontosvisita) 
+    pontosvisita = OrdenarPontos(pontosvisita,pontoinicial) 
     RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita)
     
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
@@ -1475,7 +1508,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
     for ponto in pontosvisita:
         latitude, longitude = ponto
         if i == len(pontosvisita) - 1:  # Verifica se é o último elemento
-           RouteDetail.mapcode += f"       [{latitude}, {longitude}]"
+           RouteDetail.mapcode += f"       [{latitude}, {longitude}]"   
         else: 
            RouteDetail.mapcode += f"       [{latitude}, {longitude}]," 
            
@@ -1485,15 +1518,20 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
     # Criar um mapa  
     # RouteDetail.mapcode += f"    const map = L.map('map');\n"
     RouteDetail.mapcode += f"    map.fitBounds(L.latLngBounds(pontosVisita));\n"        
- 
+    # RouteDetail.pontoinicial
+    lat = RouteDetail.pontoinicial[0]    
+    lon = RouteDetail.pontoinicial[1]  
+    desc = RouteDetail.pontoinicial[2] 
+    altitude=10000
+    RouteDetail.mapcode += f"         mrkPtInicial = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude('i',{altitude}));\n"      
+    RouteDetail.mapcode += f"         mrkPtInicial.bindTooltip('{desc}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"   
+        
     i=0
     RouteDetail.mapcode += "var markerVet = [];";
     for ponto in pontosvisita:
         lat, lon = ponto        
-        
-        
-        
-        altitude = AltitudeEtopo2(lat,lon)   
+ 
+        altitude = AltitudeAnatelServer(lat,lon)   
         # RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
         RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"   
         RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n"         
@@ -1514,13 +1552,14 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
 
 
 ################################################################################
-def RoutePontosVisita(user,pontosvisita,regioes):
+def RoutePontosVisita(user,pontoinicial,pontosvisita,regioes):
     
     UserData.nome=user
     
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
+    RouteDetail.pontoinicial=pontoinicial
            
     RouteDetail = ServerSetupJavaScript(RouteDetail)     
     RouteDetail.mapcode += f"    const TipoRoute = 'PontosVisita';\n"   
@@ -1530,7 +1569,8 @@ def RoutePontosVisita(user,pontosvisita,regioes):
     
     # Processa Pontos de Visita
     wLog("Ordenando e processando Pontos de Visita:")
-    pontosvisita=OrdenarPontos(pontosvisita) 
+    pontosvisita=OrdenarPontos(pontosvisita,pontoinicial) 
+    
     RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita)
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
     RouteDetail.GeraMapPolylineCaminho()
@@ -1608,7 +1648,7 @@ def calcula_bounding_box_pontos(pontos, margem_km=50):
     return lat_min,lat_max,lon_min,lon_max
 
 ###########################################################################################################################
-def RouteDriveTest(user,central_point,regioes,radius_km=5, num_points=8):
+def RouteDriveTest(user,pontoinicial,central_point,regioes,radius_km=5, num_points=8):
     # Coordenadas do ponto central (latitude, longitude)
     # central_point = [40.712776, -74.005974]  # Exemplo: Nova York
     #central_point = [-22.90941986104239, -43.16486081793237] # Santos Dumont
@@ -1628,6 +1668,7 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5, num_points=8):
     PreparaServidorRoteamento(regioes)
     
     RouteDetail = ClRouteDetailList()
+    RouteDetail.pontoinicial=pontoinicial
     
     RouteDetail = ServerSetupJavaScript(RouteDetail)  
     
@@ -1641,6 +1682,7 @@ def RouteDriveTest(user,central_point,regioes,radius_km=5, num_points=8):
     RouteDetail.mapcode += f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map).bindPopup('Ponto Central'); \n"
     RouteDetail.mapcode += "     markerCentral.setIcon(iMarquerVerde);\n"
 
+    pontosvisita = OrdenarPontos(pontosvisita,pontoinicial) 
     RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita)
  
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)

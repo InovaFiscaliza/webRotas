@@ -145,7 +145,8 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
        utilMap = AbrirArquivoComoString("static/UtilMap.js")
        
     else:
-       tmpstaticResources = "<script src=\"{{ url_for('static', filename='tmpStaticResources.js') }}\"></script>" 
+       # tmpstaticResources = "<script src=\"{{ url_for('static', filename='tmpStaticResources.js') }}\"></script>" 
+       tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = "<script src=\"{{ url_for('static', filename='StaticResources.js') }}\"></script> "    
        utilMap = "<script src=\"{{ url_for('static', filename='UtilMap.js') }}\"></script>"
        
@@ -199,7 +200,7 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     if static:
        tilesMap =  tilesMap0 + " <script> "+tmpstaticResources+ staticResources + utilMap + "</script>" + tilesMap1 
     else:
-       tilesMap =  tilesMap0 +tmpstaticResources+  staticResources + utilMap  + tilesMap1       
+       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources + "</script>" +   staticResources + utilMap  + tilesMap1       
     
     texto = header + tilesMap + RouteDetail.mapcode  + footer
    

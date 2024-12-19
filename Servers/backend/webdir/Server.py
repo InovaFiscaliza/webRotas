@@ -121,10 +121,12 @@ def ProcessaRequisicoesAoServidor(data):
        raio = data["raio"]
        regioes = data.get("regioes", []) 
        numeropontos = data["numeropontos"]
+       pontoinicial = data.get("PontoInicial", [])  
+       
        # Processa os dados (exemplo: exibe no console)
        print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}")
        central_point = [latitude, longitude] 
-       fileName,fileNameStatic,fileKml=wr.RouteDriveTest(user,central_point,regioes,radius_km=raio,num_points=numeropontos)
+       fileName,fileNameStatic,fileKml=wr.RouteDriveTest(user,pontoinicial,central_point,regioes,radius_km=raio,num_points=numeropontos)
        # Retorna uma resposta de confirmação
        return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
                        "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
@@ -142,10 +144,10 @@ def ProcessaRequisicoesAoServidor(data):
        user=data["User"]
        pontosvisita = data.get("pontosvisita", [])   
        regioes = data.get("regioes", []) 
-
+       pontoinicial = data.get("PontoInicial", []) 
        # Processa os dados (exemplo: exibe no console)
        print(f"pontosvisita: {pontosvisita},  Regiões Evitar: {regioes}")
-       fileName,fileNameStatic,fileKml=wr.RoutePontosVisita(user,pontosvisita,regioes)
+       fileName,fileNameStatic,fileKml=wr.RoutePontosVisita(user,pontoinicial,pontosvisita,regioes)
        # Retorna uma resposta de confirmação
        return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
                        "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
@@ -162,6 +164,7 @@ def ProcessaRequisicoesAoServidor(data):
           return jsonify({"error": "Campos cidade, distancia_pontos e regioes são necessários"}), 400
       
        user=data["User"]
+       pontoinicial = data.get("PontoInicial", []) 
        cidade = data["cidade"]
        uf = data["uf"]
        distanciaPontos = data["distancia_pontos"]
@@ -169,7 +172,7 @@ def ProcessaRequisicoesAoServidor(data):
 
        # Processa os dados (exemplo: exibe no console)
        print(f"Cidade: {cidade},Uf: {uf}, distancia_pontos: {distanciaPontos} m, Regiões Evitar: {regioes}")
-       fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(user,cidade,uf,distanciaPontos,regioes)
+       fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(user,pontoinicial,cidade,uf,distanciaPontos,regioes)
        # Retorna uma resposta de confirmação
        return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
                        "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
