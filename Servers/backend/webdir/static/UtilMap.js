@@ -717,7 +717,7 @@ var LastHeading = 0;
 var maxHistorySize = 5;
 var positionHistory = [];    
 //////////////////////////////////////////////////////////////////////////////////////////////////////   
-var gpsAtivado = true; // Defina como false para desabilitar a geolocalização  
+var gpsAtivado = false; // Defina como false para desabilitar a geolocalização  
 ////////////////////////////////////////////////////////////////////////////////////////////////////// 
 function updateGPSPosition(position) {
     if(gpsAtivado==false)
@@ -816,7 +816,7 @@ if (navigator.geolocation)
  }
 
 // Definindo o intervalo de 300ms
-let timer = setInterval(AtualizaGps, 1000);
+// let timer = setInterval(AtualizaGps, 1000);
 //////////////////////////////////////////////////////////////////////////////////////////////////////  
 function SelIconHalf(marker,flagHeadingNorte)
 {
@@ -863,14 +863,6 @@ function CopyMarkerAttribs(MarkerOrigin,MarkerDest)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function AjustaTamanhoMarquers(div)
 {
-    /*
-    var iMarquerVerde = L.icon({
-        iconUrl: '/static/MarkerVerde.png', // Icone clicado
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        className: 'clicked-marker' // Adiciona uma classe para diferenciar visualmente
-    });
-    */
     if(markerVet==null)
         return null;
     if (div===0)
@@ -880,6 +872,7 @@ function AjustaTamanhoMarquers(div)
         markerVet.forEach(marker => {
                SelIconHalf(marker,div);
             });
+        mrkPtInicial.setIcon(createSvgIconColorAltitude('i',10000))    
     }    
     else
     {
@@ -888,6 +881,7 @@ function AjustaTamanhoMarquers(div)
         markerVet.forEach(marker => {
             SelIconHalf(marker,div);
         });
+        mrkPtInicial.setIcon(createSvgIconColorAltitudeHalf('i',10000))  
     }
 
 }
@@ -987,7 +981,10 @@ function createAtivaGps() {
     compassDiv.style.width = '45px';              // Largura da bússola
     compassDiv.style.height = '45px';             // Altura da bússola
     // compassDiv.style.backgroundImage = 'url("/static/GpsAtivo.png")'; // URL da imagem da bússola
-    compassDiv.style.backgroundImage = imgGpsAtivo;
+    if(gpsAtivado)
+        compassDiv.style.backgroundImage = imgGpsAtivo;
+    else
+        compassDiv.style.backgroundImage = imgGpsInativo;    
     compassDiv.style.backgroundSize = '35px 35px';    // Redimensiona a imagem para cobrir a div
     compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
     compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem

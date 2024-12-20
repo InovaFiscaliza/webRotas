@@ -1443,7 +1443,7 @@ def RouteCompAbrangencia(user,pontoinicial,cidade,uf,distanciaPontos,regioes):
     
     wLog("Ordenando e processando Pontos de Visita:")
     pontosvisita = OrdenarPontos(pontosvisita,pontoinicial) 
-    RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita)
+    RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita,[])
     
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
     RouteDetail.GeraMapPolylineCaminho()
@@ -1501,7 +1501,27 @@ def FileToDataUrlBase64(file_path):
 # print(data_url)
 
 ################################################################################
-def PlotaPontosVisita(RouteDetail,pontosvisita):
+def DeclaracaopontosvisitaDadosJS(pontosvisitaDados):
+    """
+    Gera uma declaração em JavaScript para uma lista de pontos.
+
+    Args:
+        dados (list): Lista de pontos no formato [lat, lon, tipo, descrição].
+
+    Returns:
+        str: String contendo a declaração JavaScript.
+    """
+    # Gerar o array formatado
+    js_array = "[\n"
+    for ponto in pontosvisitaDados:
+        js_array += f"    [{ponto[0]}, {ponto[1]}, \"{ponto[2]}\", \"{ponto[3]}\"],\n"
+    js_array = js_array.rstrip(",\n") + "\n]"  # Remover a última vírgula e adicionar fechamento
+
+    # Criar a declaração completa
+    js_code = f"var pontosvisitaDados = {js_array};\n"
+    return js_code
+################################################################################
+def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     wLog("PlotaPontosVisita")
     i=0
     RouteDetail.mapcode += f"    pontosVisita = [\n"
@@ -1514,6 +1534,9 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
            
         # print(f"  Latitude: {latitude}, Longitude: {longitude}")
     RouteDetail.mapcode += f"    ];\n"
+
+    if(pontosvisitaDados!=[]):
+        RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
     
     # Criar um mapa  
     # RouteDetail.mapcode += f"    const map = L.map('map');\n"
@@ -1522,8 +1545,8 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
     lat = RouteDetail.pontoinicial[0]    
     lon = RouteDetail.pontoinicial[1]  
     desc = RouteDetail.pontoinicial[2] 
-    altitude=10000
-    RouteDetail.mapcode += f"         mrkPtInicial = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude('i',{altitude}));\n"      
+     
+    RouteDetail.mapcode += f"         mrkPtInicial = L.marker([{lat}, {lon}]).addTo(map).setIcon(createSvgIconColorAltitude('i',10000));\n"      
     RouteDetail.mapcode += f"         mrkPtInicial.bindTooltip('{desc}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"   
         
     i=0
@@ -1531,11 +1554,15 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
     for ponto in pontosvisita:
         lat, lon = ponto        
  
-        altitude = AltitudeAnatelServer(lat,lon)   
+        altitude = AltitudeAnatelServer(lat,lon) 
+        Descricao = "" 
+        if(pontosvisitaDados!=[]):
+            Descricao=DescricaoPontoVisita(pontosvisitaDados, lat, lon)
+            
         # RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
         RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"   
         RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n"         
-        RouteDetail.mapcode += f"         markerbufTemp.bindTooltip('Altitude: {altitude}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"   
+        RouteDetail.mapcode += f"         markerbufTemp.bindTooltip('Altitude: {altitude}<br>{Descricao}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"   
         RouteDetail.mapcode += f"         markerVet.push(markerbufTemp);\n"   
         if(i==0):
            (latfI,lonfI) = pontosvisita[i] 
@@ -1549,13 +1576,22 @@ def PlotaPontosVisita(RouteDetail,pontosvisita):
 
     RouteDetail.mapcode +="           const defaultIcon = markerVet[1].getIcon();\n"      
     return RouteDetail
-
-
 ################################################################################
-def RoutePontosVisita(user,pontoinicial,pontosvisita,regioes):
+def PegaPontosVisita(pontosvisitaDados):
+    pontosvisita=[]
+    pontosvisita = [[ponto[0], ponto[1]] for ponto in pontosvisitaDados]
+    return pontosvisita
+################################################################################
+def DescricaoPontoVisita(pontosvisitaDados, lat, lon):
+    for ponto in pontosvisitaDados:
+        if ponto[0] == lat and ponto[1] == lon:
+            return ponto[3]  # Retorna o campo de endereço (4º elemento)
+    return "Endereço não encontrado para a latitude e longitude fornecidas."
+################################################################################
+def RoutePontosVisita(user,pontoinicial,pontosvisitaDados,regioes):
     
     UserData.nome=user
-    
+    pontosvisita=PegaPontosVisita(pontosvisitaDados)
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
@@ -1571,7 +1607,7 @@ def RoutePontosVisita(user,pontoinicial,pontosvisita,regioes):
     wLog("Ordenando e processando Pontos de Visita:")
     pontosvisita=OrdenarPontos(pontosvisita,pontoinicial) 
     
-    RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita)
+    RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados)
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
     RouteDetail.GeraMapPolylineCaminho()
 
@@ -1683,7 +1719,7 @@ def RouteDriveTest(user,pontoinicial,central_point,regioes,radius_km=5, num_poin
     RouteDetail.mapcode += "     markerCentral.setIcon(iMarquerVerde);\n"
 
     pontosvisita = OrdenarPontos(pontosvisita,pontoinicial) 
-    RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita)
+    RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita,[])
  
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
     RouteDetail.GeraMapPolylineCaminho()
