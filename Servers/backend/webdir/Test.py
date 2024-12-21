@@ -73,7 +73,7 @@ payload = {
         [2.844719, -60.754723,"Local","Bairro Cidade Satélite"],
         [2.817774, -60.728333,"Local","Rua São Sebastião com Ataide Teive"],
         [2.814996, -60.696664,"Local","Hospital do Amor - Bairro Pericumã"],    
-        [2.769164, -60.731389,"Local","Bairro Nova Cidade – Escola Estadual DR. Luiz"], 
+        [2.769164, -60.731389,"Local","Bairro Nova Cidade – Escola Estadual Dr. Luiz"], 
         [2.838887, -60.718613,"Local","Fórum Criminal – Bairro Caranã"],
         [2.811386, -60.711945,"Local","Senai – RR, Bairro Asa Branca"],           
         [2.803887, -60.691666,"Local","Hospital Materno Infantil – Bairro 13 de Setembro"],  
