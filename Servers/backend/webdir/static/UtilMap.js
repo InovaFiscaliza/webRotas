@@ -1141,6 +1141,42 @@ function EncontrarDado(pontosvisitaDados, lat, lon,iDado) {
     // Retorna o endereço se o ponto for encontrado, ou uma mensagem padrão
     return ponto ? ponto[iDado] : "Idado não encontrado";
 }
+
+var pontosvisitaDados = [
+    [-22.89969976126829, -43.120632464653674, "P0","Local", ""],
+    [-22.89969976126829, -43.10262976730735, "P1","Local", ""],
+    [-22.88169706392197, -43.10262976730735, "P2","Local", ""],
+    [-22.88169706392197, -43.120632464653674, "P3","Local", ""],
+    [-22.863694366575647, -43.10262976730735, "P4","Local", ""],
+    [-22.863694366575647, -43.08462706996102, "P5","Local", ""],
+    [-22.89969976126829, -43.04862167526837, "P6","Local", ""],
+    [-22.89969976126829, -43.030618977922046, "P7","Local", ""],
+    [-22.89969976126829, -43.01261628057572, "P8","Local", ""],
+    [-22.89969976126829, -42.994613583229395, "P9","Local", ""],
+    [-22.917702458614613, -42.994613583229395, "P10","Local", ""],
+    [-22.917702458614613, -42.97661088588307, "P11","Local", ""],
+    [-22.935705155960935, -42.994613583229395, "P12","Local", ""],
+    [-22.935705155960935, -43.01261628057572, "P13","Local", ""],
+    [-22.935705155960935, -43.030618977922046, "P14","Local", ""],
+    [-22.935705155960935, -43.04862167526837, "P15","Local", ""],
+    [-22.935705155960935, -43.0666243726147, "P16","Local", ""],
+    [-22.917702458614613, -43.0666243726147, "P17","Local", ""],
+    [-22.917702458614613, -43.08462706996102, "P18","Local", ""],
+    [-22.935705155960935, -43.10262976730735, "P19","Local", ""],
+    [-22.935705155960935, -43.120632464653674, "P20","Local", ""],
+    [-22.953707853307257, -43.10262976730735, "P21","Local", ""],
+    [-22.953707853307257, -43.08462706996102, "P22","Local", ""],
+    [-22.953707853307257, -43.0666243726147, "P23","Local", ""],
+    [-22.953707853307257, -43.04862167526837, "P24","Local", ""],
+    [-22.953707853307257, -43.030618977922046, "P25","Local", ""],
+    [-22.953707853307257, -43.01261628057572, "P26","Local", ""],
+    [-22.97171055065358, -43.030618977922046, "P27","Local", ""],
+    [-22.917702458614613, -43.030618977922046, "P28","Local", ""],
+    [-22.917702458614613, -43.04862167526837, "P29","Local", ""],
+    [-22.917702458614613, -43.01261628057572, "P30","Local", ""],
+    [-22.88169706392197, -43.030618977922046, "P31","Local", ""]
+];
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createDivOrdenaPontos() {
     // Cria a div principal
@@ -1217,17 +1253,22 @@ function createDivOrdenaPontos() {
     compassDiv.appendChild(select);
 
     // Adiciona opções ao select
+    /*
     ['P1', 'P2', 'P3', 'P4', 'P5'].forEach((text, index) => {
         const option = document.createElement('option');
         option.value = index + 1;
         option.textContent = text;
         select.appendChild(option);
     });
-    
-    const option = document.createElement('option');
-    option.value = 1;
-    option.textContent = "P6";
-    select.appendChild(option);
+    */
+    // Adiciona opções ao select
+    pontosVisita.forEach((ponto, index) => {
+        const [latitude, longitude] = ponto;
+        const option = document.createElement('option');
+        option.value = index + 1;
+        option.textContent = EncontrarDado(pontosvisitaDados, latitude, longitude,2);
+        select.appendChild(option);
+    });
 
     // Cria os botões
     const buttonsContainer = document.createElement('div');

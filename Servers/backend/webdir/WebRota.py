@@ -1523,6 +1523,12 @@ def DeclaracaopontosvisitaDadosJS(pontosvisitaDados):
     js_code = f"var pontosvisitaDados = {js_array};\n"
     return js_code
 ################################################################################
+def PegaLinhaPontosVisitaDados(pontosvisitaDados,lat,lon):
+    for linha in pontosvisitaDados:  
+        if(linha[0]==lat and linha[1]==lon): 
+           return linha 
+    return ""
+################################################################################
 def GeraPontosVisitaDados(pontosvisita):
     i=0
     pontosvisitaDados=[]
@@ -1531,6 +1537,15 @@ def GeraPontosVisitaDados(pontosvisita):
         dado = (lat, lon,"Local","")
         pontosvisitaDados.append(dado)        
     return pontosvisitaDados
+################################################################################
+def MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita):
+    pontosvisitaDadosNew=[]
+    for ponto in pontosvisita:
+        latitude, longitude = ponto
+        linha=PegaLinhaPontosVisitaDados(pontosvisitaDados,latitude,longitude)
+        dado = (latitude, longitude,linha[2],linha[3])
+        pontosvisitaDadosNew.append(dado)
+    return pontosvisitaDadosNew
 ################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     wLog("PlotaPontosVisita")
@@ -1547,9 +1562,11 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     RouteDetail.mapcode += f"    ];\n"
 
     if(pontosvisitaDados!=[]):
+        pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita)
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
     else:
         pontosvisitaDados = GeraPontosVisitaDados(pontosvisita) 
+        pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita)
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)   
     
     # Criar um mapa  
