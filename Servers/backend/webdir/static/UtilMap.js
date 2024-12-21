@@ -1133,7 +1133,14 @@ function createDivOrdemPontos() {
     // Adiciona a bússola ao corpo da página
     document.body.appendChild(compassDiv);
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function EncontrarDado(pontosvisitaDados, lat, lon,iDado) {
+    // Procura o ponto com a mesma latitude e longitude
+    const ponto = pontosvisitaDados.find(p => p[0] === lat && p[1] === lon);
 
+    // Retorna o endereço se o ponto for encontrado, ou uma mensagem padrão
+    return ponto ? ponto[iDado] : "Idado não encontrado";
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createDivOrdenaPontos() {
     // Cria a div principal
@@ -1202,7 +1209,8 @@ function createDivOrdenaPontos() {
     // Cria o controle de seleção múltipla
     const select = document.createElement('select');
     select.id = 'listaPontos';
-    select.multiple = true;
+    // select.multiple = true;
+    select.size = 10000; // Define o número de itens visíveis
     select.style.width = '100%';
     select.style.height = 'calc(100% - 70px)'; // Ocupa o espaço restante
     select.style.fontSize = '16px';
@@ -1253,15 +1261,23 @@ function createDivOrdenaPontos() {
 
     // Função para mover opções na lista
     function moveOption(direction) {
-        const selectedOption = select.options[select.selectedIndex];
-        if (!selectedOption) return;
-
-        const newIndex = select.selectedIndex + direction;
-        if (newIndex >= 0 && newIndex < select.options.length) {
-            select.removeChild(selectedOption);
-            select.insertBefore(selectedOption, select.options[newIndex + (direction > 0 ? 1 : 0)]);
-        }
+        const selectedIndex = select.selectedIndex;
+        if (selectedIndex === -1) return; // Nenhuma opção selecionada
+    
+        const selectedOption = select.options[selectedIndex];
+        const newIndex = selectedIndex + direction;
+    
+        // Verificar limites
+        if (newIndex < 0 || newIndex >= select.options.length) return;
+    
+        // Mover a opção
+        select.removeChild(selectedOption);
+        select.insertBefore(selectedOption, select.options[newIndex]);
+    
+        // Atualizar o índice selecionado
+        select.selectedIndex = newIndex;
     }
+    
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateControls()

@@ -1512,14 +1512,25 @@ def DeclaracaopontosvisitaDadosJS(pontosvisitaDados):
         str: String contendo a declaração JavaScript.
     """
     # Gerar o array formatado
+    i=0
     js_array = "[\n"
     for ponto in pontosvisitaDados:
-        js_array += f"    [{ponto[0]}, {ponto[1]}, \"{ponto[2]}\", \"{ponto[3]}\"],\n"
+        js_array += f"    [{ponto[0]}, {ponto[1]}, \"P{i}\",\"{ponto[2]}\", \"{ponto[3]}\"],\n"
+        i=i+1
     js_array = js_array.rstrip(",\n") + "\n]"  # Remover a última vírgula e adicionar fechamento
 
     # Criar a declaração completa
     js_code = f"var pontosvisitaDados = {js_array};\n"
     return js_code
+################################################################################
+def GeraPontosVisitaDados(pontosvisita):
+    i=0
+    pontosvisitaDados=[]
+    for ponto in pontosvisita:
+        lat, lon = ponto    
+        dado = (lat, lon,"Local","")
+        pontosvisitaDados.append(dado)        
+    return pontosvisitaDados
 ################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     wLog("PlotaPontosVisita")
@@ -1537,6 +1548,9 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
 
     if(pontosvisitaDados!=[]):
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
+    else:
+        pontosvisitaDados = GeraPontosVisitaDados(pontosvisita) 
+        RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)   
     
     # Criar um mapa  
     # RouteDetail.mapcode += f"    const map = L.map('map');\n"
@@ -1555,9 +1569,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
         lat, lon = ponto        
  
         altitude = AltitudeAnatelServer(lat,lon) 
-        Descricao = "" 
-        if(pontosvisitaDados!=[]):
-            Descricao=DescricaoPontoVisita(pontosvisitaDados, lat, lon)
+        Descricao=DescricaoPontoVisita(pontosvisitaDados, lat, lon)
             
         # RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
         RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"   
