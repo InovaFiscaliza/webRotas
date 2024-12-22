@@ -1142,41 +1142,44 @@ function EncontrarDado(pontosvisitaDados, lat, lon,iDado) {
     return ponto ? ponto[iDado] : "Idado não encontrado";
 }
 
-var pontosvisitaDados = [
-    [-22.89969976126829, -43.120632464653674, "P0","Local", ""],
-    [-22.89969976126829, -43.10262976730735, "P1","Local", ""],
-    [-22.88169706392197, -43.10262976730735, "P2","Local", ""],
-    [-22.88169706392197, -43.120632464653674, "P3","Local", ""],
-    [-22.863694366575647, -43.10262976730735, "P4","Local", ""],
-    [-22.863694366575647, -43.08462706996102, "P5","Local", ""],
-    [-22.89969976126829, -43.04862167526837, "P6","Local", ""],
-    [-22.89969976126829, -43.030618977922046, "P7","Local", ""],
-    [-22.89969976126829, -43.01261628057572, "P8","Local", ""],
-    [-22.89969976126829, -42.994613583229395, "P9","Local", ""],
-    [-22.917702458614613, -42.994613583229395, "P10","Local", ""],
-    [-22.917702458614613, -42.97661088588307, "P11","Local", ""],
-    [-22.935705155960935, -42.994613583229395, "P12","Local", ""],
-    [-22.935705155960935, -43.01261628057572, "P13","Local", ""],
-    [-22.935705155960935, -43.030618977922046, "P14","Local", ""],
-    [-22.935705155960935, -43.04862167526837, "P15","Local", ""],
-    [-22.935705155960935, -43.0666243726147, "P16","Local", ""],
-    [-22.917702458614613, -43.0666243726147, "P17","Local", ""],
-    [-22.917702458614613, -43.08462706996102, "P18","Local", ""],
-    [-22.935705155960935, -43.10262976730735, "P19","Local", ""],
-    [-22.935705155960935, -43.120632464653674, "P20","Local", ""],
-    [-22.953707853307257, -43.10262976730735, "P21","Local", ""],
-    [-22.953707853307257, -43.08462706996102, "P22","Local", ""],
-    [-22.953707853307257, -43.0666243726147, "P23","Local", ""],
-    [-22.953707853307257, -43.04862167526837, "P24","Local", ""],
-    [-22.953707853307257, -43.030618977922046, "P25","Local", ""],
-    [-22.953707853307257, -43.01261628057572, "P26","Local", ""],
-    [-22.97171055065358, -43.030618977922046, "P27","Local", ""],
-    [-22.917702458614613, -43.030618977922046, "P28","Local", ""],
-    [-22.917702458614613, -43.04862167526837, "P29","Local", ""],
-    [-22.917702458614613, -43.01261628057572, "P30","Local", ""],
-    [-22.88169706392197, -43.030618977922046, "P31","Local", ""]
-];
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function EncontrarDadoPn(pontosvisitaDados, Pn,iDado) {
+    // Procura o ponto com a mesma latitude e longitude
+    const ponto = pontosvisitaDados.find(p => p[2] === Pn);
+    // Retorna o endereço se o ponto for encontrado, ou uma mensagem padrão
+    return ponto ? ponto[iDado] : "Idado não encontrado";
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function limparMarcadores(markerVet) {
+    // Verifica se o array tem marcadores
+    if (!markerVet || markerVet.length === 0) {
+        console.log("Nenhum marcador para remover.");
+        return;
+    }
 
+    // Itera sobre os marcadores e remove cada um do mapa
+    markerVet.forEach(marker => {
+        if (marker.remove) {
+            marker.remove(); // Remove o marcador do mapa
+        }
+    });
+
+    // Esvazia o array
+    markerVet.length = 0;
+
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function ReordenaPontosTela(pontosVisita){
+    limparMarcadores(markerVet)
+    return;
+    markerbufTemp.bindTooltip('Altitude: 0<br>Hospital do Amor - Bairro Pericumã', {permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'});
+    markerVet.push(markerbufTemp);
+    markerbufTemp = L.marker([2.811386, -60.711945]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude(2,0));
+    markerbufTemp._icon.setAttribute('data-id', '2'); 
+    markerbufTemp._icon.setAttribute('clicado', '0'); 
+    markerbufTemp._icon.setAttribute('tamanho', 'full'); 
+    markerbufTemp._icon.setAttribute('altitude', '0');   
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createDivOrdenaPontos() {
     // Cria a div principal
@@ -1281,12 +1284,14 @@ function createDivOrdenaPontos() {
 
     const sobeBtn = createButton('Sobe', () => moveOption(-1));
     const desceBtn = createButton('Desce', () => moveOption(1));
+    const reordenaBtn = createButton('Reordena', () => reordenaOption());
     const fechaBtn = createButton('Fecha', () => document.body.removeChild(compassDiv));
     fechaBtn.style.backgroundColor = '#0039FF';
     fechaBtn.style.color = '#fff';
 
     buttonsContainer.appendChild(sobeBtn);
     buttonsContainer.appendChild(desceBtn);
+    buttonsContainer.appendChild(reordenaBtn);
     buttonsContainer.appendChild(fechaBtn);
     compassDiv.appendChild(buttonsContainer);
 
@@ -1299,7 +1304,25 @@ function createDivOrdenaPontos() {
         button.addEventListener('click', onClick);
         return button;
     }
-
+    ////////////////////////////////
+    function reordenaOption(){
+        const selectElement = document.getElementById('listaPontos');
+        // Pega a lista de itens (opções)
+        const options = Array.from(selectElement.options); // Converte para array para facilitar manipulação
+        
+        // Exibe os valores e textos no console
+        pontosVisitaNew = []
+        options.forEach(option => {
+            // console.log(`Value: ${option.value}, Text: ${option.textContent}`);
+            // alert(`Value: ${option.value}, Text: ${option.textContent}`);
+            lat = EncontrarDadoPn(pontosvisitaDados, option.textContent,0)
+            lon = EncontrarDadoPn(pontosvisitaDados, option.textContent,1)
+            pontosVisitaNew.push([lat, lon]); 
+        });
+        pontosVisita = pontosVisitaNew;
+        ReordenaPontosTela(pontosVisita);
+    }
+    ////////////////////////////////
     // Função para mover opções na lista
     function moveOption(direction) {
         const selectedIndex = select.selectedIndex;
