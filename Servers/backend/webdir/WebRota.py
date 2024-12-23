@@ -1603,8 +1603,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
  
         altitude = AltitudeAnatelServer(lat,lon) 
         Descricao=DescricaoPontoVisita(pontosvisitaDados, lat, lon)
-            
-        # RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIcon({i}));\n"   
+             
         RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"   
         RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n"         
         RouteDetail.mapcode += f"         markerbufTemp.bindTooltip('Altitude: {altitude}<br>{Descricao}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"   
@@ -1630,7 +1629,7 @@ def PegaPontosVisita(pontosvisitaDados):
 def DescricaoPontoVisita(pontosvisitaDados, lat, lon):
     for ponto in pontosvisitaDados:
         if ponto[0] == lat and ponto[1] == lon:
-            return ponto[3]  # Retorna o campo de endereço (4º elemento)
+            return ponto[4]  # Retorna o campo de endereço (4º elemento)
     return "Endereço não encontrado para a latitude e longitude fornecidas."
 ################################################################################
 def RoutePontosVisita(user,pontoinicial,pontosvisitaDados,regioes):

@@ -1204,8 +1204,10 @@ function ReordenaPontosTela(pontosVisita){
         iPnDados=EncontrarDado(pontosvisitaDados, lat, lon,2);
         tooltip = EncontrarDado(pontosvisitaDados, lat, lon,4);
         alt = EncontrarDado(pontosvisitaDados, lat, lon,5);
-        // console.log(`---->>> lat ${lat}, lon ${lat}`);
-        // console.log(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+        tooltip = `Altitude: ${alt}<br>${tooltip}`
+        console.log(`---->>> lat ${lat}, lon ${lat}, tooltip - ${tooltip}`);
+        console.log(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}, alt - ${alt}`);
+
         if(iPn!=iPnDados)
         {
             pontosvisitaDados=AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,iPn,iPnDados);
@@ -1215,7 +1217,7 @@ function ReordenaPontosTela(pontosVisita){
         markerbufTemp._icon.setAttribute('data-id', `${i}`); 
         markerbufTemp._icon.setAttribute('clicado', '0'); 
         markerbufTemp._icon.setAttribute('tamanho', 'full'); 
-        markerbufTemp._icon.setAttribute('altitude', '`${alt}`');
+        markerbufTemp._icon.setAttribute('altitude', `${alt}`);
         markerbufTemp.bindTooltip(tooltip, {permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'});
         markerVet.push(markerbufTemp);
         i=i+1;
