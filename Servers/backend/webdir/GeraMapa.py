@@ -1,4 +1,5 @@
 import WebRota as wr
+import os
 ###########################################################################################################################
 def GeraHeader():
     header = """
@@ -130,15 +131,21 @@ def WriteToFile(file_path, content):
     except Exception as e:
         print(f"Erro ao gravar no arquivo: {e}")
 ###########################################################################################################################    
+def GeraElevationTable():
+    wr.wLog(f"GeraElevationTable - MaxAltitude - {wr.MaxAltitude}")
+    nomeuser=wr.UserData.nome
+    fileElevation = f'static/elevation_table{nomeuser}.png'
+    wr.generate_elevation_table_png(output_filename=fileElevation,max_elevation=wr.MaxAltitude)     
+    base64ElevationTable = wr.FileToDataUrlBase64(fileElevation)
+    if os.path.exists(fileElevation):
+       os.remove(fileElevation)
+    content = f"imgElevationTable = 'url(\"{base64ElevationTable}\")';"
+    WriteToFile('static/tmpStaticResources.js', content)    
+###########################################################################################################################
 def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     wr.wLog(f"GeraMapaLeaflet - {mapa}")
-    
-    globalMaxElevation = 1500   
-    wr.generate_elevation_table_png(output_filename='static/elevation_table.png',max_elevation=globalMaxElevation)      
-    base64ElevationTable = wr.FileToDataUrlBase64('static/elevation_table.png')
-    content = f"imgElevationTable = 'url(\"{base64ElevationTable}\")';"
-    WriteToFile('static/tmpStaticResources.js', content)
-    
+    globalMaxElevation = wr.MaxAltitude 
+    GeraElevationTable()
     if static:
        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = AbrirArquivoComoString("static/StaticResources.js")  
