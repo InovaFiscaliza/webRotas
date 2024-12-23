@@ -359,6 +359,9 @@ def AltitudeEtopo2New(lat,lon):
     wLog(f"A altitude em ({latitude}, {longitude}) é {altitude} metros.")
     return altitude;
 ###########################################################################################################################
+MaxAltitudeMin=500
+MaxAltitude=MaxAltitudeMin
+###########################################################################################################################
 def AltitudeAnatelServer(latitude, longitude):
     return 0
 
@@ -1565,6 +1568,7 @@ def MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False):
 ################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     wLog("PlotaPontosVisita")
+    
     i=0
     RouteDetail.mapcode += f"    pontosVisita = [\n"
     for ponto in pontosvisita:
