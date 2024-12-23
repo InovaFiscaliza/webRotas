@@ -247,7 +247,7 @@ function onMarkerClick(e) {
     // Verifica o ícone atual e troca para o outro
     if (HeadingNorte==0)
     {    
-        console.log(`aqui`)
+        // console.log(`aqui`)
         if (clicado === "0") {
             currentMarker.setIcon(clickedIcon);
             currentMarker._icon.setAttribute('clicado', "1");
@@ -562,7 +562,7 @@ async function getRouteOSMR(startCoords, endCoords) {
 
             // Decodificar a geometria usando uma biblioteca como @mapbox/polyline
             coordinates = decodePolyline(geometry); // polyline precisa estar disponível/importada
-            console.log("Coordinates:", coordinates);
+            // console.log("Coordinates:", coordinates);
             DesenhaRota(coordinates);
             return coordinates;
         } else {
@@ -1182,7 +1182,7 @@ function limparMarcadores(markerVet) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,iPn,iPnDados)
 {
-    console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+    // console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
     i_posicaoiPnDados = pontosvisitaDados.findIndex(ponto => ponto[2] === iPnDados );
     i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
     
@@ -1204,8 +1204,8 @@ function ReordenaPontosTela(pontosVisita){
         iPnDados=EncontrarDado(pontosvisitaDados, lat, lon,2);
         tooltip = EncontrarDado(pontosvisitaDados, lat, lon,4);
         alt = EncontrarDado(pontosvisitaDados, lat, lon,5);
-        console.log(`---->>> lat ${lat}, lon ${lat}`);
-        console.log(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+        // console.log(`---->>> lat ${lat}, lon ${lat}`);
+        // console.log(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}`);
         if(iPn!=iPnDados)
         {
             pontosvisitaDados=AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,iPn,iPnDados);
@@ -1309,6 +1309,7 @@ function createDivOrdenaPontos() {
     // Adiciona opções ao select
     function LoadSelect()
     {
+        select.innerHTML = '';
         pontosVisita.forEach((ponto, index) => {
             const [latitude, longitude] = ponto;
             const option = document.createElement('option');
@@ -1366,8 +1367,7 @@ function createDivOrdenaPontos() {
             pontosVisitaNew.push([lat, lon]); 
         });
         pontosVisita = pontosVisitaNew;
-        ReordenaPontosTela(pontosVisita);
-        select.innerHTML = '';
+        ReordenaPontosTela(pontosVisita);        
         LoadSelect();
     }
     ////////////////////////////////
