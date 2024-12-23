@@ -1513,9 +1513,10 @@ def DeclaracaopontosvisitaDadosJS(pontosvisitaDados):
     """
     # Gerar o array formatado
     i=0
+    
     js_array = "[\n"
     for ponto in pontosvisitaDados:
-        js_array += f"    [{ponto[0]}, {ponto[1]}, \"P{i}\",\"{ponto[2]}\", \"{ponto[3]}\"],\n"
+        js_array += f"    [{ponto[0]}, {ponto[1]},\"{ponto[2]}\",\"{ponto[3]}\", \"{ponto[4]}\",\"{ponto[5]}\"],\n"
         i=i+1
     js_array = js_array.rstrip(",\n") + "\n]"  # Remover a última vírgula e adicionar fechamento
 
@@ -1524,9 +1525,13 @@ def DeclaracaopontosvisitaDadosJS(pontosvisitaDados):
     return js_code
 ################################################################################
 def PegaLinhaPontosVisitaDados(pontosvisitaDados,lat,lon):
-    for linha in pontosvisitaDados:  
+    for linha in pontosvisitaDados: 
+        # wLog(f"linha - lat,lon - {lat},{lon} - {linha}")  
         if(linha[0]==lat and linha[1]==lon): 
+          
            return linha 
+    # wLog("PegaLinhaPontosVisitaDados - falhou")  
+    # wLog(f"linha - {linha}") 
     return ""
 ################################################################################
 def GeraPontosVisitaDados(pontosvisita):
@@ -1534,17 +1539,28 @@ def GeraPontosVisitaDados(pontosvisita):
     pontosvisitaDados=[]
     for ponto in pontosvisita:
         lat, lon = ponto    
-        dado = (lat, lon,"Local","")
-        pontosvisitaDados.append(dado)        
+        alt=AltitudeAnatelServer(lat,lon)
+        dado = (lat, lon,f"P{i}","Local","",alt)
+        pontosvisitaDados.append(dado)   
+        i=i+1     
     return pontosvisitaDados
 ################################################################################
-def MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita):
+def MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False):
     pontosvisitaDadosNew=[]
+    i=0
     for ponto in pontosvisita:
         latitude, longitude = ponto
-        linha=PegaLinhaPontosVisitaDados(pontosvisitaDados,latitude,longitude)
-        dado = (latitude, longitude,linha[2],linha[3])
+        linha=PegaLinhaPontosVisitaDados(pontosvisitaDados,latitude,longitude)    
+        alt=AltitudeAnatelServer(latitude,latitude)
+        if(new):
+           lin2=linha[3] 
+           lin3=linha[4] 
+        else:
+           lin2=linha[2]
+           lin3=linha[3]        
+        dado = (latitude, longitude,f"P{i}",lin2,lin3,alt)
         pontosvisitaDadosNew.append(dado)
+        i=i+1
     return pontosvisitaDadosNew
 ################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
@@ -1557,16 +1573,16 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
            RouteDetail.mapcode += f"       [{latitude}, {longitude}]"   
         else: 
            RouteDetail.mapcode += f"       [{latitude}, {longitude}]," 
-           
+        i=i+1   
         # print(f"  Latitude: {latitude}, Longitude: {longitude}")
     RouteDetail.mapcode += f"    ];\n"
 
     if(pontosvisitaDados!=[]):
-        pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita)
+        pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False)
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
     else:
         pontosvisitaDados = GeraPontosVisitaDados(pontosvisita) 
-        pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita)
+        pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=True)
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)   
     
     # Criar um mapa  

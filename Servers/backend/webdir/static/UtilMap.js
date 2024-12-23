@@ -914,6 +914,7 @@ HeadingNorte=0
 function createCompassIcon() {
     // Cria a div para a bússola
     const compassDiv = document.createElement('div');
+    compassDiv.id = 'compassIconDirecaoMapa';
     
     // Define os estilos inline da bússola
     compassDiv.style.position = 'absolute';
@@ -968,6 +969,14 @@ function createCompassIcon() {
 
     // Adiciona a bússola ao corpo da página
     document.body.appendChild(compassDiv);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function SetHeadingNorte_SemRodarMapa()
+{
+   compassDiv = document.getElementById('compassIconDirecaoMapa'); 
+   compassDiv.style.backgroundImage = imgPointerNorte;
+   HeadingNorte=0;
+   AtualizaMapaHeading(LastHeading);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createAtivaGps() {
@@ -1093,6 +1102,8 @@ function createColorTable() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createDivOrdemPontos() {
     // Cria a div para a bússola
+    // Desabilita modo mapa girar com o veículopara evitar bugs
+
     const compassDiv = document.createElement('div');
     
     // Define os estilos inline da bússola
@@ -1145,7 +1156,7 @@ function EncontrarDado(pontosvisitaDados, lat, lon,iDado) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function EncontrarDadoPn(pontosvisitaDados, Pn,iDado) {
     // Procura o ponto com a mesma latitude e longitude
-    const ponto = pontosvisitaDados.find(p => p[2] === Pn);
+    ponto = pontosvisitaDados.find(p => p[2] === Pn);
     // Retorna o endereço se o ponto for encontrado, ou uma mensagem padrão
     return ponto ? ponto[iDado] : "Idado não encontrado";
 }
@@ -1169,16 +1180,47 @@ function limparMarcadores(markerVet) {
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,iPn,iPnDados)
+{
+    console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+    i_posicaoiPnDados = pontosvisitaDados.findIndex(ponto => ponto[2] === iPnDados );
+    i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
+    
+    pontosvisitaDados[i_posicaoiPnDados][2]=iPnDados;
+    pontosvisitaDados[i_posicaolatlon][2]=iPn;
+    return pontosvisitaDados; 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function ReordenaPontosTela(pontosVisita){
     limparMarcadores(markerVet)
-    return;
-    markerbufTemp.bindTooltip('Altitude: 0<br>Hospital do Amor - Bairro Pericumã', {permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'});
-    markerVet.push(markerbufTemp);
-    markerbufTemp = L.marker([2.811386, -60.711945]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude(2,0));
-    markerbufTemp._icon.setAttribute('data-id', '2'); 
-    markerbufTemp._icon.setAttribute('clicado', '0'); 
-    markerbufTemp._icon.setAttribute('tamanho', 'full'); 
-    markerbufTemp._icon.setAttribute('altitude', '0');   
+    
+    markerVet = [];
+    i=0;
+    pontosVisita.forEach(point => {
+        lat = point[0];
+        lon = point[1];
+
+        iPn = `P${i}`;
+        iPnDados=EncontrarDado(pontosvisitaDados, lat, lon,2);
+        tooltip = EncontrarDado(pontosvisitaDados, lat, lon,4);
+        alt = EncontrarDado(pontosvisitaDados, lat, lon,5);
+        console.log(`---->>> lat ${lat}, lon ${lat}`);
+        console.log(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+        if(iPn!=iPnDados)
+        {
+            pontosvisitaDados=AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,iPn,iPnDados);
+        }
+
+        markerbufTemp = L.marker([lat, lon]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude(i,alt));
+        markerbufTemp._icon.setAttribute('data-id', `${i}`); 
+        markerbufTemp._icon.setAttribute('clicado', '0'); 
+        markerbufTemp._icon.setAttribute('tamanho', 'full'); 
+        markerbufTemp._icon.setAttribute('altitude', '`${alt}`');
+        markerbufTemp.bindTooltip(tooltip, {permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'});
+        markerVet.push(markerbufTemp);
+        i=i+1;
+    });
+
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createDivOrdenaPontos() {
@@ -1188,7 +1230,7 @@ function createDivOrdenaPontos() {
         console.log('A div já está aberta.');
         return; // Sai da função se a div já existir
     }
-
+    SetHeadingNorte_SemRodarMapa();
     const compassDiv = document.createElement('div');
     compassDiv.id = 'divOrdenaPontos';
     // Define os estilos da div principal
