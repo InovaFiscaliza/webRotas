@@ -1307,14 +1307,18 @@ function createDivOrdenaPontos() {
     });
     */
     // Adiciona opções ao select
-    pontosVisita.forEach((ponto, index) => {
-        const [latitude, longitude] = ponto;
-        const option = document.createElement('option');
-        option.value = index + 1;
-        option.textContent = EncontrarDado(pontosvisitaDados, latitude, longitude,2);
-        select.appendChild(option);
-    });
-
+    function LoadSelect()
+    {
+        pontosVisita.forEach((ponto, index) => {
+            const [latitude, longitude] = ponto;
+            const option = document.createElement('option');
+            option.value = index + 1;
+            option.textContent = EncontrarDado(pontosvisitaDados, latitude, longitude,2);
+            select.appendChild(option);
+        });
+    
+    }
+    LoadSelect();
     // Cria os botões
     const buttonsContainer = document.createElement('div');
     buttonsContainer.style.position = 'absolute';
@@ -1363,6 +1367,8 @@ function createDivOrdenaPontos() {
         });
         pontosVisita = pontosVisitaNew;
         ReordenaPontosTela(pontosVisita);
+        select.innerHTML = '';
+        LoadSelect();
     }
     ////////////////////////////////
     // Função para mover opções na lista
