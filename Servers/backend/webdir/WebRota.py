@@ -1763,7 +1763,8 @@ def RouteDriveTest(user,pontoinicial,central_point,regioes,radius_km=5, num_poin
     RouteDetail.mapcode += f"     map.setView([{central_point[0]}, {central_point[1]}], 13);\n"
     
     # Adicionar uma marca no ponto central
-    RouteDetail.mapcode += f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map).bindPopup('Ponto Central'); \n"
+    RouteDetail.mapcode += f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map); \n"
+    RouteDetail.mapcode += f"    markerCentral.bindTooltip('Ponto Central', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"   
     RouteDetail.mapcode += "     markerCentral.setIcon(iMarquerVerde);\n"
 
     pontosvisita = OrdenarPontos(pontosvisita,pontoinicial) 
