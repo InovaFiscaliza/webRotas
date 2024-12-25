@@ -973,8 +973,8 @@ function createCompassIcon() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function SetHeadingNorte_SemRodarMapa()
 {
-   compassDiv = document.getElementById('compassIconDirecaoMapa'); 
-   compassDiv.style.backgroundImage = imgPointerNorte;
+   img = document.getElementById('imgPointerNorte'); 
+   img.src = imgPointerNorte;
    HeadingNorte=0;
    AtualizaMapaHeading(LastHeading);
 }
@@ -1050,7 +1050,7 @@ function createColorTable() {
           ElevationTableOpen=false;
           return;
       } 
-    ElevationTableOpen = true
+    ElevationTableOpen = true;
     const compassDiv = document.createElement('div');
     compassDiv.id = 'colorTableDiv'; // Define o ID da div
     compassDiv.style.position = 'absolute';
@@ -1395,6 +1395,7 @@ function createDivOrdenaPontos() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createMacOSDock() {
     // Create the main translucent container
+    // https://macosicons.com/#/
     const dock = document.createElement('div');
     dock.style.position = 'absolute';
     dock.style.top = '10px'; // Move the dock to the top of the page
@@ -1423,23 +1424,67 @@ function createMacOSDock() {
         iconDiv.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
         iconDiv.style.transition = 'transform 0.2s';
         iconDiv.innerText = icon;
-
+        
+        
+        //---------------------------------------------------------------------------
         if (index === 0) {
             // Add the imgElevationTable image to the first icon
             iconDiv.innerText = '';
             const img = document.createElement('img');
-            img.src = imgOpenElevTable; // Ensure `imgElevationTable` is defined as a valid image URL
-            img.style.width = '30px';
-            img.style.height = '30px';
+            img.src = imgOpenElevTable;  
+            img.style.width = '50px';
+            img.style.height = '50px';
             img.style.borderRadius = '10px';
             iconDiv.appendChild(img);
             img.onclick = () => {
                 createColorTable();
             };
 
-        } else {
-            iconDiv.innerText = icon;
-        }
+        } 
+        //---------------------------------------------------------------------------
+        if (index === 1) {
+            // Add the imgElevationTable image to the first icon
+            iconDiv.innerText = '';
+            const img = document.createElement('img');
+            img.src = imgOrdemPontos;  
+            img.style.width = '40px';
+            img.style.height = '40px';
+            img.style.borderRadius = '10px';
+            iconDiv.appendChild(img);
+            img.onclick = () => {
+                createDivOrdenaPontos();
+            };
+
+        }      
+        //---------------------------------------------------------------------------
+        if (index === 2) {
+            // Add the imgElevationTable image to the first icon
+            iconDiv.innerText = '';
+            const img = document.createElement('img');
+            img.id="imgPointerNorte";
+            img.src = imgPointerNorte;  
+            img.style.width = '30px';
+            img.style.height = '30px';
+            img.style.borderRadius = '10px';
+            iconDiv.appendChild(img);
+            img.onclick = () => {
+                if (HeadingNorte==0) 
+                    {    
+                        img.src = imgPointer;
+                        HeadingNorte=1;
+                        AtualizaMapaHeading(LastHeading);
+                    }
+                    else    
+                    {
+                        img.src = imgPointerNorte;
+                        HeadingNorte=0
+                        AtualizaMapaHeading(LastHeading);
+                    }                     
+            };
+
+        }      
+        
+        //---------------------------------------------------------------------------
 
         // Add hover effect for scaling
         iconDiv.addEventListener('mouseenter', () => {
@@ -1461,9 +1506,8 @@ function createMacOSDock() {
 function CreateControls()
 {
     HeadingNorte=0;
+    map.zoomControl.remove();
     createMacOSDock();
-    createCompassIcon();
     createAtivaGps();
-    createDivOrdemPontos(); 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////

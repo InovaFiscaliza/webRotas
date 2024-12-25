@@ -125,7 +125,7 @@ def WriteToFile(file_path, content):
     :param content: String a ser escrita no arquivo.
     """
     try:
-        with open(file_path, 'w') as file:  # Modo 'w' para sobrescrever o arquivo
+        with open(file_path, 'a') as file:  # Modo 'w' para sobrescrever o arquivo
             file.write(content)
         print(f"Conteúdo gravado com sucesso no arquivo: {file_path}")
     except Exception as e:
@@ -141,11 +141,25 @@ def GeraElevationTable():
        os.remove(fileElevation)
     content = f"imgElevationTable = 'url(\"{base64ElevationTable}\")';"
     WriteToFile('static/tmpStaticResources.js', content)    
+###########################################################################################################################    
+def GeraStaticIcon(name):
+    wr.wLog(f"GeraStaticIcon - {name}")
+    nomeuser=wr.UserData.nome
+    fileIcon = f'static/{name}.png'  
+    base64ElevationTable = wr.FileToDataUrlBase64(fileIcon)
+    content = f"img{name} = '{base64ElevationTable}';"
+    WriteToFile('static/tmpStaticResources.js', content)     
 ###########################################################################################################################
 def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     wr.wLog(f"GeraMapaLeaflet - {mapa}")
+
+    GeraStaticIcon("OpenElevTable") 
+    GeraStaticIcon("OrdemPontos")
+    GeraStaticIcon("PointerNorte")
+    GeraStaticIcon("Pointer")
     globalMaxElevation = wr.MaxAltitude 
-    GeraElevationTable()
+    GeraElevationTable()    
+    
     if static:
        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = AbrirArquivoComoString("static/StaticResources.js")  
