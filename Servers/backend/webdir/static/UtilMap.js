@@ -1041,19 +1041,28 @@ function createAtivaGps() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 ElevationTableOpen = false;
 function createColorTable() {
-    // Cria a div para a bússola
+    colorTableDiv = document.getElementById('colorTableDiv');
+    // alert(`ElevationTableOpen - ${ElevationTableOpen}, colorTableDiv - ${colorTableDiv}`)
+    if(colorTableDiv!=null)
+      if (ElevationTableOpen == true) 
+      {
+          colorTableDiv.remove();
+          ElevationTableOpen=false;
+          return;
+      } 
+    ElevationTableOpen = true
     const compassDiv = document.createElement('div');
-    
-    // Define os estilos inline da bússola
+    compassDiv.id = 'colorTableDiv'; // Define o ID da div
     compassDiv.style.position = 'absolute';
     compassDiv.style.top = '80px';
     compassDiv.style.left = '10px';
-    compassDiv.style.width = '45px';             
-    compassDiv.style.height = '45px'; 
-    compassDiv.style.borderRadius = '50%';        // Bordas arredondadas    
-    compassDiv.style.backgroundSize = '45px 45px';    
+
+    compassDiv.style.width = '150px';            
+    compassDiv.style.height = '500px';   
+    compassDiv.style.backgroundSize = '150px 500px';   
+    compassDiv.style.borderRadius = '2%';              
     // compassDiv.style.backgroundImage = 'url("/static/OpenElevTable.png")';  
-    compassDiv.style.backgroundImage = imgOpenElevTable;
+    compassDiv.style.backgroundImage = imgElevationTable;
     compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
     compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
     compassDiv.style.backgroundColor = 'white'; 
@@ -1076,23 +1085,13 @@ function createColorTable() {
         // Alerta ou função quando clicado
         if (ElevationTableOpen == false) 
         {
-            // compassDiv.style.backgroundImage = 'url("/static/elevation_table.png")';  
-            compassDiv.style.backgroundImage = imgElevationTable ;  
-            
-            ElevationTableOpen=true;
-            compassDiv.style.width = '150px';            
-            compassDiv.style.height = '500px';   
-            compassDiv.style.backgroundSize = '150px 500px';   
-            compassDiv.style.borderRadius = '2%';           
+            compassDiv.style.backgroundImage = imgElevationTable;  
+            ElevationTableOpen=true;        
         }   
         else
         {
-            compassDiv.style.backgroundImage = imgOpenElevTable;  
+            compassDiv.remove();
             ElevationTableOpen=false;
-            compassDiv.style.width = '45px';             
-            compassDiv.style.height = '45px'; 
-            compassDiv.style.backgroundSize = '45px 45px';
-            compassDiv.style.borderRadius = '50%';
         } 
     });
     document.body.appendChild(compassDiv);
@@ -1394,12 +1393,77 @@ function createDivOrdenaPontos() {
     
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function createMacOSDock() {
+    // Create the main translucent container
+    const dock = document.createElement('div');
+    dock.style.position = 'absolute';
+    dock.style.top = '10px'; // Move the dock to the top of the page
+    dock.style.left = '50%';
+    dock.style.transform = 'translateX(-50%)';
+    dock.style.backgroundColor = 'rgba(255, 255, 255, 0.65)'; // 65% translucent white
+    dock.style.borderRadius = '15px';
+    dock.style.padding = '10px 15px';
+    dock.style.display = 'flex';
+    dock.style.gap = '10px';
+    dock.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2)';
+    dock.style.zIndex = 1000;
+
+    // Add icon-like divs to the dock
+    const icons = ['🏠', '🔍', '📂', '⚙️', '💡']; // Example icons
+    icons.forEach((icon,index) => {
+        const iconDiv = document.createElement('div');
+        iconDiv.style.width = '50px';
+        iconDiv.style.height = '50px';
+        iconDiv.style.backgroundColor = '#fff';
+        iconDiv.style.borderRadius = '10px';
+        iconDiv.style.display = 'flex';
+        iconDiv.style.justifyContent = 'center';
+        iconDiv.style.alignItems = 'center';
+        iconDiv.style.cursor = 'pointer';
+        iconDiv.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+        iconDiv.style.transition = 'transform 0.2s';
+        iconDiv.innerText = icon;
+
+        if (index === 0) {
+            // Add the imgElevationTable image to the first icon
+            iconDiv.innerText = '';
+            const img = document.createElement('img');
+            img.src = imgOpenElevTable; // Ensure `imgElevationTable` is defined as a valid image URL
+            img.style.width = '30px';
+            img.style.height = '30px';
+            img.style.borderRadius = '10px';
+            iconDiv.appendChild(img);
+            img.onclick = () => {
+                createColorTable();
+            };
+
+        } else {
+            iconDiv.innerText = icon;
+        }
+
+        // Add hover effect for scaling
+        iconDiv.addEventListener('mouseenter', () => {
+            iconDiv.style.transform = 'scale(1.2)';
+        });
+        iconDiv.addEventListener('mouseleave', () => {
+            iconDiv.style.transform = 'scale(1)';
+        });
+
+        // Append each icon div to the dock
+        dock.appendChild(iconDiv);
+    });
+
+    // Add the dock to the body
+    document.body.appendChild(dock);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateControls()
 {
     HeadingNorte=0;
+    createMacOSDock();
     createCompassIcon();
     createAtivaGps();
-    createColorTable();
     createDivOrdemPontos(); 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
