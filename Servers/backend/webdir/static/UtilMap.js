@@ -979,66 +979,6 @@ function SetHeadingNorte_SemRodarMapa()
    AtualizaMapaHeading(LastHeading);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createAtivaGps() {
-    // Cria a div para a bússola
-    const compassDiv = document.createElement('div');
-    
-    // Define os estilos inline da bússola
-    compassDiv.style.position = 'absolute';
-    compassDiv.style.top = '60px';
-    compassDiv.style.right = '10px';
-    compassDiv.style.width = '45px';              // Largura da bússola
-    compassDiv.style.height = '45px';             // Altura da bússola
-    // compassDiv.style.backgroundImage = 'url("/static/GpsAtivo.png")'; // URL da imagem da bússola
-    if(gpsAtivado)
-        compassDiv.style.backgroundImage = imgGpsAtivo;
-    else
-        compassDiv.style.backgroundImage = imgGpsInativo;    
-    compassDiv.style.backgroundSize = '35px 35px';    // Redimensiona a imagem para cobrir a div
-    compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
-    compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
-    compassDiv.style.backgroundColor = 'white'; 
-    compassDiv.style.display = 'flex';
-    compassDiv.style.alignItems = 'center';
-    compassDiv.style.justifyContent = 'center';
-    compassDiv.style.borderRadius = '50%';        // Bordas arredondadas
-    compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
-    compassDiv.style.zIndex = 1000;
-    
-    // Cria o ícone da bússola (seta para o norte)
-    const icon = document.createElement('i');
-    
-    // Estilos inline do ícone
-    // icon.style.fontSize = '20px';
-    // icon.style.color = '#fff';
-    //icon.style.transform = 'rotate(0deg)';        // Alinhado ao norte
-
-    // Adiciona um evento de clique à bússola
-    compassDiv.addEventListener('click', function() {
-        // alert('Você clicou na bússola!');         // Alerta ou função quando clicado
-        if (gpsAtivado) 
-        {    
-            // alert('Clicou para PointerNorte.png',HeadingNorte)
-            // compassDiv.style.backgroundImage = 'url("/static/GpsInativo.png")';
-            compassDiv.style.backgroundImage = imgGpsInativo;
-            gpsAtivado=false;
-        }
-        else    
-        {
-            // alert('Clicou para Pointer.png',HeadingNorte)
-            // compassDiv.style.backgroundImage = 'url("/static/GpsAtivo.png")';
-            compassDiv.style.backgroundImage = imgGpsAtivo;
-            gpsAtivado=true;
-        }    
-    });
-
-    // Adiciona o ícone dentro da bússola
-    // compassDiv.appendChild(icon);
-
-    // Adiciona a bússola ao corpo da página
-    document.body.appendChild(compassDiv);
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 ElevationTableOpen = false;
 function createColorTable() {
     colorTableDiv = document.getElementById('colorTableDiv');
@@ -1393,6 +1333,66 @@ function createDivOrdenaPontos() {
     
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function createAtivaGps() {
+    // Cria a div para a bússola
+    const compassDiv = document.createElement('div');
+    
+    // Define os estilos inline da bússola
+    compassDiv.style.position = 'absolute';
+    compassDiv.style.top = '60px';
+    compassDiv.style.right = '10px';
+    compassDiv.style.width = '45px';              // Largura da bússola
+    compassDiv.style.height = '45px';             // Altura da bússola
+    // compassDiv.style.backgroundImage = 'url("/static/GpsAtivo.png")'; // URL da imagem da bússola
+    if(gpsAtivado)
+        compassDiv.style.backgroundImage = imgGpsAtivo;
+    else
+        compassDiv.style.backgroundImage = imgGpsInativo;    
+    compassDiv.style.backgroundSize = '35px 35px';    // Redimensiona a imagem para cobrir a div
+    compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
+    compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
+    compassDiv.style.backgroundColor = 'white'; 
+    compassDiv.style.display = 'flex';
+    compassDiv.style.alignItems = 'center';
+    compassDiv.style.justifyContent = 'center';
+    compassDiv.style.borderRadius = '50%';        // Bordas arredondadas
+    compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
+    compassDiv.style.zIndex = 1000;
+    
+    // Cria o ícone da bússola (seta para o norte)
+    const icon = document.createElement('i');
+    
+    // Estilos inline do ícone
+    // icon.style.fontSize = '20px';
+    // icon.style.color = '#fff';
+    //icon.style.transform = 'rotate(0deg)';        // Alinhado ao norte
+
+    // Adiciona um evento de clique à bússola
+    compassDiv.addEventListener('click', function() {
+        // alert('Você clicou na bússola!');         // Alerta ou função quando clicado
+        if (gpsAtivado) 
+        {    
+            // alert('Clicou para PointerNorte.png',HeadingNorte)
+            // compassDiv.style.backgroundImage = 'url("/static/GpsInativo.png")';
+            compassDiv.style.backgroundImage = imgGpsInativo;
+            gpsAtivado=false;
+        }
+        else    
+        {
+            // alert('Clicou para Pointer.png',HeadingNorte)
+            // compassDiv.style.backgroundImage = 'url("/static/GpsAtivo.png")';
+            compassDiv.style.backgroundImage = imgGpsAtivo;
+            gpsAtivado=true;
+        }    
+    });
+
+    // Adiciona o ícone dentro da bússola
+    // compassDiv.appendChild(icon);
+
+    // Adiciona a bússola ao corpo da página
+    document.body.appendChild(compassDiv);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function createMacOSDock() {
     // Create the main translucent container
     // https://macosicons.com/#/
@@ -1483,6 +1483,35 @@ function createMacOSDock() {
             };
 
         }      
+        //---------------------------------------------------------------------------
+        if (index === 3) {
+            // Add the imgElevationTable image to the first icon
+            iconDiv.innerText = '';
+            const img = document.createElement('img');
+            img.id="imgGps";
+            if(gpsAtivado)
+                img.src = imgGpsAtivo;
+            else
+                img.src = imgGpsInativo;     
+
+            img.style.width = '30px';
+            img.style.height = '30px';
+            img.style.borderRadius = '10px';
+            iconDiv.appendChild(img);
+            img.onclick = () => {
+                if (gpsAtivado) 
+                {    
+                    img.src = imgGpsInativo;
+                    gpsAtivado=false;
+                }
+                else    
+                {
+                    img.src = imgGpsAtivo;
+                    gpsAtivado=true;
+                }                     
+            };
+
+        }      
         
         //---------------------------------------------------------------------------
 
@@ -1508,6 +1537,5 @@ function CreateControls()
     HeadingNorte=0;
     map.zoomControl.remove();
     createMacOSDock();
-    createAtivaGps();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
