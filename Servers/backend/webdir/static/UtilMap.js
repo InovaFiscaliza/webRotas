@@ -1525,6 +1525,7 @@ function createMacOSDock() {
             layersControl.addTo(map);
             const layersContainer =  layersControl.getContainer(); // Obter a interface do controle
             layersContainer.style.fontFamily = "'Arial', sans-serif"; // Define a família da fonte
+            layersContainer.style.textShadow = '1px 1px 1px white'; // Sombra branca no texto
             layersContainer.style.fontSize = '12px'; // Define o tamanho da fonte
             layersContainer.style.color = '#333'; // Define a cor da fonte
             layersContainer.style.width = '200px'; // Define a largura do menu
