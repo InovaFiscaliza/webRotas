@@ -1469,17 +1469,17 @@ function createMacOSDock() {
             iconDiv.appendChild(img);
             img.onclick = () => {
                 if (HeadingNorte==0) 
-                    {    
-                        img.src = imgPointer;
-                        HeadingNorte=1;
-                        AtualizaMapaHeading(LastHeading);
-                    }
-                    else    
-                    {
-                        img.src = imgPointerNorte;
-                        HeadingNorte=0
-                        AtualizaMapaHeading(LastHeading);
-                    }                     
+                {    
+                    img.src = imgPointer;
+                    HeadingNorte=1;
+                    AtualizaMapaHeading(LastHeading);
+                }
+                else    
+                {
+                    img.src = imgPointerNorte;
+                    HeadingNorte=0
+                    AtualizaMapaHeading(LastHeading);
+                }                     
             };
 
         }      
