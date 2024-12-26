@@ -207,7 +207,7 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
 
             // Adiciona o controle de camadas ao mapa
             // Adiciona o controle de camadas ao mapa no canto inferior direito
-            L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(map);
+            // L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(map);
             L.control.scale({
                metric: true, // Mostrar em metros
                imperial: false, // Desativar milhas

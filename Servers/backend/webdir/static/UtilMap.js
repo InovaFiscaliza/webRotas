@@ -1512,7 +1512,30 @@ function createMacOSDock() {
             };
 
         }      
-        
+        //---------------------------------------------------------------------------
+        if (index === 4) {
+            // Add the imgElevationTable image to the first icon
+            iconDiv.innerText = '';
+            const img = document.createElement('div');
+            img.id="divLayers";     
+            img.style.width = '35px';
+            img.style.height = '35px';
+            img.style.borderRadius = '10px';
+            const layersControl = L.control.layers(baseLayers, null);
+            layersControl.addTo(map);
+            const layersContainer =  layersControl.getContainer(); // Obter a interface do controle
+            layersContainer.style.fontFamily = "'Arial', sans-serif"; // Define a família da fonte
+            layersContainer.style.fontSize = '12px'; // Define o tamanho da fonte
+            layersContainer.style.color = '#333'; // Define a cor da fonte
+            layersContainer.style.width = '200px'; // Define a largura do menu
+            layersContainer.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.0)'; // Sombra para destacar
+            layersContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.0)';
+            img.appendChild(layersContainer); // Adicionar ao div personalizado
+            iconDiv.appendChild(img);
+            img.onclick = () => {
+                  
+            };
+        }               
         //---------------------------------------------------------------------------
 
         // Add hover effect for scaling
