@@ -865,7 +865,50 @@ def calcular_distancia_haversine(ponto1, ponto2):
     return distancia
 ################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
-def OrdenarPontos(pontosvisita,pontoinicial):
+def OrdenarPontos(pontosvisita,pontoinicial):  
+    # return OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial)
+    return OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial)
+################################################################################
+def calcular_distancia_totalOSMR(osmr_saida):
+    """
+    Calcula a distância total de uma rota com base nos passos fornecidos na saída do OSMR.
+    
+    :param osmr_saida: Dicionário contendo a saída do OSMR.
+    :return: Distância total da rota em metros.
+    """
+    distancia_total = 0
+
+    if "routes" in osmr_saida and osmr_saida["routes"]:
+        for leg in osmr_saida["routes"][0]["legs"]:
+            for step in leg["steps"]:
+                distancia_total += step["distance"]
+                
+    return distancia_total
+################################################################################
+def DistanciaRota(start_lat, start_lon, end_lat, end_lon):
+    response = GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
+    data = response.json()
+    # Verificar se a solicitação foi bem-sucedida
+    if response.status_code == 200 and 'routes' in data:
+       return calcular_distancia_totalOSMR(data)
+    else:
+       wLog("DistanciaRota - erro pegando rota OSMR") 
+       quit()       
+    return 0
+################################################################################
+# Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
+def OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial):
+    ordenados = [(pontoinicial[0],pontoinicial[1])]  # Iniciar a lista com o ponto inicial
+    while pontosvisita:
+        ultimo_ponto = ordenados[-1]
+        proximo_ponto = min(pontosvisita, key=lambda p: DistanciaRota(ultimo_ponto[0], ultimo_ponto[1], p[0], p[1]))
+        ordenados.append(proximo_ponto)
+        pontosvisita.remove(proximo_ponto)
+    del ordenados[0]  # Remove o primeiro elemento, usado apenas como referência de inicial da ordenação    
+    return ordenados
+################################################################################
+# Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
+def OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial):
     ordenados = [(pontoinicial[0],pontoinicial[1])]  # Iniciar a lista com o ponto inicial
     while pontosvisita:
         ultimo_ponto = ordenados[-1]
@@ -1334,7 +1377,7 @@ def DesenhaMunicipio(RouteDetail,nome,polMunicipio):
         indPol=indPol+1
     return RouteDetail          
 ################################################################################
-# zzzzzzzzzzzzz
+# 
 from shapely.geometry import Point, Polygon
 from geopy.distance import geodesic    # pip install geopy
 import numpy as np
