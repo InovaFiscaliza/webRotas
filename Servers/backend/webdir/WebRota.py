@@ -539,7 +539,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
       # URL da solicitação ao servidor GHopper
       url = f"http://localhost:8989/route?point={start_lat},{start_lon}&point={end_lat},{end_lon}"
    
-   wLog(url)
+   # wLog(url)
    # Fazer a solicitação
    response = requests.get(url)   
    return response
@@ -866,8 +866,9 @@ def calcular_distancia_haversine(ponto1, ponto2):
 ################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
 def OrdenarPontos(pontosvisita,pontoinicial):  
-    # return OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial)
-    return OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial)
+    BenchmarkRotas(pontosvisita,pontoinicial)
+    return OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial)
+    # return OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial)
 ################################################################################
 def calcular_distancia_totalOSMR(osmr_saida):
     """
@@ -896,6 +897,14 @@ def DistanciaRota(start_lat, start_lon, end_lat, end_lon):
        quit()       
     return 0
 ################################################################################
+def DistanciaRotaTotal(pontosvisita):
+    i=0
+    dist=0
+    for i in range(len(pontosvisita) - 1):
+        dist += DistanciaRota(pontosvisita[i][0], pontosvisita[i][1], pontosvisita[i+1][0], pontosvisita[i+1][1])
+        i=i+1
+    return dist
+################################################################################
 # Função para ordenar os pontos de visita, metrica OSMR, pelo ultimo mais próximo, algoritmo ganancioso.
 def OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial):
     ordenados = [(pontoinicial[0],pontoinicial[1])]  # Iniciar a lista com o ponto inicial
@@ -917,6 +926,66 @@ def OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial):
         pontosvisita.remove(proximo_ponto)
     del ordenados[0]  # Remove o primeiro elemento, usado apenas como referência de inicial da ordenação    
     return ordenados
+################################################################################
+import time
+################################################################################
+def CronometraFuncao(func, *args, **kwargs):
+    """
+    Mede o tempo de execução de uma função.
+
+    Parâmetros:
+    - func: A função a ser cronometrada.
+    - *args: Argumentos posicionais para a função.
+    - **kwargs: Argumentos nomeados para a função.
+
+    Retorna:
+    - O resultado da função executada.
+    - O tempo de execução em segundos.
+    """
+    try:
+        inicio = time.time()
+        resultado = func(*args, **kwargs)
+        fim = time.time()
+        tempo_execucao = fim - inicio
+        return resultado, tempo_execucao
+    except Exception as e:
+        print(f"Erro ao executar a função: {e}")
+        return None, None
+################################################################################
+def formatar_tempo(tempo_em_segundos):
+    """
+    Formata o tempo em minutos, segundos e milissegundos.
+
+    Parâmetros:
+    - tempo_em_segundos (float): Tempo em segundos.
+
+    Retorna:
+    - str: Tempo formatado como 'MM:SS:mmm'.
+    """
+    minutos, segundos = divmod(tempo_em_segundos, 60)
+    segundos, milissegundos = divmod(segundos * 1000, 1000)
+    return f"{int(minutos):02}:{int(segundos):02}:{int(milissegundos):03}"
+################################################################################
+def BenchmarkRotas(pontosvisita,pontoinicial):
+    # 2024-12-27 19:16:20 : -----------------------------------------------------------------
+    # 2024-12-27 19:16:20 : BenchmarkRotas - compromisso de abrangencia niteroi
+    # 2024-12-27 19:36:24 : Tempo ordenacao geodesica: 00:00:000 minutos - Distancia rota: 250 km
+    # 2024-12-27 19:36:24 : Tempo ordenacao OSMR: 00:17:961 minutos - Distancia rota: 158 km
+    # 2024-12-27 19:36:24 : -----------------------------------------------------------------
+    wLog("-----------------------------------------------------------------")
+    wLog("BenchmarkRotas")
+    pontosvisitaBench = pontosvisita.copy()
+    pontosvisitaBench,tempoGeo = CronometraFuncao(OrdenarPontosDistanciaGeodesica,pontosvisitaBench,pontoinicial)
+    tempoGeo = formatar_tempo(tempoGeo)
+    distGeo = int(DistanciaRotaTotal(pontosvisitaBench)/1000)
+    pontosvisitaBench = pontosvisita.copy()
+    pontosvisitaBench,tempoOsmr = CronometraFuncao(OrdenarPontosDistanciaOSMR,pontosvisitaBench,pontoinicial)
+    tempoOsmr = formatar_tempo(tempoOsmr)
+    distOsmr = int(DistanciaRotaTotal(pontosvisitaBench)/1000)
+    wLog(f"Tempo ordenação geodesica: {tempoGeo} minutos - Distancia rota: {distGeo} km")
+    wLog(f"Tempo ordenação OSMR: {tempoOsmr} minutos - Distancia rota: {distOsmr} km")
+    wLog("-----------------------------------------------------------------")
+    return
 ################################################################################
 import os
 import shutil
@@ -1488,6 +1557,7 @@ def RouteCompAbrangencia(user,pontoinicial,cidade,uf,distanciaPontos,regioes):
     RouteDetail = DesenhaMunicipio(RouteDetail,cidade,polMunicipio)
     
     wLog("Ordenando e processando Pontos de Visita:")
+  
     pontosvisita = OrdenarPontos(pontosvisita,pontoinicial) 
     RouteDetail = PlotaPontosVisita(RouteDetail,pontosvisita,[])
     
