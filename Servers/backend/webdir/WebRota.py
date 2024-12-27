@@ -896,7 +896,7 @@ def DistanciaRota(start_lat, start_lon, end_lat, end_lon):
        quit()       
     return 0
 ################################################################################
-# Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
+# Função para ordenar os pontos de visita, metrica OSMR, pelo ultimo mais próximo, algoritmo ganancioso.
 def OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial):
     ordenados = [(pontoinicial[0],pontoinicial[1])]  # Iniciar a lista com o ponto inicial
     while pontosvisita:
@@ -907,7 +907,7 @@ def OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial):
     del ordenados[0]  # Remove o primeiro elemento, usado apenas como referência de inicial da ordenação    
     return ordenados
 ################################################################################
-# Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
+# Função para ordenar os pontos de visita, metrica Distâcia Geodesica , pelo ultimo mais próximo, algoritmo ganancioso.
 def OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial):
     ordenados = [(pontoinicial[0],pontoinicial[1])]  # Iniciar a lista com o ponto inicial
     while pontosvisita:
