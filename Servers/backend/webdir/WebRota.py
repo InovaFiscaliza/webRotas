@@ -866,7 +866,7 @@ def calcular_distancia_haversine(ponto1, ponto2):
 ################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
 def OrdenarPontos(pontosvisita,pontoinicial):  
-    BenchmarkRotas(pontosvisita,pontoinicial)
+    # BenchmarkRotas(pontosvisita,pontoinicial)
     return OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial)
     # return OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial)
 ################################################################################
