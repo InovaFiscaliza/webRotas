@@ -998,11 +998,13 @@ def formatar_tempo(tempo_em_segundos):
     return f"{int(minutos):02}:{int(segundos):02}:{int(milissegundos):03}"
 ################################################################################
 def BenchmarkRotas(pontosvisita,pontoinicial):
-    # 2024-12-27 19:16:20 : -----------------------------------------------------------------
-    # 2024-12-27 19:16:20 : BenchmarkRotas - compromisso de abrangencia niteroi
-    # 2024-12-27 19:36:24 : Tempo ordenacao geodesica: 00:00:000 minutos - Distancia rota: 250 km
-    # 2024-12-27 19:36:24 : Tempo ordenacao OSMR: 00:17:961 minutos - Distancia rota: 158 km
-    # 2024-12-27 19:36:24 : -----------------------------------------------------------------
+    # 2024-12-28 23:11:33 : ---------------------------------------------------------------------------------------------
+    # 2024-12-28 23:11:33 : BenchmarkRotas
+    # 2024-12-28 23:34:42 : Tempo ordenacao geodesica: 00:00:001 minutos - Distancia rota: 250 km
+    # 2024-12-28 23:34:42 : Tempo ordenacao OSMR: 17:56:159 minutos - Distancia rota: 158 km
+    # 2024-12-28 23:34:42 : Tempo ordenacao OSMR MultiThread: 02:03:077 minutos - Distancia rota: 158 km
+    # 2024-12-28 23:34:42 : ---------------------------------------------------------------------------------------------
+    
     wLog("---------------------------------------------------------------------------------------------")
     wLog("BenchmarkRotas")
     #---------------------------------------
