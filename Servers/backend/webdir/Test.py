@@ -174,7 +174,7 @@ payload = {
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
     "cidade": "Niterói",
     "uf": "RJ",
-    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     # "DistanciaOSMR" ou "DistanciaGeodesica"
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMR",     # "DistanciaOSMR" ou "DistanciaGeodesica"
     "distancia_pontos": "2000",  # distancia entre pontos em metros
     "regioes": regioesBuf
 }

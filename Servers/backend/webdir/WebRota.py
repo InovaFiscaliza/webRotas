@@ -867,8 +867,12 @@ def calcular_distancia_haversine(ponto1, ponto2):
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
 def OrdenarPontos(pontosvisita,pontoinicial):  
     # BenchmarkRotas(pontosvisita,pontoinicial)
-    return OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial)
-    # return OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial)
+    wLog(f"    Algoritmo: [{UserData.AlgoritmoOrdenacaoPontos}]")
+    if UserData.AlgoritmoOrdenacaoPontos=="DistanciaGeodesica":     # "DistanciaOSMR" ou "DistanciaGeodesica"
+       return OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial)
+    if UserData.AlgoritmoOrdenacaoPontos=="DistanciaOSMR":      
+       return OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial)
+    return pontosvisita # Nenhuma seleção, não ordena os pontos
 ################################################################################
 def calcular_distancia_totalOSMR(osmr_saida):
     """
@@ -1035,6 +1039,7 @@ class ClUserData:
         self.nome = None
         self.OSMRport = None
         self.Regioes = None
+        self.AlgoritmoOrdenacaoPontos = None
         return
 ################################################################################
 UserData = ClUserData()    
@@ -1206,7 +1211,7 @@ def StopOldContainers(days=30):
 import requests
 import time
 ################################################################################
-def VerificarOsrmAtivo(tentativas=100000, intervalo=5):
+def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
     """
     Verifica se o servidor OSRM está ativo.
 
@@ -1540,9 +1545,10 @@ def ServerSetupJavaScript(RouteDetail):
        RouteDetail.mapcode += f"    const ServerTec = 'GHopper';\n"
     return RouteDetail
 ################################################################################
-def RouteCompAbrangencia(user,pontoinicial,cidade,uf,distanciaPontos,regioes):
+def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioes):
     
     UserData.nome=user
+    UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
     
     polMunicipio= GetBoundMunicipio(cidade, uf)
     pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
@@ -1749,9 +1755,11 @@ def DescricaoPontoVisita(pontosvisitaDados, lat, lon):
             return ponto[4]  # Retorna o campo de endereço (4º elemento)
     return "Endereço não encontrado para a latitude e longitude fornecidas."
 ################################################################################
-def RoutePontosVisita(user,pontoinicial,pontosvisitaDados,regioes):
+def RoutePontosVisita(data,user,pontoinicial,pontosvisitaDados,regioes):
     
     UserData.nome=user
+    UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
+    
     pontosvisita=PegaPontosVisita(pontosvisitaDados)
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
@@ -1845,7 +1853,7 @@ def calcula_bounding_box_pontos(pontos, margem_km=50):
     return lat_min,lat_max,lon_min,lon_max
 
 ###########################################################################################################################
-def RouteDriveTest(user,pontoinicial,central_point,regioes,radius_km=5, num_points=8):
+def RouteDriveTest(data,user,pontoinicial,central_point,regioes,radius_km=5, num_points=8):
     # Coordenadas do ponto central (latitude, longitude)
     # central_point = [40.712776, -74.005974]  # Exemplo: Nova York
     #central_point = [-22.90941986104239, -43.16486081793237] # Santos Dumont
@@ -1855,6 +1863,7 @@ def RouteDriveTest(user,pontoinicial,central_point,regioes,radius_km=5, num_poin
     #central_point = [-22.9864182585604, -43.37041245345915] 
     
     UserData.nome=user
+    UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
    
     # Coordenadas da rota (exemplo de uma rota circular simples)   
 
