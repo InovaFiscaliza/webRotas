@@ -685,6 +685,7 @@ def GenerateRouteMapOSMR(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
 
        # GerarKml(coordinates, filename="rota.kml")    
        # GerarGeojson(coordinates, filename="rota.geojson")
+       """
        wLog("Imprimindo rota")    
        nomes_ruas = []
        for route in data.get("routes", []):
@@ -701,7 +702,8 @@ def GenerateRouteMapOSMR(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
                 location = maneuver.get("location", [])      
                 # NewWaypoint(self,waypoint,lat,lon)
                 RouteDetailLoc.NewWaypoint(f"{nome} {destinations}",str(location[1]),str(location[0]))
-                wLog(f"{mode} {nome} {destinations} por {dist} metros e {tempo} segundos e {type} {modifier}")        
+                wLog(f"{mode} {nome} {destinations} por {dist} metros e {tempo} segundos e {type} {modifier}")  
+        """              
     else:
        wLog(f"Erro na solicitação: {data}")    
        return RouteDetailLoc
@@ -866,13 +868,38 @@ def calcular_distancia_haversine(ponto1, ponto2):
 ################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
 def OrdenarPontos(pontosvisita,pontoinicial):  
-    # BenchmarkRotas(pontosvisita,pontoinicial)
+    BenchmarkRotas(pontosvisita,pontoinicial)
     wLog(f"    Algoritmo: [{UserData.AlgoritmoOrdenacaoPontos}]")
     if UserData.AlgoritmoOrdenacaoPontos=="DistanciaGeodesica":     # "DistanciaOSMR" ou "DistanciaGeodesica"
        return OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial)
     if UserData.AlgoritmoOrdenacaoPontos=="DistanciaOSMR":      
        return OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial)
     return pontosvisita # Nenhuma seleção, não ordena os pontos
+################################################################################
+from concurrent.futures import ThreadPoolExecutor
+import threading
+################################################################################
+# Função paralela para calcular a menor distância
+def calcular_menor_distanciaThread(pontosvisita, ultimo_ponto):
+    with ThreadPoolExecutor() as executor:
+        distancias = executor.map(lambda p: (p, DistanciaRota(ultimo_ponto[0], ultimo_ponto[1], p[0], p[1])), pontosvisita)
+        return min(distancias, key=lambda x: x[1])[0]  # Retorna o ponto com menor distância
+################################################################################
+def OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial):
+    ordenados = [(pontoinicial[0], pontoinicial[1])]  # Iniciar a lista com o ponto inicial
+    pontosvisita_lock = threading.Lock()
+
+    while pontosvisita:
+        ultimo_ponto = ordenados[-1]
+
+        # Calcular o próximo ponto mais próximo em paralelo
+        with pontosvisita_lock:  # Protege a lista durante a iteração
+            proximo_ponto = calcular_menor_distanciaThread(pontosvisita, ultimo_ponto)
+            ordenados.append(proximo_ponto)
+            pontosvisita.remove(proximo_ponto)
+
+    del ordenados[0]  # Remove o primeiro elemento, usado apenas como referência inicial da ordenação
+    return ordenados
 ################################################################################
 def calcular_distancia_totalOSMR(osmr_saida):
     """
@@ -976,19 +1003,28 @@ def BenchmarkRotas(pontosvisita,pontoinicial):
     # 2024-12-27 19:36:24 : Tempo ordenacao geodesica: 00:00:000 minutos - Distancia rota: 250 km
     # 2024-12-27 19:36:24 : Tempo ordenacao OSMR: 00:17:961 minutos - Distancia rota: 158 km
     # 2024-12-27 19:36:24 : -----------------------------------------------------------------
-    wLog("-----------------------------------------------------------------")
+    wLog("---------------------------------------------------------------------------------------------")
     wLog("BenchmarkRotas")
+    #---------------------------------------
     pontosvisitaBench = pontosvisita.copy()
     pontosvisitaBench,tempoGeo = CronometraFuncao(OrdenarPontosDistanciaGeodesica,pontosvisitaBench,pontoinicial)
     tempoGeo = formatar_tempo(tempoGeo)
     distGeo = int(DistanciaRotaTotal(pontosvisitaBench)/1000)
+    #---------------------------------------
     pontosvisitaBench = pontosvisita.copy()
     pontosvisitaBench,tempoOsmr = CronometraFuncao(OrdenarPontosDistanciaOSMR,pontosvisitaBench,pontoinicial)
     tempoOsmr = formatar_tempo(tempoOsmr)
     distOsmr = int(DistanciaRotaTotal(pontosvisitaBench)/1000)
+    #---------------------------------------
+    pontosvisitaBench = pontosvisita.copy()
+    pontosvisitaBench,tempoOsmrThr = CronometraFuncao(OrdenarPontosDistanciaOSMRMultiThread,pontosvisitaBench,pontoinicial)
+    tempoOsmrThr = formatar_tempo(tempoOsmrThr)
+    distOsmrThr = int(DistanciaRotaTotal(pontosvisitaBench)/1000)    
+    #---------------------------------------
     wLog(f"Tempo ordenação geodesica: {tempoGeo} minutos - Distancia rota: {distGeo} km")
     wLog(f"Tempo ordenação OSMR: {tempoOsmr} minutos - Distancia rota: {distOsmr} km")
-    wLog("-----------------------------------------------------------------")
+    wLog(f"Tempo ordenação OSMR MultiThread: {tempoOsmrThr} minutos - Distancia rota: {distOsmrThr} km")
+    wLog("---------------------------------------------------------------------------------------------")
     return
 ################################################################################
 import os
