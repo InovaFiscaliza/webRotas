@@ -870,10 +870,12 @@ def calcular_distancia_haversine(ponto1, ponto2):
 def OrdenarPontos(pontosvisita,pontoinicial):  
     BenchmarkRotas(pontosvisita,pontoinicial)
     wLog(f"    Algoritmo: [{UserData.AlgoritmoOrdenacaoPontos}]")
-    if UserData.AlgoritmoOrdenacaoPontos=="DistanciaGeodesica":     # "DistanciaOSMR" ou "DistanciaGeodesica"
+    if UserData.AlgoritmoOrdenacaoPontos=="DistanciaGeodesica":     # "DistanciaOSMR", "DistanciaGeodesica", "DistanciaOSMRMultiThread"
        return OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial)
     if UserData.AlgoritmoOrdenacaoPontos=="DistanciaOSMR":      
        return OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial)
+    if UserData.AlgoritmoOrdenacaoPontos=="DistanciaOSMRMultiThread":      
+       return OrdenarPontosDistanciaOSMRMultiThread(pontosvisita,pontoinicial)   
     return pontosvisita # Nenhuma seleção, não ordena os pontos
 ################################################################################
 from concurrent.futures import ThreadPoolExecutor
