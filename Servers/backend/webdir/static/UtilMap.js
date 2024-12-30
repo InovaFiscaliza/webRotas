@@ -1312,6 +1312,7 @@ function createDivOrdenaPontos() {
     buttonsContainer.style.right = '10px';
     buttonsContainer.style.display = 'flex'; // Flex para alinhar os botões horizontalmente
     buttonsContainer.style.gap = '10px'; // Espaçamento entre os botões
+    
 
     const sobeBtn = createButton('Sobe', () => moveOption(-1));
     const desceBtn = createButton('Desce', () => moveOption(1));
@@ -1332,6 +1333,7 @@ function createDivOrdenaPontos() {
         button.textContent = text;
         button.style.padding = '8px 12px';
         button.style.cursor = 'pointer';
+        button.style.fontSize = fontSize;
         button.addEventListener('click', onClick);
         return button;
     }
