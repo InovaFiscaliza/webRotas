@@ -913,7 +913,7 @@ def OrdenarPontosDistanciaOSMR_DML(pontosvisita, pontoinicial):
 ################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
 def OrdenarPontos(pontosvisita,pontoinicial):  
-    BenchmarkRotas(pontosvisita,pontoinicial)
+    # BenchmarkRotas(pontosvisita,pontoinicial)
     wLog(f"    Algoritmo: [{UserData.AlgoritmoOrdenacaoPontos}]")
     if UserData.AlgoritmoOrdenacaoPontos=="DistanciaGeodesica":     # "DistanciaOSMR", "DistanciaGeodesica", "DistanciaOSMRMultiThread"
        return OrdenarPontosDistanciaGeodesica(pontosvisita,pontoinicial)

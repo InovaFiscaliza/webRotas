@@ -1172,61 +1172,61 @@ function createDivOrdenaPontos() {
         return; // Sai da função se a div já existir
     }
     SetHeadingNorte_SemRodarMapa();
-    const compassDiv = document.createElement('div');
-    compassDiv.id = 'divOrdenaPontos';
+    const iDlg = document.createElement('div');
+    iDlg.id = 'divOrdenaPontos';
     // Define os estilos da div principal
-    compassDiv.style.position = 'absolute';
-    compassDiv.style.top = '50%';
-    compassDiv.style.left = '50%';
-    compassDiv.style.transform = 'translate(-50%, -50%)';
-    compassDiv.style.width = '400px'; // Tamanho inicial
-    compassDiv.style.height = '300px';
-    compassDiv.style.backgroundColor = '#f9f9f9';
-    compassDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-    compassDiv.style.display = 'flex';
-    compassDiv.style.flexDirection = 'column';
-    compassDiv.style.alignItems = 'flex-start';
-    compassDiv.style.padding = '10px';
-    compassDiv.style.border = '2px solid #ccc';
-    compassDiv.style.borderRadius = '8px';
-    compassDiv.style.resize = 'both';
-    compassDiv.style.overflow = 'auto';
-    compassDiv.style.cursor = 'move'; // Cursor de movimento para o arrasto
-    compassDiv.style.zIndex = 1000;
+    iDlg.style.position = 'absolute';
+    iDlg.style.top = '50%';
+    iDlg.style.left = '50%';
+    iDlg.style.transform = 'translate(-50%, -50%)';
+    iDlg.style.width = '400px'; // Tamanho inicial
+    iDlg.style.height = '300px';
+    iDlg.style.backgroundColor = '#f9f9f9';
+    iDlg.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+    iDlg.style.display = 'flex';
+    iDlg.style.flexDirection = 'column';
+    iDlg.style.alignItems = 'flex-start';
+    iDlg.style.padding = '10px';
+    iDlg.style.border = '2px solid #ccc';
+    iDlg.style.borderRadius = '8px';
+    iDlg.style.resize = 'both';
+    iDlg.style.overflow = 'auto';
+    iDlg.style.cursor = 'move'; // Cursor de movimento para o arrasto
+    iDlg.style.zIndex = 1000;
 
-    document.body.appendChild(compassDiv);
+    document.body.appendChild(iDlg);
 
     // Função para arrastar a div
     let offsetX, offsetY, isDragging = false;
 
-    compassDiv.addEventListener('mousedown', function (e) {
+    iDlg.addEventListener('mousedown', function (e) {
         isDragging = true;
-        offsetX = e.clientX - compassDiv.offsetLeft;
-        offsetY = e.clientY - compassDiv.offsetTop;
-        compassDiv.style.cursor = 'grabbing'; // Muda o cursor ao arrastar
+        offsetX = e.clientX - iDlg.offsetLeft;
+        offsetY = e.clientY - iDlg.offsetTop;
+        iDlg.style.cursor = 'grabbing'; // Muda o cursor ao arrastar
     });
 
     document.addEventListener('mousemove', function (e) {
         if (isDragging) {
-            compassDiv.style.left = `${e.clientX - offsetX}px`;
-            compassDiv.style.top = `${e.clientY - offsetY}px`;
+            iDlg.style.left = `${e.clientX - offsetX}px`;
+            iDlg.style.top = `${e.clientY - offsetY}px`;
         }
     });
 
     document.addEventListener('mouseup', function () {
         isDragging = false;
-        compassDiv.style.cursor = 'move'; // Retorna ao cursor padrão
+        iDlg.style.cursor = 'move'; // Retorna ao cursor padrão
     });
 
     // Adiciona o rótulo
-    const label = document.createElement('label');
+    label = document.createElement('label');
     label.htmlFor = 'lista3';
     label.textContent = 'Ordem dos pontos:';
     label.style.marginBottom = '10px';
     label.style.fontFamily = 'Arial, sans-serif';
     label.style.fontSize = '14px';
     label.style.color = '#333';
-    compassDiv.appendChild(label);
+    iDlg.appendChild(label);
 
     // Cria o controle de seleção múltipla
     const select = document.createElement('select');
@@ -1234,20 +1234,11 @@ function createDivOrdenaPontos() {
     // select.multiple = true;
     select.size = 10000; // Define o número de itens visíveis
     select.style.width = '100%';
-    select.style.height = 'calc(100% - 70px)'; // Ocupa o espaço restante
+    select.style.height = 'calc(100% - 150px)'; // Ocupa o espaço restante
     select.style.fontSize = '16px';
-    compassDiv.appendChild(select);
+    iDlg.appendChild(select);
 
-    // Adiciona opções ao select
-    /*
-    ['P1', 'P2', 'P3', 'P4', 'P5'].forEach((text, index) => {
-        const option = document.createElement('option');
-        option.value = index + 1;
-        option.textContent = text;
-        select.appendChild(option);
-    });
-    */
-    // Adiciona opções ao select
+    // Adiciona opções ao select dos pontos
     function LoadSelect()
     {
         select.innerHTML = '';
@@ -1261,6 +1252,52 @@ function createDivOrdenaPontos() {
     
     }
     LoadSelect();
+
+    // Adiciona o rótulo
+    label = document.createElement('label');
+    label.htmlFor = 'listaAlgoOrdencao';
+    label.textContent = 'Algoritmo Ordenação:';
+    label.style.marginTop = '10px';
+    label.style.marginBottom = '10px';
+    label.style.fontFamily = 'Arial, sans-serif';
+    label.style.fontSize = '14px';
+    label.style.color = '#333';
+    iDlg.appendChild(label);
+
+    // Cria o controle de seleção múltipla
+    const selectAlgoOrdenacao = document.createElement('select');
+    selectAlgoOrdenacao.id = 'listaAlgoOrdencao';
+    // select.multiple = true;
+    selectAlgoOrdenacao.size = 1; // Define o número de itens visíveis (vira um dropdown)
+    selectAlgoOrdenacao.style.bottom = '0px';
+    selectAlgoOrdenacao.style.width = '100%';
+    selectAlgoOrdenacao.style.height = '40px'; // Ocupa o espaço restante
+    selectAlgoOrdenacao.style.fontSize = '16px';
+    iDlg.appendChild(selectAlgoOrdenacao);
+
+    function LoadSelectAlgoOrdenacao()
+    {
+        // "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread" 
+        index = 0;
+        selectAlgoOrdenacao.innerHTML = '';
+        option = document.createElement('option');
+        option.value = index + 1;
+        option.textContent = "Nenhum";
+        selectAlgoOrdenacao.appendChild(option); 
+
+        option = document.createElement('option');
+        option.value = index + 1;
+        option.textContent = "Distancia Geodesica";
+        selectAlgoOrdenacao.appendChild(option); 
+
+        option = document.createElement('option');
+        option.value = index + 1;
+        option.textContent = "Distancia OSMR MultiThread";
+        selectAlgoOrdenacao.appendChild(option); 
+    }
+    LoadSelectAlgoOrdenacao();
+
+
     // Cria os botões
     const buttonsContainer = document.createElement('div');
     buttonsContainer.style.position = 'absolute';
@@ -1281,7 +1318,7 @@ function createDivOrdenaPontos() {
     buttonsContainer.appendChild(desceBtn);
     buttonsContainer.appendChild(reordenaBtn);
     buttonsContainer.appendChild(fechaBtn);
-    compassDiv.appendChild(buttonsContainer);
+    iDlg.appendChild(buttonsContainer);
 
     // Função auxiliar para criar botões
     function createButton(text, onClick) {
@@ -1443,7 +1480,6 @@ function createMacOSDock() {
         } 
         //---------------------------------------------------------------------------
         if (index === 1) {
-            // Add the imgElevationTable image to the first icon
             iconDiv.innerText = '';
             const img = document.createElement('img');
             img.src = imgOrdemPontos;  
