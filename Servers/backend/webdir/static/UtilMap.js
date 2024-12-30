@@ -1164,6 +1164,7 @@ function ReordenaPontosTela(pontosVisita){
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+fontSize = '12px';
 function createDivOrdenaPontos() {
     // Cria a div principal
 
@@ -1193,6 +1194,11 @@ function createDivOrdenaPontos() {
     iDlg.style.overflow = 'auto';
     iDlg.style.cursor = 'move'; // Cursor de movimento para o arrasto
     iDlg.style.zIndex = 1000;
+    iDlg.style.userSelect = 'none';           // Para navegadores modernos
+    iDlg.style.webkitUserSelect = 'none';     // Para navegadores baseados no WebKit
+    iDlg.style.mozUserSelect = 'none';        // Para Firefox
+    iDlg.style.msUserSelect = 'none'; 
+
 
     document.body.appendChild(iDlg);
 
@@ -1224,7 +1230,7 @@ function createDivOrdenaPontos() {
     label.textContent = 'Ordem dos pontos:';
     label.style.marginBottom = '10px';
     label.style.fontFamily = 'Arial, sans-serif';
-    label.style.fontSize = '14px';
+    label.style.fontSize = fontSize;
     label.style.color = '#333';
     iDlg.appendChild(label);
 
@@ -1235,7 +1241,7 @@ function createDivOrdenaPontos() {
     select.size = 10000; // Define o número de itens visíveis
     select.style.width = '100%';
     select.style.height = 'calc(100% - 150px)'; // Ocupa o espaço restante
-    select.style.fontSize = '16px';
+    select.style.fontSize = fontSize;
     iDlg.appendChild(select);
 
     // Adiciona opções ao select dos pontos
@@ -1260,7 +1266,7 @@ function createDivOrdenaPontos() {
     label.style.marginTop = '10px';
     label.style.marginBottom = '10px';
     label.style.fontFamily = 'Arial, sans-serif';
-    label.style.fontSize = '14px';
+    label.style.fontSize = fontSize;
     label.style.color = '#333';
     iDlg.appendChild(label);
 
@@ -1272,7 +1278,7 @@ function createDivOrdenaPontos() {
     selectAlgoOrdenacao.style.bottom = '0px';
     selectAlgoOrdenacao.style.width = '100%';
     selectAlgoOrdenacao.style.height = '40px'; // Ocupa o espaço restante
-    selectAlgoOrdenacao.style.fontSize = '16px';
+    selectAlgoOrdenacao.style.fontSize = fontSize;
     iDlg.appendChild(selectAlgoOrdenacao);
 
     function LoadSelectAlgoOrdenacao()
