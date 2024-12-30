@@ -866,6 +866,51 @@ def calcular_distancia_haversine(ponto1, ponto2):
 
     return distancia
 ################################################################################
+import numpy as np
+import torch_directml as dml  # Substituto para GPUs não CUDA # pip install torch-directml
+                              # pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+  
+################################################################################
+def OrdenarPontosDistanciaOSMR_DML(pontosvisita, pontoinicial):
+    """
+    Ordena os pontos de visita usando a métrica DistanciaRota com DirectML.
+
+    Args:
+        pontosvisita (list): Lista de pontos (lat, lon) a serem visitados.
+        pontoinicial (tuple): Coordenadas (lat, lon) do ponto inicial.
+
+    Returns:
+        list: Lista de pontos ordenados.
+    """
+    # Dispositivo DirectML
+    device = dml.device()
+    
+    # Converta os pontos para tensores no dispositivo DirectML
+    pontos_lat = torch.tensor([p[0] for p in pontosvisita], device=device, dtype=torch.float32)
+    pontos_lon = torch.tensor([p[1] for p in pontosvisita], device=device, dtype=torch.float32)
+    ordenados = [pontoinicial]
+    
+    while pontos_lat.numel() > 0:  # Enquanto houver pontos para visitar
+        ultimo_ponto = ordenados[-1]
+        lat1 = torch.tensor(ultimo_ponto[0], device=device, dtype=torch.float32)
+        lon1 = torch.tensor(ultimo_ponto[1], device=device, dtype=torch.float32)
+
+        # Calcular distâncias para todos os pontos restantes
+        distancias = DistanciaRota(lat1, lon1, pontos_lat, pontos_lon)
+        
+        # Encontrar o índice do ponto mais próximo
+        idx_proximo_ponto = torch.argmin(distancias).item()
+
+        # Adicionar o ponto mais próximo à lista de ordenados
+        ordenados.append((pontos_lat[idx_proximo_ponto].item(), pontos_lon[idx_proximo_ponto].item()))
+
+        # Remover o ponto selecionado dos tensores
+        pontos_lat = torch.cat((pontos_lat[:idx_proximo_ponto], pontos_lat[idx_proximo_ponto + 1:]))
+        pontos_lon = torch.cat((pontos_lon[:idx_proximo_ponto], pontos_lon[idx_proximo_ponto + 1:]))
+
+    return ordenados
+
+################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
 def OrdenarPontos(pontosvisita,pontoinicial):  
     BenchmarkRotas(pontosvisita,pontoinicial)
@@ -875,7 +920,7 @@ def OrdenarPontos(pontosvisita,pontoinicial):
     if UserData.AlgoritmoOrdenacaoPontos=="DistanciaOSMR":      
        return OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial)
     if UserData.AlgoritmoOrdenacaoPontos=="DistanciaOSMRMultiThread":      
-       return OrdenarPontosDistanciaOSMRMultiThread(pontosvisita,pontoinicial)   
+       return OrdenarPontosDistanciaOSMRMultiThread(pontosvisita,pontoinicial)    
     return pontosvisita # Nenhuma seleção, não ordena os pontos
 ################################################################################
 from concurrent.futures import ThreadPoolExecutor
@@ -902,6 +947,7 @@ def OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial):
 
     del ordenados[0]  # Remove o primeiro elemento, usado apenas como referência inicial da ordenação
     return ordenados
+
 ################################################################################
 def calcular_distancia_totalOSMR(osmr_saida):
     """
