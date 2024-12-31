@@ -1317,7 +1317,7 @@ function createDivOrdenaPontos() {
     const sobeBtn = createButton('Sobe', () => moveOption(-1));
     const desceBtn = createButton('Desce', () => moveOption(1));
     const reordenaBtn = createButton('Reordena', () => reordenaOption());
-    const fechaBtn = createButton('Fecha', () => document.body.removeChild(compassDiv));
+    const fechaBtn = createButton('Fecha', () => document.body.removeChild(iDlg));
     fechaBtn.style.backgroundColor = '#0039FF';
     fechaBtn.style.color = '#fff';
 
