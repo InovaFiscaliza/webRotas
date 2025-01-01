@@ -80,7 +80,7 @@ payload = {
         [2.793886, -60.715556,"Local","CRAS/Cristiana Vicente Nunes – Bairro Centenário"],                  
         [2.816383, -60.772500,"Local","Praça Cruviana – Bairro Jardin Equatorial"]
     ],
-    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread" 
+    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
 
@@ -137,7 +137,7 @@ payload = {
     "longitude": -43.16360553394545,
     "raio": 10,
     "numeropontos":21,
-    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread" 
+    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
 # enviar_json(payload, "http://localhost:5001/webrotas")
@@ -158,7 +158,7 @@ payload = {
         [-22.890314907121354, -43.02994867766674,"Local",""],
         [-22.82050214149252, -43.07793536049125,"Local",""]
     ],
-    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread" 
+    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
 
@@ -174,7 +174,7 @@ payload = {
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
     "cidade": "Niterói",
     "uf": "RJ",
-    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread" 
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
     "distancia_pontos": "2000",  # distancia entre pontos em metros
     "regioes": regioesBuf
 }

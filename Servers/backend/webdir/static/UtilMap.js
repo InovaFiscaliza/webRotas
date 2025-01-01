@@ -1161,7 +1161,7 @@ function ReordenaPontosTela(pontosVisita){
         markerVet.push(markerbufTemp);
         i=i+1;
     });
-
+    
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 fontSize = '12px';
@@ -1240,7 +1240,7 @@ function createDivOrdenaPontos() {
     // select.multiple = true;
     select.size = 10000; // Define o número de itens visíveis
     select.style.width = '100%';
-    select.style.height = 'calc(100% - 150px)'; // Ocupa o espaço restante
+    select.style.height = 'calc(100% - 70px)'; // Ocupa o espaço restante e retira os espaços para outros controles
     select.style.fontSize = fontSize;
     iDlg.appendChild(select);
 
@@ -1258,7 +1258,7 @@ function createDivOrdenaPontos() {
     
     }
     LoadSelect();
-
+    /*
     // Adiciona o rótulo
     label = document.createElement('label');
     label.htmlFor = 'listaAlgoOrdencao';
@@ -1284,25 +1284,24 @@ function createDivOrdenaPontos() {
     function LoadSelectAlgoOrdenacao()
     {
         // "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread" 
-        index = 0;
         selectAlgoOrdenacao.innerHTML = '';
         option = document.createElement('option');
-        option.value = index + 1;
+        option.value = "Nenhum";
         option.textContent = "Nenhum";
         selectAlgoOrdenacao.appendChild(option); 
 
         option = document.createElement('option');
-        option.value = index + 1;
+        option.value = "Distancia Geodesica";
         option.textContent = "Distancia Geodesica";
         selectAlgoOrdenacao.appendChild(option); 
 
         option = document.createElement('option');
-        option.value = index + 1;
+        option.value = "Distancia OSMR MultiThread";
         option.textContent = "Distancia OSMR MultiThread";
         selectAlgoOrdenacao.appendChild(option); 
     }
     LoadSelectAlgoOrdenacao();
-
+    */
 
     // Cria os botões
     const buttonsContainer = document.createElement('div');
@@ -1353,8 +1352,17 @@ function createDivOrdenaPontos() {
             pontosVisitaNew.push([lat, lon]); 
         });
         pontosVisita = pontosVisitaNew;
-        ReordenaPontosTela(pontosVisita);        
+        //  Pegar algoritmo de ordenação selecionado
+        // selecionado = selectAlgoOrdenacao.value; // Obtém o valor selecionado
+        // console.log("Algoritmo de ordenação selecionado:", selecionado);
+        ReordenaPontosTela(pontosVisita);    
+        RefazRotaNoServidor();    
         LoadSelect();
+    }
+    ////////////////////////////////
+    function RefazRotaNoServidor()
+    {
+
     }
     ////////////////////////////////
     // Função para mover opções na lista
