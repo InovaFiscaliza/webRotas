@@ -179,4 +179,37 @@ payload = {
     "regioes": regioesBuf
 }
 
+# enviar_json(payload, "http://localhost:5001/webrotas")
+
+#------------------------------------------------------
+# exemplo pontos compromisso de abrangência
+payload = {
+    "User": "Fabio",
+    "TipoRequisicao": "Abrangencia",
+    "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
+    "cidade": "Niterói",
+    "uf": "RJ",
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
+    "distancia_pontos": "2000",  # distancia entre pontos em metros
+    "regioes": regioesBuf
+}
+
+# enviar_json(payload, "http://localhost:5001/webrotas")
+
+# exemplo pedido para regerar a rota para uma lista de pontos já roteados, restorna o polyline da rota
+# usado a partir de um cliente html que sabe o número de porta dos OSMR server já ativo de um usuário.    
+payload = {
+    "TipoRequisicao": "RoteamentoOSMR",
+    "PortaOSRMServer": 50001,
+    "pontosvisita": [
+        [-22.90510838815471, -43.105772903105354],
+        [-22.917360518277434, -43.089637952126694],
+        [-22.93823733595283, -43.04438138041789],
+        [-22.866894934079635, -43.084679404650934],
+        [-22.890314907121354, -43.02994867766674],
+        [-22.82050214149252, -43.07793536049125]
+    ]
+}
+
 enviar_json(payload, "http://localhost:5001/webrotas")
+#------------------------------------------------------

@@ -1356,12 +1356,59 @@ function createDivOrdenaPontos() {
         // selecionado = selectAlgoOrdenacao.value; // Obtém o valor selecionado
         // console.log("Algoritmo de ordenação selecionado:", selecionado);
         ReordenaPontosTela(pontosVisita);    
-        RefazRotaNoServidor();    
+        RefazRotaNoServidor(pontosVisita);    
         LoadSelect();
     }
     ////////////////////////////////
-    function RefazRotaNoServidor()
+    function GetServerUrl()
     {
+        if ( window.location.hostname=="127.0.0.1") 
+        {
+                //  sem ngrock 
+                serverUrl = `${window.location.protocol}//${window.location.hostname}`;
+                url = `${serverUrl}:5001`
+        }    
+        else
+        {
+                //  no ngrock
+                serverUrl = `${window.location.protocol}//${window.location.hostname}`;
+                url = `${serverUrl}`
+        }      
+        return(url);
+    }
+    ////////////////////////////////
+    async function RefazRotaNoServidor(pontosVisita)
+    {
+        if(poly_lineRota)
+        {    
+           poly_lineRota.remove();
+           poly_lineRota = null;
+        }     
+        const payload = {
+            TipoRequisicao: "RoteamentoOSMR",
+            PortaOSRMServer: 50001,
+            pontosvisita: pontosVisita
+        };
+        // enviar_json(payload, "http://localhost:5001/webrotas")
+
+        url = GetServerUrl()+ "/webrotas"; 
+
+        try {
+            // Espera a resposta da função enviarJson
+            data = await enviarJson(payload, url);
+            // Manipula a resposta
+            console.log("Resposta recebida:", data);
+        } catch (error) {
+            console.error("Erro ao processar a requisição:", error);
+            return;
+        }
+
+        polylineRotaDat = data.polylineRota;
+        poly_lineRota = L.polyline(polylineRotaDat, {
+            "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
+            "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
+            "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
+            "weight": 3}).addTo(map);
 
     }
     ////////////////////////////////
@@ -1385,6 +1432,39 @@ function createDivOrdenaPontos() {
     }
     
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+async function enviarJson(payload, url) {
+    try {
+        // Envia uma requisição POST com JSON
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // Verifica se a requisição foi bem-sucedida
+        if (response.ok) {
+            console.log("-----------------------------------------------");
+            console.log("Requisição bem-sucedida:");
+            
+            const responseData = await response.json();
+            console.log(responseData);
+            console.log("-----------------------------------------------");
+            return(responseData);
+            // const redirectUrl = responseData.Url;
+            // if (redirectUrl) {
+            //     window.open(redirectUrl, '_blank'); // Abre a URL em uma nova aba
+            // }
+        } else {
+            console.error(`Erro ${response.status}: ${await response.text()}`);
+        }
+    } catch (error) {
+        console.error("Erro na requisição:", error);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createAtivaGps() {
     // Cria a div para a bússola

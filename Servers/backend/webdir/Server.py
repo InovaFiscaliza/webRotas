@@ -178,6 +178,23 @@ def ProcessaRequisicoesAoServidor(data):
                        "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
                        "Kml":f"http://127.0.0.1:5001/download/{fileKml}"}
                       ), 200
+    #---------------------------------------------------------------------------------------------
+    TipoReq = data["TipoRequisicao"]
+    if TipoReq=="RoteamentoOSMR":
+       # Obtém valores do JSON
+       print("\n\n#############################################################################################")
+       print("Recebida solicitação de RoteamentoOSMR\n")
+       
+       if not all(key in data for key in ("TipoRequisicao", "PortaOSRMServer", "pontosvisita")):
+          return jsonify({"error": "Campos TipoRequisicao, PortaOSRMServer e pontosvisita são necessários"}), 400
+      
+       porta=data["PortaOSRMServer"]
+       pontosvisita = data.get("pontosvisita", []) 
+
+       polylineRota=wr.RoteamentoOSMR(data,porta,pontosvisita)
+       # Retorna uma resposta de confirmação
+       return jsonify({"polylineRota": polylineRota}), 200       
+       
     #---------------------------------------------------------------------------------------------    
     return jsonify({"ErroPedido": "ErroPedido"}), 200
 ################################################################################

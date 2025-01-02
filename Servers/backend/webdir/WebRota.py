@@ -103,16 +103,27 @@ class ClRouteDetailList:
     def GeraMapPolylineCaminho(self):
         wLog("Plotando polyline rota")
         self.mapcode += "\n"
-        self.mapcode += """var poly_line = L.polyline(["""
-        
+        # self.mapcode += """var poly_lineRota = L.polyline([""" 
+        # for i, (lat, lon) in enumerate(self.coordinates):
+        #     if i == len(self.coordinates) - 1:  # Último elemento
+        #        self.mapcode += f"[{lat}, {lon}]"
+        #    else:
+        #       self.mapcode += f"[{lat}, {lon}], "    
+        #self.mapcode += """],{"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+        #                   ).addTo(map);\n"""
+                   
+        self.mapcode += """var polylineRotaDat = ["""       
         for i, (lat, lon) in enumerate(self.coordinates):
             if i == len(self.coordinates) - 1:  # Último elemento
-               self.mapcode += f"[{lat}, {lon}]"
+                self.mapcode += f"[{lat}, {lon}]"
             else:
-               self.mapcode += f"[{lat}, {lon}], "
-          
-        self.mapcode += """],{"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
-                           ).addTo(map);\n"""
+                self.mapcode += f"[{lat}, {lon}], "
+        self.mapcode += """];
+        var poly_lineRota = L.polyline(polylineRotaDat, {
+            "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
+            "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
+            "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
+            "weight": 3}).addTo(map);\n"""                           
         return
     #---------------------------------------------------
     def NewWaypoint(self,waypoint,lat,lon):
@@ -1840,6 +1851,25 @@ def DescricaoPontoVisita(pontosvisitaDados, lat, lon):
         if ponto[0] == lat and ponto[1] == lon:
             return ponto[4]  # Retorna o campo de endereço (4º elemento)
     return "Endereço não encontrado para a latitude e longitude fornecidas."
+################################################################################
+# 222222222222222
+def RoteamentoOSMR(data,porta,pontosvisita):
+    UserData.OSMRport=porta
+    RouteDetail = ClRouteDetailList()
+    i = 0
+    for ponto in pontosvisita:
+        # lat, lon = ponto        
+
+        if(i==0):
+           (latfI,lonfI) = pontosvisita[i] 
+        if(i==(len(pontosvisita) -1)):
+           (latfF,lonfF) = pontosvisita[i]            
+        if(i>0):
+            (lati,loni) = pontosvisita[i-1]
+            (latf,lonf) = pontosvisita[i]       
+            RouteDetail=GenerateRouteMap(RouteDetail,lati,loni,latf,lonf)
+        i=i+1    
+    return RouteDetail.coordinates
 ################################################################################
 def RoutePontosVisita(data,user,pontoinicial,pontosvisitaDados,regioes):
     
