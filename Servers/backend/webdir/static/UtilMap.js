@@ -1457,6 +1457,10 @@ function exibirMensagem(mensagem) {
     mensagemDiv.style.display = 'flex';
     mensagemDiv.style.alignItems = 'center'; // Alinhamento vertical
     mensagemDiv.style.gap = '10px'; // Espaçamento entre elementos
+    mensagemDiv.style.userSelect = 'none';           // Para navegadores modernos
+    mensagemDiv.style.webkitUserSelect = 'none';     // Para navegadores baseados no WebKit
+    mensagemDiv.style.mozUserSelect = 'none';        // Para Firefox
+    mensagemDiv.style.msUserSelect = 'none'; 
 
     // Criar a div da ampulheta
     const ampulhetaDiv = document.createElement('div');

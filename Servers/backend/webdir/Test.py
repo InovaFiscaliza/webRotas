@@ -86,7 +86,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 regioesBuf =  [       
@@ -140,7 +140,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -164,7 +164,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência
@@ -179,7 +179,7 @@ payload = {
     "regioes": regioesBuf
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência
@@ -194,7 +194,7 @@ payload = {
     "regioes": regioesBuf
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 
 # exemplo pedido para regerar a rota para uma lista de pontos já roteados, restorna o polyline da rota
 # usado a partir de um cliente html que sabe o número de porta dos OSMR server já ativo de um usuário.    
@@ -211,5 +211,5 @@ payload = {
     ]
 }
 
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 #------------------------------------------------------
