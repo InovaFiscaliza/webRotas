@@ -550,7 +550,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
       # URL da solicitação ao servidor GHopper
       url = f"http://localhost:8989/route?point={start_lat},{start_lon}&point={end_lat},{end_lon}"
    
-   # wLog(url)
+   wLog(url)
    # Fazer a solicitação
    response = requests.get(url)   
    return response

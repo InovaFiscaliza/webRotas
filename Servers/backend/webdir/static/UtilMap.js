@@ -1361,7 +1361,7 @@ function createDivOrdenaPontos() {
     }
     ////////////////////////////////
     function GetServerUrl()
-    {
+    {    
         if ( window.location.hostname=="127.0.0.1") 
         {
                 //  sem ngrock 
@@ -1387,7 +1387,7 @@ function createDivOrdenaPontos() {
         }     
         const payload = {
             TipoRequisicao: "RoteamentoOSMR",
-            PortaOSRMServer: 50001,
+            PortaOSRMServer: OSRMPort,
             pontosvisita: pontosVisita
         };
         // enviar_json(payload, "http://localhost:5001/webrotas")
@@ -1401,17 +1401,21 @@ function createDivOrdenaPontos() {
             console.log("Resposta recebida:", data);
         } catch (error) {
             console.error("Erro ao processar a requisição:", error);
+            document.body.removeChild(IhandleMsg);
             return;
         }
 
         polylineRotaDat = data.polylineRota;
+        console.log("---------------------------------");
+        console.log(polylineRotaDat);
+        console.log("---------------------------------");
         poly_lineRota = L.polyline(polylineRotaDat, {
             "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
             "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
             "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
             "weight": 3}).addTo(map);
         
-            document.body.removeChild(IhandleMsg);
+        document.body.removeChild(IhandleMsg);
     }
     ////////////////////////////////
     // Função para mover opções na lista

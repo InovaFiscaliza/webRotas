@@ -182,8 +182,8 @@ def ProcessaRequisicoesAoServidor(data):
     TipoReq = data["TipoRequisicao"]
     if TipoReq=="RoteamentoOSMR":
        # Obtém valores do JSON
-       print("\n\n#############################################################################################")
-       print("Recebida solicitação de RoteamentoOSMR\n")
+       wr.wLog("\n\n#############################################################################################")
+       wr.wLog("Recebida solicitação de RoteamentoOSMR\n")
        
        if not all(key in data for key in ("TipoRequisicao", "PortaOSRMServer", "pontosvisita")):
           return jsonify({"error": "Campos TipoRequisicao, PortaOSRMServer e pontosvisita são necessários"}), 400
@@ -193,6 +193,7 @@ def ProcessaRequisicoesAoServidor(data):
 
        polylineRota=wr.RoteamentoOSMR(data,porta,pontosvisita)
        # Retorna uma resposta de confirmação
+       wr.wLog("\n\n#############################################################################################")
        return jsonify({"polylineRota": polylineRota}), 200       
        
     #---------------------------------------------------------------------------------------------    
