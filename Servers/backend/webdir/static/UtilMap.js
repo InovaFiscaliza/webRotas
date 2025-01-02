@@ -1379,6 +1379,7 @@ function createDivOrdenaPontos() {
     ////////////////////////////////
     async function RefazRotaNoServidor(pontosVisita)
     {
+        IhandleMsg=exibirMensagem("Servidor Calculando a Nova Rota");
         if(poly_lineRota)
         {    
            poly_lineRota.remove();
@@ -1409,7 +1410,8 @@ function createDivOrdenaPontos() {
             "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
             "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
             "weight": 3}).addTo(map);
-
+        
+            document.body.removeChild(IhandleMsg);
     }
     ////////////////////////////////
     // Função para mover opções na lista
@@ -1433,6 +1435,75 @@ function createDivOrdenaPontos() {
     
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function exibirMensagem(mensagem) {
+    // Criar a div principal da mensagem
+    const mensagemDiv = document.createElement('div');
+
+    // Estilizar a div principal
+    mensagemDiv.style.position = 'fixed'; // Fixo em relação à janela
+    mensagemDiv.style.top = '50%';
+    mensagemDiv.style.left = '50%';
+    mensagemDiv.style.transform = 'translate(-50%, -50%)';
+    mensagemDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.40)'; // Transparência de 40%
+    mensagemDiv.style.padding = '20px';
+    mensagemDiv.style.borderRadius = '10px'; // Bordas arredondadas
+    mensagemDiv.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.2)'; // Sombra
+    mensagemDiv.style.zIndex = '1000';
+    mensagemDiv.style.textAlign = 'center';
+    mensagemDiv.style.fontFamily = 'Arial, sans-serif';
+    mensagemDiv.style.fontSize = '16px';
+    mensagemDiv.style.color = '#333';
+    mensagemDiv.style.backgroundImage = 'linear-gradient(135deg, rgba(224, 244, 228, 0.8), rgba(192, 216, 236, 0.8))'; // Degradê
+    mensagemDiv.style.display = 'flex';
+    mensagemDiv.style.alignItems = 'center'; // Alinhamento vertical
+    mensagemDiv.style.gap = '10px'; // Espaçamento entre elementos
+
+    // Criar a div da ampulheta
+    const ampulhetaDiv = document.createElement('div');
+    ampulhetaDiv.style.width = '20px';
+    ampulhetaDiv.style.height = '20px';
+    ampulhetaDiv.style.border = '4px solid rgba(0, 0, 0, 0.1)';
+    ampulhetaDiv.style.borderTop = '4px solid #333';
+    ampulhetaDiv.style.borderRadius = '50%';
+    ampulhetaDiv.style.animation = 'spin 1s linear infinite';
+
+    // Criar o texto da mensagem
+    const textoMensagem = document.createElement('span');
+    textoMensagem.classList.add('mensagem-texto');
+    textoMensagem.textContent = mensagem;
+    // Estilos definidos em uma tag <style> ou arquivo CSS:
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        .mensagem-texto {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #333;
+        }
+    `;
+
+
+    // Adicionar a ampulheta e o texto à div principal
+    mensagemDiv.appendChild(ampulhetaDiv);
+    mensagemDiv.appendChild(textoMensagem);
+
+    // Adicionar a div ao body
+    document.body.appendChild(mensagemDiv);
+
+    // Criar a animação CSS para a ampulheta
+    const styleSheet = document.createElement('style');
+    styleSheet.type = 'text/css';
+    styleSheet.innerText = `
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+
+    return mensagemDiv;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 async function enviarJson(payload, url) {
     try {
         // Envia uma requisição POST com JSON
