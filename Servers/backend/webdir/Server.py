@@ -6,20 +6,24 @@ from flask_compress import Compress  # pip install flask_compress
 from flask_cors import CORS # pip install flask-cors
 
   # pip install flask
-# estudar como melhorar a escalabilidade com gunicorn
-
-# gunicorn -w 4 -b 0.0.0.0:8000 Site:app
+#-----------------------------------------------------------  
+# estudar como melhorar a escalabilidade com gunicorn (no linux)
+# gunicorn -w 4 -b 0.0.0.0:5001 Site:app
 # Como instalar o gunicorn no ningx docker
-
+# pip install gunicorn
+#----------------------------------------------------------- 
+# pip install waitress (melhor no windows)
+# waitress-serve --host=0.0.0.0 --port=5001 Server:app
+#----------------------------------------------------------- 
+# Config ngrock
 # ngrok http 5001 
-
+#----------------------------------------------------------- 
 wr.FileLog=os.getcwd()+"\logs\WebRotasServer.log"
 print(f"Arquivo de log: {wr.FileLog}")
 
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Habilita CORS para todas as rotas
 Compress(app)
-
 # Configuração para forçar a recarga de arquivos estáticos
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # Ativa o auto-reload dos templates

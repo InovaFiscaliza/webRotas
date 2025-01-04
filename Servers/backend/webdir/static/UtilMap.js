@@ -1474,22 +1474,24 @@ function exibirMensagem(mensagem) {
     ampulhetaDiv.style.borderTop = '4px solid #333';
     ampulhetaDiv.style.borderRadius = '50%';
     ampulhetaDiv.style.animation = 'spin 1s linear infinite';
-
     // Criar o texto da mensagem
     const textoMensagem = document.createElement('span');
     textoMensagem.classList.add('mensagem-texto');
     textoMensagem.textContent = mensagem;
     // Estilos definidos em uma tag <style> ou arquivo CSS:
     const styleElement = document.createElement('style');
+    
     styleElement.textContent = `
         .mensagem-texto {
             font-family: Arial, sans-serif;
             font-size: 16px;
             color: #333;
-        }
-    `;
+        
+    }`;
+    
 
-
+    document.head.appendChild(styleElement);
+   
     // Adicionar a ampulheta e o texto à div principal
     mensagemDiv.appendChild(ampulhetaDiv);
     mensagemDiv.appendChild(textoMensagem);

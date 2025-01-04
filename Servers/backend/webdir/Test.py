@@ -137,7 +137,7 @@ payload = {
     "longitude": -43.16360553394545,
     "raio": 10,
     "numeropontos":21,
-    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
 enviar_json(payload, "http://localhost:5001/webrotas")
