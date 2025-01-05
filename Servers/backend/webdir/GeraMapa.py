@@ -159,6 +159,7 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     GeraStaticIcon("Pointer")   
     GeraStaticIcon("GpsInativo")
     GeraStaticIcon("GpsAtivo")
+    GeraStaticIcon("Kml")
     
     globalMaxElevation = wr.MaxAltitude 
     GeraElevationTable()    

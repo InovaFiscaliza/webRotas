@@ -1183,7 +1183,7 @@ function createDivOrdenaPontos() {
     iDlg.style.width = '400px'; // Tamanho inicial
     iDlg.style.height = '300px';
     iDlg.style.backgroundColor = '#f9f9f9';
-    iDlg.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+    iDlg.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.4)';  // sombra em torno do div para destaque na interface
     iDlg.style.display = 'flex';
     iDlg.style.flexDirection = 'column';
     iDlg.style.alignItems = 'flex-start';
@@ -1451,7 +1451,7 @@ function exibirMensagem(mensagem) {
     mensagemDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.40)'; // Transparência de 40%
     mensagemDiv.style.padding = '20px';
     mensagemDiv.style.borderRadius = '10px'; // Bordas arredondadas
-    mensagemDiv.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.2)'; // Sombra
+    mensagemDiv.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.4)'; // Sombra
     mensagemDiv.style.zIndex = '1000';
     mensagemDiv.style.textAlign = 'center';
     mensagemDiv.style.fontFamily = 'Arial, sans-serif';
@@ -1475,7 +1475,7 @@ function exibirMensagem(mensagem) {
     ampulhetaDiv.style.borderRadius = '50%';
     ampulhetaDiv.style.animation = 'spin 1s linear infinite';
     // Criar o texto da mensagem
-    const textoMensagem = document.createElement('span');
+    const textoMensagem = document.createElement('label'); // 'label' ou 'span'
     textoMensagem.classList.add('mensagem-texto');
     textoMensagem.textContent = mensagem;
     // Estilos definidos em uma tag <style> ou arquivo CSS:
@@ -1620,11 +1620,11 @@ function createMacOSDock() {
     dock.style.padding = '10px 15px';
     dock.style.display = 'flex';
     dock.style.gap = '10px';
-    dock.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2)';
+    dock.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.4)'; // sombra em torno para destacar na interface
     dock.style.zIndex = 1000;
 
     // Add icon-like divs to the dock
-    const icons = ['🏠', '🔍', '📂', '⚙️', '💡']; // Example icons
+    const icons = ['🏠', '🔍', '📂', '⚙️', '💡', 'KML']; // Example icons
     icons.forEach((icon,index) => {
         const iconDiv = document.createElement('div');
         iconDiv.style.width = '50px';
@@ -1726,14 +1726,14 @@ function createMacOSDock() {
 
         }      
         //---------------------------------------------------------------------------
-        if (index === 4) {
-            // Add the imgElevationTable image to the first icon
+        if (index === 5) {
             iconDiv.innerText = '';
             const img = document.createElement('div');
             img.id="divLayers";     
             img.style.width = '35px';
             img.style.height = '35px';
             img.style.borderRadius = '10px';
+            img.style.zIndex ="1501";
             const layersControl = L.control.layers(baseLayers, null);
             layersControl.addTo(map);
             const layersContainer =  layersControl.getContainer(); // Obter a interface do controle
@@ -1744,12 +1744,28 @@ function createMacOSDock() {
             layersContainer.style.width = '200px'; // Define a largura do menu
             layersContainer.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.0)'; // Sombra para destacar
             layersContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.0)';
+            
             img.appendChild(layersContainer); // Adicionar ao div personalizado
             iconDiv.appendChild(img);
             img.onclick = () => {
                   
             };
         }               
+        //---------------------------------------------------------------------------
+        if (index === 4) {
+            iconDiv.innerText = '';
+            const img = document.createElement('img');
+            img.src = imgKml;  
+            img.style.width = '40px';
+            img.style.height = '40px';
+            img.style.borderRadius = '10px';
+            img.style.zIndex ="999";
+            iconDiv.appendChild(img);
+            img.onclick = () => {
+                // createColorTable();
+            };
+
+        } 
         //---------------------------------------------------------------------------
 
         // Add hover effect for scaling

@@ -1,3 +1,4 @@
+taskkill /F /IM python.exe /T
 FOR /F "tokens=*" %%i IN ('podman ps -a -q') DO podman stop %%i
 wsl rm -rf logs/*
 wsl rm -rf ../../Osmosis/TempData/*
