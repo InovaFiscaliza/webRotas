@@ -237,7 +237,7 @@ function createCustomSvgIcon(text,iconSz,iconAnc,iconColor) {
         iconAnchor: iconAnc // Ponto de ancoragem (centro)
     });
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////        
+//////////////////////////////////////////////////////////////////////////////////////////////////////  
 function onMarkerClick(e) {
     const currentMarker = e.target;
     const markerId = currentMarker._icon.getAttribute('data-id');
@@ -274,6 +274,32 @@ function onMarkerClick(e) {
     currentMarker._icon.setAttribute('data-id', String(markerId));
     currentMarker._icon.setAttribute('altitude', String(altitude));
     AtualizaGps();
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////  
+// zzzzzzzzzz      
+function DisableMarker(e) 
+{
+    console.log("DisableMarker");
+    const currentMarker = e;
+    const markerId = currentMarker._icon.getAttribute('data-id');
+    const clicado = currentMarker._icon.getAttribute('clicado');
+    const altitude = currentMarker._icon.getAttribute('altitude');
+    // Verifica o ícone atual e troca para o outro
+    if (HeadingNorte==0)
+    {    
+
+        currentMarker.setIcon(clickedIcon);
+        currentMarker._icon.setAttribute('clicado', "1");
+        currentMarker._icon.setAttribute('tamanho', "full");
+    }
+    else
+    {
+        currentMarker.setIcon(clickedIconHalf);
+        currentMarker._icon.setAttribute('clicado', "1");
+        currentMarker._icon.setAttribute('tamanho', "half");
+    }
+    currentMarker._icon.setAttribute('data-id', String(markerId));
+    currentMarker._icon.setAttribute('altitude', String(altitude));
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fução que rotaciona um icone no Leaflet
@@ -379,7 +405,8 @@ function decodePolyline(encoded) {
 // Função para calcular a distância Haversine entre duas coordenadas
 function haversineDistance(coord1, coord2) {
     const toRad = angle => (angle * Math.PI) / 180;
-    const R = 6371; // Raio da Terra em km
+    const R = 6371000; // Raio da Terra em metros
+
     const dLat = toRad(coord2.lat - coord1.lat);
     const dLon = toRad(coord2.lng - coord1.lng);
     const lat1 = toRad(coord1.lat);
@@ -412,10 +439,36 @@ function GetNearestPoint(lat, lon) {
         {
             minDistance = distance;
             closestMarkerCoords = markerCoords;   
+            
         }
     });
     DistMakerMaisProximo = minDistance.toFixed(2);
     return closestMarkerCoords; // Retorna as coordenadas do marcador mais próximo
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon) 
+{
+    // zzzzzzzzzzzzz
+    console.log("DesabilitaMarquerNoGPSRaioDaEstacao");
+    const userLocation = {lat: lat, lng: lon};
+
+    // Lista de marcadores já adicionados ao mapa
+    // const markers = [marker1, marker2, marker3, marker4, marker5, marker6, marker7, marker8];
+    if (RaioDaEstacao==null)
+        return;
+    if (markerVet==null)
+        return;
+    markerVet.forEach(marker => {
+        const markerCoords = marker.getLatLng(); // Obtém as coordenadas do marcador
+        const distance = haversineDistance(userLocation, markerCoords);
+        console.log("   userLocation - "+String(userLocation));
+        console.log("   markerCoords - "+String(markerCoords));
+        console.log("   distance - "+String(distance));
+        if (distance < RaioDaEstacao) 
+        {
+            DisableMarker(marker); 
+        }
+    });
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Exemplo de uso
@@ -711,6 +764,8 @@ map.on('click', function(e) {
     heading = 0;
     velocidade = 0;
     GetRouteCarFromHere(latitude,longitude); 
+    // zzzzzzzzzzzzz
+    DesabilitaMarquerNoGPSRaioDaEstacao(latitude, longitude);
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 var LastHeading = 0;  
@@ -766,7 +821,7 @@ function updateGPSPosition(position) {
     if (heading !== 'N/A')
        heading = positionHistory.reduce((sum, pos) => sum + pos.heading, 0) / positionHistory.length;
     // Move o marcador para a nova posição
-    gpsMarker.setLatLng([latitude, longitude]);
+    gpsMarker.setLatLng([latitude, latitude]);
     // Centraliza o mapa na nova posição do marcador
     map.setView([latitude, longitude]);
     // Rotaciona o marcador com base no heading
@@ -775,6 +830,7 @@ function updateGPSPosition(position) {
     
     AtualizaMapaHeading(LastHeading);
     GetRouteCarFromHere(latitude,longitude); 
+    DesabilitaMarquerNoGPSRaioDaEstacao(latitude, latitude); 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetRouteCarFromHere(latitude,longitude)
@@ -1248,7 +1304,7 @@ function createDivOrdenaPontos() {
     function LoadSelect()
     {
         select.innerHTML = '';
-        pontosVisita.forEach((ponto, index) => {
+        pontosVisitaOrdenados.forEach((ponto, index) => {
             const [latitude, longitude] = ponto;
             const option = document.createElement('option');
             option.value = index + 1;
@@ -1351,12 +1407,12 @@ function createDivOrdenaPontos() {
             lon = EncontrarDadoPn(pontosvisitaDados, option.textContent,1)
             pontosVisitaNew.push([lat, lon]); 
         });
-        pontosVisita = pontosVisitaNew;
+        pontosVisitaOrdenados = pontosVisitaNew;
         //  Pegar algoritmo de ordenação selecionado
         // selecionado = selectAlgoOrdenacao.value; // Obtém o valor selecionado
         // console.log("Algoritmo de ordenação selecionado:", selecionado);
-        ReordenaPontosTela(pontosVisita);    
-        RefazRotaNoServidor(pontosVisita);    
+        ReordenaPontosTela(pontosVisitaOrdenados);    
+        RefazRotaNoServidor(pontosVisitaOrdenados);    
         LoadSelect();
     }
     ////////////////////////////////
@@ -1762,7 +1818,7 @@ function createMacOSDock() {
             img.style.zIndex ="999";
             iconDiv.appendChild(img);
             img.onclick = () => {
-                GerarKML(polylineRotaDat, pontosVisita, pontosvisitaDados );
+                GerarKML(polylineRotaDat, pontosVisitaOrdenados, pontosvisitaDados );
             };
 
         } 

@@ -1137,6 +1137,8 @@ class ClUserData:
         self.OSMRport = None
         self.Regioes = None
         self.AlgoritmoOrdenacaoPontos = None
+        self.RaioDaEstacao = None
+        
         return
 ################################################################################
 UserData = ClUserData()    
@@ -1646,6 +1648,8 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
     
     UserData.nome=user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
+    UserData.RaioDaEstacao = data["RaioDaEstacao"]
+    
     
     polMunicipio= GetBoundMunicipio(cidade, uf)
     pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
@@ -1783,10 +1787,10 @@ def MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False):
     return pontosvisitaDadosNew
 ################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
-    wLog("PlotaPontosVisita")
-    
-    i=0
-    RouteDetail.mapcode += f"    pontosVisita = [\n"
+    wLog("PlotaPontosVisita") 
+    i=0 
+    RouteDetail.mapcode += f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n"
+    RouteDetail.mapcode += f"    var pontosVisitaOrdenados = [\n"
     for ponto in pontosvisita:
         latitude, longitude = ponto
         if i == len(pontosvisita) - 1:  # Verifica se é o último elemento
@@ -1807,7 +1811,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     
     # Criar um mapa  
     # RouteDetail.mapcode += f"    const map = L.map('map');\n"
-    RouteDetail.mapcode += f"    map.fitBounds(L.latLngBounds(pontosVisita));\n"        
+    RouteDetail.mapcode += f"    map.fitBounds(L.latLngBounds(pontosVisitaOrdenados));\n"        
     # RouteDetail.pontoinicial
     lat = RouteDetail.pontoinicial[0]    
     lon = RouteDetail.pontoinicial[1]  
@@ -1852,7 +1856,6 @@ def DescricaoPontoVisita(pontosvisitaDados, lat, lon):
             return ponto[4]  # Retorna o campo de endereço (4º elemento)
     return "Endereço não encontrado para a latitude e longitude fornecidas."
 ################################################################################
-# 222222222222222
 def RoteamentoOSMR(data,porta,pontosvisita):
     UserData.OSMRport=porta
     RouteDetail = ClRouteDetailList()
@@ -1875,6 +1878,8 @@ def RoutePontosVisita(data,user,pontoinicial,pontosvisitaDados,regioes):
     
     UserData.nome=user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
+    UserData.RaioDaEstacao = data["RaioDaEstacao"]
+    
     
     pontosvisita=PegaPontosVisita(pontosvisitaDados)
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
@@ -1980,6 +1985,8 @@ def RouteDriveTest(data,user,pontoinicial,central_point,regioes,radius_km=5, num
     
     UserData.nome=user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
+    UserData.RaioDaEstacao = data["RaioDaEstacao"]
+
    
     # Coordenadas da rota (exemplo de uma rota circular simples)   
 

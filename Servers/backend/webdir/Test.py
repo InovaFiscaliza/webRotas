@@ -58,6 +58,7 @@ payload = {
     "User": "Alessandro",
     "TipoRequisicao": "PontosVisita",
     "PontoInicial": [2.802119889276001, -60.68869135518992,"Anatel Roraima"],            # Anatel Roraima 2.802119889276001, -60.68869135518992
+    "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "pontosvisita": [
         [2.812482, -60.670263,"Local","Parque do Rio Branco"],
         [2.840826, -60.692496,"Local","Aeroporto Internacional de Boa Vista"],
@@ -133,6 +134,7 @@ payload = {
     "User": "Andre",
     "TipoRequisicao": "DriveTest",
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
+    "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "latitude": -22.910555413451096,        
     "longitude": -43.16360553394545,
     "raio": 10,
@@ -150,6 +152,7 @@ payload = {
     "User": "Rodrigo",
     "TipoRequisicao": "PontosVisita",
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
+    "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca 
     "pontosvisita": [
         [-22.90510838815471, -43.105772903105354,"Local",""],
         [-22.917360518277434, -43.089637952126694,"Local",""],
@@ -172,6 +175,7 @@ payload = {
     "User": "Fabio",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
+    "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
@@ -187,6 +191,7 @@ payload = {
     "User": "Fabio",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
+    "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
