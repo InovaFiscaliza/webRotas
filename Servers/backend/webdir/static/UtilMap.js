@@ -1762,7 +1762,7 @@ function createMacOSDock() {
             img.style.zIndex ="999";
             iconDiv.appendChild(img);
             img.onclick = () => {
-                // createColorTable();
+                GerarKML(polylineRotaDat, pontosVisita, pontosvisitaDados );
             };
 
         } 
@@ -1783,7 +1783,73 @@ function createMacOSDock() {
     // Add the dock to the body
     document.body.appendChild(dock);
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function GerarKML(polylineRota, pontosVisita, pontosVisitaDados) {
+    // Cabeçalho do KML
+    let kmlInicio = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Pontos e Rotas</name>
+    <!-- Definir estilos -->
+    <Style id="lineStyleBlue">
+      <LineStyle>
+        <color>ff00ff00</color> <!-- verde em formato ABGR -->
+        <width>4</width>
+      </LineStyle>
+    </Style>
 
+
+`;
+
+    // Footer do KML
+    let kmlFim = `
+  </Document>
+</kml>`;
+
+    // Adicionar os pontos de visita
+    let kmlPontos = "";
+    pontosVisitaDados.forEach(([latitude, longitude, idPonto, tipo, descricao, altitude]) => {
+        kmlPontos += `
+    <Placemark>
+      <name>${idPonto}</name>
+      <description>${descricao}</description>
+      <Point>
+        <coordinates>${longitude},${latitude},${altitude}</coordinates>
+      </Point>
+    </Placemark>`;
+    });
+
+    // Adicionar a polilinha (rota)
+    let kmlPolyline = `
+    <Placemark>
+      <name>Rota</name>
+      <styleUrl>#lineStyleBlue</styleUrl>
+      <LineString>
+        <coordinates>
+`;
+    polylineRota.forEach(([latitude, longitude]) => {
+        kmlPolyline += `          ${longitude},${latitude},0\n`;
+    });
+
+    kmlPolyline += `
+        </coordinates>
+      </LineString>
+    </Placemark>`;
+
+    // Combinar todas as partes
+    const kmlConteudo = kmlInicio + kmlPontos + kmlPolyline + kmlFim;
+
+    // Salvar o arquivo KML
+    const blob = new Blob([kmlConteudo], { type: "application/vnd.google-earth.kml+xml" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pontos_e_rotasWebRota.kml";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateControls()
 {
