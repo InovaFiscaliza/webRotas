@@ -237,7 +237,15 @@ function createCustomSvgIcon(text,iconSz,iconAnc,iconColor) {
         iconAnchor: iconAnc // Ponto de ancoragem (centro)
     });
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////  
+////////////////////////////////////////////////////////////////////////////////////////////////////// 
+function AtualizaPontosvisitaDadosMarquerData(currentMarker,ColunaAtualizar,NovoDado)
+{
+    // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"]
+    position = currentMarker.getLatLng();  
+    pontosVisitaDados =  AtualizaPontosvisitaDados(pontosvisitaDados,position.lat, position.lng,ColunaAtualizar,NovoDado);
+    console.log(JSON.stringify(pontosvisitaDados, null, 2));
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function onMarkerClick(e) {
     const currentMarker = e.target;
     const markerId = currentMarker._icon.getAttribute('data-id');
@@ -248,26 +256,33 @@ function onMarkerClick(e) {
     if (HeadingNorte==0)
     {    
         // console.log(`aqui`)
-        if (clicado === "0") {
+        if (clicado === "0") 
+        {
             currentMarker.setIcon(clickedIcon);
             currentMarker._icon.setAttribute('clicado', "1");
-        } else {
-            // aaaaaaaaaaaaaaaa createSvgIconColorAltitude
-            // currentMarker.setIcon(createSvgIconAzul(String(markerId)));   
+            AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Inativo");
+        } 
+        else 
+        {
             currentMarker.setIcon(createSvgIconColorAltitude(String(markerId),String(altitude))); 
             currentMarker._icon.setAttribute('clicado', "0");
+            AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Ativo");
         }      
         currentMarker._icon.setAttribute('tamanho', "full");
     }
     else
     {
-        if (clicado === "0") {
+        if (clicado === "0") 
+        {
             currentMarker.setIcon(clickedIconHalf);
             currentMarker._icon.setAttribute('clicado', "1");
-        } else {
-            // currentMarker.setIcon(createSvgIconAzulHalf(String(markerId)));
+            AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Inativo");
+        } 
+        else 
+        {
             currentMarker.setIcon(createSvgIconColorAltitudeHalf(String(markerId),String(altitude))); 
             currentMarker._icon.setAttribute('clicado', "0");
+            AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Ativo");
         }
         currentMarker._icon.setAttribute('tamanho', "half");
     }
@@ -478,7 +493,7 @@ function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
 function calcularMediaUltimasNCoordenadas(coordinates, n) {
     // Verifica se há coordenadas suficientes
     if (coordinates.length < n) {
-        console.error("Não há coordenadas suficientes para calcular a média");
+        console.log("Não há coordenadas suficientes para calcular a média");
         return null;
     }
 
@@ -1175,7 +1190,7 @@ function limparMarcadores(markerVet) {
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,iPn,iPnDados)
+function AtualizaPontosvisitaDadosCampoPN(pontosvisitaDados,lat, lon,iPn,iPnDados)
 {
     // console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
     i_posicaoiPnDados = pontosvisitaDados.findIndex(ponto => ponto[2] === iPnDados );
@@ -1186,9 +1201,18 @@ function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,iPn,iPnDados)
     return pontosvisitaDados; 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function ReordenaPontosTela(pontosVisita){
+// Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
+function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,ColunaAtualizar,NovoDado)
+{
+    // console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+    i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
+    pontosvisitaDados[i_posicaolatlon][ColunaAtualizar]=NovoDado;
+    return pontosvisitaDados; 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function ReordenaPontosTela(pontosVisita)
+{
     limparMarcadores(markerVet)
-    
     markerVet = [];
     i=0;
     pontosVisita.forEach(point => {
@@ -1205,7 +1229,7 @@ function ReordenaPontosTela(pontosVisita){
 
         if(iPn!=iPnDados)
         {
-            pontosvisitaDados=AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,iPn,iPnDados);
+            pontosvisitaDados=AtualizaPontosvisitaDadosCampoPN(pontosvisitaDados,lat, lon,iPn,iPnDados);
         }
 
         markerbufTemp = L.marker([lat, lon]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude(i,alt));
@@ -1898,13 +1922,30 @@ function GerarKML(polylineRota, pontosVisita, pontosVisitaDados) {
     // Salvar o arquivo KML
     const blob = new Blob([kmlConteudo], { type: "application/vnd.google-earth.kml+xml" });
     const url = URL.createObjectURL(blob);
-
+    
+    date = gerarDataHoraAtual();
     const a = document.createElement("a");
     a.href = url;
-    a.download = "pontos_e_rotasWebRota.kml";
+    
+    a.download = `WebRotasPontosRotas${date}.kml`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function gerarDataHoraAtual() {
+    const agora = new Date();
+
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0'); // Mês começa em 0
+    const dia = String(agora.getDate()).padStart(2, '0');
+
+    const horas = String(agora.getHours()).padStart(2, '0');
+    const minutos = String(agora.getMinutes()).padStart(2, '0');
+    const segundos = String(agora.getSeconds()).padStart(2, '0');
+
+    // Montar a string no formato desejado: YYYY-MM-DD HH:mm:ss
+    return `${ano}-${mes}-${dia}-${horas}:${minutos}:${segundos}`;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateControls()

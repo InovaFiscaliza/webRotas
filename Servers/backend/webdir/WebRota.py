@@ -1736,15 +1736,16 @@ def DeclaracaopontosvisitaDadosJS(pontosvisitaDados):
     """
     # Gerar o array formatado
     i=0
-    
+    # [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
     js_array = "[\n"
     for ponto in pontosvisitaDados:
-        js_array += f"    [{ponto[0]}, {ponto[1]},\"{ponto[2]}\",\"{ponto[3]}\", \"{ponto[4]}\",\"{ponto[5]}\"],\n"
+        js_array += f"    [{ponto[0]}, {ponto[1]},\"{ponto[2]}\",\"{ponto[3]}\", \"{ponto[4]}\",\"{ponto[5]}\",\"Ativo\"],\n"
         i=i+1
     js_array = js_array.rstrip(",\n") + "\n]"  # Remover a última vírgula e adicionar fechamento
 
     # Criar a declaração completa
-    js_code = f"var pontosvisitaDados = {js_array};\n"
+    js_code = "// Formato pontosvisitaDados - [-22.88169706392197, -43.10262976730735,\"P0\",\"Local\", \"Descrição\",\"Altitude\",\"Ativo\"]\n"
+    js_code = js_code+ f"var pontosvisitaDados = {js_array};\n"
     return js_code
 ################################################################################
 def PegaLinhaPontosVisitaDados(pontosvisitaDados,lat,lon):
