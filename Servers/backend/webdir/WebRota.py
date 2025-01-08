@@ -1138,7 +1138,7 @@ class ClUserData:
         self.Regioes = None
         self.AlgoritmoOrdenacaoPontos = None
         self.RaioDaEstacao = None
-        
+        self.GpsProximoPonto = None     
         return
 ################################################################################
 UserData = ClUserData()    
@@ -1649,7 +1649,7 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
     UserData.nome=user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
-    
+    UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
     polMunicipio= GetBoundMunicipio(cidade, uf)
     pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
@@ -1791,6 +1791,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     wLog("PlotaPontosVisita") 
     i=0 
     RouteDetail.mapcode += f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n"
+    RouteDetail.mapcode += f"    var GpsProximoPonto = {UserData.GpsProximoPonto};\n"
     RouteDetail.mapcode += f"    var pontosVisitaOrdenados = [\n"
     for ponto in pontosvisita:
         latitude, longitude = ponto
@@ -1880,7 +1881,7 @@ def RoutePontosVisita(data,user,pontoinicial,pontosvisitaDados,regioes):
     UserData.nome=user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
-    
+    UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
     pontosvisita=PegaPontosVisita(pontosvisitaDados)
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
@@ -1987,7 +1988,7 @@ def RouteDriveTest(data,user,pontoinicial,central_point,regioes,radius_km=5, num
     UserData.nome=user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
-
+    UserData.GpsProximoPonto = data["GpsProximoPonto"]
    
     # Coordenadas da rota (exemplo de uma rota circular simples)   
 

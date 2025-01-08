@@ -926,9 +926,11 @@ function GetRouteCarFromHere(latitude,longitude)
    endCoords = [];
    // zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
    // Colocar a opção de buscar a rota para o ponto mais próximo ou o próximo ponto ativo da lista
-   // nearestPoint = GetNearestPoint(latitude, longitude);
-   nearestPoint = GetNextActivePoint(latitude, longitude);
-   console.log("nearestPoint - "+String(nearestPoint))
+   if(GpsProximoPonto=="ProximoDaRota")
+      nearestPoint = GetNextActivePoint(latitude, longitude);
+   else  // "MaisProximo"
+      nearestPoint = GetNearestPoint(latitude, longitude);
+   // console.log("nearestPoint - "+String(nearestPoint))
    if (nearestPoint==null) // Apaga rota auxiliar 
    {
        if (polyRotaAux) {
