@@ -246,6 +246,44 @@ function AtualizaPontosvisitaDadosMarquerData(currentMarker,ColunaAtualizar,Novo
     console.log(JSON.stringify(pontosvisitaDados, null, 2));
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function salvarEmCookies(nomeCookie, valor, dias) 
+{
+    const data = new Date();
+    data.setTime(data.getTime() + (dias * 24 * 60 * 60 * 1000));
+    const expiracao = "expires=" + data.toUTCString();
+    document.cookie = nomeCookie + "=" + encodeURIComponent(JSON.stringify(valor)) + ";" + expiracao + ";path=/";
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function carregarDeCookies(nomeCookie) {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(nomeCookie + "=")) {
+            const valor = cookie.substring(nomeCookie.length + 1);
+            return JSON.parse(decodeURIComponent(valor));
+        }
+    }
+    return null; // Retorna null se o cookie não for encontrado
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function CarregarCookies()
+{
+   // Carregar variáveis de cookies
+   const polylineRotaDatCarregado = carregarDeCookies('polylineRotaDat');
+   const RaioDaEstacaoCarregado = carregarDeCookies('RaioDaEstacao');
+   const pontosVisitaOrdenadosCarregado = carregarDeCookies('pontosVisitaOrdenados');
+   const pontosvisitaDadosCarregado = carregarDeCookies('pontosvisitaDados');
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function SalvarCookies()
+{
+   // Salvar variáveis em cookies
+   salvarEmCookies('polylineRotaDat', polylineRotaDat, 7);
+   salvarEmCookies('RaioDaEstacao', RaioDaEstacao, 7);
+   salvarEmCookies('pontosVisitaOrdenados', pontosVisitaOrdenados, 7);
+   salvarEmCookies('pontosvisitaDados', pontosvisitaDados, 7);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function onMarkerClick(e) {
     const currentMarker = e.target;
     const markerId = currentMarker._icon.getAttribute('data-id');
@@ -290,8 +328,7 @@ function onMarkerClick(e) {
     currentMarker._icon.setAttribute('altitude', String(altitude));
     AtualizaGps();
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////  
-// zzzzzzzzzz      
+//////////////////////////////////////////////////////////////////////////////////////////////////////   
 function DisableMarker(e) 
 {
     console.log("DisableMarker");
@@ -463,7 +500,6 @@ function GetNearestPoint(lat, lon) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon) 
 {
-    // zzzzzzzzzzzzz
     console.log("DesabilitaMarquerNoGPSRaioDaEstacao");
     const userLocation = {lat: lat, lng: lon};
 
@@ -476,9 +512,9 @@ function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
     markerVet.forEach(marker => {
         const markerCoords = marker.getLatLng(); // Obtém as coordenadas do marcador
         const distance = haversineDistance(userLocation, markerCoords);
-        console.log("   userLocation - "+String(userLocation));
-        console.log("   markerCoords - "+String(markerCoords));
-        console.log("   distance - "+String(distance));
+        // console.log("   userLocation - "+String(userLocation));
+        // console.log("   markerCoords - "+String(markerCoords));
+        // console.log("   distance - "+String(distance));
         if (distance < RaioDaEstacao) 
         {
             DisableMarker(marker); 
@@ -779,7 +815,6 @@ map.on('click', function(e) {
     heading = 0;
     velocidade = 0;
     GetRouteCarFromHere(latitude,longitude); 
-    // zzzzzzzzzzzzz
     DesabilitaMarquerNoGPSRaioDaEstacao(latitude, longitude);
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -848,12 +883,52 @@ function updateGPSPosition(position) {
     DesabilitaMarquerNoGPSRaioDaEstacao(latitude, latitude); 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function GetNextActivePoint(lat, lon) {
+    const userLocation = {lat: lat, lng: lon};
+
+    // Lista de marcadores já adicionados ao mapa
+    // const markers = [marker1, marker2, marker3, marker4, marker5, marker6, marker7, marker8];
+
+    if (markerVet==null)
+        return(null);
+    iPnMin=""
+    markerVet.forEach(marker => {
+        markerCoords = marker.getLatLng(); // Obtém as coordenadas do marcador
+        lat = markerCoords.lat;
+        lon = markerCoords.lng;
+        // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
+        iPnDados = EncontrarDado(pontosvisitaDados, lat, lon,2);
+        bAtivo   = EncontrarDado(pontosvisitaDados, lat, lon,6);
+        console.log("iPnDados - "+iPnDados);
+        console.log("bAtivo - "+bAtivo);
+        if (bAtivo=="Ativo") 
+        {
+            if(iPnMin=="")
+              iPnMin=iPnDados;
+            if(parseInt(iPnMin.slice(1), 10) > parseInt(iPnDados.slice(1), 10))
+                iPnMin=iPnDados;
+        }
+    });
+    pnt=null;
+    if(iPnMin!="")
+    {
+        pnt = {};
+        pnt.lat = EncontrarDadoPn(pontosvisitaDados, iPnMin,0);
+        pnt.lng = EncontrarDadoPn(pontosvisitaDados, iPnMin,1); 
+    }    
+    return pnt; 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetRouteCarFromHere(latitude,longitude)
 {
    console.log("Tentando pegar rota")
    startCoords = [];
    endCoords = [];
-   nearestPoint = GetNearestPoint(latitude, longitude);
+   // zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+   // Colocar a opção de buscar a rota para o ponto mais próximo ou o próximo ponto ativo da lista
+   // nearestPoint = GetNearestPoint(latitude, longitude);
+   nearestPoint = GetNextActivePoint(latitude, longitude);
+   console.log("nearestPoint - "+String(nearestPoint))
    if (nearestPoint==null) // Apaga rota auxiliar 
    {
        if (polyRotaAux) {
@@ -872,9 +947,8 @@ function GetRouteCarFromHere(latitude,longitude)
 // Monitora a posição do usuário e chama updateGPSPosition a cada atualização
 if (navigator.geolocation)
 {
-        navigator.geolocation.getCurrentPosition(updateGPSPosition,
-            error => console.error(error),
-            {enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });  
+    navigator.geolocation.getCurrentPosition(updateGPSPosition,error => console.error(error),
+        {enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });  
 } else
 {
     alert("Geolocalização não é suportada pelo seu navegador.");
@@ -1593,7 +1667,6 @@ function exibirMensagem(mensagem) {
     return mensagemDiv;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-
 async function enviarJson(payload, url) {
     try {
         // Envia uma requisição POST com JSON
