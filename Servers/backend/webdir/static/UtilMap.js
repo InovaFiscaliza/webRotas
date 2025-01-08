@@ -343,12 +343,14 @@ function DisableMarker(e)
         currentMarker.setIcon(clickedIcon);
         currentMarker._icon.setAttribute('clicado', "1");
         currentMarker._icon.setAttribute('tamanho', "full");
+        AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Inativo");
     }
     else
     {
         currentMarker.setIcon(clickedIconHalf);
         currentMarker._icon.setAttribute('clicado', "1");
         currentMarker._icon.setAttribute('tamanho', "half");
+        AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Inativo");
     }
     currentMarker._icon.setAttribute('data-id', String(markerId));
     currentMarker._icon.setAttribute('altitude', String(altitude));

@@ -1791,7 +1791,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     wLog("PlotaPontosVisita") 
     i=0 
     RouteDetail.mapcode += f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n"
-    RouteDetail.mapcode += f"    var GpsProximoPonto = {UserData.GpsProximoPonto};\n"
+    RouteDetail.mapcode += f"    var GpsProximoPonto = '{UserData.GpsProximoPonto}';\n"
     RouteDetail.mapcode += f"    var pontosVisitaOrdenados = [\n"
     for ponto in pontosvisita:
         latitude, longitude = ponto
