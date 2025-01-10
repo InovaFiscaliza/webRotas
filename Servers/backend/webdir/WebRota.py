@@ -1,5 +1,6 @@
 ###########################################################################################################################
 import GeraMapa as gm
+import ShapeFiles as sf
 
 # Salvar enviroment
 # conda env export > environment.yml
@@ -619,54 +620,6 @@ def GenerateRouteMapGHopper(RouteDetailLoc,start_lat, start_lon, end_lat, end_lo
        return RouteDetailLoc
             
     return RouteDetailLoc
-###########################################################################################################################
-import geopandas as gpd
-import matplotlib.pyplot as plt
-# https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/BR_Municipios_2022.zip
-##########################################################################################################################
-def GetBoundMunicipio(nome_municipio, estado_sigla):
-    """
-    Função para obter o limite geográfico e o centroide de um município específico e retornar a Polyline.
-    
-    Parâmetros:
-        nome_municipio (str): Nome do município.
-        estado_sigla (str): Sigla do estado (ex: 'RJ' para Rio de Janeiro).
-        
-    Retorna:
-        polyline (list): Lista de coordenadas [(lat, lon), ...] representando o limite do município.
-        centroide (Point): Coordenadas do centroide do município.
-    """
-    wLog(f"GetBoundMunicipio - {nome_municipio} - {estado_sigla}")
-    # Carregar o arquivo Shapefile BR_Municipios_2022.shp
-    shapefile_path = '../../BR_Municipios_2022/BR_Municipios_2022.shp'
-    gdf = gpd.read_file(shapefile_path)
-    
-    # Filtrar município e estado
-    municipio = gdf[(gdf['NM_MUN'] == nome_municipio) & (gdf['SIGLA_UF'] == estado_sigla)]
-
-    if municipio.empty:
-        wLog(f"Município '{nome_municipio}' no estado '{estado_sigla}' não encontrado.")
-        return None
-    
-    # Obter a geometria do município
-    geometria = municipio.geometry.values[0]  # Geometria do limite
-    centroide = geometria.centroid            # Centroide do município
-    
-    # Extrair coordenadas como Polyline
-    polyline = []
-    if geometria.geom_type == 'MultiPolygon':
-        # Se for MultiPolygon, concatenar coordenadas de todos os polígonos
-        wLog("Foi multipoligon - Cidade possui ilhas ou áreas isoladas")
-        
-        for polygon in geometria.geoms:
-            polyline.append(list(polygon.exterior.coords))
-    else:
-        # Se for Polygon, apenas extrair as coordenadas
-        polyline.append(list(geometria.exterior.coords))
-    
-    # Retornar a Polyline (como lista de coordenadas) 
-    return polyline
-
 ###########################################################################################################################
 def GenerateRouteMapOSMR(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
     """
@@ -1644,6 +1597,47 @@ def ServerSetupJavaScript(RouteDetail):
        RouteDetail.mapcode += f"    const ServerTec = 'GHopper';\n"
     return RouteDetail
 ################################################################################
+def DesenhaComunidades(RouteDetail,regioes):
+    for regiao in regioes:
+        nome = regiao.get("nome", "")
+        if nome == "regiaoBoundingbox":
+           coords = regiao.get("coord", [])
+           lon_min = coords[0][1] 
+           lat_min = coords[2][0]  
+           lon_max = coords[1][1]   
+           lat_max = coords[0][0]  
+           break;
+    bounding_box = (lon_min, lat_min, lon_max, lat_max)
+    polylinesComunidades=sf.FiltrarComunidadesBoundingBox(bounding_box)       
+    
+    RouteDetail.mapcode += f"    listComunidades = [\n"
+    indPol=0
+    for polyline in polylinesComunidades:
+        i=0
+        RouteDetail.mapcode += f"    [\n"
+        for coordenada in polyline:
+            # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
+            lat,lon = coordenada
+            if i == len(polyline) - 1:  # Verifica se é o último elemento
+               RouteDetail.mapcode += f"       [{lat}, {lon}]\n"               
+            else: 
+               RouteDetail.mapcode += f"       [{lat}, {lon}]," 
+            i=i+1  
+        if indPol == len(polylinesComunidades) - 1:  # Verifica se é o último elemento     
+           RouteDetail.mapcode += f"    ]\n"
+        else:
+           RouteDetail.mapcode += f"    ],\n"  
+        indPol = indPol+1
+    RouteDetail.mapcode += f"    ];\n"   
+         
+    RouteDetail.mapcode += f"let polyComunidades = [];"    
+    i=0
+    for polyline in polylinesComunidades: 
+        RouteDetail.mapcode += f"polyTmp = L.polygon(listComunidades[{i}], {{ color: 'rgb(204,0,204)',fillColor: 'rgb(204,0,204)',fillOpacity: 0.3, weight: 1}}).addTo(map);\n"  
+        RouteDetail.mapcode += f"polyComunidades.push(polyTmp);\n"          
+        i=i+1  
+    return RouteDetail            
+################################################################################
 def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioes):
     
     UserData.nome=user
@@ -1651,7 +1645,7 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
-    polMunicipio= GetBoundMunicipio(cidade, uf)
+    polMunicipio= sf.GetBoundMunicipio(cidade, uf)
     pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
@@ -1659,8 +1653,8 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
     RouteDetail.pontoinicial=pontoinicial
     
     RouteDetail = ServerSetupJavaScript(RouteDetail)   
-       
-    RouteDetail.mapcode += f"    const TipoRoute = 'CompAbrangencia';\n"   
+    RouteDetail.mapcode += f"    const TipoRoute = 'CompAbrangencia';\n"  
+    RouteDetail = DesenhaComunidades(RouteDetail,regioes)
     RouteDetail = DesenhaMunicipio(RouteDetail,cidade,polMunicipio)
     
     wLog("Ordenando e processando Pontos de Visita:")
@@ -1891,6 +1885,7 @@ def RoutePontosVisita(data,user,pontoinicial,pontosvisitaDados,regioes):
            
     RouteDetail = ServerSetupJavaScript(RouteDetail)     
     RouteDetail.mapcode += f"    const TipoRoute = 'PontosVisita';\n"   
+    RouteDetail = DesenhaComunidades(RouteDetail,regioes)
     
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView(13);\n"
@@ -1913,11 +1908,12 @@ import math
 def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita,distancia_km=50):
     lat_min,lat_max,lon_min,lon_max = calcula_bounding_box_pontos(pontosvisita, margem_km=50)
     # 1 grau de latitude = 111 km
-    graus_lat = distancia_km / 111.0
-    lat_min = lat_min- graus_lat;
-    lat_max = lat_max+ graus_lat;    
-    lon_min = lon_min- graus_lat;   
-    lon_max = lon_max+ graus_lat;   
+    # graus_lat = distancia_km / 111.0
+    # lat_min = lat_min- graus_lat;
+    # lat_max = lat_max+ graus_lat;    
+    # lon_min = lon_min- graus_lat;   
+    # lon_max = lon_max+ graus_lat;   
+    
     NewRegioes = []
     
     regioesglobal = {
@@ -2002,8 +1998,8 @@ def RouteDriveTest(data,user,pontoinicial,central_point,regioes,radius_km=5, num
     RouteDetail.pontoinicial=pontoinicial
     
     RouteDetail = ServerSetupJavaScript(RouteDetail)  
-    
     RouteDetail.mapcode += f"    const TipoRoute = 'DriveTest';\n"
+    RouteDetail = DesenhaComunidades(RouteDetail,regioes)
     
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView([{central_point[0]}, {central_point[1]}], 13);\n"
