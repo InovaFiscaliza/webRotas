@@ -1488,6 +1488,7 @@ def DesenhaRegioes(RouteDetail,regioes):
 ################################################################################    
 def DesenhaMunicipio(RouteDetail,nome,polMunicipio):         
     indPol=0
+    nome=SubstAcentos(nome).replace(" ", "_")
     for poligons in polMunicipio:
         i=0
         RouteDetail.mapcode += f"    municipio{nome}Pol{indPol} = [\n"
@@ -1610,30 +1611,30 @@ def DesenhaComunidades(RouteDetail,regioes):
     bounding_box = (lon_min, lat_min, lon_max, lat_max)
     polylinesComunidades=sf.FiltrarComunidadesBoundingBox(bounding_box)       
     
-    RouteDetail.mapcode += f"    listComunidades = [\n"
+    RouteDetail.mapcode += f"listComunidades = [\n"
     indPol=0
     for polyline in polylinesComunidades:
         i=0
-        RouteDetail.mapcode += f"    [\n"
+        RouteDetail.mapcode += f"[\n"
         for coordenada in polyline:
             # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
             lat,lon = coordenada
             if i == len(polyline) - 1:  # Verifica se é o último elemento
-               RouteDetail.mapcode += f"       [{lat}, {lon}]\n"               
+               RouteDetail.mapcode += f"[{lat}, {lon}]\n"               
             else: 
-               RouteDetail.mapcode += f"       [{lat}, {lon}]," 
+               RouteDetail.mapcode += f"[{lat}, {lon}]," 
             i=i+1  
         if indPol == len(polylinesComunidades) - 1:  # Verifica se é o último elemento     
-           RouteDetail.mapcode += f"    ]\n"
+           RouteDetail.mapcode += f"]\n"
         else:
-           RouteDetail.mapcode += f"    ],\n"  
+           RouteDetail.mapcode += f"],\n"  
         indPol = indPol+1
-    RouteDetail.mapcode += f"    ];\n"   
+    RouteDetail.mapcode += f"];\n"   
          
     RouteDetail.mapcode += f"let polyComunidades = [];"    
     i=0
     for polyline in polylinesComunidades: 
-        RouteDetail.mapcode += f"polyTmp = L.polygon(listComunidades[{i}], {{ color: 'rgb(204,0,204)',fillColor: 'rgb(204,0,204)',fillOpacity: 0.3, weight: 1}}).addTo(map);\n"  
+        RouteDetail.mapcode += f"polyTmp = L.polygon(listComunidades[{i}], {{ color: 'rgb(102,0,204)',fillColor: 'rgb(102,0,204)',fillOpacity: 0.3, weight: 1}}).addTo(map);\n"  
         RouteDetail.mapcode += f"polyComunidades.push(polyTmp);\n"          
         i=i+1  
     return RouteDetail            

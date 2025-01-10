@@ -88,7 +88,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 regioesBuf =  [       
@@ -144,7 +144,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -170,7 +170,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência
@@ -187,7 +187,7 @@ payload = {
     "regioes": regioesBuf
 }
 
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência
@@ -201,7 +201,20 @@ payload = {
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
     "distancia_pontos": "2000",  # distancia entre pontos em metros
-    "regioes": regioesBuf
+    "regioes": "regioesBuf"
+}
+
+payload = {
+    "User": "Fabio",
+    "TipoRequisicao": "Abrangencia",
+    "PontoInicial": [-23.587577163638976, -46.63326070110086,"Anatel São Paulo"],            
+    "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
+    "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
+    "cidade": "São Paulo",
+    "uf": "SP",
+    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
+    "distancia_pontos": "2000",  # distancia entre pontos em metros
+    "regioes": ""
 }
 
 enviar_json(payload, "http://localhost:5001/webrotas")
