@@ -827,14 +827,17 @@ var positionHistory = [];
 var gpsAtivado = false; // Defina como false para desabilitar a geolocalização  
 ////////////////////////////////////////////////////////////////////////////////////////////////////// 
 function updateGPSPosition(position) {
+    console.log("updateGPSPosition");
     if(gpsAtivado==false)
         return
     if (position === undefined) {
         console.log("A posição é undefined.");
         return;
     }
+
     latitude = position.coords.latitude;
     longitude = position.coords.longitude;
+    console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
     heading = position.coords.heading;
     speed = position.coords.speed;
 
@@ -870,10 +873,12 @@ function updateGPSPosition(position) {
     // Calcula a média das posições
     latitude = positionHistory.reduce((sum, pos) => sum + pos.latitude, 0) / positionHistory.length;
     longitude = positionHistory.reduce((sum, pos) => sum + pos.longitude, 0) / positionHistory.length;
+
+    // console.log(`Após média Latitude: ${latitude}, Longitude: ${longitude}`);
     if (heading !== 'N/A')
        heading = positionHistory.reduce((sum, pos) => sum + pos.heading, 0) / positionHistory.length;
     // Move o marcador para a nova posição
-    gpsMarker.setLatLng([latitude, latitude]);
+    gpsMarker.setLatLng([latitude, longitude]);
     // Centraliza o mapa na nova posição do marcador
     map.setView([latitude, longitude]);
     // Rotaciona o marcador com base no heading
@@ -901,8 +906,8 @@ function GetNextActivePoint(lat, lon) {
         // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
         iPnDados = EncontrarDado(pontosvisitaDados, lat, lon,2);
         bAtivo   = EncontrarDado(pontosvisitaDados, lat, lon,6);
-        console.log("iPnDados - "+iPnDados);
-        console.log("bAtivo - "+bAtivo);
+        // console.log("iPnDados - "+iPnDados);
+        // console.log("bAtivo - "+bAtivo);
         if (bAtivo=="Ativo") 
         {
             if(iPnMin=="")
@@ -966,9 +971,20 @@ if (navigator.geolocation)
         error => console.error(error),
         {enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
  }
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+bAtiva=false;
+timerGps=null;
+function AtualizaGpsTimer(bAtiva)
+{
+    // Definindo o intervalo de 300ms
+    if(bAtiva==true)
+        timerGps = setInterval(AtualizaGps, 500);
+    else
+    {
+       clearInterval(timerGps);
+    }   
+}
 
-// Definindo o intervalo de 300ms
-// let timer = setInterval(AtualizaGps, 1000);
 //////////////////////////////////////////////////////////////////////////////////////////////////////  
 function SelIconHalf(marker,flagHeadingNorte)
 {
@@ -1876,11 +1892,13 @@ function createMacOSDock() {
                 {    
                     img.src = imgGpsInativo;
                     gpsAtivado=false;
+                    AtualizaGpsTimer(gpsAtivado);
                 }
                 else    
                 {
                     img.src = imgGpsAtivo;
                     gpsAtivado=true;
+                    AtualizaGpsTimer(gpsAtivado);
                 }                     
             };
 
