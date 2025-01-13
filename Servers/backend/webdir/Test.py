@@ -210,10 +210,10 @@ payload = {
     "PontoInicial": [-23.587577163638976, -46.63326070110086,"Anatel São Paulo"],            
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
-    "cidade": "São Paulo",
-    "uf": "SP",
-    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "2000",  # distancia entre pontos em metros
+    "cidade": "Salvador",
+    "uf": "BA",
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
+    "distancia_pontos": "4000",  # distancia entre pontos em metros
     "regioes": ""
 }
 
