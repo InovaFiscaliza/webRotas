@@ -959,18 +959,18 @@ function GetRouteCarFromHere(latitude,longitude)
 // Monitora a posição do usuário e chama updateGPSPosition a cada atualização
 if (navigator.geolocation)
 {
-    navigator.geolocation.getCurrentPosition(updateGPSPosition,error => console.error(error),
-        {enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });  
+    // navigator.geolocation.getCurrentPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+    navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });  
 } else
 {
     alert("Geolocalização não é suportada pelo seu navegador.");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
  function AtualizaGps() {
-    navigator.geolocation.getCurrentPosition(updateGPSPosition,
-        error => console.error(error),
-        {enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
- }
+    // navigator.geolocation.getCurrentPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+    navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 bAtiva=false;
 timerGps=null;

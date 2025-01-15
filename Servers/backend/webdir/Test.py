@@ -85,11 +85,11 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
+# enviar_json(payload, "http://localhost:5001/webrotas")
+# quit()
 
 # Aplicativo MapsMe - verificar
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
-# quit()
 
 regioesBuf =  [       
         {
@@ -144,7 +144,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -201,8 +201,9 @@ payload = {
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
     "distancia_pontos": "2000",  # distancia entre pontos em metros
-    "regioes": "regioesBuf"
+    "regioes": regioesBuf
 }
+enviar_json(payload, "http://localhost:5001/webrotas")
 
 payload = {
     "User": "Fabio",
@@ -217,7 +218,7 @@ payload = {
     "regioes": ""
 }
 
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 
 # exemplo pedido para regerar a rota para uma lista de pontos já roteados, restorna o polyline da rota
 # usado a partir de um cliente html que sabe o número de porta dos OSMR server já ativo de um usuário.    
