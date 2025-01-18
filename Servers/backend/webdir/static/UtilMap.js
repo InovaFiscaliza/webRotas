@@ -826,6 +826,75 @@ var positionHistory = [];
 //////////////////////////////////////////////////////////////////////////////////////////////////////   
 var gpsAtivado = false; // Defina como false para desabilitar a geolocalização  
 ////////////////////////////////////////////////////////////////////////////////////////////////////// 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Variáveis globais para o estado do filtro de Kalman
+let kalmanState = {
+    latitude: null,
+    longitude: null,
+    heading: null,
+    variancePosition: 1, // Variância inicial para latitude e longitude
+    varianceHeading: 1,  // Variância inicial para heading
+
+    // Constantes do filtro de Kalman
+    noise: {
+        processPosition: 1,      // Ruído do processo para posição
+        measurementPosition: 5,  // Ruído de medição para posição
+        processHeading: 0.5,     // Ruído do processo para heading
+        measurementHeading: 2    // Ruído de medição para heading
+    }
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função de atualização do estado pelo Filtro de Kalman
+function kalmanFilter(measured, estimated, variance, processNoise, measurementNoise) {
+    const kalmanGain = variance / (variance + measurementNoise); // Ganho de Kalman
+    const updatedEstimate = estimated + kalmanGain * (measured - estimated);
+    const updatedVariance = (1 - kalmanGain) * variance + processNoise;
+    return [updatedEstimate, updatedVariance];
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função para atualizar a posição GPS e o heading usando o Filtro de Kalman
+function updateGPSPositionKalman(position) {
+    const { latitude, longitude, heading } = position.coords;
+
+    // Inicializar ou atualizar o estado do filtro
+    if (kalmanState.latitude === null) {
+        // Inicializar o filtro com a primeira leitura
+        kalmanState.latitude = latitude;
+        kalmanState.longitude = longitude;
+        kalmanState.heading = heading || 0; // Heading pode ser null inicialmente
+    } else {
+        // Atualizar latitude e longitude
+        [kalmanState.latitude, kalmanState.variancePosition] = kalmanFilter(
+            latitude,
+            kalmanState.latitude,
+            kalmanState.variancePosition,
+            kalmanState.noise.processPosition,
+            kalmanState.noise.measurementPosition
+        );
+
+        [kalmanState.longitude, kalmanState.variancePosition] = kalmanFilter(
+            longitude,
+            kalmanState.longitude,
+            kalmanState.variancePosition,
+            kalmanState.noise.processPosition,
+            kalmanState.noise.measurementPosition
+        );
+
+        // Atualizar heading, caso esteja disponível
+        if (heading !== null && heading !== undefined) {
+            [kalmanState.heading, kalmanState.varianceHeading] = kalmanFilter(
+                heading,
+                kalmanState.heading,
+                kalmanState.varianceHeading,
+                kalmanState.noise.processHeading,
+                kalmanState.noise.measurementHeading
+            );
+        }
+    }
+
+    console.log(`Posição estimada: Latitude: ${kalmanState.latitude}, Longitude: ${kalmanState.longitude}, Heading: ${kalmanState.heading}`);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function updateGPSPosition(position) {
     console.log("updateGPSPosition");
     if(gpsAtivado==false)
@@ -841,11 +910,6 @@ function updateGPSPosition(position) {
     heading = position.coords.heading;
     speed = position.coords.speed;
 
-    // Armazena a nova posição
-    positionHistory.push({ latitude, longitude, heading });
-    if (positionHistory.length > maxHistorySize) {
-        positionHistory.shift(); // Remove a posição mais antiga
-    }
 
 
 
@@ -870,13 +934,8 @@ function updateGPSPosition(position) {
         speed = 'N/A';
     }
 
-    // Calcula a média das posições
-    latitude = positionHistory.reduce((sum, pos) => sum + pos.latitude, 0) / positionHistory.length;
-    longitude = positionHistory.reduce((sum, pos) => sum + pos.longitude, 0) / positionHistory.length;
 
-    // console.log(`Após média Latitude: ${latitude}, Longitude: ${longitude}`);
-    if (heading !== 'N/A')
-       heading = positionHistory.reduce((sum, pos) => sum + pos.heading, 0) / positionHistory.length;
+
     // Move o marcador para a nova posição
     gpsMarker.setLatLng([latitude, longitude]);
     // Centraliza o mapa na nova posição do marcador
@@ -955,6 +1014,7 @@ function GetRouteCarFromHere(latitude,longitude)
    endCoords[1] = nearestPoint.lng;
    getRoute(startCoords, endCoords); 
 }  
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Monitora a posição do usuário e chama updateGPSPosition a cada atualização
 if (navigator.geolocation)
@@ -1962,7 +2022,7 @@ function createMacOSDock() {
     document.body.appendChild(dock);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function GerarKML(polylineRota, pontosVisita, pontosVisitaDados) {
+function GerarKML(polylineRota, pontosVisitaDados) {
     // Cabeçalho do KML
     let kmlInicio = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">

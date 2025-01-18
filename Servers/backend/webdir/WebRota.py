@@ -81,6 +81,7 @@ class ClRouteDetailList:
         self.waypnts = [] 
         self.instructions = [] 
         self.coordinates = []
+        self.pontosvisitaDados = []
         self.mapcode = ""  
         self.pontoinicial = None    
     #---------------------------------------------------    
@@ -532,6 +533,64 @@ def GerarKml(coord, filename="rota.kml"):
     # Salvar o arquivo KML
     kml.save(filename)
     wLog(f"Arquivo {filename} gerado com sucesso!")
+###########################################################################################################################
+import datetime
+###########################################################################################################################
+def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
+    # Cabeçalho do KML
+    kml_inicio = """<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Pontos e Rotas</name>
+    <!-- Definir estilos -->
+    <Style id="lineStyleBlue">
+      <LineStyle>
+        <color>ff00ff00</color> <!-- verde em formato ABGR -->
+        <width>4</width>
+      </LineStyle>
+    </Style>
+"""
+
+    # Footer do KML
+    kml_fim = """
+  </Document>
+</kml>"""
+
+    # Adicionar os pontos de visita
+    kml_pontos = ""
+    for latitude, longitude, id_ponto, tipo, descricao, altitude in pontos_visita_dados:
+        kml_pontos += f"""
+    <Placemark>
+      <name>{id_ponto}</name>
+      <description>{descricao}</description>
+      <Point>
+        <coordinates>{longitude},{latitude},{altitude}</coordinates>
+      </Point>
+    </Placemark>"""
+
+    # Adicionar a polilinha (rota)
+    kml_polyline = """
+    <Placemark>
+      <name>Rota</name>
+      <styleUrl>#lineStyleBlue</styleUrl>
+      <LineString>
+        <coordinates>
+"""
+    for latitude, longitude in polyline_rota:
+        kml_polyline += f"          {longitude},{latitude},0\n"
+
+    kml_polyline += """
+        </coordinates>
+      </LineString>
+    </Placemark>"""
+
+    # Combinar todas as partes
+    kml_conteudo = kml_inicio + kml_pontos + kml_polyline + kml_fim
+
+    with open(filename, "w", encoding="utf-8") as file:
+        file.write(kml_conteudo)
+
+    print(f"Arquivo KML '{file_name}' gerado com sucesso!")
 
 ###########################################################################################################################
 ServerTec = "OSMR"
@@ -1681,7 +1740,10 @@ def GeraArquivosSaida(RouteDetail,pontosvisita,tipoServico):
     
     fileKml = f"Mapa{tipoServico}{buf}.kml"     
     fileKmlF = f"templates/{fileKml}"    
-    GerarKml(pontosvisita,fileKmlF)    
+    # GerarKml(pontosvisita,fileKmlF)    
+    # zzzzzzzzzzz
+    Gerar_Kml(RouteDetail.coordinates, RouteDetail.pontosvisitaDados,filename=fileKmlF)
+    
     return fileMap,fileMapStatic,fileKml
 ################################################################################
 import base64
@@ -1805,7 +1867,8 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
         pontosvisitaDados = GeraPontosVisitaDados(pontosvisita) 
         pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=True)
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)   
-    
+        
+    RouteDetail.pontosvisitaDados = pontosvisitaDados
     # Criar um mapa  
     # RouteDetail.mapcode += f"    const map = L.map('map');\n"
     RouteDetail.mapcode += f"    map.fitBounds(L.latLngBounds(pontosVisitaOrdenados));\n"        

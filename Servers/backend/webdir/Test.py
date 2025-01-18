@@ -144,7 +144,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -173,21 +173,21 @@ payload = {
 # enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 #------------------------------------------------------
-# exemplo pontos compromisso de abrangência
+# exemplo pontos compromisso de abrangência      
 payload = {
     "User": "Fabio",
     "TipoRequisicao": "Abrangencia",
-    "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
+    "PontoInicial": [-15.805462291348457, -47.882631325568745,"Anatel DF"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
-    "cidade": "Niterói",
-    "uf": "RJ",
-    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "2000",  # distancia entre pontos em metros
-    "regioes": regioesBuf
+    "cidade": "Brasília",
+    "uf": "DF",
+    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
+    "distancia_pontos": "10000",  # distancia entre pontos em metros
+    "regioes": ""
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência
@@ -203,7 +203,7 @@ payload = {
     "distancia_pontos": "2000",  # distancia entre pontos em metros
     "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 
 payload = {
     "User": "Fabio",
