@@ -590,7 +590,7 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(kml_conteudo)
 
-    print(f"Arquivo KML '{file_name}' gerado com sucesso!")
+    print(f"Arquivo KML '{filename}' gerado com sucesso!")
 
 ###########################################################################################################################
 ServerTec = "OSMR"
