@@ -180,10 +180,10 @@ payload = {
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698 # "PontoInicial": [-15.805462291348457, -47.882631325568745,"Anatel DF"]
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
-    "cidade": "Niteroi",
+    "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "10000",  # distancia entre pontos em metros
+    "distancia_pontos": "2000",  # distancia entre pontos em metros
     "regioes": ""
 }
 
