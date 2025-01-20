@@ -1,6 +1,11 @@
 ##############################################################
  OpenElevation server
 
+https://open-elevation.com/
+
+https://github.com/Jorl17/open-elevation/blob/master/docs/host-your-own.md
+
+
  mkdir data # Create the target folder for the dataset
 
 podman run -t -i -v data:/code/data openelevation/open-elevation /code/create-dataset.sh
