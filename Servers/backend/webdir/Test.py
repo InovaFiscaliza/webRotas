@@ -85,7 +85,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 # Aplicativo MapsMe - verificar
@@ -144,7 +144,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-# enviar_json(payload, "http://localhost:5001/webrotas")
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -177,11 +177,11 @@ payload = {
 payload = {
     "User": "Fabio",
     "TipoRequisicao": "Abrangencia",
-    "PontoInicial": [-15.805462291348457, -47.882631325568745,"Anatel DF"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
+    "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698 # "PontoInicial": [-15.805462291348457, -47.882631325568745,"Anatel DF"]
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
-    "cidade": "Brasília",
-    "uf": "DF",
+    "cidade": "Niteroi",
+    "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
     "distancia_pontos": "10000",  # distancia entre pontos em metros
     "regioes": ""

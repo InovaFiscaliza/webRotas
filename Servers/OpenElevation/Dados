@@ -1,3 +1,24 @@
+##############################################################
+ OpenElevation server
+
+ mkdir data # Create the target folder for the dataset
+
+podman run -t -i -v data:/code/data openelevation/open-elevation /code/create-dataset.sh
+
+
+podman run -t -i -v data:/code/data -p 81:8080 openelevation/open-elevation
+
+
+
+Testar
+
+http://localhost:81/api/v1/lookup?locations=-22.9056,-43.1035
+
+
+
+
+
+###############################################################################
 Arquivos que cobrem o Brasil
 
     ETOTO_2022_v1_15s_S60W030_bed.nc (Latitude: 60°S a 0°N, Longitude: 30°W a 45°W)
