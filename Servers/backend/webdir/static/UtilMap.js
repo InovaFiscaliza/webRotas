@@ -2000,7 +2000,7 @@ function createMacOSDock() {
             img.style.zIndex ="999";
             iconDiv.appendChild(img);
             img.onclick = () => {
-                GerarKML(polylineRotaDat, pontosVisitaOrdenados, pontosvisitaDados );
+                GerarKML(polylineRotaDat, pontosvisitaDados );
             };
 
         } 
@@ -2049,7 +2049,7 @@ function GerarKML(polylineRota, pontosVisitaDados) {
     pontosVisitaDados.forEach(([latitude, longitude, idPonto, tipo, descricao, altitude]) => {
         kmlPontos += `
     <Placemark>
-      <name>${idPonto}</name>
+      <name>${idPonto}  ${descricao}</name>
       <description>${descricao}</description>
       <Point>
         <coordinates>${longitude},${latitude},${altitude}</coordinates>
