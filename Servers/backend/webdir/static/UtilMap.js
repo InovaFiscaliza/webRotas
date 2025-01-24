@@ -1414,11 +1414,13 @@ function createDivOrdenaPontos() {
     iDlg.id = 'divOrdenaPontos';
     // Define os estilos da div principal
     iDlg.style.position = 'absolute';
-    iDlg.style.top = '50%';
-    iDlg.style.left = '50%';
-    iDlg.style.transform = 'translate(-50%, -50%)';
-    iDlg.style.width = '400px'; // Tamanho inicial
-    iDlg.style.height = '300px';
+    // iDlg.style.top = '50%';
+    // iDlg.style.left = '50%';
+    // iDlg.style.transform = 'translate(-50%, -50%)';
+    iDlg.style.top = '10px';
+    iDlg.style.left = '10px'; 
+    iDlg.style.width = '300px'; // Tamanho inicial
+    iDlg.style.height = '600px';
     iDlg.style.backgroundColor = '#f9f9f9';
     iDlg.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.4)';  // sombra em torno do div para destaque na interface
     iDlg.style.display = 'flex';
