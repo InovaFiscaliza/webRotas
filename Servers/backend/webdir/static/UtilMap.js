@@ -13,7 +13,7 @@ gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map);
 
 document.addEventListener("DOMContentLoaded", function () {
     // Sua função aqui
-    
+
     console.log("A página foi carregada (DOM completamente construído).");
 });
 
@@ -22,7 +22,7 @@ window.addEventListener("load", function () {
     CreateControls();
     console.log("Todos os recursos da página foram carregados.");
 });
- 
+
 const clickedIcon = L.icon({
     iconUrl: 'data:image/png;base64,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gAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQAAAESIAAAAIEIEAAAAESIAAACIEAEAAECECAAAACJEAAAAECECAACACBEAAABEiAAAACBCBAAAABEiAAAAiBABAABAhAgAAAAiRAAAABAhAgAAgAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQAAAESIAAAAIEIEAAAAESIAAACIEAEAAECECAAAACJElcmvXAAABLxJREFUAAAAECECAACACBEAAABEiAAAACBCBAAAABEiAAAAiBABAABAhAgAAAAiRAAAABAhAgAAgAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQAAAESIAAAAIEIEAAAAESIAAACIEAEAAECECAAAACJEAAAAECECAACACBEAAABEiAAAACBCBAAAABEiAAAAiBABAABAhAgAAAAiRAAAABAhAgAAgAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQAAAESIAAAAIEIEAAAAESIAAACIEAEAAECECAAAACJEAAAAECECAACACBEAAABEiAAAACBCBAAAABEiAAAAiBABAABAhAgAAAAiRAAAABAhAgAAgAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQAAAESIAAAAIEIEAAAAESIAAACIEAEAAECECAAAACJEAAAAECECAACACBEAAABEiAAAACBCBAAAABEiAAAAiBABAABAhAgAAAAiRAAAABAhAgAAgAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQAAAESIAAAAIEIEAAAAESIAAACIEAEAAECECAAAACJEAAAAECECAACACBEAAABEiAAAACBCBAAAABEiAAAAiBABAABAhAgAAAAiRAAAABAhAgAAgAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQAAAESIAAAAIEIEAAAAESIAAACIEAEAAECECAAAACJEAAAAECECAACACBEAAABEiAAAACBCBAAAABEiAAAAiBABAABAhAgAAAAiRAAAABAhAgAAgAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQAAAESIAAAAIEIEAAAAESIAAACIEAEAAECECAAAACJEAAAAECECAACACBEAAABEiAAAACBCBAAAABEiAAAAiBABAABAhAgAAAAiRAAAABAhAgAAgAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQAAAESIAAAAIEIEAAAAESIAAACIEAEAAECECAAAACJEAAAAECECAACACBEAAABEiAAAACBCBAAAABEiAAAAiBABAABAhAgAAAAiRAAAABAhAgAAgAgRAAAARIgAAAAgQgQAAAARIgAAAIgQAQAAQIQIAAAAIkQAAAAQIQIAAIAIEQBAUZnGMvFnAMgkAgAorscz8mcAyCACACgq17ZM/BkAMokAAAoqcX1Bks/qz0hLm6s0B0DGEABAQX3xs3c+bNLfzPSfd9M9X/zc7z1UzU0AsoMAAAosSfQ2zex1/MdrTG+v9h4A2UEAAAX2hb+886A8uU2uQ1P+h1yH5MltX/jLOw/O4TQAgREAQMFt/sy7O0umdknfmsL//FslU/vmz7y7c653AQjLQg8AMH9e/pr3vtATf7WkH5fUdPb/PCDp3yy1u+/57Hu+HW4dgPn0/wF4jPYZF7VEIQAAAABJRU5ErkJggg==', // Icone clicado
     iconSize: [36, 36],
@@ -70,7 +70,7 @@ var iMarquerAzulHalf  = L.icon({
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 var newIcon=null; // Não funciona
-function ChangeMarquerIconSize(marker,div, newSize,newAnchor) 
+function ChangeMarquerIconSize(marker,div, newSize,newAnchor)
 {
     // Chamar a função para alterar o tamanho do ícone para metade do original
     // changeIconSize(marker, [25, 41]);
@@ -88,17 +88,17 @@ function ChangeMarquerIconSize(marker,div, newSize,newAnchor)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Função para criar um icone svg numerado
-function createSvgIcon(number) {  
+function createSvgIcon(number) {
 
     return createCustomSvgIcon(number,[25, 41],[12, 41],"#007bff");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconAzul(number) {  
+function createSvgIconAzul(number) {
 
     return createCustomSvgIcon(number,[25, 41],[12, 41],"#007bff");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconAzulHalf(number) {  
+function createSvgIconAzulHalf(number) {
 
     return createCustomSvgIcon(number,[12, 20],[6, 20],"#007bff");
 }
@@ -149,7 +149,7 @@ function getElevationSync(latitude, longitude){
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 async function getElevation(latitude, longitude) {
     const apiUrl = `https://api.open-elevation.com/api/v1/lookup?locations=${latitude},${longitude}`;
-    
+
     try {
         const response = await fetch(apiUrl); // Faz a requisição à API
         if (!response.ok) {
@@ -168,22 +168,22 @@ async function getElevation(latitude, longitude) {
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconColorAltitude(number,altitude) {  
+function createSvgIconColorAltitude(number,altitude) {
     color = ElevationColor(altitude);
     return createCustomSvgIcon(number,[25, 41],[12, 41],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconColorAltitudeHalf(number,altitude) {  
+function createSvgIconColorAltitudeHalf(number,altitude) {
     color = ElevationColor(altitude);
     return createCustomSvgIcon(number,[12, 20],[6, 20],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconVerde(number) {  
+function createSvgIconVerde(number) {
 
     return createCustomSvgIcon(number,[25, 41],[12, 41],"#007b22");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconVerdeHalf(number) {  
+function createSvgIconVerdeHalf(number) {
 
     return createCustomSvgIcon(number,[12, 20],[6, 20],"#007b22");
 }
@@ -211,25 +211,25 @@ function createSvg(iconSz, iconColor, text) {
 
     // Retorna o SVG ajustado
     return `
-        <svg id="iconSvg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" 
+        <svg id="iconSvg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"
              xmlns="http://www.w3.org/2000/svg">
-            <path d="${dynamicPath}" fill="${iconColor}"/> 
-            <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="${Math.min(width, height) * 0.55}" 
+            <path d="${dynamicPath}" fill="${iconColor}"/>
+            <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="${Math.min(width, height) * 0.55}"
                   fill="white" font-weight="bold">${text}</text>
         </svg>`;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createCustomSvgIcon(text,iconSz,iconAnc,iconColor) {  
+function createCustomSvgIcon(text,iconSz,iconAnc,iconColor) {
     /*
-    datHtml = `<svg id="iconSvg" width="${iconSz[0]}" height="${iconSz[1]}" viewBox="0 0 ${iconSz[0]} ${iconSz[1]}" 
+    datHtml = `<svg id="iconSvg" width="${iconSz[0]}" height="${iconSz[1]}" viewBox="0 0 ${iconSz[0]} ${iconSz[1]}"
                xmlns="http://www.w3.org/2000/svg">
-               <path d="M12.5 0C19.4 0 25 5.6 25 12.5C25 19.4 12.5 41 12.5 41C12.5 41 0 19.4 0 12.5C0 5.6 5.6 0 12.5 0Z" 
-               fill="${iconColor}"/> <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="12" 
+               <path d="M12.5 0C19.4 0 25 5.6 25 12.5C25 19.4 12.5 41 12.5 41C12.5 41 0 19.4 0 12.5C0 5.6 5.6 0 12.5 0Z"
+               fill="${iconColor}"/> <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="12"
                fill="white" font-weight="bold">${text}</text>
-               </svg>`; 
+               </svg>`;
     */
-    datHtml = createSvg(iconSz, iconColor, text)           
+    datHtml = createSvg(iconSz, iconColor, text)
     return L.divIcon({
         className: '', // Sem classe adicional
         html: datHtml,
@@ -237,16 +237,16 @@ function createCustomSvgIcon(text,iconSz,iconAnc,iconColor) {
         iconAnchor: iconAnc // Ponto de ancoragem (centro)
     });
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////// 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function AtualizaPontosvisitaDadosMarquerData(currentMarker,ColunaAtualizar,NovoDado)
 {
     // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"]
-    position = currentMarker.getLatLng();  
+    position = currentMarker.getLatLng();
     pontosVisitaDados =  AtualizaPontosvisitaDados(pontosvisitaDados,position.lat, position.lng,ColunaAtualizar,NovoDado);
     console.log(JSON.stringify(pontosvisitaDados, null, 2));
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function salvarEmCookies(nomeCookie, valor, dias) 
+function salvarEmCookies(nomeCookie, valor, dias)
 {
     const data = new Date();
     data.setTime(data.getTime() + (dias * 24 * 60 * 60 * 1000));
@@ -292,33 +292,33 @@ function onMarkerClick(e) {
     console.log(`Marquer clicado - ID - ${markerId} - Clicado - ${clicado}`)
     // Verifica o ícone atual e troca para o outro
     if (HeadingNorte==0)
-    {    
+    {
         // console.log(`aqui`)
-        if (clicado === "0") 
+        if (clicado === "0")
         {
             currentMarker.setIcon(clickedIcon);
             currentMarker._icon.setAttribute('clicado', "1");
             AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Inativo");
-        } 
-        else 
+        }
+        else
         {
-            currentMarker.setIcon(createSvgIconColorAltitude(String(markerId),String(altitude))); 
+            currentMarker.setIcon(createSvgIconColorAltitude(String(markerId),String(altitude)));
             currentMarker._icon.setAttribute('clicado', "0");
             AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Ativo");
-        }      
+        }
         currentMarker._icon.setAttribute('tamanho', "full");
     }
     else
     {
-        if (clicado === "0") 
+        if (clicado === "0")
         {
             currentMarker.setIcon(clickedIconHalf);
             currentMarker._icon.setAttribute('clicado', "1");
             AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Inativo");
-        } 
-        else 
+        }
+        else
         {
-            currentMarker.setIcon(createSvgIconColorAltitudeHalf(String(markerId),String(altitude))); 
+            currentMarker.setIcon(createSvgIconColorAltitudeHalf(String(markerId),String(altitude)));
             currentMarker._icon.setAttribute('clicado', "0");
             AtualizaPontosvisitaDadosMarquerData(currentMarker,6,"Ativo");
         }
@@ -328,8 +328,8 @@ function onMarkerClick(e) {
     currentMarker._icon.setAttribute('altitude', String(altitude));
     AtualizaGps();
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////   
-function DisableMarker(e) 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function DisableMarker(e)
 {
     console.log("DisableMarker");
     const currentMarker = e;
@@ -338,7 +338,7 @@ function DisableMarker(e)
     const altitude = currentMarker._icon.getAttribute('altitude');
     // Verifica o ícone atual e troca para o outro
     if (HeadingNorte==0)
-    {    
+    {
 
         currentMarker.setIcon(clickedIcon);
         currentMarker._icon.setAttribute('clicado', "1");
@@ -489,18 +489,18 @@ function GetNearestPoint(lat, lon) {
     markerVet.forEach(marker => {
         const markerCoords = marker.getLatLng(); // Obtém as coordenadas do marcador
         const distance = haversineDistance(userLocation, markerCoords);
-        if ((distance < minDistance) && ((marker.options.icon != clickedIcon) && (marker.options.icon != clickedIconHalf))) 
+        if ((distance < minDistance) && ((marker.options.icon != clickedIcon) && (marker.options.icon != clickedIconHalf)))
         {
             minDistance = distance;
-            closestMarkerCoords = markerCoords;   
-            
+            closestMarkerCoords = markerCoords;
+
         }
     });
     DistMakerMaisProximo = minDistance.toFixed(2);
     return closestMarkerCoords; // Retorna as coordenadas do marcador mais próximo
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon) 
+function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
 {
     console.log("DesabilitaMarquerNoGPSRaioDaEstacao");
     const userLocation = {lat: lat, lng: lon};
@@ -517,9 +517,9 @@ function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
         // console.log("   userLocation - "+String(userLocation));
         // console.log("   markerCoords - "+String(markerCoords));
         // console.log("   distance - "+String(distance));
-        if (distance < RaioDaEstacao) 
+        if (distance < RaioDaEstacao)
         {
-            DisableMarker(marker); 
+            DisableMarker(marker);
         }
     });
 }
@@ -563,13 +563,13 @@ function DesenhaRota(coordinates)
     }
     console.log("Plotando nova rota auxiliar")
     polyRotaAux = L.polyline(coordinates, {color: 'red', "opacity": 0.7}).addTo(map);
-    
+
     // armazena o inicio da rota para a simulação de movimento buscar a rota ok
     if (coordinates.length > 0) {
         inicioRota = calcularMediaUltimasNCoordenadas(coordinates,20);
-    }  
-    else 
-       inicioRota = null;  
+    }
+    else
+       inicioRota = null;
     // Ajuste a visualização do mapa para mostrar a polyline inteira
     // map.fitBounds(poly_line.getBounds());
 }
@@ -591,11 +591,11 @@ async function getRoute(startCoords, endCoords){
     if(ServerTec == "OSMR")
     {
         return getRouteOSMR(startCoords, endCoords);
-    } 
+    }
     if(ServerTec == "GHopper")
     {
         return getRouteGHopper(startCoords, endCoords);
-    } 
+    }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Função para obter a rota do OSRM por roteamento do mesmo site externo
@@ -603,7 +603,7 @@ async function getRouteGHopper(startCoords, endCoords) {
     serverUrl = "http://localhost:8989"
 
     // "http://localhost:8989/route?point=-22.87248975925445,-43.08681365669065&point=-22.885656291854495,-43.05230110610495"
-    
+
     const url = `${serverUrl}/route?point=${startCoords[0]},${startCoords[1]}&point=${endCoords[0]},${endCoords[1]}`;
     console.log("\n\n" + url + "\n");
 
@@ -636,18 +636,18 @@ async function getRouteGHopper(startCoords, endCoords) {
 async function getRouteOSMR(startCoords, endCoords) {
     // URL da solicitação ao servidor OSRM
     // const baseUrl = "{{ url_for('proxy') }}"
-    
+
     // serverUrl = ServerUrl()  // Falhou no ngrock a resposta em json
     // console.log("URL do servidor:", serverUrl);
-    // const url = `${serverUrl}/osmr/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=polyline&steps=true`; 
-    
-    // ngrok http 5001  
-    if ( window.location.hostname=="127.0.0.1") 
+    // const url = `${serverUrl}/osmr/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=polyline&steps=true`;
+
+    // ngrok http 5001
+    if ( window.location.hostname=="127.0.0.1")
     {
-       //  sem ngrock 
+       //  sem ngrock
        serverUrl = `${window.location.protocol}//${window.location.hostname}`;
        url = `${serverUrl}:5001/route?porta=${OSRMPort}&start=${startCoords[1]},${startCoords[0]}&end=${endCoords[1]},${endCoords[0]}`
-    }    
+    }
     else
     {
        //  no ngrock
@@ -680,26 +680,26 @@ async function getRouteOSMR(startCoords, endCoords) {
         return null;
     }
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////// 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var headingError=0
 function AtualizaMapaHeading(heading)
 {
     // alert("atualizando gps - ",HeadingNorte);
     if (HeadingNorte==0)
-    { 
+    {
        // Mapa fixo direção sul e carro rotacionando
        RodaMapaPorCss(0);
        gpsMarker.setRotationAngle(heading-90);
 
-       
+
     }
     else
     {
         // Mapa girando em direção ao heading
         RodaMapaPorCss(heading -(2*heading));
         headingError=heading -(2*heading)
-        gpsMarker.setRotationAngle(-90-headingError);     
+        gpsMarker.setRotationAngle(-90-headingError);
     }
 
 }
@@ -745,15 +745,15 @@ function simularMovimento() {
     // Calcula a distância percorrida por atualização (300ms ou 0.3 segundos)
     const distancia = velocidade * 0.3;  // Em metros
 
-    /* 
+    /*
     if (heading==80)
         incHead = -1;
     if (heading==0)
-        incHead = 1;    
+        incHead = 1;
     heading = heading+incHead;
     heading = adjustHeading(heading);
     */
-    
+
     if (inicioRota!=null)
         heading = calculateHeading(latitude, longitude, inicioRota[0], inicioRota[1]);   // Aponta para o inicio da rota
     // Convertendo a direção (heading) para radianos
@@ -801,7 +801,7 @@ async function obterHeadingOsrm(lat, lon) {
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-// Adiciona o evento de clique no mapa 
+// Adiciona o evento de clique no mapa
 // Simula posição do carro em clique para debugar
 
 map.on('click', function(e) {
@@ -816,16 +816,16 @@ map.on('click', function(e) {
     longitude = lon;
     heading = 0;
     velocidade = 0;
-    GetRouteCarFromHere(latitude,longitude); 
+    GetRouteCarFromHere(latitude,longitude);
     DesabilitaMarquerNoGPSRaioDaEstacao(latitude, longitude);
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-var LastHeading = 0;  
+var LastHeading = 0;
 var maxHistorySize = 5;
-var positionHistory = [];    
-//////////////////////////////////////////////////////////////////////////////////////////////////////   
-var gpsAtivado = false; // Defina como false para desabilitar a geolocalização  
-////////////////////////////////////////////////////////////////////////////////////////////////////// 
+var positionHistory = [];
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+var gpsAtivado = false; // Defina como false para desabilitar a geolocalização
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variáveis globais para o estado do filtro de Kalman
 let kalmanState = {
@@ -914,10 +914,10 @@ function updateGPSPosition(position) {
 
 
     // degub lat e lon RETIRAR EM PRODUÇÃO
-    // latitude = -22.87714906709627;    
+    // latitude = -22.87714906709627;
     // longitude = -42.98235891833397;
 
-    if (heading !== null || !isNaN(heading)) 
+    if (heading !== null || !isNaN(heading))
     {
         // heading = Math.round(heading);
         LastHeading = heading;
@@ -943,10 +943,10 @@ function updateGPSPosition(position) {
     // Rotaciona o marcador com base no heading
     gpsMarker.setRotationAngle(heading);
     document.getElementById("gpsInfo").innerText = `Velocidade: ${speed} Km/h\nHeading: ${heading} graus\nDistancia: ${DistMakerMaisProximo} Km`;
-    
+
     AtualizaMapaHeading(LastHeading);
-    GetRouteCarFromHere(latitude,longitude); 
-    DesabilitaMarquerNoGPSRaioDaEstacao(latitude, latitude); 
+    GetRouteCarFromHere(latitude,longitude);
+    DesabilitaMarquerNoGPSRaioDaEstacao(latitude, latitude);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetNextActivePoint(lat, lon) {
@@ -967,7 +967,7 @@ function GetNextActivePoint(lat, lon) {
         bAtivo   = EncontrarDado(pontosvisitaDados, lat, lon,6);
         // console.log("iPnDados - "+iPnDados);
         // console.log("bAtivo - "+bAtivo);
-        if (bAtivo=="Ativo") 
+        if (bAtivo=="Ativo")
         {
             if(iPnMin=="")
               iPnMin=iPnDados;
@@ -980,9 +980,9 @@ function GetNextActivePoint(lat, lon) {
     {
         pnt = {};
         pnt.lat = EncontrarDadoPn(pontosvisitaDados, iPnMin,0);
-        pnt.lng = EncontrarDadoPn(pontosvisitaDados, iPnMin,1); 
-    }    
-    return pnt; 
+        pnt.lng = EncontrarDadoPn(pontosvisitaDados, iPnMin,1);
+    }
+    return pnt;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetRouteCarFromHere(latitude,longitude)
@@ -1000,27 +1000,27 @@ function GetRouteCarFromHere(latitude,longitude)
    else  // "MaisProximo"
       nearestPoint = GetNearestPoint(latitude, longitude);
    // console.log("nearestPoint - "+String(nearestPoint))
-   if (nearestPoint==null) // Apaga rota auxiliar 
+   if (nearestPoint==null) // Apaga rota auxiliar
    {
        if (polyRotaAux) {
            polyRotaAux.remove();
            polyRotaAux = null; // Opcional: redefinir a variável para null
        }
        return;
-   }    
+   }
    startCoords[0] = latitude;
    startCoords[1] = longitude;
    endCoords[0] = nearestPoint.lat;
    endCoords[1] = nearestPoint.lng;
-   getRoute(startCoords, endCoords); 
-}  
+   getRoute(startCoords, endCoords);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Monitora a posição do usuário e chama updateGPSPosition a cada atualização
 if (navigator.geolocation)
 {
     // navigator.geolocation.getCurrentPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
-    navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });  
+    navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
 } else
 {
     alert("Geolocalização não é suportada pelo seu navegador.");
@@ -1042,10 +1042,10 @@ function AtualizaGpsTimer(bAtiva)
     else
     {
        clearInterval(timerGps);
-    }   
+    }
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////  
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function SelIconHalf(marker,flagHeadingNorte)
 {
     markerOld = marker;
@@ -1055,30 +1055,30 @@ function SelIconHalf(marker,flagHeadingNorte)
     altitude = markerOld._icon.getAttribute('altitude');
     if (clicado=="1")
         if (flagHeadingNorte==0)
-        {    
+        {
            marker.setIcon(clickedIcon);
            marker._icon.setAttribute('tamanho',"full");
-        }   
-        else 
-        { 
+        }
+        else
+        {
            marker.setIcon(clickedIconHalf);
            marker._icon.setAttribute('tamanho',"half");
-        }   
+        }
     else
        if (flagHeadingNorte==0)
-       { 
+       {
            // aaaaaaaaaaaaaa createSvgIconColorAltitude
            // marker.setIcon(createSvgIconAzul(String(markerId)));
            marker.setIcon(createSvgIconColorAltitude(String(markerId),String(altitude)));
            marker._icon.setAttribute('tamanho',"full");
-       }   
-       else 
-       { 
-           // marker.setIcon(createSvgIconAzulHalf(String(markerId))); 
+       }
+       else
+       {
+           // marker.setIcon(createSvgIconAzulHalf(String(markerId)));
            marker.setIcon(createSvgIconColorAltitudeHalf(String(markerId),String(altitude)));
            marker._icon.setAttribute('tamanho',"half");
-       }    
-    CopyMarkerAttribs(markerOld,marker);    
+       }
+    CopyMarkerAttribs(markerOld,marker);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function CopyMarkerAttribs(MarkerOrigin,MarkerDest)
@@ -1096,12 +1096,12 @@ function AjustaTamanhoMarquers(div)
     if (div===0)
     {
         if (TipoRoute == 'DriveTest')
-            markerCentral.setIcon(createSvgIconVerde("x")); 
+            markerCentral.setIcon(createSvgIconVerde("x"));
         markerVet.forEach(marker => {
                SelIconHalf(marker,div);
             });
-        mrkPtInicial.setIcon(createSvgIconColorAltitude('i',10000))    
-    }    
+        mrkPtInicial.setIcon(createSvgIconColorAltitude('i',10000))
+    }
     else
     {
         if (TipoRoute == 'DriveTest')
@@ -1109,7 +1109,7 @@ function AjustaTamanhoMarquers(div)
         markerVet.forEach(marker => {
             SelIconHalf(marker,div);
         });
-        mrkPtInicial.setIcon(createSvgIconColorAltitudeHalf('i',10000))  
+        mrkPtInicial.setIcon(createSvgIconColorAltitudeHalf('i',10000))
     }
 
 }
@@ -1121,14 +1121,14 @@ function RodaMapaPorCss(angle) // Não funciona bem
    // var markerPosition = map.latLngToContainerPoint(gpsMarker.getLatLng());
 
    if(HeadingNorte==0)
-   { 
+   {
       mapElement.style.transform = `rotate(${0}deg) scale(1.0) `; // Define o ângulo de rotação
       mapElement.style.transformOrigin = 'center';  // Define o ponto de rotação
       gpsMarker.setIcon(gpsIcon);
       AjustaTamanhoMarquers(HeadingNorte);
    }
    else
-   { 
+   {
       mapElement.style.transform = `rotate(${angle}deg) scale(2.5) `; // Define o ângulo de rotação
       mapElement.style.transformOrigin = 'center';  // Define o ponto de rotação
       gpsMarker.setLatLng([latitude, longitude]);
@@ -1143,7 +1143,7 @@ function createCompassIcon() {
     // Cria a div para a bússola
     const compassDiv = document.createElement('div');
     compassDiv.id = 'compassIconDirecaoMapa';
-    
+
     // Define os estilos inline da bússola
     compassDiv.style.position = 'absolute';
     compassDiv.style.top = '10px';
@@ -1151,21 +1151,21 @@ function createCompassIcon() {
     compassDiv.style.width = '45px';              // Largura da bússola
     compassDiv.style.height = '45px';             // Altura da bússola
     // compassDiv.style.backgroundImage = 'url("/static/PointerNorte.png")'; // URL da imagem da bússola
-    compassDiv.style.backgroundImage = imgPointerNorte; 
+    compassDiv.style.backgroundImage = imgPointerNorte;
     compassDiv.style.backgroundSize = '35px 35px';    // Redimensiona a imagem para cobrir a div
     compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
     compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
-    compassDiv.style.backgroundColor = 'white'; 
+    compassDiv.style.backgroundColor = 'white';
     compassDiv.style.display = 'flex';
     compassDiv.style.alignItems = 'center';
     compassDiv.style.justifyContent = 'center';
     compassDiv.style.borderRadius = '50%';        // Bordas arredondadas
     compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
     compassDiv.style.zIndex = 1000;
-    
+
     // Cria o ícone da bússola (seta para o norte)
     const icon = document.createElement('i');
-    
+
     // Estilos inline do ícone
     // icon.style.fontSize = '20px';
     // icon.style.color = '#fff';
@@ -1174,22 +1174,22 @@ function createCompassIcon() {
     // Adiciona um evento de clique à bússola
     compassDiv.addEventListener('click', function() {
         // alert('Você clicou na bússola!');         // Alerta ou função quando clicado
-        if (HeadingNorte==0) 
-        {    
+        if (HeadingNorte==0)
+        {
             // alert('Clicou para PointerNorte.png',HeadingNorte)
             // compassDiv.style.backgroundImage = 'url("/static/Pointer.png")';
             compassDiv.style.backgroundImage = imgPointer;
             HeadingNorte=1;
             AtualizaMapaHeading(LastHeading);
         }
-        else    
+        else
         {
             // alert('Clicou para Pointer.png',HeadingNorte)
             // compassDiv.style.backgroundImage = 'url("/static/PointerNorte.png")';
             compassDiv.style.backgroundImage = imgPointerNorte;
             HeadingNorte=0
             AtualizaMapaHeading(LastHeading);
-        }    
+        }
     });
 
     // Adiciona o ícone dentro da bússola
@@ -1201,7 +1201,7 @@ function createCompassIcon() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function SetHeadingNorte_SemRodarMapa()
 {
-   img = document.getElementById('imgPointerNorte'); 
+   img = document.getElementById('imgPointerNorte');
    img.src = imgPointerNorte;
    HeadingNorte=0;
    AtualizaMapaHeading(LastHeading);
@@ -1212,12 +1212,12 @@ function createColorTable() {
     colorTableDiv = document.getElementById('colorTableDiv');
     // alert(`ElevationTableOpen - ${ElevationTableOpen}, colorTableDiv - ${colorTableDiv}`)
     if(colorTableDiv!=null)
-      if (ElevationTableOpen == true) 
+      if (ElevationTableOpen == true)
       {
           colorTableDiv.remove();
           ElevationTableOpen=false;
           return;
-      } 
+      }
     ElevationTableOpen = true;
     const compassDiv = document.createElement('div');
     compassDiv.id = 'colorTableDiv'; // Define o ID da div
@@ -1225,24 +1225,24 @@ function createColorTable() {
     compassDiv.style.top = '80px';
     compassDiv.style.left = '10px';
 
-    compassDiv.style.width = '150px';            
-    compassDiv.style.height = '500px';   
-    compassDiv.style.backgroundSize = '150px 500px';   
-    compassDiv.style.borderRadius = '2%';              
-    // compassDiv.style.backgroundImage = 'url("/static/OpenElevTable.png")';  
+    compassDiv.style.width = '150px';
+    compassDiv.style.height = '500px';
+    compassDiv.style.backgroundSize = '150px 500px';
+    compassDiv.style.borderRadius = '2%';
+    // compassDiv.style.backgroundImage = 'url("/static/OpenElevTable.png")';
     compassDiv.style.backgroundImage = imgElevationTable;
     compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
     compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
-    compassDiv.style.backgroundColor = 'white'; 
+    compassDiv.style.backgroundColor = 'white';
     compassDiv.style.display = 'flex';
     compassDiv.style.alignItems = 'center';
     compassDiv.style.justifyContent = 'center';
     compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
     compassDiv.style.zIndex = 1000;
-    
-  
+
+
     const icon = document.createElement('i');
-    
+
     // Estilos inline do ícone
     // icon.style.fontSize = '20px';
     // icon.style.color = '#fff';
@@ -1251,16 +1251,16 @@ function createColorTable() {
     // Adiciona um evento de clique à bússola
     compassDiv.addEventListener('click', function() {
         // Alerta ou função quando clicado
-        if (ElevationTableOpen == false) 
+        if (ElevationTableOpen == false)
         {
-            compassDiv.style.backgroundImage = imgElevationTable;  
-            ElevationTableOpen=true;        
-        }   
+            compassDiv.style.backgroundImage = imgElevationTable;
+            ElevationTableOpen=true;
+        }
         else
         {
             compassDiv.remove();
             ElevationTableOpen=false;
-        } 
+        }
     });
     document.body.appendChild(compassDiv);
 }
@@ -1272,29 +1272,29 @@ function createDivOrdemPontos() {
     // Desabilita modo mapa girar com o veículopara evitar bugs
 
     const compassDiv = document.createElement('div');
-    
+
     // Define os estilos inline da bússola
     compassDiv.style.position = 'absolute';
     compassDiv.style.top = '130px';
     compassDiv.style.left = '10px';
-    compassDiv.style.width = '45px';             
-    compassDiv.style.height = '45px'; 
-    compassDiv.style.borderRadius = '50%';        // Bordas arredondadas    
-    compassDiv.style.backgroundSize = '45px 45px';    
-    // compassDiv.style.backgroundImage = 'url("/static/OrdemPontos.png")';  
+    compassDiv.style.width = '45px';
+    compassDiv.style.height = '45px';
+    compassDiv.style.borderRadius = '50%';        // Bordas arredondadas
+    compassDiv.style.backgroundSize = '45px 45px';
+    // compassDiv.style.backgroundImage = 'url("/static/OrdemPontos.png")';
     compassDiv.style.backgroundImage = imgOrdemPontos;
     compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
     compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
-    compassDiv.style.backgroundColor = 'white'; 
+    compassDiv.style.backgroundColor = 'white';
     compassDiv.style.display = 'flex';
     compassDiv.style.alignItems = 'center';
     compassDiv.style.justifyContent = 'center';
     compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
     compassDiv.style.zIndex = 999;
-    
-  
+
+
     const icon = document.createElement('i');
-    
+
     // Estilos inline do ícone
     // icon.style.fontSize = '20px';
     // icon.style.color = '#fff';
@@ -1352,10 +1352,10 @@ function AtualizaPontosvisitaDadosCampoPN(pontosvisitaDados,lat, lon,iPn,iPnDado
     // console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
     i_posicaoiPnDados = pontosvisitaDados.findIndex(ponto => ponto[2] === iPnDados );
     i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
-    
+
     pontosvisitaDados[i_posicaoiPnDados][2]=iPnDados;
     pontosvisitaDados[i_posicaolatlon][2]=iPn;
-    return pontosvisitaDados; 
+    return pontosvisitaDados;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
@@ -1364,7 +1364,7 @@ function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,ColunaAtualizar,No
     // console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
     i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
     pontosvisitaDados[i_posicaolatlon][ColunaAtualizar]=NovoDado;
-    return pontosvisitaDados; 
+    return pontosvisitaDados;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function ReordenaPontosTela(pontosVisita)
@@ -1390,18 +1390,18 @@ function ReordenaPontosTela(pontosVisita)
         }
 
         markerbufTemp = L.marker([lat, lon]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude(i,alt));
-        markerbufTemp._icon.setAttribute('data-id', `${i}`); 
-        markerbufTemp._icon.setAttribute('clicado', '0'); 
-        markerbufTemp._icon.setAttribute('tamanho', 'full'); 
+        markerbufTemp._icon.setAttribute('data-id', `${i}`);
+        markerbufTemp._icon.setAttribute('clicado', '0');
+        markerbufTemp._icon.setAttribute('tamanho', 'full');
         markerbufTemp._icon.setAttribute('altitude', `${alt}`);
         markerbufTemp.bindTooltip(tooltip, {permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'});
         markerVet.push(markerbufTemp);
         i=i+1;
     });
-    
+
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-fontSize = '12px';
+fontSize = '10px';
 function createDivOrdenaPontos() {
     // Cria a div principal
 
@@ -1434,7 +1434,7 @@ function createDivOrdenaPontos() {
     iDlg.style.userSelect = 'none';           // Para navegadores modernos
     iDlg.style.webkitUserSelect = 'none';     // Para navegadores baseados no WebKit
     iDlg.style.mozUserSelect = 'none';        // Para Firefox
-    iDlg.style.msUserSelect = 'none'; 
+    iDlg.style.msUserSelect = 'none';
 
 
     document.body.appendChild(iDlg);
@@ -1463,13 +1463,146 @@ function createDivOrdenaPontos() {
 
     // Adiciona o rótulo
     label = document.createElement('label');
-    label.htmlFor = 'lista3';
-    label.textContent = 'Ordem dos pontos:';
-    label.style.marginBottom = '10px';
+    label.htmlFor = 'listaRotas';
+    label.textContent = 'Rotas:';
+    label.style.marginBottom = '5px';
     label.style.fontFamily = 'Arial, sans-serif';
     label.style.fontSize = fontSize;
     label.style.color = '#333';
     iDlg.appendChild(label);
+
+    // Cria o controle de seleção múltipla
+    selectRotas = document.createElement('select');
+    selectRotas.id = 'listaRotas';
+    // select.multiple = true;
+    selectRotas.size = 10000; // Define o número de itens visíveis
+    selectRotas.style.width = '100%';
+    selectRotas.style.height = '80px'; // Ocupa o espaço restante e retira os espaços para outros controles
+    selectRotas.style.fontSize = fontSize;
+    iDlg.appendChild(selectRotas);
+
+    // Ponto Inicial
+    label = document.createElement('label');
+    label.htmlFor = 'listaRotas';
+    label.textContent = 'Ponto Inicial:';
+    label.style.marginTop = '5px';
+    label.style.marginBottom = '5px';
+    label.style.fontFamily = 'Arial, sans-serif';
+    label.style.fontSize = fontSize;
+    label.style.color = '#333';
+    iDlg.appendChild(label);
+     
+    //-----------------------------------------------------------------------------------
+    // Div com lat, lon e descrição 
+    let divPai = document.createElement('div');
+    divPai.style.width = '98%';
+    divPai.style.display = 'flex';
+    divPai.style.justifyContent = 'space-between';
+    divPai.style.padding = '2px';
+    divPai.style.border = '1px solid rgb(180, 179, 179)'; // A borda será de 2px, cor escura (pode ser ajustada conforme necessário)
+    divPai.style.borderRadius = '2px'; // Opcional: bordas arredondadas
+
+    // Função para criar uma div com label e input
+    function criarDivComLabelInput(labelText, inputId) {
+        let div = document.createElement('div');
+        div.style.flex = '1';
+        div.style.padding = '5px';
+        
+        let label = document.createElement('label');
+        label.setAttribute('for', inputId);
+        label.textContent = labelText;
+        label.style.marginTop = '5px';
+        label.style.marginBottom = '5px';
+        label.style.fontFamily = 'Arial, sans-serif';
+        label.style.fontSize = fontSize;
+        label.style.color = '#333';
+        
+        let input = document.createElement('input');
+        input.type = 'text';
+        input.id = inputId;
+        input.name = inputId;
+        input.style.width = '90%';
+        input.style.padding = '5px';
+        
+        div.appendChild(label);
+        div.appendChild(input);
+        
+        return div;
+    }
+
+    // Adicionando as divs internas à div pai
+    divPai.appendChild(criarDivComLabelInput('Latitude:', 'latitude'));
+    divPai.appendChild(criarDivComLabelInput('Longitude:', 'longitude'));
+    divPai.appendChild(criarDivComLabelInput('Descrição:', 'descricao'));    
+    iDlg.appendChild(divPai);
+    //----------------------------------------------------------------------------------- 
+
+    // Label Ordem dos Pontos e os controles ao seu lado
+    // novo label com div
+    // Cria uma div para envolver o label e outros elementos
+    div = document.createElement('div');
+    div.style.display = 'flex'; // Habilita o Flexbox
+    div.style.justifyContent = 'space-between'; // Espaça os itens entre si
+    div.style.alignItems = 'center'; // Centraliza os itens verticalmente (opcional)
+    div.style.marginBottom = '5px'; // Espaçamento externo inferior
+    div.style.marginTop = '5px'; // Espaçamento externo inferior
+    // Faz o div ocupar 100% do espaço disponível
+    div.style.width = '100%'; // Largura total
+    div.style.boxSizing = 'border-box'; // Garante que padding e borda sejam incluídos na largura total
+
+    // Cria o label (alinhado à esquerda)
+    label = document.createElement('label');
+    label.htmlFor = 'listaPontos';
+    label.textContent = 'Ordem dos pontos:';
+    label.style.fontFamily = 'Arial, sans-serif';
+    label.style.fontSize = fontSize;
+    label.style.color = '#333';
+
+
+    // Cria um wrapper para os elementos alinhados à direita
+    const rightWrapper = document.createElement('div');
+    rightWrapper.style.display = 'flex'; // Flexbox para os elementos da direita
+    rightWrapper.style.justifyContent = 'flex-end'; // Garante o alinhamento à direita dentro do wrapper
+    rightWrapper.style.gap = '5px'; // Espaçamento entre os itens da direita
+    rightWrapper.style.flexGrow = '1'; // Faz o wrapper ocupar todo o espaço restante na linha
+
+    // Exemplo de ícones clicáveis para as setas
+    const upArrow = document.createElement('span');
+    upArrow.textContent = '▲'; // Seta para cima
+    upArrow.style.cursor = 'pointer'; // Define como clicável
+    upArrow.style.fontSize = '14px'; // Ajusta o tamanho da seta
+    upArrow.style.color = '#333'; // Cor da seta
+    upArrow.style.marginRight = '0px'; // Espaçamento à direita (opcional)
+
+    // Adiciona um evento de clique na seta para cima
+    upArrow.addEventListener('click', () => {
+        console.log('Seta acima clicada!');
+    });
+
+    const downArrow = document.createElement('span');
+    downArrow.textContent = '▼'; // Seta para baixo
+    downArrow.style.cursor = 'pointer'; // Define como clicável
+    downArrow.style.fontSize = '14px'; // Ajusta o tamanho da seta
+    downArrow.style.color = '#333'; // Cor da seta
+
+    // Adiciona um evento de clique na seta para baixo
+    downArrow.addEventListener('click', () => {
+        console.log('Seta abaixo clicada!');
+    });
+
+    // Adiciona os elementos ao wrapper da direita
+    rightWrapper.appendChild(upArrow);
+    rightWrapper.appendChild(downArrow);
+
+    // Adiciona o label (esquerda) e o wrapper (direita) à div principal
+    div.appendChild(label);
+    div.appendChild(rightWrapper);
+
+    // Adiciona a div ao elemento pai (iDlg)
+    iDlg.appendChild(div);
+    // Fim novo label com div
+
+
 
     // Cria o controle de seleção múltipla
     const select = document.createElement('select');
@@ -1492,7 +1625,7 @@ function createDivOrdenaPontos() {
             option.textContent = EncontrarDado(pontosvisitaDados, latitude, longitude,2);
             select.appendChild(option);
         });
-    
+
     }
     LoadSelect();
     /*
@@ -1520,22 +1653,22 @@ function createDivOrdenaPontos() {
 
     function LoadSelectAlgoOrdenacao()
     {
-        // "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread" 
+        // "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread"
         selectAlgoOrdenacao.innerHTML = '';
         option = document.createElement('option');
         option.value = "Nenhum";
         option.textContent = "Nenhum";
-        selectAlgoOrdenacao.appendChild(option); 
+        selectAlgoOrdenacao.appendChild(option);
 
         option = document.createElement('option');
         option.value = "Distancia Geodesica";
         option.textContent = "Distancia Geodesica";
-        selectAlgoOrdenacao.appendChild(option); 
+        selectAlgoOrdenacao.appendChild(option);
 
         option = document.createElement('option');
         option.value = "Distancia OSMR MultiThread";
         option.textContent = "Distancia OSMR MultiThread";
-        selectAlgoOrdenacao.appendChild(option); 
+        selectAlgoOrdenacao.appendChild(option);
     }
     LoadSelectAlgoOrdenacao();
     */
@@ -1548,7 +1681,7 @@ function createDivOrdenaPontos() {
     buttonsContainer.style.right = '10px';
     buttonsContainer.style.display = 'flex'; // Flex para alinhar os botões horizontalmente
     buttonsContainer.style.gap = '10px'; // Espaçamento entre os botões
-    
+
 
     const sobeBtn = createButton('Sobe', () => moveOption(-1));
     const desceBtn = createButton('Desce', () => moveOption(1));
@@ -1578,7 +1711,7 @@ function createDivOrdenaPontos() {
         const selectElement = document.getElementById('listaPontos');
         // Pega a lista de itens (opções)
         const options = Array.from(selectElement.options); // Converte para array para facilitar manipulação
-        
+
         // Exibe os valores e textos no console
         pontosVisitaNew = []
         options.forEach(option => {
@@ -1586,31 +1719,31 @@ function createDivOrdenaPontos() {
             // alert(`Value: ${option.value}, Text: ${option.textContent}`);
             lat = EncontrarDadoPn(pontosvisitaDados, option.textContent,0)
             lon = EncontrarDadoPn(pontosvisitaDados, option.textContent,1)
-            pontosVisitaNew.push([lat, lon]); 
+            pontosVisitaNew.push([lat, lon]);
         });
         pontosVisitaOrdenados = pontosVisitaNew;
         //  Pegar algoritmo de ordenação selecionado
         // selecionado = selectAlgoOrdenacao.value; // Obtém o valor selecionado
         // console.log("Algoritmo de ordenação selecionado:", selecionado);
-        ReordenaPontosTela(pontosVisitaOrdenados);    
-        RefazRotaNoServidor(pontosVisitaOrdenados);    
+        ReordenaPontosTela(pontosVisitaOrdenados);
+        RefazRotaNoServidor(pontosVisitaOrdenados);
         LoadSelect();
     }
     ////////////////////////////////
     function GetServerUrl()
-    {    
-        if ( window.location.hostname=="127.0.0.1") 
+    {
+        if ( window.location.hostname=="127.0.0.1")
         {
-                //  sem ngrock 
+                //  sem ngrock
                 serverUrl = `${window.location.protocol}//${window.location.hostname}`;
                 url = `${serverUrl}:5001`
-        }    
+        }
         else
         {
                 //  no ngrock
                 serverUrl = `${window.location.protocol}//${window.location.hostname}`;
                 url = `${serverUrl}`
-        }      
+        }
         return(url);
     }
     ////////////////////////////////
@@ -1618,10 +1751,10 @@ function createDivOrdenaPontos() {
     {
         IhandleMsg=exibirMensagem("Servidor Calculando a Nova Rota");
         if(poly_lineRota)
-        {    
+        {
            poly_lineRota.remove();
            poly_lineRota = null;
-        }     
+        }
         const payload = {
             TipoRequisicao: "RoteamentoOSMR",
             PortaOSRMServer: OSRMPort,
@@ -1629,7 +1762,7 @@ function createDivOrdenaPontos() {
         };
         // enviar_json(payload, "http://localhost:5001/webrotas")
 
-        url = GetServerUrl()+ "/webrotas"; 
+        url = GetServerUrl()+ "/webrotas";
 
         try {
             // Espera a resposta da função enviarJson
@@ -1651,7 +1784,7 @@ function createDivOrdenaPontos() {
             "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
             "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
             "weight": 3}).addTo(map);
-        
+
         document.body.removeChild(IhandleMsg);
     }
     ////////////////////////////////
@@ -1659,21 +1792,21 @@ function createDivOrdenaPontos() {
     function moveOption(direction) {
         const selectedIndex = select.selectedIndex;
         if (selectedIndex === -1) return; // Nenhuma opção selecionada
-    
+
         const selectedOption = select.options[selectedIndex];
         const newIndex = selectedIndex + direction;
-    
+
         // Verificar limites
         if (newIndex < 0 || newIndex >= select.options.length) return;
-    
+
         // Mover a opção
         select.removeChild(selectedOption);
         select.insertBefore(selectedOption, select.options[newIndex]);
-    
+
         // Atualizar o índice selecionado
         select.selectedIndex = newIndex;
     }
-    
+
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function exibirMensagem(mensagem) {
@@ -1701,7 +1834,7 @@ function exibirMensagem(mensagem) {
     mensagemDiv.style.userSelect = 'none';           // Para navegadores modernos
     mensagemDiv.style.webkitUserSelect = 'none';     // Para navegadores baseados no WebKit
     mensagemDiv.style.mozUserSelect = 'none';        // Para Firefox
-    mensagemDiv.style.msUserSelect = 'none'; 
+    mensagemDiv.style.msUserSelect = 'none';
 
     // Criar a div da ampulheta
     const ampulhetaDiv = document.createElement('div');
@@ -1717,18 +1850,18 @@ function exibirMensagem(mensagem) {
     textoMensagem.textContent = mensagem;
     // Estilos definidos em uma tag <style> ou arquivo CSS:
     const styleElement = document.createElement('style');
-    
+
     styleElement.textContent = `
         .mensagem-texto {
             font-family: Arial, sans-serif;
             font-size: 16px;
             color: #333;
-        
+
     }`;
-    
+
 
     document.head.appendChild(styleElement);
-   
+
     // Adicionar a ampulheta e o texto à div principal
     mensagemDiv.appendChild(ampulhetaDiv);
     mensagemDiv.appendChild(textoMensagem);
@@ -1765,7 +1898,7 @@ async function enviarJson(payload, url) {
         if (response.ok) {
             console.log("-----------------------------------------------");
             console.log("Requisição bem-sucedida:");
-            
+
             const responseData = await response.json();
             console.log(responseData);
             console.log("-----------------------------------------------");
@@ -1786,7 +1919,7 @@ async function enviarJson(payload, url) {
 function createAtivaGps() {
     // Cria a div para a bússola
     const compassDiv = document.createElement('div');
-    
+
     // Define os estilos inline da bússola
     compassDiv.style.position = 'absolute';
     compassDiv.style.top = '60px';
@@ -1797,21 +1930,21 @@ function createAtivaGps() {
     if(gpsAtivado)
         compassDiv.style.backgroundImage = imgGpsAtivo;
     else
-        compassDiv.style.backgroundImage = imgGpsInativo;    
+        compassDiv.style.backgroundImage = imgGpsInativo;
     compassDiv.style.backgroundSize = '35px 35px';    // Redimensiona a imagem para cobrir a div
     compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
     compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
-    compassDiv.style.backgroundColor = 'white'; 
+    compassDiv.style.backgroundColor = 'white';
     compassDiv.style.display = 'flex';
     compassDiv.style.alignItems = 'center';
     compassDiv.style.justifyContent = 'center';
     compassDiv.style.borderRadius = '50%';        // Bordas arredondadas
     compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
     compassDiv.style.zIndex = 1000;
-    
+
     // Cria o ícone da bússola (seta para o norte)
     const icon = document.createElement('i');
-    
+
     // Estilos inline do ícone
     // icon.style.fontSize = '20px';
     // icon.style.color = '#fff';
@@ -1820,20 +1953,20 @@ function createAtivaGps() {
     // Adiciona um evento de clique à bússola
     compassDiv.addEventListener('click', function() {
         // alert('Você clicou na bússola!');         // Alerta ou função quando clicado
-        if (gpsAtivado) 
-        {    
+        if (gpsAtivado)
+        {
             // alert('Clicou para PointerNorte.png',HeadingNorte)
             // compassDiv.style.backgroundImage = 'url("/static/GpsInativo.png")';
             compassDiv.style.backgroundImage = imgGpsInativo;
             gpsAtivado=false;
         }
-        else    
+        else
         {
             // alert('Clicou para Pointer.png',HeadingNorte)
             // compassDiv.style.backgroundImage = 'url("/static/GpsAtivo.png")';
             compassDiv.style.backgroundImage = imgGpsAtivo;
             gpsAtivado=true;
-        }    
+        }
     });
 
     // Adiciona o ícone dentro da bússola
@@ -1874,14 +2007,14 @@ function createMacOSDock() {
         iconDiv.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
         iconDiv.style.transition = 'transform 0.2s';
         iconDiv.innerText = icon;
-        
-        
+
+
         //---------------------------------------------------------------------------
         if (index === 0) {
             // Add the imgElevationTable image to the first icon
             iconDiv.innerText = '';
             const img = document.createElement('img');
-            img.src = imgOpenElevTable;  
+            img.src = imgOpenElevTable;
             img.style.width = '50px';
             img.style.height = '50px';
             img.style.borderRadius = '10px';
@@ -1890,12 +2023,12 @@ function createMacOSDock() {
                 createColorTable();
             };
 
-        } 
+        }
         //---------------------------------------------------------------------------
         if (index === 1) {
             iconDiv.innerText = '';
             const img = document.createElement('img');
-            img.src = imgOrdemPontos;  
+            img.src = imgOrdemPontos;
             img.style.width = '40px';
             img.style.height = '40px';
             img.style.borderRadius = '10px';
@@ -1904,34 +2037,34 @@ function createMacOSDock() {
                 createDivOrdenaPontos();
             };
 
-        }      
+        }
         //---------------------------------------------------------------------------
         if (index === 2) {
             // Add the imgElevationTable image to the first icon
             iconDiv.innerText = '';
             const img = document.createElement('img');
             img.id="imgPointerNorte";
-            img.src = imgPointerNorte;  
+            img.src = imgPointerNorte;
             img.style.width = '30px';
             img.style.height = '30px';
             img.style.borderRadius = '10px';
             iconDiv.appendChild(img);
             img.onclick = () => {
-                if (HeadingNorte==0) 
-                {    
+                if (HeadingNorte==0)
+                {
                     img.src = imgPointer;
                     HeadingNorte=1;
                     AtualizaMapaHeading(LastHeading);
                 }
-                else    
+                else
                 {
                     img.src = imgPointerNorte;
                     HeadingNorte=0
                     AtualizaMapaHeading(LastHeading);
-                }                     
+                }
             };
 
-        }      
+        }
         //---------------------------------------------------------------------------
         if (index === 3) {
             // Add the imgElevationTable image to the first icon
@@ -1941,33 +2074,33 @@ function createMacOSDock() {
             if(gpsAtivado)
                 img.src = imgGpsAtivo;
             else
-                img.src = imgGpsInativo;     
+                img.src = imgGpsInativo;
 
             img.style.width = '30px';
             img.style.height = '30px';
             img.style.borderRadius = '10px';
             iconDiv.appendChild(img);
             img.onclick = () => {
-                if (gpsAtivado) 
-                {    
+                if (gpsAtivado)
+                {
                     img.src = imgGpsInativo;
                     gpsAtivado=false;
                     AtualizaGpsTimer(gpsAtivado);
                 }
-                else    
+                else
                 {
                     img.src = imgGpsAtivo;
                     gpsAtivado=true;
                     AtualizaGpsTimer(gpsAtivado);
-                }                     
+                }
             };
 
-        }      
+        }
         //---------------------------------------------------------------------------
         if (index === 5) {
             iconDiv.innerText = '';
             const img = document.createElement('div');
-            img.id="divLayers";     
+            img.id="divLayers";
             img.style.width = '35px';
             img.style.height = '35px';
             img.style.borderRadius = '10px';
@@ -1982,18 +2115,18 @@ function createMacOSDock() {
             layersContainer.style.width = '200px'; // Define a largura do menu
             layersContainer.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.0)'; // Sombra para destacar
             layersContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.0)';
-            
+
             img.appendChild(layersContainer); // Adicionar ao div personalizado
             iconDiv.appendChild(img);
             img.onclick = () => {
-                  
+
             };
-        }               
+        }
         //---------------------------------------------------------------------------
         if (index === 4) {
             iconDiv.innerText = '';
             const img = document.createElement('img');
-            img.src = imgKml;  
+            img.src = imgKml;
             img.style.width = '40px';
             img.style.height = '40px';
             img.style.borderRadius = '10px';
@@ -2003,7 +2136,7 @@ function createMacOSDock() {
                 GerarKML(polylineRotaDat, pontosvisitaDados );
             };
 
-        } 
+        }
         //---------------------------------------------------------------------------
 
         // Add hover effect for scaling
@@ -2080,11 +2213,11 @@ function GerarKML(polylineRota, pontosVisitaDados) {
     // Salvar o arquivo KML
     const blob = new Blob([kmlConteudo], { type: "application/vnd.google-earth.kml+xml" });
     const url = URL.createObjectURL(blob);
-    
+
     date = gerarDataHoraAtual();
     const a = document.createElement("a");
     a.href = url;
-    
+
     a.download = `WebRotasPontosRotas${date}.kml`;
     document.body.appendChild(a);
     a.click();
