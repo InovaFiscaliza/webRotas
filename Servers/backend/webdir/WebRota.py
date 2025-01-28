@@ -84,6 +84,7 @@ class ClRouteDetailList:
         self.pontosvisitaDados = []
         self.mapcode = ""  
         self.pontoinicial = None    
+        self.DistanceTotal = 0
     #---------------------------------------------------    
     def NewPiece(self, lat, lon,street):   
        self.list.append(ClRouteDetail(lat, lon,street))
@@ -703,6 +704,7 @@ def GenerateRouteMapOSMR(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
        geometry = route['geometry']
        coordinates = polyline.decode(geometry)
        RouteDetailLoc.coordinates += coordinates
+       RouteDetailLoc.DistanceTotal = RouteDetailLoc.DistanceTotal + calcular_distancia_totalOSMR(data)
        # Pegando nomes das ruas e rota
        # waypoints = data['waypoints']
 
@@ -1724,6 +1726,8 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
     
     RouteDetail=DesenhaRegioes(RouteDetail,regioes)
     RouteDetail.GeraMapPolylineCaminho()
+      
+      
           
     fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,pontosvisita,'CompAbrangencia')      
     return fileMap,fileNameStatic,fileKml
@@ -1741,7 +1745,6 @@ def GeraArquivosSaida(RouteDetail,pontosvisita,tipoServico):
     fileKml = f"Mapa{tipoServico}{buf}.kml"     
     fileKmlF = f"templates/{fileKml}"    
     # GerarKml(pontosvisita,fileKmlF)    
-    # zzzzzzzzzzz
     Gerar_Kml(RouteDetail.coordinates, RouteDetail.pontosvisitaDados,filename=fileKmlF)
     
     return fileMap,fileMapStatic,fileKml
@@ -1844,12 +1847,38 @@ def MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False):
         i=i+1
     return pontosvisitaDadosNew
 ################################################################################
+def get_formatted_timestamp():
+    now = datetime.datetime.now()
+    return now.strftime("%Y/%m/%d_%H:%M:%S")  
+################################################################################
+def DeclaraArrayRotas(RouteDetail):
+    # var estruturas = []; // Array vazio
+    # Salvar
+    # sessionStorage.setItem('sessionId', 'abc123');
+    # // Recuperar
+    # const sessionId = sessionStorage.getItem('sessionId');
+    # AAAAAAAAAAAAAAAAAAAAAAAa
+    timeStp=get_formatted_timestamp()
+    RouteDetail.mapcode += f"    var ListaRotasCalculadas = [];\n"
+    RouteDetail.mapcode += f"    var bufdados = {{}};\n"
+    RouteDetail.mapcode += f"    bufdados.id = 0;\n"    
+    RouteDetail.mapcode += f"    bufdados.time = '{timeStp}';\n"    
+    RouteDetail.mapcode += f"    bufdados.polylineRotaDat = polylineRotaDat;\n"
+    RouteDetail.mapcode += f"    bufdados.pontosvisitaDados = pontosvisitaDados;\n"
+    RouteDetail.mapcode += f"    bufdados.pontoinicial = [{RouteDetail.pontoinicial[0]},{RouteDetail.pontoinicial[1]},'{RouteDetail.pontoinicial[2]}'];\n"
+    RouteDetail.mapcode += f"    bufdados.DistanceTotal = {RouteDetail.DistanceTotal/1000};\n"
+    RouteDetail.mapcode += f"    ListaRotasCalculadas.push(bufdados);\n"
+    
+    return RouteDetail   
+################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     wLog("PlotaPontosVisita") 
     i=0 
     RouteDetail.mapcode += f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n"
     RouteDetail.mapcode += f"    var GpsProximoPonto = '{UserData.GpsProximoPonto}';\n"
     RouteDetail.mapcode += f"    var pontosVisitaOrdenados = [\n"
+    
+    
     for ponto in pontosvisita:
         latitude, longitude = ponto
         if i == len(pontosvisita) - 1:  # Verifica se é o último elemento
@@ -1902,6 +1931,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
             RouteDetail=GenerateRouteMap(RouteDetail,lati,loni,latf,lonf)
         i=i+1    
 
+    RouteDetail = DeclaraArrayRotas(RouteDetail)    
     RouteDetail.mapcode +="           const defaultIcon = markerVet[1].getIcon();\n"      
     return RouteDetail
 ################################################################################
@@ -1916,6 +1946,7 @@ def DescricaoPontoVisita(pontosvisitaDados, lat, lon):
             return ponto[4]  # Retorna o campo de endereço (4º elemento)
     return "Endereço não encontrado para a latitude e longitude fornecidas."
 ################################################################################
+# zzzzzzzzzzzzzzzzzzzzzzzzz
 def RoteamentoOSMR(data,porta,pontosvisita):
     UserData.OSMRport=porta
     RouteDetail = ClRouteDetailList()
@@ -1932,7 +1963,7 @@ def RoteamentoOSMR(data,porta,pontosvisita):
             (latf,lonf) = pontosvisita[i]       
             RouteDetail=GenerateRouteMap(RouteDetail,lati,loni,latf,lonf)
         i=i+1    
-    return RouteDetail.coordinates
+    return RouteDetail.coordinates,RouteDetail.DistanceTotal
 ################################################################################
 def RoutePontosVisita(data,user,pontoinicial,pontosvisitaDados,regioes):
     

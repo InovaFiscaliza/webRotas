@@ -1400,7 +1400,21 @@ function ReordenaPontosTela(pontosVisita)
     });
 
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function getFormattedTimestamp() {
+    const now = new Date();
+    const dia = String(now.getDate()).padStart(2, '0'); // Dia com 2 dígitos
+    const mes = String(now.getMonth() + 1).padStart(2, '0'); // Mês com 2 dígitos (0-11)
+    const ano = now.getFullYear();
+    const horas = String(now.getHours()).padStart(2, '0'); // Horas com 2 dígitos
+    const minutos = String(now.getMinutes()).padStart(2, '0'); // Minutos com 2 dígitos
+    const segundos = String(now.getSeconds()).padStart(2, '0'); // Segundos com 2 dígitos
+    
+    return `${ano}/${mes}/${dia}_${horas}:${minutos}:${segundos}`;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Dialogo de ordenação de pontos
 fontSize = '10px';
 function createDivOrdenaPontos() {
     // Cria a div principal
@@ -1463,6 +1477,33 @@ function createDivOrdenaPontos() {
         iDlg.style.cursor = 'move'; // Retorna ao cursor padrão
     });
 
+    
+    // Adicionando o botão "X" para fechar
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'x';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '5px';
+    closeButton.style.right = '5px';
+    closeButton.style.border = 'none';
+    closeButton.style.borderRadius = '50%';
+    closeButton.style.width = '15px';
+    closeButton.style.height = '15px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.display = 'flex';
+    closeButton.style.alignItems = 'center';
+    closeButton.style.justifyContent = 'center';
+    closeButton.style.fontSize = fontSize;
+    closeButton.title = 'Fechar';
+    
+    // Função para fechar o div
+    closeButton.addEventListener('click', () => {
+      iDlg.remove();
+    });
+    
+    // Adicionando o botão ao div
+    iDlg.appendChild(closeButton);
+
+
     // Adiciona o rótulo
     label = document.createElement('label');
     label.htmlFor = 'listaRotas';
@@ -1482,6 +1523,32 @@ function createDivOrdenaPontos() {
     selectRotas.style.height = '80px'; // Ocupa o espaço restante e retira os espaços para outros controles
     selectRotas.style.fontSize = fontSize;
     iDlg.appendChild(selectRotas);
+
+    // Adicionando itens ao select
+    function adicionarItemAoSelect(texto, valor) {
+        let opcao = document.createElement('option'); // Cria o elemento <option>
+        opcao.text = texto; // Define o texto visível da opção
+        opcao.value = valor; // Define o valor da opção
+        selectRotas.appendChild(opcao); // Adiciona a opção ao select
+    }
+
+    // Loop para varrer os itens
+    // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa
+    for (let i = 0; i < ListaRotasCalculadas.length; i++) {
+        let item = ListaRotasCalculadas[i];
+        fmtDist = item.DistanceTotal.toFixed(2);
+        adicionarItemAoSelect(`Rota #${item.id} - ${item.time} - ${fmtDist} km`, `${item.id}`);
+        
+        console.log(`Item ${i}:`);
+        console.log(`ID: ${item.id}`);
+        console.log(`Polyline: ${item.polylineRotaDat}`);
+        console.log(`Pontos de Visita: ${item.pontosvisitaDados}`);
+        console.log(`Ponto Inicial: ${item.pontoinicial}`);
+        console.log(`Distância Total: ${item.DistanceTotal}`);
+    }
+    selectRotas.selectedIndex = 0;
+    
+    
 
     // Ponto Inicial
     label = document.createElement('label');
@@ -1525,6 +1592,8 @@ function createDivOrdenaPontos() {
         input.name = inputId;
         input.style.width = '90%';
         input.style.padding = '5px';
+        input.style.fontFamily = 'Arial, sans-serif';
+        input.style.fontSize = fontSize;
         
         div.appendChild(label);
         div.appendChild(input);
@@ -1537,6 +1606,11 @@ function createDivOrdenaPontos() {
     divPai.appendChild(criarDivComLabelInput('Longitude:', 'longitude'));
     divPai.appendChild(criarDivComLabelInput('Descrição:', 'descricao'));    
     iDlg.appendChild(divPai);
+ 
+
+    document.getElementById('latitude').value =  ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[0];
+    document.getElementById('longitude').value = ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[1];
+    document.getElementById('descricao').value = ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[2];
     //----------------------------------------------------------------------------------- 
 
     // Label Ordem dos Pontos e os controles ao seu lado
@@ -1579,6 +1653,7 @@ function createDivOrdenaPontos() {
     // Adiciona um evento de clique na seta para cima
     upArrow.addEventListener('click', () => {
         console.log('Seta acima clicada!');
+        moveOption(-1)
     });
 
     const downArrow = document.createElement('span');
@@ -1590,6 +1665,7 @@ function createDivOrdenaPontos() {
     // Adiciona um evento de clique na seta para baixo
     downArrow.addEventListener('click', () => {
         console.log('Seta abaixo clicada!');
+        moveOption(1)
     });
 
     // Adiciona os elementos ao wrapper da direita
@@ -1603,7 +1679,7 @@ function createDivOrdenaPontos() {
     // Adiciona a div ao elemento pai (iDlg)
     iDlg.appendChild(div);
     // Fim novo label com div
-
+    //-----------------------------------------------------------------------------------
 
 
     // Cria o controle de seleção múltipla
@@ -1612,7 +1688,7 @@ function createDivOrdenaPontos() {
     // select.multiple = true;
     select.size = 10000; // Define o número de itens visíveis
     select.style.width = '100%';
-    select.style.height = 'calc(100% - 70px)'; // Ocupa o espaço restante e retira os espaços para outros controles
+    select.style.height = 'calc(100% - 240px)'; // Ocupa o espaço restante e retira os espaços para outros controles
     select.style.fontSize = fontSize;
     iDlg.appendChild(select);
 
@@ -1630,50 +1706,6 @@ function createDivOrdenaPontos() {
 
     }
     LoadSelect();
-    /*
-    // Adiciona o rótulo
-    label = document.createElement('label');
-    label.htmlFor = 'listaAlgoOrdencao';
-    label.textContent = 'Algoritmo Ordenação:';
-    label.style.marginTop = '10px';
-    label.style.marginBottom = '10px';
-    label.style.fontFamily = 'Arial, sans-serif';
-    label.style.fontSize = fontSize;
-    label.style.color = '#333';
-    iDlg.appendChild(label);
-
-    // Cria o controle de seleção múltipla
-    const selectAlgoOrdenacao = document.createElement('select');
-    selectAlgoOrdenacao.id = 'listaAlgoOrdencao';
-    // select.multiple = true;
-    selectAlgoOrdenacao.size = 1; // Define o número de itens visíveis (vira um dropdown)
-    selectAlgoOrdenacao.style.bottom = '0px';
-    selectAlgoOrdenacao.style.width = '100%';
-    selectAlgoOrdenacao.style.height = '40px'; // Ocupa o espaço restante
-    selectAlgoOrdenacao.style.fontSize = fontSize;
-    iDlg.appendChild(selectAlgoOrdenacao);
-
-    function LoadSelectAlgoOrdenacao()
-    {
-        // "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread"
-        selectAlgoOrdenacao.innerHTML = '';
-        option = document.createElement('option');
-        option.value = "Nenhum";
-        option.textContent = "Nenhum";
-        selectAlgoOrdenacao.appendChild(option);
-
-        option = document.createElement('option');
-        option.value = "Distancia Geodesica";
-        option.textContent = "Distancia Geodesica";
-        selectAlgoOrdenacao.appendChild(option);
-
-        option = document.createElement('option');
-        option.value = "Distancia OSMR MultiThread";
-        option.textContent = "Distancia OSMR MultiThread";
-        selectAlgoOrdenacao.appendChild(option);
-    }
-    LoadSelectAlgoOrdenacao();
-    */
 
     // Cria os botões
     const buttonsContainer = document.createElement('div');
@@ -1682,27 +1714,18 @@ function createDivOrdenaPontos() {
     buttonsContainer.style.left = '10px';
     buttonsContainer.style.right = '10px';
     buttonsContainer.style.display = 'flex'; // Flex para alinhar os botões horizontalmente
-    buttonsContainer.style.gap = '10px'; // Espaçamento entre os botões
+    buttonsContainer.style.justifyContent = 'flex-end'; // Alinha os itens ao lado direito
+    buttonsContainer.style.gap = '5px'; // Espaçamento entre os botões
 
-
-    const sobeBtn = createButton('Sobe', () => moveOption(-1));
-    const desceBtn = createButton('Desce', () => moveOption(1));
-    const reordenaBtn = createButton('Reordena', () => reordenaOption());
-    const fechaBtn = createButton('Fecha', () => document.body.removeChild(iDlg));
-    fechaBtn.style.backgroundColor = '#0039FF';
-    fechaBtn.style.color = '#fff';
-
-    buttonsContainer.appendChild(sobeBtn);
-    buttonsContainer.appendChild(desceBtn);
+    const reordenaBtn = createButton('Recalcula Rota', () => reordenaOption());
     buttonsContainer.appendChild(reordenaBtn);
-    buttonsContainer.appendChild(fechaBtn);
     iDlg.appendChild(buttonsContainer);
 
     // Função auxiliar para criar botões
     function createButton(text, onClick) {
         const button = document.createElement('button');
         button.textContent = text;
-        button.style.padding = '8px 12px';
+        button.style.padding = '4px 16px';
         button.style.cursor = 'pointer';
         button.style.fontSize = fontSize;
         button.addEventListener('click', onClick);
@@ -1778,6 +1801,7 @@ function createDivOrdenaPontos() {
         }
 
         polylineRotaDat = data.polylineRota;
+        DistanceTotal = data.DistanceTotal;
         console.log("---------------------------------");
         console.log(polylineRotaDat);
         console.log("---------------------------------");
@@ -1810,6 +1834,9 @@ function createDivOrdenaPontos() {
     }
 
 }
+// Fim Dialogo de ordenação de pontos
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function exibirMensagem(mensagem) {
     // Criar a div principal da mensagem
