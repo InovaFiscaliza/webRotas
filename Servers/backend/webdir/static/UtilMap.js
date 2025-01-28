@@ -1524,6 +1524,13 @@ function createDivOrdenaPontos() {
     selectRotas.style.fontSize = fontSize;
     iDlg.appendChild(selectRotas);
 
+    // Adiciona o evento 'change' ao select
+    selectRotas.addEventListener('change', function () {
+        const selectedValue = selectRotas.value; // Obtém o valor selecionado
+        console.log(`Valor selecionado: ${selectedValue}`);
+    });
+
+
     // Adicionando itens ao select
     function adicionarItemAoSelect(texto, valor) {
         let opcao = document.createElement('option'); // Cria o elemento <option>
@@ -1532,23 +1539,27 @@ function createDivOrdenaPontos() {
         selectRotas.appendChild(opcao); // Adiciona a opção ao select
     }
 
-    // Loop para varrer os itens
-    // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa
-    for (let i = 0; i < ListaRotasCalculadas.length; i++) {
-        let item = ListaRotasCalculadas[i];
-        fmtDist = item.DistanceTotal.toFixed(2);
-        adicionarItemAoSelect(`Rota #${item.id} - ${item.time} - ${fmtDist} km`, `${item.id}`);
-        
-        console.log(`Item ${i}:`);
-        console.log(`ID: ${item.id}`);
-        console.log(`Polyline: ${item.polylineRotaDat}`);
-        console.log(`Pontos de Visita: ${item.pontosvisitaDados}`);
-        console.log(`Ponto Inicial: ${item.pontoinicial}`);
-        console.log(`Distância Total: ${item.DistanceTotal}`);
+
+    function CarregaRotasCalculadas(selIndex)
+    {
+        // Loop para varrer os itens
+        // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa
+        selectRotas.innerHTML = ""; // Limpa todo o conteúdo do select
+        for (let i = 0; i < ListaRotasCalculadas.length; i++) {
+            let item = ListaRotasCalculadas[i];
+            fmtDist = item.DistanceTotal.toFixed(2);
+            adicionarItemAoSelect(`Rota #${item.id} - ${item.time} - ${fmtDist} km`, `${item.id}`);
+            
+            console.log(`Item ${i}:`);
+            console.log(`ID: ${item.id}`);
+            console.log(`Polyline: ${item.polylineRotaDat}`);
+            console.log(`Pontos de Visita: ${item.pontosvisitaDados}`);
+            console.log(`Ponto Inicial: ${item.pontoinicial}`);
+            console.log(`Distância Total: ${item.DistanceTotal}`);
+        }
+        selectRotas.selectedIndex = selIndex;
     }
-    selectRotas.selectedIndex = 0;
-    
-    
+    CarregaRotasCalculadas(0);
 
     // Ponto Inicial
     label = document.createElement('label');
@@ -1693,19 +1704,25 @@ function createDivOrdenaPontos() {
     iDlg.appendChild(select);
 
     // Adiciona opções ao select dos pontos
-    function LoadSelect()
+    function LoadSelectPontos()
     {
         select.innerHTML = '';
         pontosVisitaOrdenados.forEach((ponto, index) => {
             const [latitude, longitude] = ponto;
             const option = document.createElement('option');
             option.value = index + 1;
-            option.textContent = EncontrarDado(pontosvisitaDados, latitude, longitude,2);
+            //  [2.803887, -60.691666,"P0","Local", "Hospital Materno Infantil – Bairro 13 de Setembro","0","Ativo"],
+            ponto = EncontrarDado(pontosvisitaDados, latitude, longitude,2);
+            desc = EncontrarDado(pontosvisitaDados, latitude, longitude,4);
+            if(desc == "")
+                option.textContent = ponto;
+            else 
+                option.textContent = ponto+"  - "+desc;            
             select.appendChild(option);
         });
 
     }
-    LoadSelect();
+    LoadSelectPontos();
 
     // Cria os botões
     const buttonsContainer = document.createElement('div');
@@ -1742,8 +1759,9 @@ function createDivOrdenaPontos() {
         options.forEach(option => {
             // console.log(`Value: ${option.value}, Text: ${option.textContent}`);
             // alert(`Value: ${option.value}, Text: ${option.textContent}`);
-            lat = EncontrarDadoPn(pontosvisitaDados, option.textContent,0)
-            lon = EncontrarDadoPn(pontosvisitaDados, option.textContent,1)
+            Pn = option.textContent.split(" ")[0]; // Pega o texto antes do primeiro espaço;
+            lat = EncontrarDadoPn(pontosvisitaDados, Pn,0)
+            lon = EncontrarDadoPn(pontosvisitaDados, Pn,1)
             pontosVisitaNew.push([lat, lon]);
         });
         pontosVisitaOrdenados = pontosVisitaNew;
@@ -1751,8 +1769,33 @@ function createDivOrdenaPontos() {
         // selecionado = selectAlgoOrdenacao.value; // Obtém o valor selecionado
         // console.log("Algoritmo de ordenação selecionado:", selecionado);
         ReordenaPontosTela(pontosVisitaOrdenados);
-        RefazRotaNoServidor(pontosVisitaOrdenados);
-        LoadSelect();
+        data=RefazRotaNoServidor(pontosVisitaOrdenados);
+
+        /*
+        ListaRotasCalculadas[0].id
+        ListaRotasCalculadas[0].time
+        ListaRotasCalculadas[0].polylineRotaDat
+        ListaRotasCalculadas[0].pontosvisitaDados
+        ListaRotasCalculadas[0].pontoinicial
+        ListaRotasCalculadas[0].DistanceTotal
+        */
+
+        pntinicialBuf = {};
+        pntinicialBuf[0] = document.getElementById('latitude').value;
+        pntinicialBuf[1] = document.getElementById('longitude').value;
+        pntinicialBuf[2] = document.getElementById('descricao').value;
+
+        maiorId = ListaRotasCalculadas.reduce((max, item) => {return item.id > max ? item.id : max;}, 0);
+        bufdados = {};
+        bufdados.id = maiorId+1;
+        bufdados.time = getFormattedTimestamp();
+        bufdados.polylineRotaDat = polylineRotaDat;
+        bufdados.pontosvisitaDados = pontosvisitaDados;
+        bufdados.pontoinicial = pntinicialBuf;
+        bufdados.DistanceTotal = data.DistanceTotal/1000;
+        ListaRotasCalculadas.push(bufdados);
+        CarregaRotasCalculadas(bufdados.id);
+        LoadSelectPontos();    
     }
     ////////////////////////////////
     function GetServerUrl()
@@ -1810,8 +1853,9 @@ function createDivOrdenaPontos() {
             "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
             "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
             "weight": 3}).addTo(map);
-
+        
         document.body.removeChild(IhandleMsg);
+        return data;
     }
     ////////////////////////////////
     // Função para mover opções na lista
