@@ -1751,7 +1751,7 @@ function createDivOrdenaPontos() {
     // select.multiple = true;
     select.size = 10000; // Define o número de itens visíveis
     select.style.width = '100%';
-    select.style.height = 'calc(100% - 240px)'; // Ocupa o espaço restante e retira os espaços para outros controles
+    select.style.height = 'calc(100% - 250px)'; // Ocupa o espaço restante e retira os espaços para outros controles
     select.style.fontSize = fontSize;
     iDlg.appendChild(select);
 
