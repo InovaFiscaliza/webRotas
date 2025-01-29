@@ -1505,8 +1505,17 @@ function createDivOrdenaPontos() {
     // Adicionando o botão ao div
     iDlg.appendChild(closeButton);
 
+    //-----------------------------------------------------------------------------------
+    // Rótulo Lista Rotas e seu controle de apagar rota
+    // Cria um contêiner para acomodar os controles na horizontal
+    container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.justifyContent = 'space-between'; // Mantém um espaço entre os elementos
+    container.style.width = '100%';
+    container.style.paddingTop = '15px'; // Adiciona espaçamento no topo
 
-    // Adiciona o rótulo
+    // Cria o rótulo
     label = document.createElement('label');
     label.htmlFor = 'listaRotas';
     label.textContent = 'Rotas:';
@@ -1514,7 +1523,47 @@ function createDivOrdenaPontos() {
     label.style.fontFamily = 'Arial, sans-serif';
     label.style.fontSize = fontSize;
     label.style.color = '#333';
-    iDlg.appendChild(label);
+
+    // Cria o botão de lixeira
+    trashButton = document.createElement('button');
+    trashButton.innerHTML = '🗑️'; // Ícone de lixeira
+    trashButton.style.border = 'none';
+    trashButton.style.background = 'transparent';
+    trashButton.style.cursor = 'pointer';
+    trashButton.style.fontSize = fontSize;
+    trashButton.style.marginLeft = '10px'; // Adiciona um espaçamento entre o label e a lixeira
+    DisableTrashButton(); // Desabilita o botão de lixeira inicialmente
+    function DisableTrashButton()
+    {
+        trashButton.style.cursor = 'not-allowed'; // Cursor indicando que está desabilitado
+        trashButton.style.opacity = '0.5'; // Deixa o botão visualmente mais "fraco"
+        trashButton.disabled = true; // Desabilita a interação do botão
+    }
+    function EnableTrashButton()
+    {
+        trashButton.disabled = false;
+        trashButton.style.opacity = '1';
+        trashButton.style.cursor = 'pointer';
+    }
+
+    // Adiciona um evento para limpar a lista ao clicar no botão de lixeira
+    trashButton.addEventListener('click', () => {
+        // document.getElementById('listaRotas').innerHTML = ''; // Limpa o select de rotas
+        // LoadSelectPontos(selectRotas.value)
+        if(selectRotas.value==0)
+            return;
+        ListaRotasCalculadas.splice(selectRotas.value, 1); // Remove a rota da lista, remove um elemento do array ListaRotasCalculadas na posição definida por selectRotas.value.
+        CarregaRotasCalculadas(0)
+    });
+
+    // Adiciona os elementos ao contêiner
+    container.appendChild(label);
+    container.appendChild(trashButton);
+
+    // Adiciona o contêiner ao elemento pai
+    iDlg.appendChild(container);
+
+
     //-----------------------------------------------------------------------------------
     // Cria a lista de rotas já calculadas 
     selectRotas = document.createElement('select');
@@ -1529,6 +1578,7 @@ function createDivOrdenaPontos() {
     // ListaRotas Adiciona o evento 'change' ao select
     selectRotas.addEventListener('change', function () {
         console.log(`Valor selecionado: ${selectRotas.value}`);
+        selectRotas.value==0 ? DisableTrashButton() : EnableTrashButton(); // Desabilita o botão de lixeira se rota selecionada for a 0
         LoadSelectPontos(selectRotas.value)
     });
 
@@ -1626,7 +1676,6 @@ function createDivOrdenaPontos() {
     document.getElementById('longitude').value = ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[1];
     document.getElementById('descricao').value = ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[2];
     //----------------------------------------------------------------------------------- 
-
     // Label Ordem dos Pontos e os controles ao seu lado
     // novo label com div
     // Cria uma div para envolver o label e outros elementos
@@ -1881,10 +1930,6 @@ function createDivOrdenaPontos() {
 
         polylineRotaDat = data.polylineRota;
         DistanceTotal = data.DistanceTotal;
-        console.log("---------------------------------");
-        console.log('DistanceTotal');
-        console.log(DistanceTotal);
-        console.log("---------------------------------");
         poly_lineRota = RedesenhaRota(poly_lineRota,rotaSel);
         
         document.body.removeChild(IhandleMsg);
@@ -1903,7 +1948,7 @@ function createDivOrdenaPontos() {
             mrkPtInicial.remove();
             mrkPtInicial = null;
         }
-            
+
         mrkPtInicial = L.marker([lat, lon]).addTo(map).setIcon(createSvgIconColorAltitude('i',10000));     
         mrkPtInicial.bindTooltip(desc, {permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'});  
 
