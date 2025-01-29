@@ -1769,33 +1769,44 @@ function createDivOrdenaPontos() {
         // selecionado = selectAlgoOrdenacao.value; // Obtém o valor selecionado
         // console.log("Algoritmo de ordenação selecionado:", selecionado);
         ReordenaPontosTela(pontosVisitaOrdenados);
-        data=RefazRotaNoServidor(pontosVisitaOrdenados);
+        // data = await RefazRotaNoServidor(pontosVisitaOrdenados);
+        
+        RefazRotaNoServidor(pontosVisitaOrdenados).then(data => 
+        {
+            console.log("Rota refeita com sucesso!", data);
+            /*
+            ListaRotasCalculadas[0].id
+            ListaRotasCalculadas[0].time
+            ListaRotasCalculadas[0].polylineRotaDat
+            ListaRotasCalculadas[0].pontosvisitaDados
+            ListaRotasCalculadas[0].pontoinicial
+            ListaRotasCalculadas[0].DistanceTotal
+            */
 
-        /*
-        ListaRotasCalculadas[0].id
-        ListaRotasCalculadas[0].time
-        ListaRotasCalculadas[0].polylineRotaDat
-        ListaRotasCalculadas[0].pontosvisitaDados
-        ListaRotasCalculadas[0].pontoinicial
-        ListaRotasCalculadas[0].DistanceTotal
-        */
+            pntinicialBuf = {};
+            pntinicialBuf[0] = document.getElementById('latitude').value;
+            pntinicialBuf[1] = document.getElementById('longitude').value;
+            pntinicialBuf[2] = document.getElementById('descricao').value;
 
-        pntinicialBuf = {};
-        pntinicialBuf[0] = document.getElementById('latitude').value;
-        pntinicialBuf[1] = document.getElementById('longitude').value;
-        pntinicialBuf[2] = document.getElementById('descricao').value;
+            maiorId = ListaRotasCalculadas.reduce((max, item) => {return item.id > max ? item.id : max;}, 0);
+            bufdados = {};
+            bufdados.id = maiorId+1;
+            bufdados.time = getFormattedTimestamp();
+            bufdados.polylineRotaDat = polylineRotaDat;
+            bufdados.pontosvisitaDados = pontosvisitaDados;
+            bufdados.pontoinicial = pntinicialBuf;
 
-        maiorId = ListaRotasCalculadas.reduce((max, item) => {return item.id > max ? item.id : max;}, 0);
-        bufdados = {};
-        bufdados.id = maiorId+1;
-        bufdados.time = getFormattedTimestamp();
-        bufdados.polylineRotaDat = polylineRotaDat;
-        bufdados.pontosvisitaDados = pontosvisitaDados;
-        bufdados.pontoinicial = pntinicialBuf;
-        bufdados.DistanceTotal = data.DistanceTotal/1000;
-        ListaRotasCalculadas.push(bufdados);
-        CarregaRotasCalculadas(bufdados.id);
-        LoadSelectPontos();    
+            console.log('data.DistanceTotal');
+            console.log(data.DistanceTotal);
+
+            
+            bufdados.DistanceTotal = data.DistanceTotal/1000;
+            ListaRotasCalculadas.push(bufdados);
+            CarregaRotasCalculadas(bufdados.id);
+            LoadSelectPontos();    
+        }).catch(error => {
+            console.error("Erro ao refazer rota:", error);
+        });
     }
     ////////////////////////////////
     function GetServerUrl()
@@ -1846,7 +1857,8 @@ function createDivOrdenaPontos() {
         polylineRotaDat = data.polylineRota;
         DistanceTotal = data.DistanceTotal;
         console.log("---------------------------------");
-        console.log(polylineRotaDat);
+        console.log('DistanceTotal');
+        console.log(DistanceTotal);
         console.log("---------------------------------");
         poly_lineRota = L.polyline(polylineRotaDat, {
             "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
