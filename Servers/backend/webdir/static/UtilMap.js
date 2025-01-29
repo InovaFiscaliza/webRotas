@@ -1367,8 +1367,10 @@ function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,ColunaAtualizar,No
     return pontosvisitaDados;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function ReordenaPontosTela(pontosVisita)
+function ReordenaPontosTela(rotaSel)
 {
+    pontosVisita = rotaSel.pontosVisitaOrdenados;
+
     limparMarcadores(markerVet)
     markerVet = [];
     i=0;
@@ -1513,8 +1515,8 @@ function createDivOrdenaPontos() {
     label.style.fontSize = fontSize;
     label.style.color = '#333';
     iDlg.appendChild(label);
-
-    // Cria o controle de seleção múltipla
+    //-----------------------------------------------------------------------------------
+    // Cria a lista de rotas já calculadas 
     selectRotas = document.createElement('select');
     selectRotas.id = 'listaRotas';
     // select.multiple = true;
@@ -1524,10 +1526,10 @@ function createDivOrdenaPontos() {
     selectRotas.style.fontSize = fontSize;
     iDlg.appendChild(selectRotas);
 
-    // Adiciona o evento 'change' ao select
+    // ListaRotas Adiciona o evento 'change' ao select
     selectRotas.addEventListener('change', function () {
-        const selectedValue = selectRotas.value; // Obtém o valor selecionado
-        console.log(`Valor selecionado: ${selectedValue}`);
+        console.log(`Valor selecionado: ${selectRotas.value}`);
+        LoadSelectPontos(selectRotas.value)
     });
 
 
@@ -1560,7 +1562,8 @@ function createDivOrdenaPontos() {
         selectRotas.selectedIndex = selIndex;
     }
     CarregaRotasCalculadas(0);
-
+    rotaSel = ListaRotasCalculadas[0];
+    //-----------------------------------------------------------------------------------
     // Ponto Inicial
     label = document.createElement('label');
     label.htmlFor = 'listaRotas';
@@ -1704,25 +1707,49 @@ function createDivOrdenaPontos() {
     iDlg.appendChild(select);
 
     // Adiciona opções ao select dos pontos
-    function LoadSelectPontos()
+    function LoadSelectPontos(value)
     {
+        /*
+            ListaRotasCalculadas[0].id
+            ListaRotasCalculadas[0].time
+            ListaRotasCalculadas[0].polylineRotaDat
+            ListaRotasCalculadas[0].pontosvisitaDados
+            ListaRotasCalculadas[0].pontosVisitaOrdenados
+            ListaRotasCalculadas[0].pontoinicial
+            ListaRotasCalculadas[0].DistanceTotal
+        */   
+        selId = parseInt(value); // Converte para número, se necessário
+        if(selId==NaN)
+        {
+            console.log(`Valor selId selecionado: ${selId} sem carregar rotas`);
+            return;
+        }
+        console.log(`Valor selId selecionado: ${selId}`);
+        rotaSel = ListaRotasCalculadas.find(rota => rota.id === selId); // Encontra a rota selecionada
+    
         select.innerHTML = '';
-        pontosVisitaOrdenados.forEach((ponto, index) => {
+        rotaSel.pontosVisitaOrdenados.forEach((ponto, index) => {
             const [latitude, longitude] = ponto;
             const option = document.createElement('option');
             option.value = index + 1;
             //  [2.803887, -60.691666,"P0","Local", "Hospital Materno Infantil – Bairro 13 de Setembro","0","Ativo"],
-            ponto = EncontrarDado(pontosvisitaDados, latitude, longitude,2);
-            desc = EncontrarDado(pontosvisitaDados, latitude, longitude,4);
+            ponto = EncontrarDado(rotaSel.pontosvisitaDados, latitude, longitude,2);
+            desc = EncontrarDado(rotaSel.pontosvisitaDados, latitude, longitude,4);
             if(desc == "")
                 option.textContent = ponto;
             else 
                 option.textContent = ponto+"  - "+desc;            
             select.appendChild(option);
-        });
+        });    
+        // Atualiza dados ponto inicial
+        document.getElementById('latitude').value =  rotaSel.pontoinicial[0];
+        document.getElementById('longitude').value = rotaSel.pontoinicial[1];
+        document.getElementById('descricao').value = rotaSel.pontoinicial[2];
+        ReordenaPontosTela(rotaSel);
+        poly_lineRota = RedesenhaRota(poly_lineRota,rotaSel);
 
     }
-    LoadSelectPontos();
+    LoadSelectPontos(0);
 
     // Cria os botões
     const buttonsContainer = document.createElement('div');
@@ -1768,7 +1795,7 @@ function createDivOrdenaPontos() {
         //  Pegar algoritmo de ordenação selecionado
         // selecionado = selectAlgoOrdenacao.value; // Obtém o valor selecionado
         // console.log("Algoritmo de ordenação selecionado:", selecionado);
-        ReordenaPontosTela(pontosVisitaOrdenados);
+        ReordenaPontosTela(rotaSel);
         // data = await RefazRotaNoServidor(pontosVisitaOrdenados);
         
         RefazRotaNoServidor(pontosVisitaOrdenados).then(data => 
@@ -1779,6 +1806,7 @@ function createDivOrdenaPontos() {
             ListaRotasCalculadas[0].time
             ListaRotasCalculadas[0].polylineRotaDat
             ListaRotasCalculadas[0].pontosvisitaDados
+            ListaRotasCalculadas[0].pontosVisitaOrdenados
             ListaRotasCalculadas[0].pontoinicial
             ListaRotasCalculadas[0].DistanceTotal
             */
@@ -1790,10 +1818,11 @@ function createDivOrdenaPontos() {
 
             maiorId = ListaRotasCalculadas.reduce((max, item) => {return item.id > max ? item.id : max;}, 0);
             bufdados = {};
-            bufdados.id = maiorId+1;
+            bufdados.id = maiorId+1; // ID da nova rota
             bufdados.time = getFormattedTimestamp();
             bufdados.polylineRotaDat = polylineRotaDat;
             bufdados.pontosvisitaDados = pontosvisitaDados;
+            bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;
             bufdados.pontoinicial = pntinicialBuf;
 
             console.log('data.DistanceTotal');
@@ -1803,7 +1832,7 @@ function createDivOrdenaPontos() {
             bufdados.DistanceTotal = data.DistanceTotal/1000;
             ListaRotasCalculadas.push(bufdados);
             CarregaRotasCalculadas(bufdados.id);
-            LoadSelectPontos();    
+            LoadSelectPontos(bufdados.id);    
         }).catch(error => {
             console.error("Erro ao refazer rota:", error);
         });
@@ -1829,11 +1858,7 @@ function createDivOrdenaPontos() {
     async function RefazRotaNoServidor(pontosVisita)
     {
         IhandleMsg=exibirMensagem("Servidor Calculando a Nova Rota");
-        if(poly_lineRota)
-        {
-           poly_lineRota.remove();
-           poly_lineRota = null;
-        }
+
         const payload = {
             TipoRequisicao: "RoteamentoOSMR",
             PortaOSRMServer: OSRMPort,
@@ -1860,14 +1885,41 @@ function createDivOrdenaPontos() {
         console.log('DistanceTotal');
         console.log(DistanceTotal);
         console.log("---------------------------------");
+        poly_lineRota = RedesenhaRota(poly_lineRota,rotaSel);
+        
+        document.body.removeChild(IhandleMsg);
+        return data;
+    }
+    ////////////////////////////////
+    function RedesenhaRota(poly_lineRota,rotaSel)
+    {
+        lat=rotaSel.pontoinicial[0];
+        lon=rotaSel.pontoinicial[1];
+        desc=rotaSel.pontoinicial[2];
+        console.log(`RedesenhaRota - Ponto - Inicial lat ${lat}, lon ${lon}, desc - ${desc}`);
+
+        if(mrkPtInicial)
+        {
+            mrkPtInicial.remove();
+            mrkPtInicial = null;
+        }
+            
+        mrkPtInicial = L.marker([lat, lon]).addTo(map).setIcon(createSvgIconColorAltitude('i',10000));     
+        mrkPtInicial.bindTooltip(desc, {permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'});  
+
+        polylineRotaDat = rotaSel.polylineRotaDat;
+        if(poly_lineRota)
+        {
+            poly_lineRota.remove();
+            poly_lineRota = null;
+        }  
+
         poly_lineRota = L.polyline(polylineRotaDat, {
             "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
             "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
             "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
-            "weight": 3}).addTo(map);
-        
-        document.body.removeChild(IhandleMsg);
-        return data;
+            "weight": 3}).addTo(map);    
+        return poly_lineRota;     
     }
     ////////////////////////////////
     // Função para mover opções na lista

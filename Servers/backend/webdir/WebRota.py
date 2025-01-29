@@ -126,7 +126,9 @@ class ClRouteDetailList:
             "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
             "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
             "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
-            "weight": 3}).addTo(map);\n"""                           
+            "weight": 3}).addTo(map);\n
+        ListaRotasCalculadas[0].polylineRotaDat = polylineRotaDat;    
+        """                          
         return
     #---------------------------------------------------
     def NewWaypoint(self,waypoint,lat,lon):
@@ -1863,8 +1865,9 @@ def DeclaraArrayRotas(RouteDetail):
     RouteDetail.mapcode += f"    var bufdados = {{}};\n"
     RouteDetail.mapcode += f"    bufdados.id = 0;\n"    
     RouteDetail.mapcode += f"    bufdados.time = '{timeStp}';\n"    
-    RouteDetail.mapcode += f"    bufdados.polylineRotaDat = polylineRotaDat;\n"
+    RouteDetail.mapcode += f"    bufdados.polylineRotaDat = [];\n"
     RouteDetail.mapcode += f"    bufdados.pontosvisitaDados = pontosvisitaDados;\n"
+    RouteDetail.mapcode += f"    bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;\n"    
     RouteDetail.mapcode += f"    bufdados.pontoinicial = [{RouteDetail.pontoinicial[0]},{RouteDetail.pontoinicial[1]},'{RouteDetail.pontoinicial[2]}'];\n"
     RouteDetail.mapcode += f"    bufdados.DistanceTotal = {RouteDetail.DistanceTotal/1000};\n"
     RouteDetail.mapcode += f"    ListaRotasCalculadas.push(bufdados);\n"
