@@ -1989,6 +1989,80 @@ function createDivOrdenaPontos() {
 }
 // Fim Dialogo de ordenação de pontos
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function exibirMensagemComTimeout(mensagem, timeout = 3000) {
+    // Remove mensagens anteriores, se existirem
+    const mensagemExistente = document.getElementById('mensagemNotificacao');
+    if (mensagemExistente) {
+        mensagemExistente.remove();
+    }
+
+    // Criar a div principal da mensagem
+    const mensagemDiv = document.createElement('div');
+    mensagemDiv.id = 'mensagemNotificacao';
+
+    // Estilizar a div principal
+    Object.assign(mensagemDiv.style, {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        backgroundColor: 'rgba(255, 255, 255, 0.40)',
+        padding: '20px',
+        borderRadius: '10px',
+        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.4)',
+        zIndex: '1000',
+        textAlign: 'justify', // Justificar o texto
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '16px',
+        color: '#333',
+        backgroundImage: 'linear-gradient(135deg, rgba(224, 244, 228, 0.8), rgba(192, 216, 236, 0.8))',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        userSelect: 'none'
+    });
+
+    // Criar a div da ampulheta (ícone de carregamento)
+    const ampulhetaDiv = document.createElement('div');
+    Object.assign(ampulhetaDiv.style, {
+        width: '20px',
+        height: '20px',
+        border: '4px solid rgba(0, 0, 0, 0.1)',
+        borderTop: '4px solid #333',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite'
+    });
+
+    // Criar o texto da mensagem
+    const textoMensagem = document.createElement('label');
+    textoMensagem.textContent = mensagem;
+
+    // Criar a animação CSS para a ampulheta
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+
+    // Adicionar os elementos à div principal
+    mensagemDiv.appendChild(ampulhetaDiv);
+    mensagemDiv.appendChild(textoMensagem);
+
+    // Adicionar a div ao body
+    document.body.appendChild(mensagemDiv);
+
+    // Remover a mensagem após o tempo especificado (se timeout for maior que 0)
+    if (timeout > 0) {
+        setTimeout(() => {
+            mensagemDiv.remove();
+        }, timeout);
+    }
+
+    return mensagemDiv;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function exibirMensagem(mensagem) {
@@ -2337,7 +2411,11 @@ function createMacOSDock() {
     document.body.appendChild(dock);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function GerarKML(polylineRota, pontosVisitaDados) {
+function GerarKML(polylineRota, pontosVisitaDados) 
+{
+
+    exibirMensagemComTimeout("Gerando e salvando o arquivo KML para uso em aplicativos como MapsMe, Google Earth e outros. 📌 No MapsMe, envie o arquivo KML ao motorista via WhatsApp. Para abrir, basta clicar no arquivo e selecionar MapsMe como aplicativo.", 
+              timeout = 9000)
     // Cabeçalho do KML
     let kmlInicio = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
