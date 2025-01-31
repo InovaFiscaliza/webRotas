@@ -56,67 +56,6 @@ def AbrirArquivoComoString(caminho_arquivo):
     except Exception as e:
         return f"Erro: {e}"
 ###########################################################################################################################    
-def GeraMapaLeafletOld(mapa,RouteDetail):
-    wr.wLog(f"GeraMapaLeaflet - {mapa}")
-    header = GeraHeader()
-    footer = GeraFooter()
-    tilesMap = """
-            var map = L.map('map').setView([-22.9035, -43.1034], 13);
-            
-            var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            });
-            
-            var tiles2 =L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', 
-            {
-                maxZoom: 19,
-                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            });
-            
-            // Adiciona camada de tiles com elevação (exemplo: OpenTopoMap)
-            // var tiles3 =L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-            //     maxZoom: 10,
-            //     attribution: '© OpenTopoMap contributors'
-            // }).addTo(map);
-            
-            // Adiciona a camada padrão (OpenStreetMap)
-            tiles.addTo(map);
-            // Cria o controle de camadas
-            var baseLayers = {
-                "OpenStreetMap": tiles,
-                "Satelite": tiles2,
-            };
-
-            // Adiciona o controle de camadas ao mapa
-            // Adiciona o controle de camadas ao mapa no canto inferior direito
-            L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(map);
-            L.control.scale({
-               metric: true, // Mostrar em metros
-               imperial: false, // Desativar milhas
-                position: 'bottomleft' // Posição da escala
-            }).addTo(map);
-            </script>
-            <!-- ------------------------------------------------------------------------------------------- -->                
-            <script src="{{ url_for('static', filename='StaticResources.js') }}"></script>                        
-            <script src="{{ url_for('static', filename='UtilMap.js') }}"></script>
-            <!-- ------------------------------------------------------------------------------------------- -->   
-            <script>
-            // Cria o marcador inicial no centro do mapa
-            // const gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map).bindPopup("Sua localização");
-            """    
-        
-    code = """
-            
-    """     
-    
-    texto = header + tilesMap + RouteDetail.mapcode  + code + footer
-   
-    # Abre o arquivo em modo de escrita, sobrescrevendo o conteúdo
-    with open(mapa, "w", encoding="utf-8") as arquivo:
-       arquivo.write(texto)
-    return
-###########################################################################################################################
 def WriteToFile(file_path, content):
     """
     Escreve uma string em um arquivo, sobrescrevendo o conteúdo existente.
@@ -167,13 +106,14 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     if static:
        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = AbrirArquivoComoString("static/StaticResources.js")  
-       utilMap = AbrirArquivoComoString("static/UtilMap.js")
-       
+       utilMap = AbrirArquivoComoString("static/UtilMap.js") 
+       ClDivOrdenaPontos = AbrirArquivoComoString("static/ClDivOrdenaPontos.js") 
     else:
        # tmpstaticResources = "<script src=\"{{ url_for('static', filename='tmpStaticResources.js') }}\"></script>" 
        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = "<script src=\"{{ url_for('static', filename='StaticResources.js') }}\"></script> "    
        utilMap = "<script src=\"{{ url_for('static', filename='UtilMap.js') }}\"></script>"
+       ClDivOrdenaPontos = "<script src=\"{{ url_for('static', filename='ClDivOrdenaPontos.js') }}\"></script>"
        
        
     header = GeraHeader()
@@ -223,9 +163,9 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
             // const gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map).bindPopup("Sua localização");
             """
     if static:
-       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources+ staticResources + utilMap + "</script>" + tilesMap1 
+       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources+ staticResources + utilMap + ClDivOrdenaPontos + "</script>" + tilesMap1 
     else:
-       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources + "</script>" +   staticResources + utilMap  + tilesMap1       
+       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources + "</script>" +   staticResources + utilMap + ClDivOrdenaPontos + tilesMap1       
     
     texto = header + tilesMap + RouteDetail.mapcode  + footer
    
