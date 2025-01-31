@@ -1762,7 +1762,7 @@ function createDivOrdenaPontos() {
     // Cria o controle de seleção múltipla
     const select = document.createElement('select');
     select.id = 'listaPontos';
-    // select.multiple = true;
+    select.multiple = true;
     select.size = 10000; // Define o número de itens visíveis
     select.style.width = '100%';
     select.style.height = 'calc(100% - 250px)'; // Ocupa o espaço restante e retira os espaços para outros controles
@@ -1955,7 +1955,7 @@ function createDivOrdenaPontos() {
             if(data==undefined)
             {
                 console.error("Erro ao processar a requisição:", data);
-                exibirMensagemComTimeout('Erro ao processar a requisição'+rotaSel.pontoinicial[0]+','+rotaSel.pontoinicial[1], 5000);
+                exibirMensagemComTimeout('Erro ao processar a requisição', 5000);
                 document.body.removeChild(IhandleMsg);
                 return;
             }
@@ -2004,6 +2004,7 @@ function createDivOrdenaPontos() {
     }
     ////////////////////////////////
     // Função para mover opções na lista
+    /*
     function moveOption(direction) {
         const selectedIndex = select.selectedIndex;
         if (selectedIndex === -1) return; // Nenhuma opção selecionada
@@ -2021,6 +2022,39 @@ function createDivOrdenaPontos() {
         // Atualizar o índice selecionado
         select.selectedIndex = newIndex;
     }
+    */
+    function moveOption(direction) {
+        const options = Array.from(select.options);
+        const selectedOptions = options.filter(option => option.selected);
+    
+        if (selectedOptions.length === 0) return; // Nenhuma opção selecionada
+    
+        const increment = direction > 0 ? 1 : -1;
+    
+        // Para mover para baixo, iteramos do final para o início
+        // Para mover para cima, iteramos do início para o final
+        const sortedOptions = direction > 0 ? selectedOptions.reverse() : selectedOptions;
+    
+        sortedOptions.forEach(option => {
+            const index = options.indexOf(option);
+            const newIndex = index + increment;
+    
+            // Verificar limites
+            if (newIndex < 0 || newIndex >= options.length) return;
+    
+            // Trocar posição dos elementos
+            [options[index], options[newIndex]] = [options[newIndex], options[index]];
+        });
+    
+        // Reaplica a ordem na lista
+        select.innerHTML = "";
+        options.forEach(option => select.appendChild(option));
+    
+        // Re-seleciona os itens movidos
+        selectedOptions.forEach(option => option.selected = true);
+    }
+    
+
 
 }
 // Fim Dialogo de ordenação de pontos
