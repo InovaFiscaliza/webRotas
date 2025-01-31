@@ -194,8 +194,9 @@ def ProcessaRequisicoesAoServidor(data):
 
        porta=data["PortaOSRMServer"]
        pontosvisita = data.get("pontosvisita", [])
+       pontoinicial = data.get("pontoinicial", [])
 
-       polylineRota,DistanceTotal=wr.RoteamentoOSMR(data,porta,pontosvisita)
+       polylineRota,DistanceTotal=wr.RoteamentoOSMR(data,porta,pontosvisita,pontoinicial)
        # Retorna uma resposta de confirmação
        wr.wLog("\n\n#############################################################################################")
        return jsonify({"polylineRota": polylineRota,"DistanceTotal": DistanceTotal}), 200

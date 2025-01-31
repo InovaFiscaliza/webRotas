@@ -1911,7 +1911,10 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
      
     RouteDetail.mapcode += f"         mrkPtInicial = L.marker([{lat}, {lon}]).addTo(map).setIcon(createSvgIconColorAltitude('i',10000));\n"      
     RouteDetail.mapcode += f"         mrkPtInicial.bindTooltip('{desc}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"   
-        
+    ##############################################
+    # Calcula rota entre os pontos os pontos a serem visitados
+    (latf,lonf) = pontosvisita[0] 
+    RouteDetail=GenerateRouteMap(RouteDetail,lat,lon,latf,lonf)   # Faz a primeira rota saindo do ponto inicial ao primeiro ponto de visita
     i=0
     RouteDetail.mapcode += "var markerVet = [];";
     for ponto in pontosvisita:
@@ -1933,7 +1936,7 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
             (latf,lonf) = pontosvisita[i]       
             RouteDetail=GenerateRouteMap(RouteDetail,lati,loni,latf,lonf)
         i=i+1    
-
+    ##############################################
     RouteDetail = DeclaraArrayRotas(RouteDetail)    
     RouteDetail.mapcode +="           const defaultIcon = markerVet[1].getIcon();\n"      
     return RouteDetail
@@ -1950,9 +1953,14 @@ def DescricaoPontoVisita(pontosvisitaDados, lat, lon):
     return "Endereço não encontrado para a latitude e longitude fornecidas."
 ################################################################################
 # zzzzzzzzzzzzzzzzzzzzzzzzz
-def RoteamentoOSMR(data,porta,pontosvisita):
+def RoteamentoOSMR(data,porta,pontosvisita,pontoinicial):
     UserData.OSMRport=porta
     RouteDetail = ClRouteDetailList()
+    # Calcula trecho de roto do pontoinicial ao primeiro ponto de visita
+    (latfI,lonfI) = pontosvisita[0]
+    wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}")
+    wLog(f"RoteamentoOSMR - pontoinicial {pontoinicial[0]},{pontoinicial[1]}")
+    RouteDetail=GenerateRouteMap(RouteDetail,pontoinicial[0],pontoinicial[1],latfI,lonfI)
     i = 0
     for ponto in pontosvisita:
         # lat, lon = ponto        
