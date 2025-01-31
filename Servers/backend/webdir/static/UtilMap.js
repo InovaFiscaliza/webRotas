@@ -896,7 +896,7 @@ function updateGPSPositionKalman(position) {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function updateGPSPosition(position) {
-    console.log("updateGPSPosition");
+    console.trace("updateGPSPosition");
     if(gpsAtivado==false)
         return
     if (position === undefined) {
@@ -1017,10 +1017,12 @@ function GetRouteCarFromHere(latitude,longitude)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Monitora a posição do usuário e chama updateGPSPosition a cada atualização
+geoLocationId=null;
 if (navigator.geolocation)
 {
     // navigator.geolocation.getCurrentPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
-    navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+    if(gpsAtivado)
+        geoLocationId=navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
 } else
 {
     alert("Geolocalização não é suportada pelo seu navegador.");
@@ -1028,7 +1030,7 @@ if (navigator.geolocation)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
  function AtualizaGps() {
     // navigator.geolocation.getCurrentPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
-    navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+    geoLocationId=navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1934,7 +1936,7 @@ function createDivOrdenaPontos() {
     ////////////////////////////////
     async function RefazRotaNoServidor(pontosVisita,rotaSel)
     {
-        IhandleMsg=exibirMensagem('Servidor Calculando a Nova Rota rotaSel.pontoinicial - '+rotaSel.pontoinicial[0]+','+rotaSel.pontoinicial[1]);
+        IhandleMsg=exibirMensagem('Servidor calculando a nova rota');
 
         const payload = {
             TipoRequisicao: "RoteamentoOSMR",
@@ -2047,7 +2049,7 @@ function exibirMensagemComTimeout(mensagem, timeout = 3000) {
         zIndex: '1000',
         textAlign: 'justify', // Justificar o texto
         fontFamily: 'Arial, sans-serif',
-        fontSize: '16px',
+        fontSize: fontSize,
         color: '#333',
         backgroundImage: 'linear-gradient(135deg, rgba(224, 244, 228, 0.8), rgba(192, 216, 236, 0.8))',
         display: 'flex',
@@ -2115,7 +2117,7 @@ function exibirMensagem(mensagem) {
     mensagemDiv.style.zIndex = '1000';
     mensagemDiv.style.textAlign = 'center';
     mensagemDiv.style.fontFamily = 'Arial, sans-serif';
-    mensagemDiv.style.fontSize = '16px';
+    mensagemDiv.style.fontSize = fontSize;
     mensagemDiv.style.color = '#333';
     mensagemDiv.style.backgroundImage = 'linear-gradient(135deg, rgba(224, 244, 228, 0.8), rgba(192, 216, 236, 0.8))'; // Degradê
     mensagemDiv.style.display = 'flex';
@@ -2249,6 +2251,8 @@ function createAtivaGps() {
             // compassDiv.style.backgroundImage = 'url("/static/GpsInativo.png")';
             compassDiv.style.backgroundImage = imgGpsInativo;
             gpsAtivado=false;
+            navigator.geolocation.clearWatch(geoLocationId);
+
         }
         else
         {
@@ -2256,6 +2260,7 @@ function createAtivaGps() {
             // compassDiv.style.backgroundImage = 'url("/static/GpsAtivo.png")';
             compassDiv.style.backgroundImage = imgGpsAtivo;
             gpsAtivado=true;
+            geoLocationId=navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
         }
     });
 
