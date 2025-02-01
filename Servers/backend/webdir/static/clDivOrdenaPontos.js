@@ -178,11 +178,11 @@ function clDivOrdenaPontos() {
 
 
     // Adicionando itens ao select
-    function adicionarItemAoSelect(texto, valor) {
+    function adicionarItemAoSelect(selectHandle,texto, valor) {
         let opcao = document.createElement('option'); // Cria o elemento <option>
         opcao.text = texto; // Define o texto visível da opção
         opcao.value = valor; // Define o valor da opção
-        selectRotas.appendChild(opcao); // Adiciona a opção ao select
+        selectHandle.appendChild(opcao); // Adiciona a opção ao select
     }
 
 
@@ -194,7 +194,7 @@ function clDivOrdenaPontos() {
         for (let i = 0; i < ListaRotasCalculadas.length; i++) {
             let item = ListaRotasCalculadas[i];
             fmtDist = item.DistanceTotal.toFixed(2);
-            adicionarItemAoSelect(`Rota #${item.id} - ${item.time} - ${fmtDist} km`, `${item.id}`);
+            adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km`, `${item.id}`);
             
             console.log(`Item ${i}:`);
             console.log(`ID: ${item.id}`);
@@ -205,6 +205,7 @@ function clDivOrdenaPontos() {
         }
         selectRotas.selectedIndex = selIndex;
     }
+
     CarregaRotasCalculadas(0);
     // rotaSel = ListaRotasCalculadas[0];
     rotaSel = structuredClone(ListaRotasCalculadas[0]); // Clona o objeto para evitar alterações indesejadas
@@ -231,38 +232,6 @@ function clDivOrdenaPontos() {
     divPai.style.borderRadius = '2px'; // Opcional: bordas arredondadas
     
     // Função para criar uma div com label e input
-    /*
-    function criarDivComLabelInput(labelText, inputId) {
-        let div = document.createElement('div');
-        div.style.flex = '1';
-        div.style.padding = '5px';
-        
-        let label = document.createElement('label');
-        label.setAttribute('for', inputId);
-        label.textContent = labelText;
-        label.style.marginTop = '5px';
-        label.style.marginBottom = '5px';
-        label.style.fontFamily = 'Arial, sans-serif';
-        label.style.fontSize = fontSize;
-        label.style.color = '#333';
-        
-        // ativaElementoHtml(id, estado)
-
-        let input = document.createElement('input');
-        input.type = 'text';
-        input.id = inputId;
-        input.name = inputId;
-        input.style.width = '90%';
-        input.style.padding = '5px';
-        input.style.fontFamily = 'Arial, sans-serif';
-        input.style.fontSize = fontSize;
-        
-        div.appendChild(label);
-        div.appendChild(input);
-        
-        return div;
-    }
-    */
     function criarDivComLabelInput(labelText, inputId, onChangeCallback) {
         let div = document.createElement('div');
         div.style.flex = '1';
@@ -305,7 +274,17 @@ function clDivOrdenaPontos() {
  
     function AlterouPntInicial()
     {
-        ativaElementoHtml('listaPontos', false);
+        lat = document.getElementById('latitude');
+        lon = document.getElementById('longitude');
+        lat.value = lat.value.replace(/[^\d.,]/g, '');
+        lon.value = lon.value.replace(/[^\d.,]/g, '');
+        if(selectRotas.value!="nova")
+        {
+            ativaElementoHtml('listaPontos', false);
+            adicionarItemAoSelect(selectRotas,`Nova Rota`, `nova`);
+            selectRotas.value = "nova";
+        }    
+
     }
 
     document.getElementById('latitude').value =  ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[0];
@@ -379,8 +358,6 @@ function clDivOrdenaPontos() {
     iDlg.appendChild(div);
     // Fim novo label com div
     //-----------------------------------------------------------------------------------
-
-
     // Lista Pontos  - Cria o controle de seleção múltipla
     const select = document.createElement('select');
     select.id = 'listaPontos';
