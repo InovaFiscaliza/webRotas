@@ -1267,6 +1267,17 @@ function createColorTable() {
     document.body.appendChild(compassDiv);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função para destivar um elmento html
+function ativaElementoHtml(id, estado) {
+    const elemento = document.getElementById(id);
+    if (elemento) {
+        elemento.disabled = !estado; // Se estado for true, habilita; se for false, desabilita
+        elemento.style.opacity = elemento.disabled ? "0.4" : "1"; // Define transparência
+    } else {
+        console.warn(`Elemento com ID '${id}' não encontrado.`);
+    }
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // https://base64.guru/converter/encode/file
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createDivOrdemPontos() {
@@ -1305,7 +1316,7 @@ function createDivOrdemPontos() {
     // Adiciona um evento de clique à bússola
     compassDiv.addEventListener('click', function() {
         // Alerta ou função quando clicado
-        ClDivOrdenaPontos();
+        clDivOrdenaPontos();
     });
     // Adiciona o ícone dentro da bússola
     // compassDiv.appendChild(icon);
@@ -1722,7 +1733,7 @@ function createMacOSDock() {
             img.style.borderRadius = '10px';
             iconDiv.appendChild(img);
             img.onclick = () => {
-                ClDivOrdenaPontos();
+                clDivOrdenaPontos();
             };
 
         }

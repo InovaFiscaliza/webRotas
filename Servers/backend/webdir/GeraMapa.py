@@ -107,13 +107,13 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = AbrirArquivoComoString("static/StaticResources.js")  
        utilMap = AbrirArquivoComoString("static/UtilMap.js") 
-       ClDivOrdenaPontos = AbrirArquivoComoString("static/ClDivOrdenaPontos.js") 
+       sDivOrdenaPontos = AbrirArquivoComoString("static/clDivOrdenaPontos.js") 
     else:
        # tmpstaticResources = "<script src=\"{{ url_for('static', filename='tmpStaticResources.js') }}\"></script>" 
        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = "<script src=\"{{ url_for('static', filename='StaticResources.js') }}\"></script> "    
        utilMap = "<script src=\"{{ url_for('static', filename='UtilMap.js') }}\"></script>"
-       ClDivOrdenaPontos = "<script src=\"{{ url_for('static', filename='ClDivOrdenaPontos.js') }}\"></script>"
+       sDivOrdenaPontos = "<script src=\"{{ url_for('static', filename='clDivOrdenaPontos.js') }}\"></script>"
        
        
     header = GeraHeader()
@@ -163,9 +163,9 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
             // const gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map).bindPopup("Sua localização");
             """
     if static:
-       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources+ staticResources + utilMap + ClDivOrdenaPontos + "</script>" + tilesMap1 
+       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources+ staticResources + utilMap + sDivOrdenaPontos + "</script>" + tilesMap1 
     else:
-       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources + "</script>" +   staticResources + utilMap + ClDivOrdenaPontos + tilesMap1       
+       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources + "</script>" +   staticResources + utilMap + sDivOrdenaPontos + tilesMap1       
     
     texto = header + tilesMap + RouteDetail.mapcode  + footer
    
