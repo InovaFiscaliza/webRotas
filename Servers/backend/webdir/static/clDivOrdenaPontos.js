@@ -189,12 +189,14 @@ function clDivOrdenaPontos() {
     function CarregaRotasCalculadas(selIndex)
     {
         // Loop para varrer os itens
-        // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa
         selectRotas.innerHTML = ""; // Limpa todo o conteúdo do select
         for (let i = 0; i < ListaRotasCalculadas.length; i++) {
             let item = ListaRotasCalculadas[i];
-            fmtDist = item.DistanceTotal.toFixed(2);
-            adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km`, `${item.id}`);
+            fmtDist = item.DistanceTotal.toFixed(2);  
+            if(item.rotaCalculada==0) // Rota não calculada, proposta pelo usuário
+                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km`, `${item.id}`);
+            else
+                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km - Calculada`, `${item.id}`);    
             
             console.log(`Item ${i}:`);
             console.log(`ID: ${item.id}`);
@@ -271,22 +273,36 @@ function clDivOrdenaPontos() {
     divPai.appendChild(criarDivComLabelInput('Longitude:', 'longitude',AlterouPntInicial));
     divPai.appendChild(criarDivComLabelInput('Descrição:', 'descricao'));    
     iDlg.appendChild(divPai);
- 
+    //-----------------------------------------------------------------------------------
+    // Alterou ponto inicial
+    recalcularRotaPontoInicial = false;
     function AlterouPntInicial()
     {
+        recalcularRotaPontoInicial = true;
         lat = document.getElementById('latitude');
         lon = document.getElementById('longitude');
-        lat.value = lat.value.replace(/[^\d.,]/g, '');
-        lon.value = lon.value.replace(/[^\d.,]/g, '');
+        lat.value = lat.value.replace(/[^\d.,-]/g, '');
+        lon.value = lon.value.replace(/[^\d.,-]/g, '');
         if(selectRotas.value!="nova")
         {
-            ativaElementoHtml('listaPontos', false);
+            DesativaControles()
             adicionarItemAoSelect(selectRotas,`Nova Rota`, `nova`);
             selectRotas.value = "nova";
         }    
-
     }
-
+    function DesativaControles()     
+    {
+        ativaElementoHtml('listaRotas', false); 
+        ativaElementoHtml('divOrdemPontos', false);
+        ativaElementoHtml('listaPontos', false);
+    }
+    function AtivaControles()
+    {
+        ativaElementoHtml('listaRotas', true); 
+        ativaElementoHtml('divOrdemPontos', true);
+        ativaElementoHtml('listaPontos', true);
+    }
+    //-----------------------------------------------------------------------------------
     document.getElementById('latitude').value =  ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[0];
     document.getElementById('longitude').value = ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[1];
     document.getElementById('descricao').value = ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[2];
@@ -296,6 +312,7 @@ function clDivOrdenaPontos() {
     // Cria uma div para envolver o label e outros elementos
     div = document.createElement('div');
     div.style.display = 'flex'; // Habilita o Flexbox
+    div.id = 'divOrdemPontos';
     div.style.justifyContent = 'space-between'; // Espaça os itens entre si
     div.style.alignItems = 'center'; // Centraliza os itens verticalmente (opcional)
     div.style.marginBottom = '5px'; // Espaçamento externo inferior
@@ -379,6 +396,7 @@ function clDivOrdenaPontos() {
             ListaRotasCalculadas[0].pontosVisitaOrdenados
             ListaRotasCalculadas[0].pontoinicial
             ListaRotasCalculadas[0].DistanceTotal
+            ListaRotasCalculadas[0].rotaCalculada
         */   
         selId = parseInt(value); // Converte para número, se necessário
         if(selId==NaN)
@@ -473,13 +491,15 @@ function clDivOrdenaPontos() {
             console.log(`   Polyline: ${rota.polylineRotaDat}`);
             console.log(`   Pontos de Visita:`, rota.pontosvisitaDados);
             console.log(`   Ponto Inicial: ${rota.pontoinicial}`);
-            console.log(`   Distância Total: ${rota.DistanceTotal} km`);
+            console.log(`   Distância Total: ${rota.DistanceTotal} km`); 
+            console.log(`   rotaCalculada: ${rota.rotaCalculada} `);
         });
 
         ReordenaPontosTela(rotaSel);
         // data = await RefazRotaNoServidor(pontosVisitaOrdenados);
         // usar aqui rotaSel 
         // RefazRotaNoServidor(pontosVisitaOrdenados).then(data => 
+         
         RefazRotaNoServidor(pontosVisitaOrdenados,rotaSel).then(data =>     
         {
             console.log("Rota refeita com sucesso!", data);
@@ -491,6 +511,7 @@ function clDivOrdenaPontos() {
             ListaRotasCalculadas[0].pontosVisitaOrdenados
             ListaRotasCalculadas[0].pontoinicial
             ListaRotasCalculadas[0].DistanceTotal
+            ListaRotasCalculadas[0].rotaCalculada
             */
 
             pntinicialBuf = [];
@@ -506,11 +527,13 @@ function clDivOrdenaPontos() {
             bufdados.pontosvisitaDados = pontosvisitaDados;
             bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;
             bufdados.pontoinicial = pntinicialBuf;
-            bufdados.DistanceTotal = data.DistanceTotal/1000;
+            bufdados.DistanceTotal = data.DistanceTotal/1000;   
+            bufdados.rotaCalculada = rotaRecalculada;           
             ListaRotasCalculadas.push(bufdados);
             rotaSel=bufdados;
             CarregaRotasCalculadas(bufdados.id);
-            LoadSelectPontos(bufdados.id);    
+            LoadSelectPontos(bufdados.id);  
+            AtivaControles();  
         }).catch(error => {
             console.error("Erro ao refazer rota:", error);
         });
@@ -533,15 +556,21 @@ function clDivOrdenaPontos() {
         return(url);
     }
     ////////////////////////////////
+    rotaRecalculada=0;  // Flag deste diálogo que indica se ondem de pontos foi recalculada no servidor
     async function RefazRotaNoServidor(pontosVisita,rotaSel)
     {
         IhandleMsg=exibirMensagem('Servidor calculando a nova rota');
-
+        recalcularRotaPontoInicial = true;   
+        if(recalcularRotaPontoInicial)
+            recalcularrota=1;
+        else
+            recalcularrota=0;
         const payload = {
             TipoRequisicao: "RoteamentoOSMR",
             PortaOSRMServer: OSRMPort,
             pontosvisita: pontosVisita,
-            pontoinicial: rotaSel.pontoinicial
+            pontoinicial: rotaSel.pontoinicial,
+            recalcularrota: recalcularrota
         };
          
         url = GetServerUrl()+ "/webrotas";
@@ -567,7 +596,8 @@ function clDivOrdenaPontos() {
         polylineRotaDat = data.polylineRota;
         DistanceTotal = data.DistanceTotal;
         poly_lineRota = RedesenhaRota(polylineRotaDat,rotaSel);
-        
+        rotaRecalculada = data.RotaRecalculada; 
+        pontosVisitaOrdenados = data.pontosVisita
         document.body.removeChild(IhandleMsg);
         return data;
     }
