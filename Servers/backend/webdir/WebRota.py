@@ -1015,7 +1015,7 @@ def DistanciaRotaTotal(pontosvisita):
 def OrdenarPontosDistanciaOSMR(pontosvisita,pontoinicial):
     ordenados = [(pontoinicial[0],pontoinicial[1])]  # Iniciar a lista com o ponto inicial
     while pontosvisita:
-        ultimo_ponto = ordenados[-1]
+        ultimo_ponto = ordenados[-1]  # Obtém o último ponto adicionado à lista 'ordenados'
         proximo_ponto = min(pontosvisita, key=lambda p: DistanciaRota(ultimo_ponto[0], ultimo_ponto[1], p[0], p[1]))
         ordenados.append(proximo_ponto)
         pontosvisita.remove(proximo_ponto)
@@ -1870,6 +1870,7 @@ def DeclaraArrayRotas(RouteDetail):
     RouteDetail.mapcode += f"    bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;\n"    
     RouteDetail.mapcode += f"    bufdados.pontoinicial = [{RouteDetail.pontoinicial[0]},{RouteDetail.pontoinicial[1]},'{RouteDetail.pontoinicial[2]}'];\n"
     RouteDetail.mapcode += f"    bufdados.DistanceTotal = {RouteDetail.DistanceTotal/1000};\n"
+    RouteDetail.mapcode += f"    bufdados.rotaCalculada = 1;\n" # Rota calculada pelo WebRotas
     RouteDetail.mapcode += f"    ListaRotasCalculadas.push(bufdados);\n"
     
     return RouteDetail   
@@ -1952,14 +1953,16 @@ def DescricaoPontoVisita(pontosvisitaDados, lat, lon):
             return ponto[4]  # Retorna o campo de endereço (4º elemento)
     return "Endereço não encontrado para a latitude e longitude fornecidas."
 ################################################################################
-# zzzzzzzzzzzzzzzzzzzzzzzzz
-def RoteamentoOSMR(data,porta,pontosvisita,pontoinicial):
+def RoteamentoOSMR(porta,pontosvisita,pontoinicial,recalcularrota):
     UserData.OSMRport=porta
     RouteDetail = ClRouteDetailList()
     # Calcula trecho de roto do pontoinicial ao primeiro ponto de visita
     (latfI,lonfI) = pontosvisita[0]
     wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}")
     wLog(f"RoteamentoOSMR - pontoinicial {pontoinicial[0]},{pontoinicial[1]}")
+    if(recalcularrota==1):
+        wLog(f"Reordenando pontos de visita")
+        pontosvisita=OrdenarPontosDistanciaOSMRMultiThread(pontosvisita,pontoinicial)  
     RouteDetail=GenerateRouteMap(RouteDetail,pontoinicial[0],pontoinicial[1],latfI,lonfI)
     i = 0
     for ponto in pontosvisita:
@@ -1974,7 +1977,7 @@ def RoteamentoOSMR(data,porta,pontosvisita,pontoinicial):
             (latf,lonf) = pontosvisita[i]       
             RouteDetail=GenerateRouteMap(RouteDetail,lati,loni,latf,lonf)
         i=i+1    
-    return RouteDetail.coordinates,RouteDetail.DistanceTotal
+    return RouteDetail.coordinates,RouteDetail.DistanceTotal,pontosvisita
 ################################################################################
 def RoutePontosVisita(data,user,pontoinicial,pontosvisitaDados,regioes):
     
