@@ -815,6 +815,13 @@ map.on('click', function(e) {
     map.setView([lat, lon]);
     latitude =lat;
     longitude = lon;
+
+
+    // Carrega coordenadas se o diálogo de ordenação de pontos estiver aberto
+    if (document.getElementById("latitude")) document.getElementById("latitude").value = latitude;
+    if (document.getElementById("latitude")) document.getElementById("latitude").value = latitude;
+
+
     heading = 0;
     velocidade = 0;
     GetRouteCarFromHere(latitude,longitude);
@@ -1281,6 +1288,16 @@ function ativaElementoHtml(id, estado) {
     if (elemento) {
         elemento.disabled = !estado; // Se estado for true, habilita; se for false, desabilita
         elemento.style.opacity = elemento.disabled ? "0.4" : "1"; // Define transparência
+        if(estado)
+        {
+            elemento.style.pointerEvents = 'auto'; // Reativa a interação com o mouse
+            elemento.style.cursor = 'pointer'; // Define como clicável
+        }
+        else
+        {
+            elemento.style.pointerEvents = 'none'; // Impede interação com o mouse
+            elemento.style.cursor = 'default'; // Remove o cursor de clique
+        }    
     } else {
         console.warn(`Elemento com ID '${id}' não encontrado.`);
     }

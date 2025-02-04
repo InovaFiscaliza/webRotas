@@ -3,7 +3,7 @@
 fontSize = '10px';   // Tamanho da fonte
 function clDivOrdenaPontos() {
     // Cria a div principal
-
+    
     if (document.getElementById('divOrdenaPontos')) {
         console.log('A div já está aberta.');
         return; // Sai da função se a div já existir
@@ -108,6 +108,7 @@ function clDivOrdenaPontos() {
     label.style.color = '#333';
 
     // Cria o botão de lixeira
+    /*
     trashButton = document.createElement('button');
     trashButton.innerHTML = '🗑️'; // Ícone de lixeira
     trashButton.style.border = 'none';
@@ -149,10 +150,10 @@ function clDivOrdenaPontos() {
 
         CarregaRotasCalculadas(0)
     });
-
+    */
     // Adiciona os elementos ao contêiner
     container.appendChild(label);
-    container.appendChild(trashButton);
+    // container.appendChild(trashButton);
 
     // Adiciona o contêiner ao elemento pai
     iDlg.appendChild(container);
@@ -172,7 +173,6 @@ function clDivOrdenaPontos() {
     // ListaRotas Adiciona o evento 'change' ao select
     selectRotas.addEventListener('change', function () {
         console.log(`Valor selecionado: ${selectRotas.value}`);
-        selectRotas.value==0 ? DisableTrashButton() : EnableTrashButton(); // Desabilita o botão de lixeira se rota selecionada for a 0
         LoadSelectPontos(selectRotas.value)
     });
 
@@ -206,6 +206,9 @@ function clDivOrdenaPontos() {
             console.log(`Distância Total: ${item.DistanceTotal}`);
         }
         selectRotas.selectedIndex = selIndex;
+        AtivaControles();
+        ativaElementoHtml('idPontoInicial', true); 
+        ativaElementoHtml('listaRotas', true); 
     }
 
     CarregaRotasCalculadas(0);
@@ -340,6 +343,7 @@ function clDivOrdenaPontos() {
     // Exemplo de ícones clicáveis para as setas
     const upArrow = document.createElement('span');
     upArrow.textContent = '▲'; // Seta para cima
+    upArrow.id = 'idSetaParaCima';  
     upArrow.style.cursor = 'pointer'; // Define como clicável
     upArrow.style.fontSize = '14px'; // Ajusta o tamanho da seta
     upArrow.style.color = '#333'; // Cor da seta
@@ -353,6 +357,7 @@ function clDivOrdenaPontos() {
 
     const downArrow = document.createElement('span');
     downArrow.textContent = '▼'; // Seta para baixo
+    downArrow.id = 'idSetaParaBaixo';  
     downArrow.style.cursor = 'pointer'; // Define como clicável
     downArrow.style.fontSize = '14px'; // Ajusta o tamanho da seta
     downArrow.style.color = '#333'; // Cor da seta
@@ -389,6 +394,12 @@ function clDivOrdenaPontos() {
     select.addEventListener("change", function () {
         bMudouOrdemPontos = true;
         ativaElementoHtml('idPontoInicial', false); 
+        if(selectRotas.value!="nova")
+        {
+            ativaElementoHtml('listaRotas', false); 
+            adicionarItemAoSelect(selectRotas,`Nova Rota`, `nova`);
+            selectRotas.value = "nova";
+        }    
     });    
 
     // Adiciona opções ao select dos pontos
@@ -450,12 +461,40 @@ function clDivOrdenaPontos() {
     buttonsContainer.style.left = '10px';
     buttonsContainer.style.right = '10px';
     buttonsContainer.style.display = 'flex'; // Flex para alinhar os botões horizontalmente
-    buttonsContainer.style.justifyContent = 'flex-end'; // Alinha os itens ao lado direito
+    // buttonsContainer.style.justifyContent = 'flex-end'; // Alinha os itens ao lado direito
+    buttonsContainer.style.justifyContent = 'space-between'; // Alinha os botões nas extremidades
     buttonsContainer.style.gap = '5px'; // Espaçamento entre os botões
+
+    const apagaRotaBtn = createButton('Apaga Rota', () => BtnApagaRota());
+    buttonsContainer.appendChild(apagaRotaBtn);
 
     const reordenaBtn = createButton('Recalcula Rota', () => reordenaOption());
     buttonsContainer.appendChild(reordenaBtn);
     iDlg.appendChild(buttonsContainer);
+
+    // Adiciona um evento para limpar a lista ao clicar no botão de lixeira
+    function BtnApagaRota()
+    {
+        // document.getElementById('listaRotas').innerHTML = ''; // Limpa o select de rotas
+        // LoadSelectPontos(selectRotas.value)
+        if (selectRotas.options.length <= 1) {
+            return; // Sai da função se houver apenas 1 ou nenhum item
+        }
+
+        // Obtém o ID selecionado
+        const idSelecionado = parseInt(selectRotas.value, 10); // Converte para número inteiro base 10
+        index = ListaRotasCalculadas.findIndex(item => item.id === idSelecionado); // Encontra o índice da rota selecionada
+        // Se o item for encontrado, remove do array
+        if (index !== -1) {
+            ListaRotasCalculadas.splice(index, 1);
+            console.log(`Item com ID ${idSelecionado} removido.`);
+        } else {
+            console.log(`Item com ID ${idSelecionado} não encontrado.`);
+        }
+
+        CarregaRotasCalculadas(0)
+    }
+
 
     // Função auxiliar para criar botões
     function createButton(text, onClick) {
@@ -509,6 +548,7 @@ function clDivOrdenaPontos() {
         // RefazRotaNoServidor(pontosVisitaOrdenados).then(data => 
          
         // Faz de forma sincrona a função assincrona    
+        tornarElementosReadonly()
         RefazRotaNoServidor(pontosVisitaOrdenados,rotaSel).then(data =>     
         {
             console.log("Rota refeita com sucesso!", data);
@@ -552,10 +592,49 @@ function clDivOrdenaPontos() {
             LoadSelectPontos(bufdados.id);  
             AtivaControles();  
             ativaElementoHtml('idPontoInicial', true); 
+            ativaElementoHtml('listaRotas', true); 
             bMudouOrdemPontos = false;
+            desfazerReadonly();
         }).catch(error => {
             console.error("Erro ao refazer rota:", error);
         });
+    }
+    ////////////////////////////////
+    function tornarElementosReadonly() {
+        ativaElementoHtml('idSetaParaBaixo', false); 
+        ativaElementoHtml('idSetaParaCima', false); 
+        const divOrdenaPontos = document.getElementById('divOrdenaPontos');
+        
+        if (divOrdenaPontos) {
+            // Percorre todos os inputs e selects dentro da div e os torna readonly ou desativados
+            divOrdenaPontos.querySelectorAll('input, textarea, select, button').forEach(elemento => {
+                if (elemento.tagName === 'INPUT' || elemento.tagName === 'TEXTAREA') {
+                    elemento.readOnly = true; // Torna o campo de texto somente leitura
+                } else {
+                    elemento.disabled = true; // Desabilita outros elementos como selects e botões
+                }
+            });
+        } else {
+            console.warn("Elemento 'divOrdenaPontos' não encontrado.");
+        }
+    }
+    ////////////////////////////////
+    function desfazerReadonly() {
+        ativaElementoHtml('idSetaParaBaixo', true); 
+        ativaElementoHtml('idSetaParaCima', true); 
+        const divOrdenaPontos = document.getElementById('divOrdenaPontos');
+    
+        if (divOrdenaPontos) {
+            divOrdenaPontos.querySelectorAll('input, textarea, select, button').forEach(elemento => {
+                if (elemento.tagName === 'INPUT' || elemento.tagName === 'TEXTAREA') {
+                    elemento.readOnly = false; // Permite edição
+                } else {
+                    elemento.disabled = false; // Reativa selects e botões
+                }
+            });
+        } else {
+            console.warn("Elemento 'divOrdenaPontos' não encontrado.");
+        }
     }
     ////////////////////////////////
     // Atualiza váriável global do JS, onde estão várias informações dos pontos, com a nova ordenação dos pontos
