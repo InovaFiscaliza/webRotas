@@ -819,7 +819,7 @@ map.on('click', function(e) {
 
     // Carrega coordenadas se o diálogo de ordenação de pontos estiver aberto
     if (document.getElementById("latitude")) document.getElementById("latitude").value = latitude;
-    if (document.getElementById("latitude")) document.getElementById("latitude").value = latitude;
+    if (document.getElementById("longitude")) document.getElementById("longitude").value = longitude;
 
 
     heading = 0;
