@@ -224,9 +224,10 @@ function clDivOrdenaPontos() {
     iDlg.appendChild(label);
      
     //-----------------------------------------------------------------------------------
-    // Div com lat, lon e descrição 
+    // Div ponto inicial com lat, lon e descrição 
     let divPai = document.createElement('div');
     divPai.style.width = '98%';
+    divPai.id = 'idPontoInicial';
     divPai.style.display = 'flex';
     divPai.style.justifyContent = 'space-between';
     divPai.style.padding = '2px';
@@ -329,7 +330,6 @@ function clDivOrdenaPontos() {
     label.style.fontSize = fontSize;
     label.style.color = '#333';
 
-
     // Cria um wrapper para os elementos alinhados à direita
     const rightWrapper = document.createElement('div');
     rightWrapper.style.display = 'flex'; // Flexbox para os elementos da direita
@@ -384,6 +384,12 @@ function clDivOrdenaPontos() {
     select.style.height = 'calc(100% - 250px)'; // Ocupa o espaço restante e retira os espaços para outros controles
     select.style.fontSize = fontSize;
     iDlg.appendChild(select);
+    bMudouOrdemPontos = false;
+    // Adiciona um event listener para monitorar mudanças
+    select.addEventListener("change", function () {
+        bMudouOrdemPontos = true;
+        ativaElementoHtml('idPontoInicial', false); 
+    });    
 
     // Adiciona opções ao select dos pontos
     function LoadSelectPontos(value)
@@ -408,7 +414,9 @@ function clDivOrdenaPontos() {
 
         const rotaSelecionada = ListaRotasCalculadas.find(rota => rota.id === selId);
         rotaSel = structuredClone(rotaSelecionada);
-
+        
+        pontosvisitaDados = rotaSel.pontosvisitaDados;
+        pontosVisitaOrdenados = rotaSel.pontosVisitaOrdenados;
         console.log(`LoadSelectPontos: rotaSel.pontoinicial ${rotaSel.pontoinicial[0]}, ${rotaSel.pontoinicial[1]}, ${rotaSel.pontoinicial[2]}`);
         select.innerHTML = '';
         rotaSel.pontosVisitaOrdenados.forEach((ponto, index) => {
@@ -500,6 +508,7 @@ function clDivOrdenaPontos() {
         // usar aqui rotaSel 
         // RefazRotaNoServidor(pontosVisitaOrdenados).then(data => 
          
+        // Faz de forma sincrona a função assincrona    
         RefazRotaNoServidor(pontosVisitaOrdenados,rotaSel).then(data =>     
         {
             console.log("Rota refeita com sucesso!", data);
@@ -518,6 +527,9 @@ function clDivOrdenaPontos() {
             pntinicialBuf[0] = document.getElementById('latitude').value;
             pntinicialBuf[1] = document.getElementById('longitude').value;
             pntinicialBuf[2] = document.getElementById('descricao').value;
+            
+            
+            
 
             maiorId = ListaRotasCalculadas.reduce((max, item) => {return item.id > max ? item.id : max;}, 0);
             bufdados = {};
@@ -528,15 +540,33 @@ function clDivOrdenaPontos() {
             bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;
             bufdados.pontoinicial = pntinicialBuf;
             bufdados.DistanceTotal = data.DistanceTotal/1000;   
-            bufdados.rotaCalculada = rotaRecalculada;           
+            if(bMudouOrdemPontos)
+                bufdados.rotaCalculada = 0; // Rota proposta pelo usuário
+            else
+                bufdados.rotaCalculada = 1; // Rota calculada pelo servidor      
             ListaRotasCalculadas.push(bufdados);
             rotaSel=bufdados;
+
+            
             CarregaRotasCalculadas(bufdados.id);
             LoadSelectPontos(bufdados.id);  
             AtivaControles();  
+            ativaElementoHtml('idPontoInicial', true); 
+            bMudouOrdemPontos = false;
         }).catch(error => {
             console.error("Erro ao refazer rota:", error);
         });
+    }
+    ////////////////////////////////
+    // Atualiza váriável global do JS, onde estão várias informações dos pontos, com a nova ordenação dos pontos
+    function SincOrdenadosPontosVisitaDados(pontosVisitaOrdenados,pontosvisitaDados)
+    {
+        i=0;
+        pontosVisitaOrdenados.forEach(([lat, lon]) => {
+            sPn = `P${i}`; 
+            // AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,ColunaAtualizar,NovoDado)
+            AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,2,sPn); // Atualiza Pn
+        });        
     }
     ////////////////////////////////
     function GetServerUrl()
@@ -592,12 +622,14 @@ function clDivOrdenaPontos() {
             document.body.removeChild(IhandleMsg);
             return;
         }
-
+        // Guardando dados para uso posterior e atualizando as variáveis globais da rota
         polylineRotaDat = data.polylineRota;
         DistanceTotal = data.DistanceTotal;
         poly_lineRota = RedesenhaRota(polylineRotaDat,rotaSel);
         rotaRecalculada = data.RotaRecalculada; 
         pontosVisitaOrdenados = data.pontosVisita
+        SincOrdenadosPontosVisitaDados(pontosVisitaOrdenados,pontosvisitaDados);
+        
         document.body.removeChild(IhandleMsg);
         return data;
     }
