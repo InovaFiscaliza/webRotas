@@ -588,6 +588,7 @@ function ServerUrl()
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 async function getRoute(startCoords, endCoords){
+    console.log("getRoute");
     if(ServerTec == "OSMR")
     {
         return getRouteOSMR(startCoords, endCoords);
@@ -949,59 +950,65 @@ function updateGPSPosition(position) {
     DesabilitaMarquerNoGPSRaioDaEstacao(latitude, latitude);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function GetNextActivePoint(lat, lon) {
-    const userLocation = {lat: lat, lng: lon};
+function GetNextActivePoint() {
+    console.log("GetNextActivePoint");
 
-    // Lista de marcadores já adicionados ao mapa
-    // const markers = [marker1, marker2, marker3, marker4, marker5, marker6, marker7, marker8];
+    let ind = 0;
 
-    if (markerVet==null)
-        return(null);
-    iPnMin=""
-    markerVet.forEach(marker => {
-        markerCoords = marker.getLatLng(); // Obtém as coordenadas do marcador
-        lat = markerCoords.lat;
-        lon = markerCoords.lng;
-        // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
-        iPnDados = EncontrarDado(pontosvisitaDados, lat, lon,2);
-        bAtivo   = EncontrarDado(pontosvisitaDados, lat, lon,6);
-        // console.log("iPnDados - "+iPnDados);
-        // console.log("bAtivo - "+bAtivo);
-        if (bAtivo=="Ativo")
-        {
-            if(iPnMin=="")
-              iPnMin=iPnDados;
-            if(parseInt(iPnMin.slice(1), 10) > parseInt(iPnDados.slice(1), 10))
-                iPnMin=iPnDados;
+    for (let ponto of pontosVisitaOrdenados) {
+        let [lati, loni] = ponto;
+        console.log("------------");
+        console.log("lati - " + String(lati));
+        console.log("loni - " + String(loni));
+
+        let stringPn = "P" + String(ind);
+        let bAtivo = EncontrarDado(pontosvisitaDados, lati, loni, 6);
+
+        console.log("bAtivo - " + bAtivo);
+
+        if (bAtivo === "Ativo") {
+            console.log("Encontrou ponto ativo");
+
+            let pnt = {
+                lat: lati,
+                lng: loni
+            };
+
+            console.log("pnt.lat - " + String(pnt.lat));
+            return pnt; // Retorna o primeiro ponto ativo encontrado
         }
-    });
-    pnt=null;
-    if(iPnMin!="")
-    {
-        pnt = {};
-        pnt.lat = EncontrarDadoPn(pontosvisitaDados, iPnMin,0);
-        pnt.lng = EncontrarDadoPn(pontosvisitaDados, iPnMin,1);
+
+        ind++;
     }
-    return pnt;
+
+    return null; // Se nenhum ponto ativo for encontrado
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetRouteCarFromHere(latitude,longitude)
 {
    console.log("Tentando pegar rota")
    startCoords = [];
    endCoords = [];
-   // zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+
    // Colocar a opção de buscar a rota para o ponto mais próximo ou o próximo ponto ativo da lista
    if(typeof GpsProximoPonto == "undefined") // Evita erro da variável não inicializada
       return;
 
    if(GpsProximoPonto=="ProximoDaRota")
-      nearestPoint = GetNextActivePoint(latitude, longitude);
-   else  // "MaisProximo"
+   {
+      console.log("ProximoDaRota algoritmo");
+      nearestPoint = GetNextActivePoint();
+   } 
+   else  // "MaisProximo"   2.856775150175865, -60.634694963294585
+   { 
+      console.log("MaisProximo algoritmo");
       nearestPoint = GetNearestPoint(latitude, longitude);
+   }   
    // console.log("nearestPoint - "+String(nearestPoint))
    if (nearestPoint==null) // Apaga rota auxiliar
    {
+       console.log("nearestPoint - null");
        if (polyRotaAux) {
            polyRotaAux.remove();
            polyRotaAux = null; // Opcional: redefinir a variável para null
@@ -1012,6 +1019,7 @@ function GetRouteCarFromHere(latitude,longitude)
    startCoords[1] = longitude;
    endCoords[0] = nearestPoint.lat;
    endCoords[1] = nearestPoint.lng;
+   console.log("getRoute");
    getRoute(startCoords, endCoords);
 }
 
