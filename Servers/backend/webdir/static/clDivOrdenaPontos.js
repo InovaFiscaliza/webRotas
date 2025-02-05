@@ -216,6 +216,40 @@ function clDivOrdenaPontos() {
     rotaSel = structuredClone(ListaRotasCalculadas[0]); // Clona o objeto para evitar alterações indesejadas
     //-----------------------------------------------------------------------------------
     // Ponto Inicial
+    // Criando o contêiner principal
+    container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.justifyContent = 'space-between';
+    container.style.width = '100%'; // Largura ajustável
+    container.style.padding = '0px';
+    container.style.paddingTop = '5px'; // Adiciona espaçamento no topo
+    container.style.marginBottom = '5px'; // Adiciona espaçamento na parte inferior
+    container.style.fontFamily = 'Arial, sans-serif';
+
+    // Criando o label
+    label = document.createElement('label');
+    label.htmlFor = 'listaRotas';
+    label.textContent = 'Ponto Inicial:';
+    label.style.fontSize = fontSize;
+    label.style.color = '#333';
+
+    // Criando a letra "P"
+    letterP = document.createElement('span');
+    letterP.textContent = '🧪';
+    letterP.style.fontSize = '16px';
+    letterP.style.color = '#555';
+    letterP.style.fontWeight = 'bold';
+    letterP.style.marginLeft = '10px';
+
+    // Adicionando elementos ao contêiner
+    container.appendChild(label);
+    container.appendChild(letterP);
+
+    // Adicionando o contêiner ao corpo do documento
+    iDlg.appendChild(container);
+
+    /*
     label = document.createElement('label');
     label.htmlFor = 'listaRotas';
     label.textContent = 'Ponto Inicial:';
@@ -225,7 +259,7 @@ function clDivOrdenaPontos() {
     label.style.fontSize = fontSize;
     label.style.color = '#333';
     iDlg.appendChild(label);
-     
+    */ 
     //-----------------------------------------------------------------------------------
     // Div ponto inicial com lat, lon e descrição 
     let divPai = document.createElement('div');
@@ -783,7 +817,7 @@ function clDivOrdenaPontos() {
         */ 
 
         // polylineRotaDat = filtrarTrechosMenoresQue5km(polylineRotaDat);
-        
+
         poly_lineRota = L.polyline(polylineRotaDat, {
             "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
             "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
