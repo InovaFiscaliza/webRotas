@@ -705,32 +705,16 @@ def GenerateRouteMapOSMR(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
        route = data['routes'][0]
        geometry = route['geometry']
        coordinates = polyline.decode(geometry)
-       RouteDetailLoc.coordinates += coordinates
+       # RouteDetailLoc.coordinates += coordinates
+       RouteDetailLoc.coordinates.extend(coordinates)
+       
        RouteDetailLoc.DistanceTotal = RouteDetailLoc.DistanceTotal + calcular_distancia_totalOSMR(data)
        # Pegando nomes das ruas e rota
        # waypoints = data['waypoints']
 
        # GerarKml(coordinates, filename="rota.kml")    
        # GerarGeojson(coordinates, filename="rota.geojson")
-       """
-       wLog("Imprimindo rota")    
-       nomes_ruas = []
-       for route in data.get("routes", []):
-         for leg in route.get("legs", []):
-            for step in leg.get("steps", []):
-                mode = step.get("mode", "")	
-                nome = step.get("name", "")
-                destinations = step.get("destinations", "")
-                tempo = step.get("duration", "")
-                dist = step.get("distance", "")
-                maneuver = step.get("maneuver", [])
-                type = maneuver.get("type", "")
-                modifier = maneuver.get("modifier", "")	
-                location = maneuver.get("location", [])      
-                # NewWaypoint(self,waypoint,lat,lon)
-                RouteDetailLoc.NewWaypoint(f"{nome} {destinations}",str(location[1]),str(location[0]))
-                wLog(f"{mode} {nome} {destinations} por {dist} metros e {tempo} segundos e {type} {modifier}")  
-        """              
+             
     else:
        wLog(f"Erro na solicitação: {data}")    
        return RouteDetailLoc
@@ -1964,6 +1948,13 @@ def RoteamentoOSMR(porta,pontosvisita,pontoinicial,recalcularrota):
         wLog(f"Reordenando pontos de visita")
         pontosvisita=OrdenarPontosDistanciaOSMRMultiThread(pontosvisita,pontoinicial)  
     RouteDetail=GenerateRouteMap(RouteDetail,pontoinicial[0],pontoinicial[1],latfI,lonfI)
+    
+    for i in range(len(pontosvisita) - 1):
+        lati, loni = pontosvisita[i]
+        latf, lonf = pontosvisita[i + 1]
+        RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
+    
+    """
     i = 0
     for ponto in pontosvisita:
         # lat, lon = ponto        
@@ -1976,7 +1967,9 @@ def RoteamentoOSMR(porta,pontosvisita,pontoinicial,recalcularrota):
             (lati,loni) = pontosvisita[i-1]
             (latf,lonf) = pontosvisita[i]       
             RouteDetail=GenerateRouteMap(RouteDetail,lati,loni,latf,lonf)
-        i=i+1    
+        i=i+1   
+    """     
+    
     return RouteDetail.coordinates,RouteDetail.DistanceTotal,pontosvisita
 ################################################################################
 def RoutePontosVisita(data,user,pontoinicial,pontosvisitaDados,regioes):

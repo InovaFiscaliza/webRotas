@@ -713,6 +713,38 @@ function clDivOrdenaPontos() {
         return data;
     }
     ////////////////////////////////
+    function haversine(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Raio da Terra em metros
+        const toRad = Math.PI / 180;
+        const dLat = (lat2 - lat1) * toRad;
+        const dLon = (lon2 - lon1) * toRad;
+    
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distância em metros
+    }
+    ////////////////////////////////
+    function filtrarTrechosMenoresQue5km(polylineRotaDat) {
+        if (polylineRotaDat.length < 2) return polylineRotaDat; // Se tiver menos de 2 pontos, retorna como está
+    
+        let novaRota = [polylineRotaDat[0]]; // Sempre mantemos o primeiro ponto
+    
+        for (let i = 1; i < polylineRotaDat.length; i++) {
+            const [lat1, lon1] = novaRota[novaRota.length - 1];
+            const [lat2, lon2] = polylineRotaDat[i];
+    
+            if (haversine(lat1, lon1, lat2, lon2) <= 5000) {
+                novaRota.push([lat2, lon2]);
+            }
+        }
+        return novaRota;
+    }
+
+    ////////////////////////////////
+
     function RedesenhaRota(polylineRotaDat,rotaSel)
     {
         lat=rotaSel.pontoinicial[0];
@@ -734,7 +766,24 @@ function clDivOrdenaPontos() {
             poly_lineRota.remove();
             poly_lineRota = null;
         }  
-        console.log(`Redesenhando  poly_lineRota`);
+        // console.log(`Redesenhando  poly_lineRota`);
+        // console.log(polylineRotaDat);
+        // Remove o último ponto da polyline, se houver pontos suficientes
+        const numeroDePontos = polylineRotaDat.length;
+        console.log(`Número de pontos na polyline: ${numeroDePontos}`);
+        
+        /*
+        iRem=20;
+        if (polylineRotaDat.length > (2*iRem)) {
+            polylineRotaDat.splice(0, iRem);  // Remove os primeiros 10 pontos  
+            polylineRotaDat.splice(-iRem);    // Remove os últimos 10 pontos  
+        } else {
+            polylineRotaDat = []; // Se houver 10 ou menos pontos, limpa o array
+        }
+        */ 
+
+        // polylineRotaDat = filtrarTrechosMenoresQue5km(polylineRotaDat);
+        
         poly_lineRota = L.polyline(polylineRotaDat, {
             "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
             "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
