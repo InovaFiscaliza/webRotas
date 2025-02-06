@@ -61,31 +61,19 @@ payload = {
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
     "pontosvisita": [
-        [2.812482, -60.670263,"Local","Parque do Rio Branco"],
-        [2.840826, -60.692496,"Local","Aeroporto Internacional de Boa Vista"],
-        [2.854428, -60.644444,"Local","Roraima Garden Shopping"],
-        [2.831661, -60.662501,"Local","Estádio Flamarion Vasconcelos"],
-        [2.827492, -60.680001,"Local","Praça Fábio Paracat"],  
-        [2.791658, -60.694723,"Local","Área Militar – 7º BIS"],
-        [2.850549, -60.706111,"Local","Pátio Roraima Shopping"],
-        [2.807220, -60.738611,"Local","Praça e Palco Aderval da Rocha Ferreira"],
-        [2.892775, -60.705277,"Local","Bairro Pedra Pintada, próximo supermercado Salmos 23"],
-        [2.764720, -60.713611,"Local","Distrito Industrial de Boa Vista - Roraima"],
-        [2.837220, -60.684445,"Local","Parque Anauá"],
-        [2.844719, -60.754723,"Local","Bairro Cidade Satélite"],
+
         [2.817774, -60.728333,"Local","Rua São Sebastião com Ataide Teive"],
-        [2.814996, -60.696664,"Local","Hospital do Amor - Bairro Pericumã"],    
-        [2.769164, -60.731389,"Local","Bairro Nova Cidade – Escola Estadual Dr. Luiz"], 
-        [2.838887, -60.718613,"Local","Fórum Criminal – Bairro Caranã"],
-        [2.811386, -60.711945,"Local","Senai – RR, Bairro Asa Branca"],           
-        [2.803887, -60.691666,"Local","Hospital Materno Infantil – Bairro 13 de Setembro"],  
-        [2.793886, -60.715556,"Local","CRAS/Cristiana Vicente Nunes – Bairro Centenário"],                  
-        [2.816383, -60.772500,"Local","Praça Cruviana – Bairro Jardin Equatorial"]
+        [2.807220, -60.738611,"Local","Praça e Palco Aderval da Rocha Ferreira"],
+        [2.811386, -60.711945,"Local","Senai – RR, Bairro Asa Branca"]
+    
     ],
+    
+   
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-# enviar_json(payload, "http://localhost:5001/webrotas")
+
+enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 # Aplicativo MapsMe - verificar
@@ -187,7 +175,7 @@ payload = {
     "regioes": ""
 }
 
-enviar_json(payload, "http://localhost:5001/webrotas")
+# enviar_json(payload, "http://localhost:5001/webrotas")
 
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência

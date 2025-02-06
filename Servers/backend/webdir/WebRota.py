@@ -115,19 +115,32 @@ class ClRouteDetailList:
         #self.mapcode += """],{"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
         #                   ).addTo(map);\n"""
                    
-        self.mapcode += """var polylineRotaDat = ["""       
-        for i, (lat, lon) in enumerate(self.coordinates):
-            if i == len(self.coordinates) - 1:  # Último elemento
-                self.mapcode += f"[{lat}, {lon}]"
+        self.mapcode += """var polylineRotaDat = ["""     
+        for ind,poliLine in enumerate(self.coordinates):  
+            self.mapcode += """["""  
+            for i, (lat, lon) in enumerate(poliLine):
+                if i == len(poliLine) - 1:  # Último elemento
+                    self.mapcode += f"[{lat}, {lon}]"
+                else:
+                    self.mapcode += f"[{lat}, {lon}], "
+            if ind == len(self.coordinates) - 1:  # Último elemento        
+                self.mapcode += """]"""
             else:
-                self.mapcode += f"[{lat}, {lon}], "
-        self.mapcode += """];
-        var poly_lineRota = L.polyline(polylineRotaDat, {
-            "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
-            "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
-            "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
-            "weight": 3}).addTo(map);\n
-        ListaRotasCalculadas[0].polylineRotaDat = polylineRotaDat;    
+                self.mapcode += """],"""    
+        self.mapcode += """];"""
+                
+        self.mapcode += """
+           poly_lineRota = [];
+           for (let i = 0; i < polylineRotaDat.length; i++) 
+           {            
+                var tempBuf = L.polyline(polylineRotaDat[i], {
+                "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
+                "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
+                "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
+                "weight": 3}).addTo(map);\n
+                 poly_lineRota.push(tempBuf);    
+           }
+           ListaRotasCalculadas[0].polylineRotaDat = polylineRotaDat;    
         """                          
         return
     #---------------------------------------------------
@@ -572,20 +585,21 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     </Placemark>"""
 
     # Adicionar a polilinha (rota)
-    kml_polyline = """
-    <Placemark>
-      <name>Rota</name>
-      <styleUrl>#lineStyleBlue</styleUrl>
-      <LineString>
-        <coordinates>
-"""
-    for latitude, longitude in polyline_rota:
-        kml_polyline += f"          {longitude},{latitude},0\n"
-
-    kml_polyline += """
-        </coordinates>
-      </LineString>
-    </Placemark>"""
+    kml_polyline=""    
+    for ind,polyLineTmp in enumerate(polyline_rota): 
+        kml_polyline += f"""
+        <Placemark>
+        <name>Rota{ind}</name>
+        <styleUrl>#lineStyleBlue</styleUrl>
+        <LineString>
+            <coordinates>
+        """
+        for latitude, longitude in polyLineTmp:
+            kml_polyline += f"          {longitude},{latitude},0\n"
+        kml_polyline += """
+            </coordinates>
+        </LineString>
+        </Placemark>"""
 
     # Combinar todas as partes
     kml_conteudo = kml_inicio + kml_pontos + kml_polyline + kml_fim
@@ -706,7 +720,7 @@ def GenerateRouteMapOSMR(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
        geometry = route['geometry']
        coordinates = polyline.decode(geometry)
        # RouteDetailLoc.coordinates += coordinates
-       RouteDetailLoc.coordinates.extend(coordinates)
+       RouteDetailLoc.coordinates.append(coordinates)
        
        RouteDetailLoc.DistanceTotal = RouteDetailLoc.DistanceTotal + calcular_distancia_totalOSMR(data)
        # Pegando nomes das ruas e rota
@@ -1944,9 +1958,18 @@ def RoteamentoOSMR(porta,pontosvisita,pontoinicial,recalcularrota):
     (latfI,lonfI) = pontosvisita[0]
     wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}")
     wLog(f"RoteamentoOSMR - pontoinicial {pontoinicial[0]},{pontoinicial[1]}")
+    wLog("Pontos de Visita antes ordenação:")
+    for ponto in pontosvisita:
+        wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}")
+    
     if(recalcularrota==1):
         wLog(f"Reordenando pontos de visita")
-        pontosvisita=OrdenarPontosDistanciaOSMRMultiThread(pontosvisita,pontoinicial)  
+        pontosvisita=OrdenarPontosDistanciaOSMRMultiThread(pontosvisita,pontoinicial) 
+        
+    wLog("Pontos de Visita apos ordenação:")
+    for ponto in pontosvisita:
+        wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}")
+        
     RouteDetail=GenerateRouteMap(RouteDetail,pontoinicial[0],pontoinicial[1],latfI,lonfI)
     
     for i in range(len(pontosvisita) - 1):

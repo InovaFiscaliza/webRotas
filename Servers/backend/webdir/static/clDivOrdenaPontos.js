@@ -1,6 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Dialogo de ordenação de pontos
 fontSize = '10px';   // Tamanho da fonte
+clicouPipetaPontoInicial=false; // Flag para indicar que clicou na pipeta
+var arrayPnts = null;
+var arrayLinhas = null;
 function clDivOrdenaPontos() {
     // Cria a div principal
     
@@ -237,10 +240,18 @@ function clDivOrdenaPontos() {
     // Criando a letra "P"
     letterP = document.createElement('span');
     letterP.textContent = '🧪';
+    letterP.id = 'idPipetaLatLon';
     letterP.style.fontSize = '16px';
     letterP.style.color = '#555';
     letterP.style.fontWeight = 'bold';
     letterP.style.marginLeft = '10px';
+    letterP.style.cursor = 'pointer'; // Transforma em clicável
+    // Adicionando evento de clique
+    letterP.addEventListener('click', function() {
+        // alert('Você clicou na pipeta! 🧪');
+        clicouPipetaPontoInicial=true;
+        ativaElementoHtml('idPipetaLatLon', false); 
+    });
 
     // Adicionando elementos ao contêiner
     container.appendChild(label);
@@ -299,7 +310,7 @@ function clDivOrdenaPontos() {
         if (typeof onChangeCallback === 'function') {
             input.addEventListener('input', (event) => onChangeCallback(event.target.value));
         }
-    
+
         div.appendChild(label);
         div.appendChild(input);
     
@@ -314,6 +325,7 @@ function clDivOrdenaPontos() {
     //-----------------------------------------------------------------------------------
     // Alterou ponto inicial
     recalcularRotaPontoInicial = false;
+
     function AlterouPntInicial()
     {
         recalcularRotaPontoInicial = true;
@@ -420,13 +432,14 @@ function clDivOrdenaPontos() {
     select.multiple = true;
     select.size = 10000; // Define o número de itens visíveis
     select.style.width = '100%';
-    select.style.height = 'calc(100% - 250px)'; // Ocupa o espaço restante e retira os espaços para outros controles
+    select.style.height = 'calc(100% - 260px)'; // Ocupa o espaço restante e retira os espaços para outros controles
     select.style.fontSize = fontSize;
     iDlg.appendChild(select);
     bMudouOrdemPontos = false;
     // Adiciona um event listener para monitorar mudanças
     select.addEventListener("change", function () {
         bMudouOrdemPontos = true;
+        recalcularRotaPontoInicial = false;
         ativaElementoHtml('idPontoInicial', false); 
         if(selectRotas.value!="nova")
         {
@@ -458,6 +471,7 @@ function clDivOrdenaPontos() {
         console.log(`Valor selId selecionado: ${selId}`);
 
         const rotaSelecionada = ListaRotasCalculadas.find(rota => rota.id === selId);
+        rotaSel = [];
         rotaSel = structuredClone(rotaSelecionada);
         
         pontosvisitaDados = rotaSel.pontosvisitaDados;
@@ -703,11 +717,11 @@ function clDivOrdenaPontos() {
     async function RefazRotaNoServidor(pontosVisita,rotaSel)
     {
         IhandleMsg=exibirMensagem('Servidor calculando a nova rota');
-        recalcularRotaPontoInicial = true;   
         if(recalcularRotaPontoInicial)
             recalcularrota=1;
         else
             recalcularrota=0;
+        
         const payload = {
             TipoRequisicao: "RoteamentoOSMR",
             PortaOSRMServer: OSRMPort,
@@ -778,7 +792,7 @@ function clDivOrdenaPontos() {
     }
 
     ////////////////////////////////
-
+    
     function RedesenhaRota(polylineRotaDat,rotaSel)
     {
         lat=rotaSel.pontoinicial[0];
@@ -795,36 +809,137 @@ function clDivOrdenaPontos() {
         mrkPtInicial = L.marker([lat, lon]).addTo(map).setIcon(createSvgIconColorAltitude('i',10000));     
         mrkPtInicial.bindTooltip(desc, {permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'});  
         
-        if(poly_lineRota)
+        for (let i = 0; i < poly_lineRota.length; i++) 
         {
-            poly_lineRota.remove();
-            poly_lineRota = null;
+            poly_lineRota[i].remove();
         }  
+        poly_lineRota = [];
+
         // console.log(`Redesenhando  poly_lineRota`);
         // console.log(polylineRotaDat);
         // Remove o último ponto da polyline, se houver pontos suficientes
         const numeroDePontos = polylineRotaDat.length;
         console.log(`Número de pontos na polyline: ${numeroDePontos}`);
-        
-        /*
-        iRem=20;
-        if (polylineRotaDat.length > (2*iRem)) {
-            polylineRotaDat.splice(0, iRem);  // Remove os primeiros 10 pontos  
-            polylineRotaDat.splice(-iRem);    // Remove os últimos 10 pontos  
-        } else {
-            polylineRotaDat = []; // Se houver 10 ou menos pontos, limpa o array
-        }
-        */ 
+        console.log(`polylineRotaDat[0]: ${polylineRotaDat[0]}`);
 
         // polylineRotaDat = filtrarTrechosMenoresQue5km(polylineRotaDat);
+        if(polylineRotaDat[0].length==2)
+            return  poly_lineRota;  
 
-        poly_lineRota = L.polyline(polylineRotaDat, {
-            "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
-            "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
-            "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
-            "weight": 3}).addTo(map);    
+        for (let i = 0; i < polylineRotaDat.length; i++) 
+        {    
+            tempBuf = L.polyline(polylineRotaDat[i], {
+                "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
+                "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
+                "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
+                "weight": 3}).addTo(map);
+
+            poly_lineRota.push(tempBuf);    
+        }
+     
+        // Exibir Lat/Lon ao clicar na Polyline
+        /*
+        poly_lineRota.on('click', function () {
+            let coords = poly_lineRota.getLatLngs(); // Obtém as coordenadas
+            let coordText = coords.map(c => `${c.lat},${c.lng}`).join('\n');
+            
+            alert("Coordenadas da Polyline:\n" + coordText);
+            console.log(coords); // Exibe no console também
+        });   
+        */ 
+        // clearPlottedPoints(arrayPnts, map); 
+        // removLines(arrayLinhas);
+        // arrayPnts = plotPolylineAsPoints(map, polylineRotaDat, color = 'red')
         return poly_lineRota;     
     }
+
+    function plotPolylineAsPoints(map, polylineCoords, color = 'blue') {
+        // Inicializar o array para armazenar os pontos e as linhas
+        let ind = 0;
+        let arrayPnts = [];
+        let arrayLinhas = [];
+
+        // Percorrer os pontos e criar uma linha entre cada dupla de pontos consecutivos
+        for (let i = 0; i < polylineCoords.length - 1; i++) {
+            // Criar uma linha azul entre os pontos consecutivos
+            let line = L.polyline([polylineCoords[i], polylineCoords[i + 1]], {
+                color: color,   // Cor da linha
+                weight: 2,      // Espessura da linha
+                opacity: 0.7    // Opacidade da linha
+            }).addTo(map);
+            
+            // Criar um marcador circular no ponto atual
+            let point = L.circleMarker(polylineCoords[i], {
+                radius: 5, // Tamanho do ponto
+                color: 'red', // Cor da borda
+                fillColor: 'yellow', // Cor interna
+                fillOpacity: 0.8
+            })
+            .bindTooltip(`Ind: ${ind} Lat: ${polylineCoords[i][0]}, Lng: ${polylineCoords[i][1]}`, {
+                permanent: false,  // Apenas ao passar o mouse
+                direction: 'top',  // Posição do tooltip
+                offset: [0, -5]    // Ajuste fino da posição
+            })
+            .addTo(map);
+            
+            arrayLinhas.push(line);
+            arrayPnts.push(point);
+            ind++;
+        }
+        
+        return arrayPnts;
+    }
+    
+
+    function plotPolylineAsPointsOld(map, polylineCoords, color = 'blue') {
+        // Criar a polyline no mapa
+
+        // Percorrer cada ponto da polyline e criar um marcador circular com tooltip
+        ind = 0;
+        arrayPnts = [];
+        polylineCoords.forEach(coord => {
+
+            let line = L.polyline([polylineCoords[i], polylineCoords[i + 1]], {
+                color: color,   // Cor da linha
+                weight: 2,      // Espessura da linha
+                opacity: 0.7    // Opacidade da linha
+            }).addTo(map);
+
+            point = L.circleMarker(coord, {
+                radius: 5, // Tamanho do ponto
+                color: 'red', // Cor da borda
+                fillColor: 'yellow', // Cor interna
+                fillOpacity: 0.8
+            })
+            .bindTooltip(`Ind: ${ind} Lat: ${coord[0]}, Lng: ${coord[1]}`, {
+                permanent: false,  // Apenas ao passar o mouse
+                direction: 'top',  // Posição do tooltip
+                offset: [0, -5]    // Ajuste fino da posição
+            })
+            .addTo(map);
+            arrayPnts.push(point);
+            ind++;
+        });
+        return arrayPnts;
+    }
+  
+    function removLines(linesArray) 
+    {
+        if(linesArray==null)
+            return;
+        // Percorrer o array de linhas e remover cada linha do mapa
+        linesArray.forEach(line => {
+            line.remove();  // Remove a linha do mapa
+        });
+    }
+
+    function clearPlottedPoints(arrayPnts, map) {
+        if (arrayPnts) {
+            arrayPnts.forEach(point => map.removeLayer(point)); // Remove cada ponto do mapa
+            arrayPnts.length = 0; // Limpa o array
+        }
+    }    
+
     ////////////////////////////////
     // Função para mover opções na lista
     /*

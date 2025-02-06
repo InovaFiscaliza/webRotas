@@ -816,11 +816,17 @@ map.on('click', function(e) {
     latitude =lat;
     longitude = lon;
 
-
-    // Carrega coordenadas se o diálogo de ordenação de pontos estiver aberto
-    if (document.getElementById("latitude")) document.getElementById("latitude").value = latitude;
-    if (document.getElementById("longitude")) document.getElementById("longitude").value = longitude;
-
+    if(clicouPipetaPontoInicial)
+    {     
+        // Carrega coordenadas se o diálogo de ordenação de pontos estiver aberto
+        if (document.getElementById("latitude")) document.getElementById("latitude").value = latitude;
+        if (document.getElementById("longitude")) document.getElementById("longitude").value = longitude;
+        clicouPipetaPontoInicial = false;
+        document.getElementById('latitude').dispatchEvent(new Event('input', { bubbles: true }));
+        document.getElementById('longitude').dispatchEvent(new Event('input', { bubbles: true }));
+        ativaElementoHtml('idPipetaLatLon', true); 
+        return;
+    }
 
     heading = 0;
     velocidade = 0;
@@ -1153,6 +1159,7 @@ function RodaMapaPorCss(angle) // Não funciona bem
       AjustaTamanhoMarquers(HeadingNorte);
    }
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Define se o mapa é rotacionado se HeadingNorte=1
 HeadingNorte=0
@@ -1857,7 +1864,7 @@ function createMacOSDock() {
             img.style.zIndex ="999";
             iconDiv.appendChild(img);
             img.onclick = () => {
-                GerarKML(polylineRotaDat, pontosvisitaDados );
+                GerarKML(polylineRotaDat, pontosVisita, pontosvisitaDados);
             };
 
         }
@@ -1879,7 +1886,7 @@ function createMacOSDock() {
     document.body.appendChild(dock);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function GerarKML(polylineRota, pontosVisitaDados) 
+function GerarKML(polylineRota, pontosVisita, pontosVisitaDados) 
 {
 
     exibirMensagemComTimeout("Gerando e salvando o arquivo KML para uso em aplicativos como MapsMe, Google Earth e outros. 📌 No MapsMe, envie o arquivo KML ao motorista via WhatsApp. Para abrir, basta clicar no arquivo e selecionar MapsMe como aplicativo.", 
@@ -1907,34 +1914,41 @@ function GerarKML(polylineRota, pontosVisitaDados)
 
     // Adicionar os pontos de visita
     let kmlPontos = "";
-    pontosVisitaDados.forEach(([latitude, longitude, idPonto, tipo, descricao, altitude]) => {
-        kmlPontos += `
-    <Placemark>
-      <name>${idPonto}  ${descricao}</name>
-      <description>${descricao}</description>
-      <Point>
-        <coordinates>${longitude},${latitude},${altitude}</coordinates>
-      </Point>
-    </Placemark>`;
+    ind = 0;
+    pontosVisita.forEach(([latitude, longitude]) => {
+            descricao = EncontrarDado(pontosvisitaDados, latitude, longitude, 4);
+            altitude  = EncontrarDado(pontosvisitaDados, latitude, longitude, 5);
+            // ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+            kmlPontos += `
+                <Placemark>
+                <name>P${ind}  ${descricao}</name>
+                <description>${descricao}</description>
+                <Point>
+                    <coordinates>${longitude},${latitude},${altitude}</coordinates>
+                </Point>
+                </Placemark>`;
+        ind++;
     });
 
-    // Adicionar a polilinha (rota)
-    let kmlPolyline = `
-    <Placemark>
-      <name>Rota</name>
-      <styleUrl>#lineStyleBlue</styleUrl>
-      <LineString>
-        <coordinates>
-`;
-    polylineRota.forEach(([latitude, longitude]) => {
-        kmlPolyline += `          ${longitude},${latitude},0\n`;
-    });
+    let kmlPolyline = ''; 
+    for (let i = 0; i < polylineRota.length; i++) 
+    {
+            kmlPolyline = kmlPolyline + `
+            <Placemark>
+            <name>Rota${i}</name>
+            <styleUrl>#lineStyleBlue</styleUrl>
+            <LineString>
+                <coordinates>
+            `;
+            polylineRota[i].forEach(([latitude, longitude]) => {
+                kmlPolyline += `          ${longitude},${latitude},0\n`;
+            });
 
-    kmlPolyline += `
-        </coordinates>
-      </LineString>
-    </Placemark>`;
-
+            kmlPolyline += `
+                </coordinates>
+            </LineString>
+            </Placemark>`;
+    }
     // Combinar todas as partes
     const kmlConteudo = kmlInicio + kmlPontos + kmlPolyline + kmlFim;
 

@@ -198,6 +198,7 @@ def ProcessaRequisicoesAoServidor(data):
        recalcularrota  = data.get("recalcularrota")
        polylineRota,DistanceTotal,pontosvisita=wr.RoteamentoOSMR(porta,pontosvisita,pontoinicial,recalcularrota)
        # Retorna uma resposta de confirmação
+       wr.wLog(json.dumps({"polylineRota": polylineRota,"DistanceTotal": DistanceTotal,"RotaRecalculada":recalcularrota,"pontosVisita":pontosvisita}))
        wr.wLog("\n\n#############################################################################################")
        return jsonify({"polylineRota": polylineRota,"DistanceTotal": DistanceTotal,"RotaRecalculada":recalcularrota,"pontosVisita":pontosvisita}), 200
 
