@@ -357,6 +357,14 @@ function clDivOrdenaPontos() {
     document.getElementById('latitude').value =  ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[0];
     document.getElementById('longitude').value = ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[1];
     document.getElementById('descricao').value = ListaRotasCalculadas[selectRotas.selectedIndex].pontoinicial[2];
+    document.getElementById('latitude').type = 'number';
+    document.getElementById('longitude').type = 'number';
+    document.getElementById('latitude').step = '0.0001'; 
+    document.getElementById('longitude').step = '0.0001'; 
+    document.getElementById('latitude').min = '-90';
+    document.getElementById('latitude').max = '90';
+    document.getElementById('longitude').min = '-180';
+    document.getElementById('longitude').max = '180';
     //----------------------------------------------------------------------------------- 
     // Label Ordem dos Pontos e os controles ao seu lado
     // novo label com div
