@@ -4,7 +4,7 @@ fontSize = '10px';   // Tamanho da fonte
 clicouPipetaPontoInicial=false; // Flag para indicar que clicou na pipeta
 var arrayPnts = null;
 var arrayLinhas = null;
-var servidorOnline = true;
+// var servidorOnline = true;
 function clDivOrdenaPontos() {
     // Cria a div principal
     
@@ -514,12 +514,18 @@ function clDivOrdenaPontos() {
     buttonsContainer.style.justifyContent = 'space-between'; // Alinha os botões nas extremidades
     buttonsContainer.style.gap = '5px'; // Espaçamento entre os botões
 
-    const apagaRotaBtn = createButton('Apaga Rota', () => BtnApagaRota());
+    const apagaRotaBtn = createButton('idBtnApagaRota','Apaga Rota', () => BtnApagaRota());
     buttonsContainer.appendChild(apagaRotaBtn);
 
-    const reordenaBtn = createButton('Recalcula Rota', () => reordenaOption());
+    const reordenaBtn = createButton('idBtnRecalcRota','Recalcula Rota', () => reordenaOption());
     buttonsContainer.appendChild(reordenaBtn);
     iDlg.appendChild(buttonsContainer);
+
+    if(verificarServidorOSMR()==false)
+    {
+        ativaElementoHtml('idBtnRecalcRota', false); 
+        alert("Servidor OSMR fora do ar");
+    }    
 
     // Adiciona um evento para limpar a lista ao clicar no botão de lixeira
     function BtnApagaRota()
@@ -546,9 +552,10 @@ function clDivOrdenaPontos() {
 
 
     // Função auxiliar para criar botões
-    function createButton(text, onClick) {
+    function createButton(id,text, onClick) {
         const button = document.createElement('button');
         button.textContent = text;
+        button.id = id;
         button.style.padding = '4px 16px';
         button.style.cursor = 'pointer';
         button.style.fontSize = fontSize;
@@ -711,7 +718,7 @@ function clDivOrdenaPontos() {
         return(url);
     }
     ////////////////////////////////
-    servidorOnline = verificarServidorOSMR();
+    // servidorOnline = verificarServidorOSMR();
     ////////////////////////////////
     rotaRecalculada=0;  // Flag deste diálogo que indica se ondem de pontos foi recalculada no servidor
     async function RefazRotaNoServidor(pontosVisita,rotaSel)
@@ -777,11 +784,8 @@ function clDivOrdenaPontos() {
             serverUrl = `${window.location.protocol}//${window.location.hostname}`;
             url = `${serverUrl}/health?porta=${OSRMPort}`
         }
-        console.log("\n\n" + url + "\n");
-        alert(url);       
         
         const request = new XMLHttpRequest();
-        alert(url);
         request.open("GET", url, false); // `false` torna a requisição síncrona
         try {
             request.send(null);
