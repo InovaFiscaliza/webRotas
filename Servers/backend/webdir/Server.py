@@ -85,6 +85,29 @@ def get_route():
 
     except requests.RequestException as e:
         return jsonify({"error": f"Falha na comunicação com o servidor OSRM: {str(e)}"}), 500
+################################################################################    
+@app.route("/health", methods=["GET"])
+def get_health():
+    # Parâmetros da requisição (origem e destino)
+    porta = request.args.get("porta")
+    # http://localhost:50002/route/v1/driving/0,0;1,1?overview=false
+    OSRM_SERVER_URL = f"http://127.0.0.1:{porta}"  # Exemplo local
+
+
+    try:
+        # Construir a URL para a requisição ao OSRM
+        osrm_url = f"{OSRM_SERVER_URL}/route/v1/driving/0,0;1,1?overview=false"
+
+        # Requisição ao servidor OSRM
+        osrm_response = requests.get(osrm_url)
+        osrm_response.raise_for_status()  # Verifica se houve erro na requisição
+
+        # Retorna a resposta JSON do OSRM para o cliente Flask
+        return jsonify(osrm_response.json())
+
+    except requests.RequestException as e:
+        return jsonify({"error": f"Falha na comunicação com o servidor OSRM: {str(e)}"}), 500
+
 ################################################################################
 import multiprocessing
 import json

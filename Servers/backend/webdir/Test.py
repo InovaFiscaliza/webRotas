@@ -184,7 +184,7 @@ payload = {
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
     "distancia_pontos": "2000",  # distancia entre pontos em metros
-    "regioes": ""
+    "regioes": regioesBuf
 }
 
 enviar_json(payload, "http://localhost:5001/webrotas")

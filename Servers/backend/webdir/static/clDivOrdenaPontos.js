@@ -4,6 +4,7 @@ fontSize = '10px';   // Tamanho da fonte
 clicouPipetaPontoInicial=false; // Flag para indicar que clicou na pipeta
 var arrayPnts = null;
 var arrayLinhas = null;
+var servidorOnline = true;
 function clDivOrdenaPontos() {
     // Cria a div principal
     
@@ -591,9 +592,6 @@ function clDivOrdenaPontos() {
         });
 
         ReordenaPontosTela(rotaSel);
-        // data = await RefazRotaNoServidor(pontosVisitaOrdenados);
-        // usar aqui rotaSel 
-        // RefazRotaNoServidor(pontosVisitaOrdenados).then(data => 
          
         // Faz de forma sincrona a função assincrona    
         tornarElementosReadonly()
@@ -713,9 +711,12 @@ function clDivOrdenaPontos() {
         return(url);
     }
     ////////////////////////////////
+    servidorOnline = verificarServidorOSMR();
+    ////////////////////////////////
     rotaRecalculada=0;  // Flag deste diálogo que indica se ondem de pontos foi recalculada no servidor
     async function RefazRotaNoServidor(pontosVisita,rotaSel)
     {
+
         IhandleMsg=exibirMensagem('Servidor calculando a nova rota');
         if(recalcularRotaPontoInicial)
             recalcularrota=1;
@@ -761,6 +762,36 @@ function clDivOrdenaPontos() {
         return data;
     }
     ////////////////////////////////
+    function verificarServidorOSMR() {
+
+        // http://localhost:50002/route/v1/driving/0,0;1,1?overview=false
+        if ( window.location.hostname=="127.0.0.1")
+        {
+            //  sem ngrock
+            serverUrl = `${window.location.protocol}//${window.location.hostname}`;
+            url = `${serverUrl}:5001/health?porta=${OSRMPort}`
+        }
+        else
+        {
+            //  no ngrock
+            serverUrl = `${window.location.protocol}//${window.location.hostname}`;
+            url = `${serverUrl}/health?porta=${OSRMPort}`
+        }
+        console.log("\n\n" + url + "\n");
+        alert(url);       
+        
+        const request = new XMLHttpRequest();
+        alert(url);
+        request.open("GET", url, false); // `false` torna a requisição síncrona
+        try {
+            request.send(null);
+            return request.status === 200;
+        } catch (error) {
+            console.error("Erro ao conectar ao servidor OSMR:", error);
+            return false;
+        }
+    }
+    ////////////////////////////////
     function haversine(lat1, lon1, lat2, lon2) {
         const R = 6371e3; // Raio da Terra em metros
         const toRad = Math.PI / 180;
@@ -775,24 +806,6 @@ function clDivOrdenaPontos() {
         return R * c; // Distância em metros
     }
     ////////////////////////////////
-    function filtrarTrechosMenoresQue5km(polylineRotaDat) {
-        if (polylineRotaDat.length < 2) return polylineRotaDat; // Se tiver menos de 2 pontos, retorna como está
-    
-        let novaRota = [polylineRotaDat[0]]; // Sempre mantemos o primeiro ponto
-    
-        for (let i = 1; i < polylineRotaDat.length; i++) {
-            const [lat1, lon1] = novaRota[novaRota.length - 1];
-            const [lat2, lon2] = polylineRotaDat[i];
-    
-            if (haversine(lat1, lon1, lat2, lon2) <= 5000) {
-                novaRota.push([lat2, lon2]);
-            }
-        }
-        return novaRota;
-    }
-
-    ////////////////////////////////
-    
     function RedesenhaRota(polylineRotaDat,rotaSel)
     {
         lat=rotaSel.pontoinicial[0];
@@ -852,7 +865,7 @@ function clDivOrdenaPontos() {
         // arrayPnts = plotPolylineAsPoints(map, polylineRotaDat, color = 'red')
         return poly_lineRota;     
     }
-
+    ////////////////////////////////
     function plotPolylineAsPoints(map, polylineCoords, color = 'blue') {
         // Inicializar o array para armazenar os pontos e as linhas
         let ind = 0;
@@ -890,7 +903,7 @@ function clDivOrdenaPontos() {
         return arrayPnts;
     }
     
-
+    ////////////////////////////////
     function plotPolylineAsPointsOld(map, polylineCoords, color = 'blue') {
         // Criar a polyline no mapa
 
@@ -922,7 +935,7 @@ function clDivOrdenaPontos() {
         });
         return arrayPnts;
     }
-  
+    ////////////////////////////////
     function removLines(linesArray) 
     {
         if(linesArray==null)
@@ -932,7 +945,7 @@ function clDivOrdenaPontos() {
             line.remove();  // Remove a linha do mapa
         });
     }
-
+    ////////////////////////////////
     function clearPlottedPoints(arrayPnts, map) {
         if (arrayPnts) {
             arrayPnts.forEach(point => map.removeLayer(point)); // Remove cada ponto do mapa

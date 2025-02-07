@@ -1056,9 +1056,10 @@ if (navigator.geolocation)
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
  function AtualizaGps() {
+    if(gpsAtivado==false)
+        return;
     // navigator.geolocation.getCurrentPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
     geoLocationId=navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
-
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 bAtiva=false;
