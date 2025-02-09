@@ -39,6 +39,11 @@ Instalação
 
     Se o instalador pergutar: "Note: If you would like to use docker compose up or docker-compose with Podman, enable docker compatability.", Habilite.
 
+    
+    Instalar o Windows Subsystem for Linux e reinicie o computador 
+        
+        wsl.exe --install
+
 5. Baixar e instalar o python
 
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
