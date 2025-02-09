@@ -43,6 +43,9 @@ Instalação
     Instalar o Windows Subsystem for Linux e reinicie o computador 
         
         wsl.exe --install
+    
+    Dentro do podman desktop na página Dashboard e selecione "Install" para instalar o podman. Você deve ter ao menos 5gb de memória para
+    o executar.
 
 5. Baixar e instalar o python
 
