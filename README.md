@@ -45,9 +45,28 @@ Instalação
 
     Anote o diretório de instalação (Geralmente c:/User/SeuNomeDeUsuario)
 
-    Abra uma Anaconda Prompt que aparecera no menu de aplicativos do Windows 11 e crie o ambiente webrotas do python 
+
+
+6. Configure seu ambiente de trabalho
+
+    Abra um Anaconda Prompt que aparecera no menu de aplicativos do Windows 11 e crie o ambiente webrotas do python 
 
     conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
+
+    Edite o arquivo C:\Users\<SeuNomeDeUsuario>\webRotas\Servers\backend\webdir\promptwork.bat e ajuste a linha:
+        call C:\Users\<SeuNomeDeUsuario>\miniconda3\condabin\conda.bat activate webrotas
+
+    Ajuste o nome de usuário para o seu.
+
+7. Testar a execução do sistema
+
+    Clique no arquivo C:\Users\<SeuNomeDeUsuario>\webRotas\Servers\backend\webdir\promptwork.bat por duas vezes e abra dois prompts de trabalho. 
+
+    No primeiro digite python Server.py para executar o servidor python.
+
+    No primeiro digite python Test2.py para executar testar a execução do sistema.
+
+
 
 
 
