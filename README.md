@@ -43,7 +43,13 @@ Instalação
 
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
 
-    
+    Anote o diretório de instalação (Geralmente c:/User/SeuNomeDeUsuario)
+
+    Abra uma Anaconda Prompt que aparecera no menu de aplicativos do Windows 11 e crie o ambiente webrotas do python 
+
+    conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
+
+
 
     
 
