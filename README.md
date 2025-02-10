@@ -38,14 +38,13 @@ Instalação
         
         wsl.exe --install
 
-    Em alguns sistemas você pode ser perguntado a habilitar o recurso de maquina virtual. Neste site temos maiores esclarecimentos 
-    deste processo.
+    Em alguns sistemas, pode ser necessário habilitar o recurso de máquina virtual. Neste site, você encontrará mais detalhes sobre esse processo.
 
         https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature
 
-    Você habilitar na Bios, dependendo de sua bios e tipo de cpu, intel ou amd, o procedimento é diferente.  
+    Se for necessário habilitar essa opção na BIOS, o procedimento pode variar dependendo do modelo da BIOS e do tipo de CPU, seja Intel ou AMD.
 
-    Outra opção é abrir uma linha de comando do PowerShell no modo administrador e digitar o seguinte comando:
+    Em algumas máquinas, pode ser necessário habilitar a opção manualmente. Outra alternativa é abrir o PowerShell como administrador e executar o seguinte comando:
 
         dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
 
@@ -61,12 +60,12 @@ Instalação
 
         https://podman-desktop.io/downloads/windows
 
-    O baixe diretamente daqui e instale
+    Ou execute este comando e instale
 
         wget https://github.com/podman-desktop/podman-desktop/releases/download/v1.16.1/podman-desktop-1.16.1-setup-x64.exe
 
     Se o instalador pergutar: "Note: If you would like to use docker compose up or docker-compose with Podman, enable docker 
-    compatibility.", Habilite.
+    compatibility.", habilite.
     
     Após isso abra o podman desktop novamente 
     
@@ -91,7 +90,7 @@ Instalação
 
         call C:\Users\<SeuNomeDeUsuario>\miniconda3\condabin\conda.bat activate webrotas
 
-    Ajuste o nome de usuário para o seu, este é diretorio onde se localizam todos aquivos python de desenvolvimento.
+    Ajuste o nome de usuário para o seu, este é diretorio onde se localizam todos aquivos python de desenvolvimento. Atenção caso tenha usado outro disco diferente do C:
 
 7. Baixar os arquivos de dados
 
@@ -148,18 +147,18 @@ Instalação
 
     Verifique no Podman Desktop se o podman está executando, Olhe nas ultimas linhas do Dashboard e verifique se ele está com o status RUNNING.
 
-    No primeiro digite python Server.py para executar o servidor python.
+    No primeiro prompt digite python Server.py para executar o servidor python.
 
-    No segundo digite python Test2.py para executar um testa de execução do sistema.
+    No segundo prompt digite python Test2.py para executar um testa de execução do sistema.
 
     Ao fim da execução do script Test2.py ele mostrará a resposta json do server e se for posível abrirá uma janela web com a resposta
     em html.
 
-    Importante, durante o desnvolvimento pode ocorrer de o sistema falhar no meio de uma criação de indices mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
+    Importante, durante o desenvolvimento pode ocorrer de o sistema falhar no meio de uma criação de indices, mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
 
     No diretório \webRotas\Servers\backend\webdir\logs você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
 
-    Outra opção de depurar os containers é na tela do podman desktop, onde encontramos a lista de containers em execução, clicar sobre eles. E ver suas telas de saída e log.
+    Outra opção para depurar os containers é usar o Podman Desktop. Na interface, você pode visualizar a lista de containers em execução, clicar sobre um deles e acessar suas telas de saída e logs.
 
 
 
