@@ -12,11 +12,11 @@ rem Rodar servidor
 podman machine init
 podman machine start
 
-podman stop osrm_%USER%
-podman load -i osrm_webrota.tar
+podman stop osmr_%USER%
+podman load -i osmr_webrota.tar
 
 rem start podman run --rm --name osm_servidor -m 32g -t -i -p 5000:5000 -v ".\%DIRETORIO_REGIAO%:/data/%DIRETORIO_REGIAO%" localhost/osrm_webrota osrm-routed --algorithm mld /data/%DIRETORIO_REGIAO%/%DIRETORIO_REGIAO%-latest.osrm
-podman run --rm --name osrm_%USER% -m 32g -t -i -p %PORTA%:5000 -v ".\TempData\filtro_%USER%:/data/%DIRETORIO_REGIAO%" localhost/osrm_webrota  osrm-routed --algorithm mld /data/%DIRETORIO_REGIAO%/filtro-latest.osm.pbf
+podman run --rm --name osmr_%USER% -m 32g -t -i -p %PORTA%:5000 -v ".\TempData\filtro_%USER%:/data/%DIRETORIO_REGIAO%" localhost/osmr_webrota  osrm-routed --algorithm mld /data/%DIRETORIO_REGIAO%/filtro-latest.osm.pbf
 
 exit /b
 :Erro
