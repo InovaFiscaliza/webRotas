@@ -13,9 +13,13 @@ Instalação
 
     git --version
 
+    Se não estiver instalado acesse o site abaixo e o instale.
+
     https://git-scm.com/downloads
 
-2. Instalar o utilitário de download wget, em caso de falha no uso após as instalações, recarregue os prompts para os novos paths estarem atualizados
+    Em caso de falha no uso após as instalações, recarregue os prompts para os novos paths estarem atualizados.
+
+2. Instalar o utilitário de download wget
 
     Abra o Prompt de Comando (cmd) ou PowerShell e digite: 
 
