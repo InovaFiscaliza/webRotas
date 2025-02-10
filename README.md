@@ -134,7 +134,7 @@ Instalação
     f - Ir para o diretório \webRotas\Servers\backend\webdir
 
         mkdir logs
-        
+
 
 
 8. Testar a execução do sistema
@@ -147,6 +147,8 @@ Instalação
 
     Ao fim da execução do script Test2.py ele mostrará a resposta json do server e se for posível abrirá uma janela web com a resposta
     em html.
+
+    Importante, durante o desnvolvimento pode ocorrer de o sistema falar no meio de uma criação de indices de um mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
 
 
 
