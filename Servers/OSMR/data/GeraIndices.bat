@@ -11,7 +11,7 @@ rem podman save -o osmr_webrota.tar osmr_webrota
 rem Comandos preparatórios
 podman machine init
 podman machine start
-podman stop osrm_%USER%
+podman stop osmr_%USER%
 podman load -i osmr_webrota.tar
 podman run --rm --name temp1%USER% -m 32g -t -v "%DIRETORIO_REGIAO%:/data/%DIRETORIO_REGIAO%" localhost/osrm_webrota osrm-extract -p /opt/car.lua /data/%DIRETORIO_REGIAO%/filtro-latest.osm.pbf
 podman run --rm --name temp2%USER% -m 32g -t -v "%DIRETORIO_REGIAO%:/data/%DIRETORIO_REGIAO%" localhost/osrm_webrota osrm-partition /data/%DIRETORIO_REGIAO%/filtro-latest.osm.pbf
