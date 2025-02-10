@@ -134,6 +134,7 @@ Instalação
     f - Ir para o diretório \webRotas\Servers\backend\webdir
 
         mkdir logs
+        mkdir templates
 
 
 
