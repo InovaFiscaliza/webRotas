@@ -87,7 +87,7 @@ Instalação
 
         call C:\Users\<SeuNomeDeUsuario>\miniconda3\condabin\conda.bat activate webrotas
 
-    Ajuste o nome de usuário para o seu.
+    Ajuste o nome de usuário para o seu, este é diretorio onde se localizam todos aquivos python de desenvolvimento.
 
 7. Baixar os arquivos de dados
 
@@ -148,7 +148,7 @@ Instalação
     Ao fim da execução do script Test2.py ele mostrará a resposta json do server e se for posível abrirá uma janela web com a resposta
     em html.
 
-    Importante, durante o desnvolvimento pode ocorrer de o sistema falar no meio de uma criação de indices de um mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
+    Importante, durante o desnvolvimento pode ocorrer de o sistema falhar no meio de uma criação de indices mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
 
 
 
