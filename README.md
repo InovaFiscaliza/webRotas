@@ -150,6 +150,10 @@ Instalação
 
     Importante, durante o desnvolvimento pode ocorrer de o sistema falhar no meio de uma criação de indices mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
 
+    No diretório \webRotas\Servers\backend\webdir\logs você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos coontainer nesse logo vc encontra.
+
+    Outra opção de depurar os containers é na tela do podman desktop, onde encontramos a lista de containers em execução, clicar sobre eles. E ver suas telas de saída e log.
+
 
 
 
