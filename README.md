@@ -111,7 +111,7 @@ Instalação
 
     c - Ir para o diretório \webRotas\Servers\Osmosis>
 
-        Rodar os seguintes comandos para gerar um imagem estática osmosis_webrota.tar do container osmosis para funcionamento caso o docker.io saia do ar ou esse container desapareça.
+        Rodar os seguintes comandos para gerar um imagem estática osmosis_webrota.tar do container osmosis para funcionamento caso o docker.io saia do ar ou esse container desapareça. Atenção, redes wifi antigas em ponto de sinal fraco ocorrem erros no download dos containeres, esteja atento quando o podman run falhar mais de uma vez.
 
         mkdir TempData
         mkdir brazil
