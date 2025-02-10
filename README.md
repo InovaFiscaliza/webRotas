@@ -37,15 +37,27 @@ Instalação
 
     wget https://github.com/podman-desktop/podman-desktop/releases/download/v1.16.1/podman-desktop-1.16.1-setup-x64.exe
 
-    Se o instalador pergutar: "Note: If you would like to use docker compose up or docker-compose with Podman, enable docker compatability.", Habilite.
+    Se o instalador pergutar: "Note: If you would like to use docker compose up or docker-compose with Podman, enable docker 
+    compatibility.", Habilite.
+    
+    Em alguns sistemas você pode ser perguntado a habilitar o recurso de maquina virtual. Neste site temos maiores esclarecimentos 
+    deste processo.
 
+    https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature
+
+    Para isso abra uma linha de comando do PowerShell no modo administrador e digite o seguinte comando:
+
+    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+
+    Após isso abra o podman desktop novamente 
     
     Instalar o Windows Subsystem for Linux e reinicie o computador 
         
         wsl.exe --install
     
-    Dentro do podman desktop na página Dashboard e selecione "Install" para instalar o podman. Você deve ter ao menos 5gb de memória para
-    o executar.
+    Dentro do podman desktop na página Dashboard e selecione "Install" para terminar a instalação do podman. Você deve ter ao 
+    menos 5gb de memória para o executar. 
+    Após instalado, o sistema deverá ser reinicializado, Volte para página Dasboard e novamente inicialize o podman.
 
 5. Baixar e instalar o python
 
