@@ -146,16 +146,18 @@ Instalação
 
     Clique no arquivo C:\Users\<SeuNomeDeUsuario>\webRotas\Servers\backend\webdir\promptwork.bat por duas vezes e abra dois prompts de trabalho. 
 
+    Verifique no Podman Desktop se o podman está executando, Olhe nas ultimas linhas do Dashboard e verifique se ele está com o status RUNNING.
+
     No primeiro digite python Server.py para executar o servidor python.
 
-    No primeiro digite python Test2.py para executar testar a execução do sistema.
+    No segundo digite python Test2.py para executar um testa de execução do sistema.
 
     Ao fim da execução do script Test2.py ele mostrará a resposta json do server e se for posível abrirá uma janela web com a resposta
     em html.
 
     Importante, durante o desnvolvimento pode ocorrer de o sistema falhar no meio de uma criação de indices mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
 
-    No diretório \webRotas\Servers\backend\webdir\logs você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos coontainer nesse logo vc encontra.
+    No diretório \webRotas\Servers\backend\webdir\logs você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
 
     Outra opção de depurar os containers é na tela do podman desktop, onde encontramos a lista de containers em execução, clicar sobre eles. E ver suas telas de saída e log.
 
