@@ -1,5 +1,14 @@
 https://inde.gov.br/AreaDownload#
 
+
+    Abrir o site https://inde.gov.br/AreaDownload#
+
+    Procurar os dados - Favelas e Comunidades Urbanas - 2022 IBGE - Instituto Brasileiro de Geografia e Estatística
+    Baixar a opção "Shapefile" essa opção fará o download do arquivo qg_2022_670_fcu_agreg.zip, descomprimir todo seu contendo no
+    diretório \webRotas\Servers\Comunidades
+
+    
+
 https://visualizador.inde.gov.br/Compartilhar?mapas=W3sibm9tZSI6IkNHTUFUOnFnXzIwMjJfNjcwX2ZjdV9hZ3JlZyIsImRlc2NyaWNhbyI6IkZhdmVsYXMgZSBDb211bmlkYWRlcyBVcmJhbmFzIC0gMjAyMiIsIndtcyI6Imh0dHBzOi8vZ2Vvc2Vydmljb3MuaWJnZS5nb3YuYnIvZ2Vvc2VydmVyL0NHTUFUL3dtcyIsImJib3giOlsiLTc0LjAxOCIsIi0zMy43NDIiLCItMjguODc3IiwiNS4yNjcyIl0sInpvb20iOjQsImNlbnRlciI6Wy01Nzg4NjEzLjUyMTI1MDIyNywtMjI3MzAzMC45MjY5ODc2OV0sInNycyI6bnVsbCwidXVpZCI6IjBkOTJiYTY2LTU5NjgtNGEwMC1iNDBiLWY4NTA2ZDRhMzdmNyIsIm1ldGFkYWRvIjoiaHR0cHM6Ly9tZXRhZGFkb3MuaW5kZS5nb3YuYnIvZ2VvbmV0d29yay9zcnYvcG9yL2Nzdz9zZXJ2aWNlPUNTVyZ2ZXJzaW9uPTIuMC4yJnJlcXVlc3Q9R2V0UmVjb3JkQnlJZCZlbGVtZW50U2V0TmFtZT1mdWxsJm91dHB1dFNjaGVtYT1jc3c6SXNvUmVjb3JkJmlkPTBkOTJiYTY2LTU5NjgtNGEwMC1iNDBiLWY4NTA2ZDRhMzdmNyJ9XQ==#
 
 

@@ -27,33 +27,44 @@ Instalação
 
     git clone https://github.com/InovaFiscaliza/webRotas.git
 
+
+4. Instalar o wsl
+
+    Instalar o Windows Subsystem for Linux e reinicie o computador 
+        
+        wsl.exe --install
+
+    Em alguns sistemas você pode ser perguntado a habilitar o recurso de maquina virtual. Neste site temos maiores esclarecimentos 
+    deste processo.
+
+        https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature
+
+    Você habilitar na Bios, dependendo de sua bios e tipo de cpu, intel ou amd, o procedimento é diferente.  
+
+    Outra opção é abrir uma linha de comando do PowerShell no modo administrador e digitar o seguinte comando:
+
+        dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+
+    Feitas essa operações, repita a instalação do wsl
+
+         wsl.exe --install       
+
+
+
 4. Baixar e instalar o podman desktop
 
     Faça o download deste url e instale
 
-    https://podman-desktop.io/downloads/windows
+        https://podman-desktop.io/downloads/windows
 
     O baixe diretamente daqui e instale
 
-    wget https://github.com/podman-desktop/podman-desktop/releases/download/v1.16.1/podman-desktop-1.16.1-setup-x64.exe
+        wget https://github.com/podman-desktop/podman-desktop/releases/download/v1.16.1/podman-desktop-1.16.1-setup-x64.exe
 
     Se o instalador pergutar: "Note: If you would like to use docker compose up or docker-compose with Podman, enable docker 
     compatibility.", Habilite.
     
-    Em alguns sistemas você pode ser perguntado a habilitar o recurso de maquina virtual. Neste site temos maiores esclarecimentos 
-    deste processo.
-
-    https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature
-
-    Para isso abra uma linha de comando do PowerShell no modo administrador e digite o seguinte comando:
-
-    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-
     Após isso abra o podman desktop novamente 
-    
-    Instalar o Windows Subsystem for Linux e reinicie o computador 
-        
-        wsl.exe --install
     
     Dentro do podman desktop na página Dashboard e selecione "Install" para terminar a instalação do podman. Você deve ter ao 
     menos 5gb de memória para o executar. 
@@ -63,8 +74,7 @@ Instalação
 
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
 
-    Anote o diretório de instalação (Geralmente c:/User/SeuNomeDeUsuario)
-
+    Anote o diretório de instalação (Geralmente c:/User/<SeuNomeDeUsuario>)
 
 
 6. Configure seu ambiente de trabalho
@@ -74,17 +84,70 @@ Instalação
     conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
 
     Edite o arquivo C:\Users\<SeuNomeDeUsuario>\webRotas\Servers\backend\webdir\promptwork.bat e ajuste a linha:
+
         call C:\Users\<SeuNomeDeUsuario>\miniconda3\condabin\conda.bat activate webrotas
 
     Ajuste o nome de usuário para o seu.
 
-7. Testar a execução do sistema
+7. Baixar os arquivos de dados
+
+
+    a - Ir para o diretório \webRotas\Servers\BR_Municipios_2022 e baixar os shapefiles dos limites municipais
+    
+        wget https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/BR_Municipios_2022.zip
+
+        Descomprimir todo o conteudo deste arquivo neste diretório.
+
+    b - Ir para o diretório \webRotas\Servers\Comunidades
+
+        Abrir o site https://inde.gov.br/AreaDownload#
+
+        Procurar os dados - Favelas e Comunidades Urbanas - 2022 IBGE - Instituto Brasileiro de Geografia e Estatística
+        Baixar a opção "Shapefile" essa opção fará o download do arquivo qg_2022_670_fcu_agreg.zip, descomprimir todo seu contendo no
+        diretório \webRotas\Servers\Comunidades
+
+    c - Ir para o diretório \webRotas\Servers\Osmosis>
+
+        Rodar os seguintes comandos para gerar um imagem estática osmosis_webrota.tar do container osmosis para funcionamento caso o docker.io saia do ar ou esse container desapareça.
+
+        mkdir TempData
+        mkdir brazil
+        podman run --name osmosis -v .:/data yagajs/osmosis osmosis
+        podman commit osmosis osmosis_webrota
+        podman save -o osmosis_webrota.tar osmosis_webrota
+
+    d - Ir para o diretório \webRotas\Servers\Osmosis\brazil>
+
+        Baixar mapa de todo o Brasil do site https://download.geofabrik.de/south-america/brazil.html usando o comando abaixo
+
+        wget https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
+
+    e - Ir para o diretório \webRotas\Servers\OSMR\data>
+
+        Rodar os seguintes comandos
+
+        mkdir TempData
+        podman run --name osmr -v .:/data osrm/osrm-backend
+        podman commit osmr osmr_webrota
+        podman save -o osmr_webrota.tar osmr_webrota
+
+    f - Ir para o diretório \webRotas\Servers\backend\webdir
+
+        mkdir logs
+        
+
+
+8. Testar a execução do sistema
 
     Clique no arquivo C:\Users\<SeuNomeDeUsuario>\webRotas\Servers\backend\webdir\promptwork.bat por duas vezes e abra dois prompts de trabalho. 
 
     No primeiro digite python Server.py para executar o servidor python.
 
     No primeiro digite python Test2.py para executar testar a execução do sistema.
+
+    Ao fim da execução do script Test2.py ele mostrará a resposta json do server e se for posível abrirá uma janela web com a resposta
+    em html.
+
 
 
 
