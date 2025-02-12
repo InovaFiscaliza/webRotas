@@ -23,19 +23,16 @@ Instalação
    https://git-scm.com/downloads
 
    Em caso de falha no uso após as instalações, recarregue os prompts para os novos paths estarem atualizados.
-
 2. Instalar o utilitário de download wget
 
    Abra o Prompt de Comando (cmd) ou PowerShell e digite:
 
    winget install wget
-
 3. Clonar o repositório
 
    No terminal (cmd, PowerShell ou Git Bash), navegue até o diretório onde deseja salvar o projeto e execute:
 
    git clone https://github.com/InovaFiscaliza/webRotas.git
-
 4. Instalar o wsl
 
    Instalar o Windows Subsystem for Linux e reinicie o computador
@@ -55,7 +52,6 @@ Instalação
    Feitas essa operações, repita a instalação do wsl
 
    wsl.exe --install
-
 5. Baixar e instalar o podman desktop
 
    Faça o download deste url e instale
@@ -74,26 +70,17 @@ Instalação
    Dentro do podman desktop na página Dashboard e selecione "Install" para terminar a instalação do podman. Você deve ter ao
    menos 5gb de memória para o executar.
    Após instalado, o sistema deverá ser reinicializado, Volte para página Dasboard e novamente inicialize o podman.
-
 6. Baixar e instalar o python
 
    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
 
    Anote o diretório de instalação (Geralmente c:/User/SeuNomeDeUsuario)
-
 7. Configure seu ambiente de trabalho
 
    Abra um Anaconda Prompt que aparecera no menu de aplicativos do Windows 11 e crie o ambiente webrotas do python
 
    conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
-
-   Edite o arquivo C:\Users\SeuNomeDeUsuario\webRotas\Servers\backend\webdir\promptwork.bat e ajuste a linha:
-
-   call C:\Users\SeuNomeDeUsuario\miniconda3\condabin\conda.bat activate webrotas
-
-   Ajuste o nome de usuário para o seu, este é diretorio onde se localizam todos aquivos python de desenvolvimento. Atenção caso tenha usado outro disco diferente do C:
-
-8. Baixar os arquivos de dados
+9. Baixar os arquivos de dados
 
    a - Ir para o diretório \webRotas\Servers\BR_Municipios_2022 e baixar os shapefiles dos limites municipais
 
@@ -138,22 +125,21 @@ Instalação
 
    mkdir logs
    mkdir templates
+10. Testar a execução do sistema
 
-9. Testar a execução do sistema
+    Clique no arquivo C:\Users\SeuNomeDeUsuario\webRotas\Servers\backend\webdir\promptwork.bat por duas vezes e abra dois prompts de trabalho.
 
-   Clique no arquivo C:\Users\SeuNomeDeUsuario\webRotas\Servers\backend\webdir\promptwork.bat por duas vezes e abra dois prompts de trabalho.
+    Verifique no Podman Desktop se o podman está executando, Olhe nas ultimas linhas do Dashboard e verifique se ele está com o status RUNNING.
 
-   Verifique no Podman Desktop se o podman está executando, Olhe nas ultimas linhas do Dashboard e verifique se ele está com o status RUNNING.
+    No primeiro prompt digite python Server.py para executar o servidor python.
 
-   No primeiro prompt digite python Server.py para executar o servidor python.
+    No segundo prompt digite python Test2.py para executar um testa de execução do sistema.
 
-   No segundo prompt digite python Test2.py para executar um testa de execução do sistema.
+    Ao fim da execução do script Test2.py ele mostrará a resposta json do server e se for posível abrirá uma janela web com a resposta
+    em html.
 
-   Ao fim da execução do script Test2.py ele mostrará a resposta json do server e se for posível abrirá uma janela web com a resposta
-   em html.
+    Importante, durante o desenvolvimento pode ocorrer de o sistema falhar no meio de uma criação de indices, mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
 
-   Importante, durante o desenvolvimento pode ocorrer de o sistema falhar no meio de uma criação de indices, mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
+    No diretório \webRotas\Servers\backend\webdir\logs você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
 
-   No diretório \webRotas\Servers\backend\webdir\logs você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
-
-   Outra opção para depurar os containers é usar o Podman Desktop. Na interface, você pode visualizar a lista de containers em execução, clicar sobre um deles e acessar suas telas de saída e logs.
+    Outra opção para depurar os containers é usar o Podman Desktop. Na interface, você pode visualizar a lista de containers em execução, clicar sobre um deles e acessar suas telas de saída e logs.
