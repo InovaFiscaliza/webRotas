@@ -7,7 +7,7 @@ Kit de ferramentas para gerenciamento de rotas de veículos, para atividades de 
 <p align="center">
   <img src="images/pntsVisita.jpg" width="200" style="margin-right: 10px;">
   <img src="images/drvTest.jpg" width="200" style="margin-right: 10px;">
-  <img src="images/pntsVisita.jpg" width="200">
+  <img src="images/abrangencia.jpg" width="200">
 </p>
 
 
