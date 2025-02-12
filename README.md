@@ -82,9 +82,9 @@ Instalação
 
    conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
 
-   Edite o arquivo C:\Users\<SeuNomeDeUsuario>\webRotas\Servers\backend\webdir\promptwork.bat e ajuste a linha:
+   Edite o arquivo C:\Users\\<SeuNomeDeUsuario>\webRotas\Servers\backend\webdir\promptwork.bat e ajuste a linha:
 
-   call C:\Users\<SeuNomeDeUsuario>\miniconda3\condabin\conda.bat activate webrotas
+   call C:\Users\\<SeuNomeDeUsuario>\miniconda3\condabin\conda.bat activate webrotas
 
    Ajuste o nome de usuário para o seu, este é diretorio onde se localizam todos aquivos python de desenvolvimento. Atenção caso tenha usado outro disco diferente do C:
 8. Baixar os arquivos de dados
