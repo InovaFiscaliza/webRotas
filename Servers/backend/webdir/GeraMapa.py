@@ -71,7 +71,7 @@ def WriteToFile(file_path, content):
         print(f"Erro ao gravar no arquivo: {e}")
 ###########################################################################################################################    
 def GeraElevationTable():
-    wr.wLog(f"GeraElevationTable - MaxAltitude - {wr.MaxAltitude}")
+    wr.wLog(f"GeraElevationTable")
     nomeuser=wr.UserData.nome
     fileElevation = f'static/elevation_table{nomeuser}.png'
     wr.generate_elevation_table_png(output_filename=fileElevation,max_elevation=wr.MaxAltitude)     
@@ -100,7 +100,6 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     GeraStaticIcon("GpsAtivo")
     GeraStaticIcon("Kml")
     
-    globalMaxElevation = wr.MaxAltitude 
     GeraElevationTable()    
     
     if static:
@@ -120,7 +119,8 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     footer = GeraFooter()
     tilesMap0 = """
             var map = L.map('map').setView([-22.9035, -43.1034], 13);
-            var globalMaxElevation = """ + str(globalMaxElevation) +""";
+            var globalMaxElevation = """ + str(wr.MaxAltitude ) +""";
+            var globalMinElevation = """ + str(wr.MinAltitude ) +""";
             var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'

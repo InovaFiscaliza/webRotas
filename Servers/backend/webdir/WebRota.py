@@ -387,13 +387,73 @@ def AltitudeEtopo2New(lat,lon):
     altitude = get_altitudeNetCDF(latitude, longitude)
     wLog(f"A altitude em ({latitude}, {longitude}) é {altitude} metros.")
     return altitude;
+###########################################################################################################################    
+def getElevationOpenElev(latitude, longitude):
+    """
+    Obtém a elevação de uma localização usando a API Open-Elevation.
+
+    Args:
+        latitude (float): Latitude da localização.
+        longitude (float): Longitude da localização.
+
+    Returns:
+        float: Elevação em metros. Retorna 0 em caso de erro.
+    """
+    url = "https://api.open-elevation.com/api/v1/lookup"
+    params = {
+        "locations": f"{latitude},{longitude}"
+    }
+
+    try:
+        # Faz a requisição à API
+        response = requests.get(url, params=params, timeout=10)  # Timeout de 10 segundos
+
+        # Verifica se a requisição foi bem-sucedida
+        response.raise_for_status()
+
+        # Tenta decodificar o JSON da resposta
+        data = response.json()
+
+        # Verifica se a resposta contém os dados esperados
+        if "results" in data and len(data["results"]) > 0:
+            return round(data['results'][0]['elevation'])
+        else:
+            wLog("getElevationOpenElev Erro: Resposta da API não contém dados válidos.")
+            return 0
+
+    except requests.exceptions.RequestException as e:
+        # Captura erros relacionados à requisição (conexão, timeout, etc.)
+        print(f"getElevationOpenElev Erro na requisição: {e}")
+        return 0
+
+    except ValueError as e:
+        # Captura erros de decodificação JSON
+        print(f"getElevationOpenElev Erro ao decodificar JSON: {e}")
+        return 0
+
+    except KeyError as e:
+        # Captura erros de chave ausente no JSON
+        print(f"getElevationOpenElev Erro no formato da resposta: {e}")
+        return 0
 ###########################################################################################################################
-MaxAltitudeMin=500
-MaxAltitude=MaxAltitudeMin
+MinAltitude=0
+MaxAltitude=0
 ###########################################################################################################################
 def AltitudeAnatelServer(latitude, longitude):
-    return 0
+    
+    global MinAltitude
+    global MaxAltitude
+    altitude = getElevationOpenElev(latitude, longitude)
+    
+    # Atualiza a altitude máxima
+    if altitude > MaxAltitude:
+        MaxAltitude = altitude
 
+    # Atualiza a altitude mínima
+    # if altitude < MinAltitude:
+    #    MinAltitude = altitude    
+    
+    return altitude
     """
     Retorna a altitude (elevation) de uma localização a partir das coordenadas latitude e longitude.
     
@@ -405,13 +465,21 @@ def AltitudeAnatelServer(latitude, longitude):
         float: Altitude em metros.
     """
     url = f"https://fiscalizacao.anatel.gov.br/api/v1/lookup?locations={latitude},{longitude}"
-    print (url)
+    print(f"URL da requisição: {url}")  # Imprime a URL para depuração
+    
     try:
+        # Faz a requisição à API
         response = requests.get(url)
+        print(f"Status da resposta: {response.status_code}")  # Imprime o status da resposta
+        print(f"Conteúdo da resposta: {response.text}")  # Imprime o conteúdo da resposta para depuração
+        
+        # Verifica se a requisição foi bem-sucedida
         response.raise_for_status()
+        
+        # Tenta interpretar a resposta como JSON
         data = response.json()
         
-        # Extraindo a altitude do resultado
+        # Extrai a altitude do resultado
         elevation = data['results'][0]['elevation']
         return elevation
     except requests.RequestException as e:
@@ -419,6 +487,9 @@ def AltitudeAnatelServer(latitude, longitude):
         return 0
     except (KeyError, IndexError) as e:
         print(f"Erro ao processar os dados da resposta: {e}")
+        return 0
+    except ValueError as e:
+        print(f"Erro ao decodificar JSON: {e}")
         return 0
 ###########################################################################################################################
 import xarray as xr  # pip install xarray netCDF4 numpy
@@ -1873,6 +1944,16 @@ def DeclaraArrayRotas(RouteDetail):
     
     return RouteDetail   
 ################################################################################
+def PegaAltitudesPVD(pontosvisitaDados):
+    # [-22.930538837645273, -43.25880584301294,"P0","Local", "","0","Ativo"],
+    for i in range(len(pontosvisitaDados)):
+        ponto = pontosvisitaDados[i]
+        lat = ponto[0]
+        lon = ponto[1]
+        alt = AltitudeAnatelServer(lat, lon)
+        pontosvisitaDados[i] = (lat, lon, ponto[2], ponto[3], ponto[4], alt)
+    return pontosvisitaDados
+################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     wLog("PlotaPontosVisita") 
     i=0 
@@ -1893,12 +1974,15 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
 
     if(pontosvisitaDados!=[]):
         pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False)
+        pontosvisitaDados = PegaAltitudesPVD(pontosvisitaDados)  
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
     else:
         pontosvisitaDados = GeraPontosVisitaDados(pontosvisita) 
         pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=True)
+        pontosvisitaDados = PegaAltitudesPVD(pontosvisitaDados)
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)   
-        
+       
+      
     RouteDetail.pontosvisitaDados = pontosvisitaDados
     # Criar um mapa  
     # RouteDetail.mapcode += f"    const map = L.map('map');\n"
@@ -1919,7 +2003,8 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
     for ponto in pontosvisita:
         lat, lon = ponto        
  
-        altitude = AltitudeAnatelServer(lat,lon) 
+        # altitude = AltitudeAnatelServer(lat,lon)
+        altitude = AltitudePontoVisita(pontosvisitaDados, lat, lon) 
         Descricao=DescricaoPontoVisita(pontosvisitaDados, lat, lon)
              
         RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"   
@@ -1949,6 +2034,12 @@ def DescricaoPontoVisita(pontosvisitaDados, lat, lon):
     for ponto in pontosvisitaDados:
         if ponto[0] == lat and ponto[1] == lon:
             return ponto[4]  # Retorna o campo de endereço (4º elemento)
+    return "Endereço não encontrado para a latitude e longitude fornecidas."
+################################################################################
+def AltitudePontoVisita(pontosvisitaDados, lat, lon):
+    for ponto in pontosvisitaDados:
+        if ponto[0] == lat and ponto[1] == lon:
+            return ponto[5] # Retorna o campo de altitude (5º elemento)  
     return "Endereço não encontrado para a latitude e longitude fornecidas."
 ################################################################################
 def RoteamentoOSMR(porta,pontosvisita,pontoinicial,recalcularrota):
