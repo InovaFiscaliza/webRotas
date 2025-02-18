@@ -435,11 +435,51 @@ def getElevationOpenElev(latitude, longitude):
         # Captura erros de chave ausente no JSON
         print(f"getElevationOpenElev Erro no formato da resposta: {e}")
         return 0
-###########################################################################################################################
+###########################################################################################################################    
+def getElevationOpenElevBatch(lat_lons, batch_size):
+    """
+    Obtém a elevação de múltiplas localizações usando a API Open-Elevation em lotes de 100.
+    
+    Args:
+        lat_lons (list): Lista de tuplas contendo latitude e longitude.
+    
+    Returns:
+        list: Lista de elevações em metros. Retorna 0 para coordenadas com erro.
+    """
+    url = "https://api.open-elevation.com/api/v1/lookup"
+    elevations = []
+    
+    for i in range(0, len(lat_lons), batch_size):
+        batch = lat_lons[i:i + batch_size]
+        locations = "|".join([f"{lat},{lon}" for lat, lon in batch])
+        params = {"locations": locations}
+        
+        try:
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            if "results" in data:
+                elevations.extend([round(res["elevation"]) for res in data["results"]])
+            else:
+                elevations.extend([0] * len(batch))
+        
+        except requests.exceptions.RequestException as e:
+            wLog(f"getElevationOpenElevBatch Erro na requisição: {e}")
+            elevations.extend([0] * len(batch))
+        except ValueError as e:
+            wLog(f"getElevationOpenElevBatch Erro ao decodificar JSON: {e}")
+            elevations.extend([0] * len(batch))
+        except KeyError as e:
+            wLog(f"getElevationOpenElevBatch Erro no formato da resposta: {e}")
+            elevations.extend([0] * len(batch))
+    
+    return elevations    
+###########################################################################################################################    
 MinAltitude=0
 MaxAltitude=0
 ###########################################################################################################################
-def AltitudeAnatelServer(latitude, longitude):
+def AltitudeOpenElevation(latitude, longitude):
     
     global MinAltitude
     global MaxAltitude
@@ -491,6 +531,24 @@ def AltitudeAnatelServer(latitude, longitude):
     except ValueError as e:
         print(f"Erro ao decodificar JSON: {e}")
         return 0
+###########################################################################################################################
+def AltitudeOpenElevationBatch(batch,batch_size):
+    
+    global MinAltitude
+    global MaxAltitude
+    lat_lons = [(p[0], p[1]) for p in batch]
+    altitudes = getElevationOpenElevBatch(lat_lons,batch_size)
+    # altitude = getElevationOpenElev(latitude, longitude)
+    
+    # Atualiza a altitude máxima
+    MaxAltitude = max(MaxAltitude, max(altitudes, default=MaxAltitude))
+    
+
+    # Atualiza a altitude mínima
+    # if altitude < MinAltitude:
+    #    MinAltitude = altitude    
+    
+    return altitudes    
 ###########################################################################################################################
 import xarray as xr  # pip install xarray netCDF4 numpy
 import numpy as np
@@ -1894,7 +1952,7 @@ def GeraPontosVisitaDados(pontosvisita):
     pontosvisitaDados=[]
     for ponto in pontosvisita:
         lat, lon = ponto    
-        alt=AltitudeAnatelServer(lat,lon)
+        alt=0
         dado = (lat, lon,f"P{i}","Local","",alt)
         pontosvisitaDados.append(dado)   
         i=i+1     
@@ -1906,7 +1964,7 @@ def MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False):
     for ponto in pontosvisita:
         latitude, longitude = ponto
         linha=PegaLinhaPontosVisitaDados(pontosvisitaDados,latitude,longitude)    
-        alt=AltitudeAnatelServer(latitude,latitude)
+        alt=0
         if(new):
            lin2=linha[3] 
            lin3=linha[4] 
@@ -1950,8 +2008,21 @@ def PegaAltitudesPVD(pontosvisitaDados):
         ponto = pontosvisitaDados[i]
         lat = ponto[0]
         lon = ponto[1]
-        alt = AltitudeAnatelServer(lat, lon)
+        alt = AltitudeOpenElevation(lat, lon)
         pontosvisitaDados[i] = (lat, lon, ponto[2], ponto[3], ponto[4], alt)
+    return pontosvisitaDados
+################################################################################
+def PegaAltitudesPVD_Batch(pontosvisitaDados): # Batch faz chamadas em lote para o OpenElevation
+    batch_size = 100
+    for i in range(0, len(pontosvisitaDados), batch_size):
+        batch = pontosvisitaDados[i:i + batch_size]
+        altitudes = AltitudeOpenElevationBatch(batch,batch_size)
+        for j in range(len(batch)):
+            ponto = batch[j]
+            lat, lon = ponto[0], ponto[1]
+            alt = altitudes[j]
+            pontosvisitaDados[i + j] = (lat, lon, ponto[2], ponto[3], ponto[4], alt)
+
     return pontosvisitaDados
 ################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
@@ -1974,12 +2045,12 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
 
     if(pontosvisitaDados!=[]):
         pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False)
-        pontosvisitaDados = PegaAltitudesPVD(pontosvisitaDados)  
+        pontosvisitaDados = PegaAltitudesPVD_Batch(pontosvisitaDados)  # Batch faz chamadas em lote para o OpenElevation
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
     else:
         pontosvisitaDados = GeraPontosVisitaDados(pontosvisita) 
         pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=True)
-        pontosvisitaDados = PegaAltitudesPVD(pontosvisitaDados)
+        pontosvisitaDados = PegaAltitudesPVD_Batch(pontosvisitaDados) # Batch faz chamadas em lote para o OpenElevation
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)   
        
       
