@@ -109,7 +109,7 @@ function createSvgIconAzulHalf(number) {
     return createCustomSvgIcon(number,[12, 20],[6, 20],"#007bff");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function ElevationColor(elevation) {
+function ElevationColorOld(elevation) {
     // Limita a elevação ao intervalo 0-8900
     max_elevation = globalMaxElevation;
     elevation = Math.max(0, Math.min(max_elevation, elevation));
@@ -119,6 +119,28 @@ function ElevationColor(elevation) {
 
     // Converte a normalização em cores do arco-íris
     const hue = (1 - normalized) * 240; // 240° (azul) a 0° (vermelho)
+    return hslToHex(hue, 100, 50); // Saturação 100%, Luminosidade 50%
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function ElevationColor(elevation) {
+    // Usa os valores globais de elevação mínima e máxima
+    const min_elevation = globalMinElevation;
+    const max_elevation = globalMaxElevation;
+
+    // Evita erro se min_elevation for igual a max_elevation
+    if (max_elevation === min_elevation) {
+        return hslToHex(240, 100, 50); // Retorna azul fixo se não houver variação de elevação
+    }
+
+    // Garante que a elevação esteja dentro dos limites
+    elevation = Math.max(min_elevation, Math.min(max_elevation, elevation));
+
+    // Normaliza a elevação para o intervalo 0-1 considerando min_elevation
+    const normalized = (elevation - min_elevation) / (max_elevation - min_elevation);
+
+    // Converte a normalização em cores do arco-íris (240° azul → 0° vermelho)
+    const hue = (1 - normalized) * 240;
+    
     return hslToHex(hue, 100, 50); // Saturação 100%, Luminosidade 50%
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
