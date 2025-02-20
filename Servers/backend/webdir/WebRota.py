@@ -251,7 +251,7 @@ def hsl_to_hex(h, s, l):
     return f'#{r:02x}{g:02x}{b:02x}'
 ###########################################################################################################################
 # Função para calcular a cor com base na elevação
-def elevation_color(elevation, max_elevation=1000):
+def elevation_colorOld(elevation, max_elevation=1000):
     # Limita a elevação ao intervalo 0-1000
     elevation = max(0, min(max_elevation, elevation))
     
@@ -262,8 +262,36 @@ def elevation_color(elevation, max_elevation=1000):
     hue = (1 - normalized) * 240
     
     return hsl_to_hex(hue, 100, 50)
+    
 ###########################################################################################################################
-def generate_elevations(step, max_elevation):
+def elevation_color(elevation, min_elevation=0, max_elevation=1000):
+    """
+    Calcula a cor associada a uma elevação específica, mapeando de azul (baixa altitude) a vermelho (alta altitude).
+
+    Parâmetros:
+    - elevation (int): Altitude a ser convertida em cor.
+    - min_elevation (int): Altitude mínima considerada na escala.
+    - max_elevation (int): Altitude máxima considerada na escala.
+
+    Retorno:
+    - str: Código hexadecimal da cor correspondente.
+    """
+
+    # Evita divisão por zero caso min_elevation == max_elevation
+    if max_elevation == min_elevation:
+        normalized = 0  # Define um valor padrão (evita erro)
+    else:
+        # Normaliza a elevação para o intervalo 0-1, considerando MinAltitude e MaxAltitude
+        elevation = max(min_elevation, min(max_elevation, elevation))  # Garante que esteja dentro dos limites
+        normalized = (elevation - min_elevation) / (max_elevation - min_elevation)
+
+    # Calcula a cor baseada na escala de matiz (azul 240° → vermelho 0°)
+    hue = (1 - normalized) * 240
+
+    return hsl_to_hex(hue, 100, 50)  # Mantém saturação e luminosidade fixas
+
+###########################################################################################################################
+def generate_elevationsOld(step, max_elevation):
     """
     Gera uma lista de elevações com um intervalo definido pelo passo.
     
@@ -286,7 +314,7 @@ def generate_elevations(step, max_elevation):
 # Função para gerar a imagem com a tabela
 import matplotlib.pyplot as plt
 ###########################################################################################################################
-def generate_elevation_table_png(output_filename='elevation_table.png',max_elevation=1500):
+def generate_elevation_table_pngOld(output_filename='elevation_table.png',max_elevation=1500):
     # Definir as elevacões e gerar as cores associadas
     # elevations = [0, 50, 100, 150, 200, 250, 300, 8900]
     num_itensdisplay = 18
@@ -324,6 +352,75 @@ def generate_elevation_table_png(output_filename='elevation_table.png',max_eleva
     # plt.show()
     img.save(output_filename)
     wLog(f'Tabelas de cores de altitudes salva como {output_filename}')
+
+
+###########################################################################################################################
+def generate_elevation_table_png(output_filename='elevation_table.png', min_elevation=0, max_elevation=1500):
+    """
+    Gera uma tabela de cores representando diferentes faixas de elevação.
+
+    Parâmetros:
+    output_filename (str): Nome do arquivo de saída da imagem.
+    min_elevation (int): Elevação mínima a ser considerada na escala.
+    max_elevation (int): Elevação máxima a ser considerada na escala.
+    """
+    num_itensdisplay = 18  # Número de divisões na tabela
+    elevation_range = max_elevation - min_elevation  # Faixa total de elevação
+    
+    if elevation_range <= 0:
+        print("Erro: min_elevation deve ser menor que max_elevation")
+        return
+
+    elevationSteps = int(elevation_range / num_itensdisplay)  # Passo entre cada nível de elevação
+    elevationItens = int(elevation_range / elevationSteps)  # Número total de níveis
+    
+    elevations = generate_elevations(min_elevation, elevationSteps, max_elevation)
+
+    # Definir as cores associadas
+    colors = [elevation_color(elevation,min_elevation=min_elevation,max_elevation=max_elevation) for elevation in elevations]
+
+    # Definir tamanho da imagem
+    img_width = 150
+    img_height = 600
+    font = ImageFont.truetype("arial.ttf", 8) 
+
+    # Criar nova imagem
+    img = Image.new('RGB', (img_width, img_height), color='white')
+    draw = ImageDraw.Draw(img)
+
+    # Ajustar tamanho da célula
+    cell_height = int(img_height / elevationItens)
+    cell_width = int(img_width * 0.7)
+
+    # Desenhar a tabela
+    for i, (elevation, color) in enumerate(zip(elevations, colors)):
+        draw.rectangle([0, i * cell_height, cell_width, (i + 1) * cell_height], fill=color)
+        draw.text((cell_width + 10, i * cell_height + 10), f'{elevation} m', fill='black', font=font)
+
+    # Salvar a imagem
+    img.save(output_filename)
+    wLog(f'Tabela de cores de altitudes salva como {output_filename}')
+###########################################################################################################################
+def generate_elevations(min_elevation, step, max_elevation):
+    """
+    Gera uma lista de elevações dentro da faixa definida.
+
+    Parâmetros:
+    min_elevation (int): O valor mínimo da elevação.
+    step (int): O passo em metros entre cada elevação.
+    max_elevation (int): O valor máximo da elevação.
+
+    Retorna:
+    list: Lista de elevações entre min_elevation e max_elevation.
+    """
+    elevations = list(range(min_elevation, max_elevation + step, step))
+
+    # Evita duplicação do valor máximo
+    if elevations[-1] > max_elevation:
+        elevations.pop()
+
+    return elevations
+
 ###########################################################################################################################
 import numpy as np
 ###########################################################################################################################
@@ -453,7 +550,12 @@ def getElevationOpenElevBatch(lat_lons, batch_size):
         batch = lat_lons[i:i + batch_size]
         locations = "|".join([f"{lat},{lon}" for lat, lon in batch])
         params = {"locations": locations}
-        
+        zbuf = url + "?" + "&".join([f"{key}={value}" for key, value in params.items()])
+        wLog(f"---------------------------------------------------------") 
+        wLog(f"getElevationOpenElevBatch URL da requisição: {zbuf}")  # Imprime a URL para depuração
+        wLog(str(len(zbuf)))
+        wLog(str(len(lat_lons)))
+        wLog(f"---------------------------------------------------------") 
         try:
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
@@ -476,7 +578,7 @@ def getElevationOpenElevBatch(lat_lons, batch_size):
     
     return elevations    
 ###########################################################################################################################    
-MinAltitude=0
+MinAltitude=50000 # Valor alto para garantir que a primeira altitude seja menor
 MaxAltitude=0
 ###########################################################################################################################
 def AltitudeOpenElevation(latitude, longitude):
@@ -490,8 +592,8 @@ def AltitudeOpenElevation(latitude, longitude):
         MaxAltitude = altitude
 
     # Atualiza a altitude mínima
-    # if altitude < MinAltitude:
-    #    MinAltitude = altitude    
+    if altitude < MinAltitude:
+        MinAltitude = altitude    
     
     return altitude
     """
@@ -540,9 +642,10 @@ def AltitudeOpenElevationBatch(batch,batch_size):
     altitudes = getElevationOpenElevBatch(lat_lons,batch_size)
     # altitude = getElevationOpenElev(latitude, longitude)
     
-    # Atualiza a altitude máxima
-    MaxAltitude = max(MaxAltitude, max(altitudes, default=MaxAltitude))
-    
+
+    if altitudes:  # Verifica se a lista não está vazia
+        MinAltitude = min(MinAltitude, min(altitudes))
+        MaxAltitude = max(MaxAltitude, max(altitudes))    
 
     # Atualiza a altitude mínima
     # if altitude < MinAltitude:
