@@ -371,8 +371,8 @@ def generate_elevation_table_png(output_filename='elevation_table.png', min_elev
         print("Erro: min_elevation deve ser menor que max_elevation")
         return
 
-    elevationSteps = int(elevation_range / num_itensdisplay)  # Passo entre cada nível de elevação
-    elevationItens = int(elevation_range / elevationSteps)  # Número total de níveis
+    elevationSteps = round(elevation_range / num_itensdisplay)  # Passo entre cada nível de elevação
+    elevationItens = round(elevation_range / elevationSteps)  # Número total de níveis
     
     elevations = generate_elevations(min_elevation, elevationSteps, max_elevation)
     colors = [elevation_color_parula(elevation, min_elevation=min_elevation, max_elevation=max_elevation) for elevation in elevations]
@@ -390,8 +390,8 @@ def generate_elevation_table_png(output_filename='elevation_table.png', min_elev
     draw = ImageDraw.Draw(img)
 
     # Ajustar tamanho da célula
-    cell_height = int(img_height / elevationItens)
-    cell_width = int(img_width * 0.7)
+    cell_height = round(img_height / elevationItens)
+    cell_width = round(img_width * 0.7)
 
     # **Desenhar a tabela na ordem inversa**
     for i, (elevation, color) in enumerate(zip(elevations, colors)):
@@ -418,8 +418,8 @@ def generate_elevations(min_elevation, step, max_elevation):
     elevations = list(range(min_elevation, max_elevation + step, step))
 
     # Evita duplicação do valor máximo
-    if elevations[-1] > max_elevation:
-        elevations.pop()
+    # if elevations[-1] > max_elevation:
+    #    elevations.pop()
 
     return elevations
 
@@ -613,8 +613,10 @@ def AltitudeOpenElevationBatch(batch,batch_size):
     lat_lons = [(p[0], p[1]) for p in batch]
     altitudes = getElevationOpenElevBatch(lat_lons,batch_size)
     if altitudes:  # Verifica se a lista não está vazia
-        MinAltitude = int( min(MinAltitude, min(altitudes))) 
-        MaxAltitude = int(max(MaxAltitude, max(altitudes))*1.1)   
+        MinAltitude = min(MinAltitude, min(altitudes)) 
+        MaxAltitude = max(MaxAltitude, max(altitudes))   
+        MinAltitude = int(MinAltitude) 
+        MaxAltitude = int(MaxAltitude)  
     return altitudes    
 ###########################################################################################################################
 import xarray as xr  # pip install xarray netCDF4 numpy
