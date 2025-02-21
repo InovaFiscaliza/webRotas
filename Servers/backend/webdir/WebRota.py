@@ -352,10 +352,11 @@ def elevation_color_parula(elevation, min_elevation=0, max_elevation=1000):
     r, g, b = parula_colors[idx]
 
     return "#{:02x}{:02x}{:02x}".format(r, g, b)
+  
 ###########################################################################################################################
 def generate_elevation_table_png(output_filename='elevation_table.png', min_elevation=0, max_elevation=1500):
     """
-    Gera uma tabela de cores representando diferentes faixas de elevação.
+    Gera uma tabela de cores representando diferentes faixas de elevação, agora de forma inversa.
 
     Parâmetros:
     output_filename (str): Nome do arquivo de saída da imagem.
@@ -374,16 +375,17 @@ def generate_elevation_table_png(output_filename='elevation_table.png', min_elev
     elevationItens = int(elevation_range / elevationSteps)  # Número total de níveis
     
     elevations = generate_elevations(min_elevation, elevationSteps, max_elevation)
+    colors = [elevation_color_parula(elevation, min_elevation=min_elevation, max_elevation=max_elevation) for elevation in elevations]
 
-    # Definir as cores associadas
-    colors = [elevation_color_parula(elevation,min_elevation=min_elevation,max_elevation=max_elevation) for elevation in elevations]
+    # **Inverte as listas para que a maior altitude fique no topo**
+    elevations.reverse()
+    colors.reverse()
 
-    # Definir tamanho da imagem
+    # Configuração da imagem
     img_width = 150
     img_height = 600
-    font = ImageFont.truetype("arial.ttf", 8) 
+    font = ImageFont.truetype("arial.ttf", 8)
 
-    # Criar nova imagem
     img = Image.new('RGB', (img_width, img_height), color='white')
     draw = ImageDraw.Draw(img)
 
@@ -391,7 +393,7 @@ def generate_elevation_table_png(output_filename='elevation_table.png', min_elev
     cell_height = int(img_height / elevationItens)
     cell_width = int(img_width * 0.7)
 
-    # Desenhar a tabela
+    # **Desenhar a tabela na ordem inversa**
     for i, (elevation, color) in enumerate(zip(elevations, colors)):
         draw.rectangle([0, i * cell_height, cell_width, (i + 1) * cell_height], fill=color)
         draw.text((cell_width + 10, i * cell_height + 10), f'{elevation} m', fill='black', font=font)
@@ -399,6 +401,7 @@ def generate_elevation_table_png(output_filename='elevation_table.png', min_elev
     # Salvar a imagem
     img.save(output_filename)
     wLog(f'Tabela de cores de altitudes salva como {output_filename}')
+    
 ###########################################################################################################################
 def generate_elevations(min_elevation, step, max_elevation):
     """
