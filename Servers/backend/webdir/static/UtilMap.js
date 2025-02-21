@@ -8,19 +8,27 @@
  */
 
 var  gpsMarker = null;
+
+var debugLevel =0; // 0 - no debug, 1 - debug
+function wLog(msg) 
+{
+   if(debugLevel == 1)
+      console.log(msg);    
+}    
+
 gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map);
 
 
 document.addEventListener("DOMContentLoaded", function () {
     // Sua função aqui
 
-    console.log("A página foi carregada (DOM completamente construído).");
+    wLog("A página foi carregada (DOM completamente construído).");
 });
 
 window.addEventListener("load", function () {
     // Sua função aqui
     CreateControls();
-    console.log("Todos os recursos da página foram carregados.");
+    wLog("Todos os recursos da página foram carregados.");
 });
 
 
@@ -167,7 +175,7 @@ function getElevationSync(latitude, longitude){
     getElevation(latitude, longitude)
     .then(elevation => {
         if (elevation !== null) {
-            console.log(`Elevation - ${elevation}`)
+            wLog(`Elevation - ${elevation}`)
             return elevation;
         } else {
             return 0;
@@ -271,7 +279,7 @@ function AtualizaPontosvisitaDadosMarquerData(currentMarker,ColunaAtualizar,Novo
     // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"]
     position = currentMarker.getLatLng();
     pontosVisitaDados =  AtualizaPontosvisitaDados(pontosvisitaDados,position.lat, position.lng,ColunaAtualizar,NovoDado);
-    console.log(JSON.stringify(pontosvisitaDados, null, 2));
+    wLog(JSON.stringify(pontosvisitaDados, null, 2));
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function salvarEmCookies(nomeCookie, valor, dias)
@@ -317,11 +325,11 @@ function onMarkerClick(e) {
     const markerId = currentMarker._icon.getAttribute('data-id');
     const clicado = currentMarker._icon.getAttribute('clicado');
     const altitude = currentMarker._icon.getAttribute('altitude');
-    console.log(`Marquer clicado - ID - ${markerId} - Clicado - ${clicado}`)
+    wLog(`Marquer clicado - ID - ${markerId} - Clicado - ${clicado}`)
     // Verifica o ícone atual e troca para o outro
     if (HeadingNorte==0)
     {
-        // console.log(`aqui`)
+        // wLog(`aqui`)
         if (clicado === "0")
         {
             currentMarker.setIcon(clickedIcon);
@@ -359,7 +367,7 @@ function onMarkerClick(e) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function DisableMarker(e)
 {
-    console.log("DisableMarker");
+    wLog("DisableMarker");
     const currentMarker = e;
     const markerId = currentMarker._icon.getAttribute('data-id');
     const clicado = currentMarker._icon.getAttribute('clicado');
@@ -530,7 +538,7 @@ function GetNearestPoint(lat, lon) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
 {
-    console.log("DesabilitaMarquerNoGPSRaioDaEstacao");
+    wLog("DesabilitaMarquerNoGPSRaioDaEstacao");
     const userLocation = {lat: lat, lng: lon};
 
     // Lista de marcadores já adicionados ao mapa
@@ -542,9 +550,9 @@ function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
     markerVet.forEach(marker => {
         const markerCoords = marker.getLatLng(); // Obtém as coordenadas do marcador
         const distance = haversineDistance(userLocation, markerCoords);
-        // console.log("   userLocation - "+String(userLocation));
-        // console.log("   markerCoords - "+String(markerCoords));
-        // console.log("   distance - "+String(distance));
+        // wLog("   userLocation - "+String(userLocation));
+        // wLog("   markerCoords - "+String(markerCoords));
+        // wLog("   distance - "+String(distance));
         if (distance < RaioDaEstacao)
         {
             DisableMarker(marker);
@@ -554,12 +562,12 @@ function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Exemplo de uso
 // const nearestPoint = GetNearestPoint(-22.9000, -43.0500);
-// console.log("Marcador mais próximo está em:", nearestPoint.lat, nearestPoint.lng);
+// wLog("Marcador mais próximo está em:", nearestPoint.lat, nearestPoint.lng);
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function calcularMediaUltimasNCoordenadas(coordinates, n) {
     // Verifica se há coordenadas suficientes
     if (coordinates.length < n) {
-        console.log("Não há coordenadas suficientes para calcular a média");
+        wLog("Não há coordenadas suficientes para calcular a média");
         return null;
     }
 
@@ -589,7 +597,7 @@ function DesenhaRota(coordinates)
         polyRotaAux.remove();
         polyRotaAux = null; // Opcional: redefinir a variável para null
     }
-    console.log("Plotando nova rota auxiliar")
+    wLog("Plotando nova rota auxiliar")
     polyRotaAux = L.polyline(coordinates, {color: 'red', "opacity": 0.7}).addTo(map);
 
     // armazena o inicio da rota para a simulação de movimento buscar a rota ok
@@ -616,7 +624,7 @@ function ServerUrl()
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 async function getRoute(startCoords, endCoords){
-    console.log("getRoute");
+    wLog("getRoute");
     if(ServerTec == "OSMR")
     {
         return getRouteOSMR(startCoords, endCoords);
@@ -634,7 +642,7 @@ async function getRouteGHopper(startCoords, endCoords) {
     // "http://localhost:8989/route?point=-22.87248975925445,-43.08681365669065&point=-22.885656291854495,-43.05230110610495"
 
     const url = `${serverUrl}/route?point=${startCoords[0]},${startCoords[1]}&point=${endCoords[0]},${endCoords[1]}`;
-    console.log("\n\n" + url + "\n");
+    wLog("\n\n" + url + "\n");
 
     try {
         // Fazer a solicitação usando fetch
@@ -648,7 +656,7 @@ async function getRouteGHopper(startCoords, endCoords) {
 
             // Decodificar a geometria usando uma biblioteca como @mapbox/polyline
             coordinates = decodePolyline(geometry); // polyline precisa estar disponível/importada
-            console.log("Coordinates:", coordinates);
+            wLog("Coordinates:", coordinates);
             DesenhaRota(coordinates);
             return coordinates;
         } else {
@@ -667,7 +675,7 @@ async function getRouteOSMR(startCoords, endCoords) {
     // const baseUrl = "{{ url_for('proxy') }}"
 
     // serverUrl = ServerUrl()  // Falhou no ngrock a resposta em json
-    // console.log("URL do servidor:", serverUrl);
+    // wLog("URL do servidor:", serverUrl);
     // const url = `${serverUrl}/osmr/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=polyline&steps=true`;
 
     // ngrok http 5001
@@ -683,7 +691,7 @@ async function getRouteOSMR(startCoords, endCoords) {
        serverUrl = `${window.location.protocol}//${window.location.hostname}`;
        url = `${serverUrl}/route?porta=${OSRMPort}&start=${startCoords[1]},${startCoords[0]}&end=${endCoords[1]},${endCoords[0]}`
     }
-    console.log("\n\n" + url + "\n");
+    wLog("\n\n" + url + "\n");
 
     try {
         // Fazer a solicitação usando fetch
@@ -697,7 +705,7 @@ async function getRouteOSMR(startCoords, endCoords) {
 
             // Decodificar a geometria usando uma biblioteca como @mapbox/polyline
             coordinates = decodePolyline(geometry); // polyline precisa estar disponível/importada
-            // console.log("Coordinates:", coordinates);
+            // wLog("Coordinates:", coordinates);
             DesenhaRota(coordinates);
             return coordinates;
         } else {
@@ -814,7 +822,7 @@ async function obterHeadingOsrm(lat, lon) {
             if (data.waypoints && data.waypoints.length > 0) {
                 // Captura o bearing (heading)
                 const heading = data.waypoints[0].bearing;
-                console.log(`Heading encontrado: ${heading} graus`);
+                wLog(`Heading encontrado: ${heading} graus`);
                 return heading;
             } else {
                 console.error("Nenhum waypoint encontrado.");
@@ -934,7 +942,7 @@ function updateGPSPositionKalman(position) {
         }
     }
 
-    console.log(`Posição estimada: Latitude: ${kalmanState.latitude}, Longitude: ${kalmanState.longitude}, Heading: ${kalmanState.heading}`);
+    wLog(`Posição estimada: Latitude: ${kalmanState.latitude}, Longitude: ${kalmanState.longitude}, Heading: ${kalmanState.heading}`);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function updateGPSPosition(position) {
@@ -942,13 +950,13 @@ function updateGPSPosition(position) {
     if(gpsAtivado==false)
         return
     if (position === undefined) {
-        console.log("A posição é undefined.");
+        wLog("A posição é undefined.");
         return;
     }
 
     latitude = position.coords.latitude;
     longitude = position.coords.longitude;
-    console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+    wLog(`Latitude: ${latitude}, Longitude: ${longitude}`);
     heading = position.coords.heading;
     speed = position.coords.speed;
 
@@ -992,30 +1000,30 @@ function updateGPSPosition(position) {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetNextActivePoint() {
-    console.log("GetNextActivePoint");
+    wLog("GetNextActivePoint");
 
     let ind = 0;
 
     for (let ponto of pontosVisitaOrdenados) {
         let [lati, loni] = ponto;
-        console.log("------------");
-        console.log("lati - " + String(lati));
-        console.log("loni - " + String(loni));
+        wLog("------------");
+        wLog("lati - " + String(lati));
+        wLog("loni - " + String(loni));
 
         let stringPn = "P" + String(ind);
         let bAtivo = EncontrarDado(pontosvisitaDados, lati, loni, 6);
 
-        console.log("bAtivo - " + bAtivo);
+        wLog("bAtivo - " + bAtivo);
 
         if (bAtivo === "Ativo") {
-            console.log("Encontrou ponto ativo");
+            wLog("Encontrou ponto ativo");
 
             let pnt = {
                 lat: lati,
                 lng: loni
             };
 
-            console.log("pnt.lat - " + String(pnt.lat));
+            wLog("pnt.lat - " + String(pnt.lat));
             return pnt; // Retorna o primeiro ponto ativo encontrado
         }
 
@@ -1028,7 +1036,7 @@ function GetNextActivePoint() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetRouteCarFromHere(latitude,longitude)
 {
-   console.log("Tentando pegar rota")
+   wLog("Tentando pegar rota")
    startCoords = [];
    endCoords = [];
 
@@ -1038,18 +1046,18 @@ function GetRouteCarFromHere(latitude,longitude)
 
    if(GpsProximoPonto=="ProximoDaRota")
    {
-      console.log("ProximoDaRota algoritmo");
+      wLog("ProximoDaRota algoritmo");
       nearestPoint = GetNextActivePoint();
    } 
    else  // "MaisProximo"   2.856775150175865, -60.634694963294585
    { 
-      console.log("MaisProximo algoritmo");
+      wLog("MaisProximo algoritmo");
       nearestPoint = GetNearestPoint(latitude, longitude);
    }   
-   // console.log("nearestPoint - "+String(nearestPoint))
+   // wLog("nearestPoint - "+String(nearestPoint))
    if (nearestPoint==null) // Apaga rota auxiliar
    {
-       console.log("nearestPoint - null");
+       wLog("nearestPoint - null");
        if (polyRotaAux) {
            polyRotaAux.remove();
            polyRotaAux = null; // Opcional: redefinir a variável para null
@@ -1060,7 +1068,7 @@ function GetRouteCarFromHere(latitude,longitude)
    startCoords[1] = longitude;
    endCoords[0] = nearestPoint.lat;
    endCoords[1] = nearestPoint.lng;
-   console.log("getRoute");
+   wLog("getRoute");
    getRoute(startCoords, endCoords);
 }
 
@@ -1405,7 +1413,7 @@ function EncontrarDadoPn(pontosvisitaDados, Pn,iDado) {
 function limparMarcadores(markerVet) {
     // Verifica se o array tem marcadores
     if (!markerVet || markerVet.length === 0) {
-        console.log("Nenhum marcador para remover.");
+        wLog("Nenhum marcador para remover.");
         return;
     }
 
@@ -1423,7 +1431,7 @@ function limparMarcadores(markerVet) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function AtualizaPontosvisitaDadosCampoPN(pontosvisitaDados,lat, lon,iPn,iPnDados)
 {
-    // console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+    // wLog(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
     i_posicaoiPnDados = pontosvisitaDados.findIndex(ponto => ponto[2] === iPnDados );
     i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
 
@@ -1435,7 +1443,7 @@ function AtualizaPontosvisitaDadosCampoPN(pontosvisitaDados,lat, lon,iPn,iPnDado
 // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
 function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,ColunaAtualizar,NovoDado)
 {
-    // console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+    // wLog(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
     i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
     pontosvisitaDados[i_posicaolatlon][ColunaAtualizar]=NovoDado;
     return pontosvisitaDados;
@@ -1457,8 +1465,8 @@ function ReordenaPontosTela(rotaSel)
         tooltip = EncontrarDado(pontosvisitaDados, lat, lon,4);
         alt = EncontrarDado(pontosvisitaDados, lat, lon,5);
         tooltip = `Altitude: ${alt}<br>${tooltip}`
-        // console.log(`---->>> lat ${lat}, lon ${lat}, tooltip - ${tooltip}`);
-        // console.log(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}, alt - ${alt}`);
+        // wLog(`---->>> lat ${lat}, lon ${lat}, tooltip - ${tooltip}`);
+        // wLog(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}, alt - ${alt}`);
 
         if(iPn!=iPnDados)
         {
@@ -1653,12 +1661,12 @@ async function enviarJson(payload, url) {
 
         // Verifica se a requisição foi bem-sucedida
         if (response.ok) {
-            console.log("-----------------------------------------------");
-            console.log("Requisição bem-sucedida:");
+            wLog("-----------------------------------------------");
+            wLog("Requisição bem-sucedida:");
 
             const responseData = await response.json();
-            console.log(responseData);
-            console.log("-----------------------------------------------");
+            wLog(responseData);
+            wLog("-----------------------------------------------");
             return(responseData);
             // const redirectUrl = responseData.Url;
             // if (redirectUrl) {

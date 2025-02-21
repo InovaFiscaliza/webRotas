@@ -581,6 +581,13 @@ def getElevationOpenElevBatch(lat_lons, batch_size):
 MinAltitude=50000 # Valor alto para garantir que a primeira altitude seja menor
 MaxAltitude=0
 ###########################################################################################################################
+def ResetAltitudes():
+    global MinAltitude
+    global MaxAltitude
+    MinAltitude=50000
+    MaxAltitude=0
+    return
+###########################################################################################################################
 def AltitudeOpenElevation(latitude, longitude):
     
     global MinAltitude
@@ -596,61 +603,16 @@ def AltitudeOpenElevation(latitude, longitude):
         MinAltitude = altitude    
     
     return altitude
-    """
-    Retorna a altitude (elevation) de uma localização a partir das coordenadas latitude e longitude.
-    
-    Args:
-        latitude (float): Latitude da localização.
-        longitude (float): Longitude da localização.
-    
-    Returns:
-        float: Altitude em metros.
-    """
-    url = f"https://fiscalizacao.anatel.gov.br/api/v1/lookup?locations={latitude},{longitude}"
-    print(f"URL da requisição: {url}")  # Imprime a URL para depuração
-    
-    try:
-        # Faz a requisição à API
-        response = requests.get(url)
-        print(f"Status da resposta: {response.status_code}")  # Imprime o status da resposta
-        print(f"Conteúdo da resposta: {response.text}")  # Imprime o conteúdo da resposta para depuração
-        
-        # Verifica se a requisição foi bem-sucedida
-        response.raise_for_status()
-        
-        # Tenta interpretar a resposta como JSON
-        data = response.json()
-        
-        # Extrai a altitude do resultado
-        elevation = data['results'][0]['elevation']
-        return elevation
-    except requests.RequestException as e:
-        print(f"Erro ao acessar a API: {e}")
-        return 0
-    except (KeyError, IndexError) as e:
-        print(f"Erro ao processar os dados da resposta: {e}")
-        return 0
-    except ValueError as e:
-        print(f"Erro ao decodificar JSON: {e}")
-        return 0
 ###########################################################################################################################
 def AltitudeOpenElevationBatch(batch,batch_size):
-    
     global MinAltitude
     global MaxAltitude
+    ResetAltitudes()
     lat_lons = [(p[0], p[1]) for p in batch]
     altitudes = getElevationOpenElevBatch(lat_lons,batch_size)
-    # altitude = getElevationOpenElev(latitude, longitude)
-    
-
     if altitudes:  # Verifica se a lista não está vazia
         MinAltitude = min(MinAltitude, min(altitudes))
         MaxAltitude = max(MaxAltitude, max(altitudes))    
-
-    # Atualiza a altitude mínima
-    # if altitude < MinAltitude:
-    #    MinAltitude = altitude    
-    
     return altitudes    
 ###########################################################################################################################
 import xarray as xr  # pip install xarray netCDF4 numpy
