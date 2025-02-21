@@ -290,37 +290,6 @@ function createSvgIconVerdeHalf(number) {
     return createCustomSvgIcon(number,[12, 20],[6, 20],"#007b22");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgTextoBranco(iconSz, iconColor, text) {
-    const width = iconSz[0];
-    const height = iconSz[1];
-
-    // Tamanhos base do SVG original
-    const baseWidth = 25;
-    const baseHeight = 41;
-
-    // Calcula fatores de escala
-    const scaleX = width / baseWidth;
-    const scaleY = height / baseHeight;
-
-    // Recalcula o path com base no fator de escala
-    const dynamicPath = `
-        M${12.5 * scaleX} 0
-        C${19.4 * scaleX} 0 ${25 * scaleX} ${5.6 * scaleY} ${25 * scaleX} ${12.5 * scaleY}
-        C${25 * scaleX} ${19.4 * scaleY} ${12.5 * scaleX} ${41 * scaleY} ${12.5 * scaleX} ${41 * scaleY}
-        C${12.5 * scaleX} ${41 * scaleY} 0 ${19.4 * scaleY} 0 ${12.5 * scaleY}
-        C0 ${5.6 * scaleY} ${5.6 * scaleX} 0 ${12.5 * scaleX} 0Z
-    `.trim();
-
-    // Retorna o SVG ajustado
-    return `
-        <svg id="iconSvg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"
-             xmlns="http://www.w3.org/2000/svg">
-            <path d="${dynamicPath}" fill="${iconColor}"/>
-            <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="${Math.min(width, height) * 0.55}"
-                  fill="white" font-weight="bold">${text}</text>
-        </svg>`;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvg(iconSz, iconColor, text) {
     const width = iconSz[0];
     const height = iconSz[1];
