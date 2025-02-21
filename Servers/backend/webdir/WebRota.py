@@ -250,20 +250,6 @@ def hsl_to_hex(h, s, l):
 
     return f'#{r:02x}{g:02x}{b:02x}'
 ###########################################################################################################################
-# Função para calcular a cor com base na elevação
-def elevation_colorOld(elevation, max_elevation=1000):
-    # Limita a elevação ao intervalo 0-1000
-    elevation = max(0, min(max_elevation, elevation))
-    
-    # Normaliza a elevação para o intervalo 0-1
-    normalized = elevation / max_elevation
-    
-    # Calcula o valor do matiz (hue) entre azul (240°) e vermelho (0°)
-    hue = (1 - normalized) * 240
-    
-    return hsl_to_hex(hue, 100, 50)
-    
-###########################################################################################################################
 def elevation_color(elevation, min_elevation=0, max_elevation=1000):
     """
     Calcula a cor associada a uma elevação específica, mapeando de azul (baixa altitude) a vermelho (alta altitude).
@@ -289,71 +275,83 @@ def elevation_color(elevation, min_elevation=0, max_elevation=1000):
     hue = (1 - normalized) * 240
 
     return hsl_to_hex(hue, 100, 50)  # Mantém saturação e luminosidade fixas
-
 ###########################################################################################################################
-def generate_elevationsOld(step, max_elevation):
+import numpy as np
+###########################################################################################################################
+# Paleta Parula aproximada (Interpolação RGB)
+parula_colors = [
+    (53, 42, 135),   # Azul escuro
+    (45, 53, 140),   # Azul médio
+    (38, 63, 146),   # Ciano
+    (30, 73, 151),   # Verde-azulado
+    (23, 84, 157),   # Verde
+    (16, 94, 162),   # Verde claro
+    (11, 103, 167),  # Verde claro 2
+    (8, 110, 170),   # Azul claro
+    (6, 118, 173),   # Azul claro 2
+    (5, 125, 176),   # Azul mais claro
+    (5, 131, 178),   # Azul esverdeado
+    (6, 138, 180),   # Azul esverdeado 2
+    (8, 144, 182),   # Azul mais esverdeado
+    (11, 150, 183),  # Azul suave
+    (14, 156, 185),  # Azul suave 2
+    (18, 161, 186),  # Azul esverdeado suave
+    (23, 165, 187),  # Azul verde-água
+    (30, 170, 186),  # Azul claro esverdeado
+    (37, 174, 186),  # Azul mais claro
+    (46, 177, 185),  # Azul mais intenso
+    (54, 180, 184),  # Azul mais intenso 2
+    (64, 183, 183),  # Azul suave intenso
+    (74, 185, 181),  # Azul muito suave
+    (85, 188, 179),  # Azul quase esverdeado
+    (96, 190, 176),  # Azul esverdeado
+    (106, 192, 174), # Azul esverdeado 2
+    (116, 194, 171), # Azul claro
+    (127, 197, 167), # Azul claro 2
+    (138, 199, 164), # Azul mais claro
+    (149, 202, 160), # Azul suave
+    (159, 204, 156), # Azul suave 2
+    (170, 204, 152), # Verde mais claro
+    (181, 206, 147), # Verde claro
+    (192, 208, 142), # Verde suave
+    (202, 210, 137), # Verde mais suave
+    (213, 212, 131), # Amarelo suave
+    (223, 214, 126), # Amarelo suave 2
+    (233, 216, 120), # Amarelo brilhante
+    (242, 217, 114), # Amarelo mais brilhante
+    (250, 218, 109), # Amarelo muito brilhante
+    (255, 219, 103), # Amarelo intenso
+    (255, 217, 96),  # Amarelo forte
+    (255, 215, 90),  # Amarelo forte 2
+    (255, 211, 77),  # Amarelo muito forte
+    (255, 206, 63),  # Amarelo super forte
+    (255, 204, 57),  # Amarelo quase dourado
+    (255, 200, 51)   # Amarelo dourado
+]
+###########################################################################################################################
+def elevation_color_parula(elevation, min_elevation=0, max_elevation=1000):
     """
-    Gera uma lista de elevações com um intervalo definido pelo passo.
-    
+    Retorna uma cor Parula baseada na elevação.
+
     Parâmetros:
-    step (int): O passo em metros entre cada elevação.
-    max_elevation (int): A elevação máxima que a sequência pode atingir.
-    
+    - elevation (float): Altitude a ser convertida em cor.
+    - min_elevation (float): Menor altitude da escala.
+    - max_elevation (float): Maior altitude da escala.
+
     Retorna:
-    list: Uma lista de elevações com o passo definido até a elevação máxima.
+    - str: Cor em formato hexadecimal.
     """
-    # Cria uma lista de elevacões começando de 0 até o valor máximo, com o passo definido
-    elevations = list(range(0, max_elevation + step, step))
-    
-    # Se a elevação máxima já está na lista, a removemos para evitar duplicação
-    if elevations[-1] > max_elevation:
-        elevations.pop()
-    
-    return elevations
-###########################################################################################################################
-# Função para gerar a imagem com a tabela
-import matplotlib.pyplot as plt
-###########################################################################################################################
-def generate_elevation_table_pngOld(output_filename='elevation_table.png',max_elevation=1500):
-    # Definir as elevacões e gerar as cores associadas
-    # elevations = [0, 50, 100, 150, 200, 250, 300, 8900]
-    num_itensdisplay = 18
-    max_elev=max_elevation
-    elevationSteps = int(max_elev/num_itensdisplay)
-    elevationItens = int(max_elev/elevationSteps)
-    elevations = generate_elevations(elevationSteps, max_elev)
-    # print(elevations)
-    colors = [elevation_color(elevation,max_elevation=max_elev) for elevation in elevations]
-    
-    # Tamanho da imagem
-    img_width = 150
-    img_height = 600
-    font = ImageFont.truetype("arial.ttf", 8) 
-    
-    # Criar uma nova imagem em branco
-    img = Image.new('RGB', (img_width, img_height), color='white')
-    draw = ImageDraw.Draw(img)
-    
-    # Tamanho da célula da tabela
-    # cell_height = 10      
-    cell_height = int(img_height/elevationItens)
-    cell_width = int(img_width * 0.7)
-    
-    # Desenhar a tabela
-    for i, (elevation, color) in enumerate(zip(elevations, colors)):
-        # Desenhar a linha de elevação
-        draw.rectangle([0, i * cell_height, cell_width, (i + 1) * cell_height], fill=color)
-        draw.text((cell_width + 10, i * cell_height + 10), f'{elevation} m', fill='black', font=font)
-    
-    # Salvar a imagem
-    # plt.figure(facecolor='black') 
-    # plt.imshow(img)
-    # plt.axis('off')  # Remover as barras de eixo
-    # plt.show()
-    img.save(output_filename)
-    wLog(f'Tabelas de cores de altitudes salva como {output_filename}')
+    if max_elevation == min_elevation:
+        normalized = 0
+    else:
+        elevation = np.clip(elevation, min_elevation, max_elevation)
+        normalized = (elevation - min_elevation) / (max_elevation - min_elevation)
 
+    # Determina os índices de interpolação
+    idx = int(normalized * (len(parula_colors) - 1))
+    r, g, b = parula_colors[idx]
 
+    return "#{:02x}{:02x}{:02x}".format(r, g, b)
 ###########################################################################################################################
 def generate_elevation_table_png(output_filename='elevation_table.png', min_elevation=0, max_elevation=1500):
     """
@@ -364,7 +362,8 @@ def generate_elevation_table_png(output_filename='elevation_table.png', min_elev
     min_elevation (int): Elevação mínima a ser considerada na escala.
     max_elevation (int): Elevação máxima a ser considerada na escala.
     """
-    num_itensdisplay = 18  # Número de divisões na tabela
+
+    num_itensdisplay = 15  # Número de divisões na tabela
     elevation_range = max_elevation - min_elevation  # Faixa total de elevação
     
     if elevation_range <= 0:
@@ -377,7 +376,7 @@ def generate_elevation_table_png(output_filename='elevation_table.png', min_elev
     elevations = generate_elevations(min_elevation, elevationSteps, max_elevation)
 
     # Definir as cores associadas
-    colors = [elevation_color(elevation,min_elevation=min_elevation,max_elevation=max_elevation) for elevation in elevations]
+    colors = [elevation_color_parula(elevation,min_elevation=min_elevation,max_elevation=max_elevation) for elevation in elevations]
 
     # Definir tamanho da imagem
     img_width = 150
@@ -611,8 +610,8 @@ def AltitudeOpenElevationBatch(batch,batch_size):
     lat_lons = [(p[0], p[1]) for p in batch]
     altitudes = getElevationOpenElevBatch(lat_lons,batch_size)
     if altitudes:  # Verifica se a lista não está vazia
-        MinAltitude = min(MinAltitude, min(altitudes))
-        MaxAltitude = max(MaxAltitude, max(altitudes))    
+        MinAltitude = int( min(MinAltitude, min(altitudes))) 
+        MaxAltitude = int(max(MaxAltitude, max(altitudes))*1.1)   
     return altitudes    
 ###########################################################################################################################
 import xarray as xr  # pip install xarray netCDF4 numpy

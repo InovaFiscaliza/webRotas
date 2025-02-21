@@ -5,6 +5,9 @@ import WebRota as wr
 latitude = -15.7942  # Exemplo de latitude (Brasília)
 longitude = -47.8822  # Exemplo de longitude (Brasília)
 
-altitude = wr.AltitudeOpenElevation(latitude, longitude)
-print(f"Altitude: {altitude} metros")
+# altitude = wr.AltitudeOpenElevation(latitude, longitude)
+# print(f"Altitude: {altitude} metros")
+
+
+wr.generate_elevation_table_png(output_filename="img.png",min_elevation=61,max_elevation=651)  
 ###########################################################################################################################

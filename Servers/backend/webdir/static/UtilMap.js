@@ -117,19 +117,6 @@ function createSvgIconAzulHalf(number) {
     return createCustomSvgIcon(number,[12, 20],[6, 20],"#007bff");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function ElevationColorOld(elevation) {
-    // Limita a elevação ao intervalo 0-8900
-    max_elevation = globalMaxElevation;
-    elevation = Math.max(0, Math.min(max_elevation, elevation));
-
-    // Normaliza a elevação para o intervalo 0-1
-    const normalized = elevation / max_elevation;
-
-    // Converte a normalização em cores do arco-íris
-    const hue = (1 - normalized) * 240; // 240° (azul) a 0° (vermelho)
-    return hslToHex(hue, 100, 50); // Saturação 100%, Luminosidade 50%
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 function ElevationColor(elevation) {
     // Usa os valores globais de elevação mínima e máxima
     const min_elevation = globalMinElevation;
@@ -150,6 +137,82 @@ function ElevationColor(elevation) {
     const hue = (1 - normalized) * 240;
     
     return hslToHex(hue, 100, 50); // Saturação 100%, Luminosidade 50%
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function ElevationColorParula(elevation) {
+    const minElevation = globalMinElevation;
+    const maxElevation = globalMaxElevation;
+
+    // Evita erro caso minElevation == maxElevation
+    if (maxElevation === minElevation) {
+        return rgbToHex(53, 42, 135); // Cor fixa (azul Parula)
+    }
+
+    // Normaliza a elevação no intervalo [0, 1]
+    elevation = Math.max(minElevation, Math.min(maxElevation, elevation));
+    const normalized = (elevation - minElevation) / (maxElevation - minElevation);
+
+    // Paleta Parula aproximada (Interpolação RGB)
+    const parulaColors = [
+        [53, 42, 135],   // Azul escuro
+        [45, 53, 140],   // Azul médio
+        [38, 63, 146],   // Ciano
+        [30, 73, 151],   // Verde-azulado
+        [23, 84, 157],   // Verde
+        [16, 94, 162],   // Verde claro
+        [11, 103, 167],  // Verde claro 2
+        [8, 110, 170],   // Azul claro
+        [6, 118, 173],   // Azul claro 2
+        [5, 125, 176],   // Azul mais claro
+        [5, 131, 178],   // Azul esverdeado
+        [6, 138, 180],   // Azul esverdeado 2
+        [8, 144, 182],   // Azul mais esverdeado
+        [11, 150, 183],  // Azul suave
+        [14, 156, 185],  // Azul suave 2
+        [18, 161, 186],  // Azul esverdeado suave
+        [23, 165, 187],  // Azul verde-água
+        [30, 170, 186],  // Azul claro esverdeado
+        [37, 174, 186],  // Azul mais claro
+        [46, 177, 185],  // Azul mais intenso
+        [54, 180, 184],  // Azul mais intenso 2
+        [64, 183, 183],  // Azul suave intenso
+        [74, 185, 181],  // Azul muito suave
+        [85, 188, 179],  // Azul quase esverdeado
+        [96, 190, 176],  // Azul esverdeado
+        [106, 192, 174], // Azul esverdeado 2
+        [116, 194, 171], // Azul claro
+        [127, 197, 167], // Azul claro 2
+        [138, 199, 164], // Azul mais claro
+        [149, 202, 160], // Azul suave
+        [159, 204, 156], // Azul suave 2
+        [170, 204, 152], // Verde mais claro
+        [181, 206, 147], // Verde claro
+        [192, 208, 142], // Verde suave
+        [202, 210, 137], // Verde mais suave
+        [213, 212, 131], // Amarelo suave
+        [223, 214, 126], // Amarelo suave 2
+        [233, 216, 120], // Amarelo brilhante
+        [242, 217, 114], // Amarelo mais brilhante
+        [250, 218, 109], // Amarelo muito brilhante
+        [255, 219, 103], // Amarelo intenso
+        [255, 217, 96],  // Amarelo forte
+        [255, 215, 90],  // Amarelo forte 2
+        [255, 211, 77],  // Amarelo muito forte
+        [255, 206, 63],  // Amarelo super forte
+        [255, 204, 57],  // Amarelo quase dourado
+        [255, 200, 51]   // Amarelo dourado
+    ];
+
+    // Determina o índice interpolado
+    const idx = Math.floor(normalized * (parulaColors.length - 1));
+    const [r, g, b] = parulaColors[idx];
+
+    return rgbToHex(r, g, b);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função auxiliar para converter RGB em Hex
+function rgbToHex(r, g, b) {
+    return "#" + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Função auxiliar: converte HSL para HEX
@@ -205,12 +268,15 @@ async function getElevation(latitude, longitude) {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconColorAltitude(number,altitude) {
-    color = ElevationColor(altitude);
+    // color = ElevationColor(altitude);
+    color = ElevationColorParula(altitude);
+
     return createCustomSvgIcon(number,[25, 41],[12, 41],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconColorAltitudeHalf(number,altitude) {
-    color = ElevationColor(altitude);
+    // color = ElevationColor(altitude);
+    color = ElevationColorParula(altitude);
     return createCustomSvgIcon(number,[12, 20],[6, 20],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
