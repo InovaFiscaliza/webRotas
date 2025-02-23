@@ -153,7 +153,7 @@ function ElevationColorParula(elevation) {
     const normalized = (elevation - minElevation) / (maxElevation - minElevation);
 
     // Paleta Parula aproximada (Interpolação RGB)
-    const parulaColors = [
+    var parulaColors = [
         [53, 42, 135],   // Azul escuro
         [45, 53, 140],   // Azul médio
         [38, 63, 146],   // Ciano
@@ -202,6 +202,7 @@ function ElevationColorParula(elevation) {
         [255, 204, 57],  // Amarelo quase dourado
         [255, 200, 51]   // Amarelo dourado
     ];
+
 
     // Determina o índice interpolado
     const idx = Math.floor(normalized * (parulaColors.length - 1));
@@ -1429,30 +1430,30 @@ function createDivScaleSvg() {
     // Adicionar resizableDiv ao body
     document.body.appendChild(resizableDiv);
 
-        // Adicionar evento de roda do mouse para alterar o zoom
-        resizableDiv.addEventListener("wheel", function (e) {
-            e.preventDefault(); // Impede o comportamento padrão de scroll
-    
-            // Calcular o fator de zoom
-            const zoomFactor = 0.1;
-            let newWidth = parseFloat(resizableDiv.style.width);
-            let newHeight = parseFloat(resizableDiv.style.height);
-    
-            if (e.deltaY < 0) {
-                // Roda para cima - aumenta o zoom
-                newWidth += newWidth * zoomFactor;
-                newHeight += newHeight * zoomFactor;
-            } else {
-                // Roda para baixo - diminui o zoom
-                newWidth -= newWidth * zoomFactor;
-                newHeight -= newHeight * zoomFactor;
-            }
-    
-            // Definir os novos valores de largura e altura, com limites para evitar que fique muito pequeno
-            resizableDiv.style.width = Math.max(newWidth, 50) + "px";
-            resizableDiv.style.height = Math.max(newHeight, 100) + "px"; // Evita que o div desapareça
-        });
-    
+    // Adicionar evento de roda do mouse para alterar o zoom
+    resizableDiv.addEventListener("wheel", function (e) {
+        e.preventDefault(); // Impede o comportamento padrão de scroll
+
+        // Calcular o fator de zoom
+        const zoomFactor = 0.1;
+        let newWidth = parseFloat(resizableDiv.style.width);
+        let newHeight = parseFloat(resizableDiv.style.height);
+
+        if (e.deltaY < 0) {
+            // Roda para cima - aumenta o zoom
+            newWidth += newWidth * zoomFactor;
+            newHeight += newHeight * zoomFactor;
+        } else {
+            // Roda para baixo - diminui o zoom
+            newWidth -= newWidth * zoomFactor;
+            newHeight -= newHeight * zoomFactor;
+        }
+
+        // Definir os novos valores de largura e altura, com limites para evitar que fique muito pequeno
+        resizableDiv.style.width = Math.max(newWidth, 50) + "px";
+        resizableDiv.style.height = Math.max(newHeight, 100) + "px"; // Evita que o div desapareça
+    });
+
     // Gerar e inserir o SVG
     updateScale();
 }
@@ -1480,7 +1481,7 @@ function generateScaleSVG(minValue, maxValue) {
 
     // Cores do gradiente
     var colors = [
-        "rgb(255, 200, 51)", "rgb(255, 200, 51)", "rgb(255, 204, 57)", "rgb(255, 206, 63)",
+        "rgb(255, 200, 51)", "rgb(255, 204, 57)", "rgb(255, 206, 63)",
         "rgb(255, 211, 77)", "rgb(255, 215, 90)", "rgb(255, 217, 96)", "rgb(255, 219, 103)",
         "rgb(250, 218, 109)", "rgb(242, 217, 114)", "rgb(233, 216, 120)", "rgb(223, 214, 126)",
         "rgb(213, 212, 131)", "rgb(202, 210, 137)", "rgb(192, 208, 142)", "rgb(181, 206, 147)",
