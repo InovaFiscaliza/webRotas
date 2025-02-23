@@ -100,16 +100,16 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     GeraStaticIcon("GpsAtivo")
     GeraStaticIcon("Kml")
     
-    GeraElevationTable()    
-    
+    # GeraElevationTable()    
+    tmpstaticResources = ""
     if static:
-       tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
+       # tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = AbrirArquivoComoString("static/StaticResources.js")  
        utilMap = AbrirArquivoComoString("static/UtilMap.js") 
        sDivOrdenaPontos = AbrirArquivoComoString("static/clDivOrdenaPontos.js") 
     else:
        # tmpstaticResources = "<script src=\"{{ url_for('static', filename='tmpStaticResources.js') }}\"></script>" 
-       tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
+       # tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = "<script src=\"{{ url_for('static', filename='StaticResources.js') }}\"></script> "    
        utilMap = "<script src=\"{{ url_for('static', filename='UtilMap.js') }}\"></script>"
        sDivOrdenaPontos = "<script src=\"{{ url_for('static', filename='clDivOrdenaPontos.js') }}\"></script>"

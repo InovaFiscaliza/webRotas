@@ -1393,6 +1393,188 @@ function createColorTable() {
     document.body.appendChild(compassDiv);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function createDivScaleSvg() {
+    // Verifica se o elemento já existe para evitar duplicação
+    if (document.getElementById("resizableDiv")) 
+    {
+        document.getElementById("resizableDiv").remove();
+        return;
+    }    
+        
+
+    // Criar o div principal
+    const resizableDiv = document.createElement("div");
+    resizableDiv.id = "resizableDiv";
+    resizableDiv.style.position = "absolute";
+    resizableDiv.style.bottom = "18px";
+    resizableDiv.style.right = "-13px";
+    resizableDiv.style.zIndex = "1001";
+    resizableDiv.style.width = "100px";
+    resizableDiv.style.height = "500px";
+    // resizableDiv.style.border = "0px solid black"; // Apenas para visualização
+    // resizableDiv.style.backgroundColor = "white"; // Para destacar o SVG
+
+    // Criar o container para o SVG
+    const svgContainer = document.createElement("div");
+    svgContainer.id = "svgContainer";
+    svgContainer.style.position = "absolute"; // Garante que ocupe todo o espaço
+    svgContainer.style.top = "0";
+    svgContainer.style.left = "0";
+    svgContainer.style.width = "100%";
+    svgContainer.style.height = "100%";
+
+    // Adicionar o svgContainer dentro do resizableDiv
+    resizableDiv.appendChild(svgContainer);
+
+    // Adicionar resizableDiv ao body
+    document.body.appendChild(resizableDiv);
+
+        // Adicionar evento de roda do mouse para alterar o zoom
+        resizableDiv.addEventListener("wheel", function (e) {
+            e.preventDefault(); // Impede o comportamento padrão de scroll
+    
+            // Calcular o fator de zoom
+            const zoomFactor = 0.1;
+            let newWidth = parseFloat(resizableDiv.style.width);
+            let newHeight = parseFloat(resizableDiv.style.height);
+    
+            if (e.deltaY < 0) {
+                // Roda para cima - aumenta o zoom
+                newWidth += newWidth * zoomFactor;
+                newHeight += newHeight * zoomFactor;
+            } else {
+                // Roda para baixo - diminui o zoom
+                newWidth -= newWidth * zoomFactor;
+                newHeight -= newHeight * zoomFactor;
+            }
+    
+            // Definir os novos valores de largura e altura, com limites para evitar que fique muito pequeno
+            resizableDiv.style.width = Math.max(newWidth, 50) + "px";
+            resizableDiv.style.height = Math.max(newHeight, 100) + "px"; // Evita que o div desapareça
+        });
+    
+    // Gerar e inserir o SVG
+    updateScale();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function generateScaleSVG(minValue, maxValue) {
+    const step = (maxValue - minValue) / 15;
+    
+    // Criando o elemento SVG diretamente via JavaScript
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 100 1000");
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    svg.style.width = "100%"; // Garante que ele ocupa todo o espaço do container
+    svg.style.height = "100%";
+
+    // Criando o gradiente
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const linearGradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+    linearGradient.setAttribute("id", "grad");
+    linearGradient.setAttribute("x1", "0");
+    linearGradient.setAttribute("y1", "1");
+    linearGradient.setAttribute("x2", "0");
+    linearGradient.setAttribute("y2", "0");
+
+    // Cores do gradiente
+    var colors = [
+        "rgb(255, 200, 51)", "rgb(255, 200, 51)", "rgb(255, 204, 57)", "rgb(255, 206, 63)",
+        "rgb(255, 211, 77)", "rgb(255, 215, 90)", "rgb(255, 217, 96)", "rgb(255, 219, 103)",
+        "rgb(250, 218, 109)", "rgb(242, 217, 114)", "rgb(233, 216, 120)", "rgb(223, 214, 126)",
+        "rgb(213, 212, 131)", "rgb(202, 210, 137)", "rgb(192, 208, 142)", "rgb(181, 206, 147)",
+        "rgb(170, 204, 152)", "rgb(159, 204, 156)", "rgb(149, 202, 160)", "rgb(138, 199, 164)",
+        "rgb(127, 197, 167)", "rgb(116, 194, 171)", "rgb(106, 192, 174)", "rgb(96, 190, 176)",
+        "rgb(85, 188, 179)", "rgb(74, 185, 181)", "rgb(64, 183, 183)", "rgb(54, 180, 184)",
+        "rgb(46, 177, 185)", "rgb(37, 174, 186)", "rgb(30, 170, 186)", "rgb(23, 165, 187)",
+        "rgb(18, 161, 186)", "rgb(14, 156, 185)", "rgb(11, 150, 183)", "rgb(8, 144, 182)",
+        "rgb(6, 138, 180)", "rgb(5, 131, 178)", "rgb(5, 125, 176)", "rgb(6, 118, 173)",
+        "rgb(8, 110, 170)", "rgb(11, 103, 167)", "rgb(16, 94, 162)", "rgb(23, 84, 157)",
+        "rgb(30, 73, 151)", "rgb(38, 63, 146)", "rgb(45, 53, 140)", "rgb(53, 42, 135)"
+    ];
+    colors = colors.reverse();
+    // Criando os "stops" no gradiente
+    colors.forEach((color, index) => {
+        const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop.setAttribute("offset", `${index * (100 / (colors.length - 1))}%`); // Percentual de cada cor no gradiente
+        stop.setAttribute("style", `stop-color:${color}; stop-opacity:1`);
+        linearGradient.appendChild(stop);
+    });
+
+
+    defs.appendChild(linearGradient);
+    svg.appendChild(defs);
+
+    // Criando o fundo branco
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("x", "0");
+    background.setAttribute("y", "0");
+    background.setAttribute("width", "120");
+    background.setAttribute("height", "1000");
+    background.setAttribute("rx", "10");
+    background.setAttribute("ry", "10");
+    background.setAttribute("fill", "white");
+    background.setAttribute("fill-opacity", "0.8");
+    svg.appendChild(background);
+
+    // Criando o retângulo de escala com gradiente
+    const scaleRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    scaleRect.setAttribute("x", "5");
+    scaleRect.setAttribute("y", "5");
+    scaleRect.setAttribute("width", "45");
+    scaleRect.setAttribute("height", "990");
+    scaleRect.setAttribute("rx", "10");
+    scaleRect.setAttribute("ry", "10");
+    scaleRect.setAttribute("fill", "url(#grad)");
+    svg.appendChild(scaleRect);
+
+    // Criando as marcações e os textos da escala
+    for (let i = 0; i < 16; i++) {
+        const y = 985 - (i * 969) / 15;
+        const value = (minValue + i * step).toFixed(1);
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", "5");
+        line.setAttribute("x2", "50");
+        line.setAttribute("y1", y);
+        line.setAttribute("y2", y);
+        line.setAttribute("stroke", "white");
+        line.setAttribute("stroke-opacity", "0.3");
+        line.setAttribute("stroke-width", "2");
+        svg.appendChild(line);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", "114");
+        text.setAttribute("y", y + 7);
+        text.setAttribute("font-family", "sans-serif");
+        text.setAttribute("font-size", "19");
+        text.setAttribute("fill", "black");
+        text.setAttribute("text-anchor", "end");
+        text.textContent = `${Math.round(value)}m`;
+        svg.appendChild(text);
+    }
+
+    return svg;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function updateScale() {
+
+    // Certifica-se de que o container existe antes de inserir o SVG
+    const svgContainer = document.getElementById("svgContainer");
+    if (!svgContainer) return;
+
+    // Limpa o conteúdo anterior
+    svgContainer.innerHTML = "";
+    
+    // Insere o novo SVG
+    svgContainer.appendChild(generateScaleSVG(globalMinElevation, globalMaxElevation));
+}
+
+// Chama a função para criar o elemento e atualizar a escala
+// createDivScaleSvg();
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Função para destivar um elmento html
 function ativaElementoHtml(id, estado) {
     const elemento = document.getElementById(id);
@@ -1855,7 +2037,9 @@ function createMacOSDock() {
             img.style.borderRadius = '10px';
             iconDiv.appendChild(img);
             img.onclick = () => {
-                createColorTable();
+                // createColorTable();
+                createDivScaleSvg();
+                
             };
 
         }
