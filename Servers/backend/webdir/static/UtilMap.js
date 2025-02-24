@@ -143,6 +143,53 @@ function ElevationColorParula(elevation) {
     const minElevation = globalMinElevation;
     const maxElevation = globalMaxElevation;
 
+    if (maxElevation === minElevation) {
+        return rgbToHex(53, 42, 135); // Cor fixa (azul Parula)
+    }
+
+    elevation = Math.max(minElevation, Math.min(maxElevation, elevation));
+    const normalized = (elevation - minElevation) / (maxElevation - minElevation);
+
+    // Paleta de cores Parula
+    const parulaColors = [
+        [53, 42, 135], [45, 53, 140], [38, 63, 146], [30, 73, 151], [23, 84, 157], [16, 94, 162], 
+        [11, 103, 167], [8, 110, 170], [6, 118, 173], [5, 125, 176], [5, 131, 178], [6, 138, 180], 
+        [8, 144, 182], [11, 150, 183], [14, 156, 185], [18, 161, 186], [23, 165, 187], [30, 170, 186], 
+        [37, 174, 186], [46, 177, 185], [54, 180, 184], [64, 183, 183], [74, 185, 181], [85, 188, 179], 
+        [96, 190, 176], [106, 192, 174], [116, 194, 171], [127, 197, 167], [138, 199, 164], [149, 202, 160], 
+        [159, 204, 156], [170, 204, 152], [181, 206, 147], [192, 208, 142], [202, 210, 137], [213, 212, 131], 
+        [223, 214, 126], [233, 216, 120], [242, 217, 114], [250, 218, 109], [255, 219, 103], [255, 217, 96],  
+        [255, 215, 90], [255, 211, 77], [255, 206, 63], [255, 204, 57], [255, 200, 51]
+    ];
+
+    // Índice interpolado
+    const scaledIndex = normalized * (parulaColors.length - 1);
+    const index = Math.floor(scaledIndex);
+    const t = scaledIndex - index; // Posição relativa entre os dois pontos
+
+    // Obtém as cores para interpolação
+    const [r1, g1, b1] = parulaColors[index];
+    const [r2, g2, b2] = parulaColors[Math.min(index + 1, parulaColors.length - 1)];
+
+    // Interpolação linear entre os dois pontos
+    const r = Math.round(r1 + t * (r2 - r1));
+    const g = Math.round(g1 + t * (g2 - g1));
+    const b = Math.round(b1 + t * (b2 - b1));
+
+    return rgbToHex(r, g, b);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função para converter RGB em Hex
+function rgbToHex(r, g, b) {
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+function ElevationColorParulaoOld(elevation) {
+    const minElevation = globalMinElevation;
+    const maxElevation = globalMaxElevation;
+
     // Evita erro caso minElevation == maxElevation
     if (maxElevation === minElevation) {
         return rgbToHex(53, 42, 135); // Cor fixa (azul Parula)
