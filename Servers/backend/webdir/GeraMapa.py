@@ -74,7 +74,7 @@ def GeraElevationTable():
     wr.wLog(f"GeraElevationTable")
     nomeuser=wr.UserData.nome
     fileElevation = f'static/elevation_table{nomeuser}.png'
-    wr.generate_elevation_table_png(output_filename=fileElevation,max_elevation=wr.MaxAltitude)     
+    wr.generate_elevation_table_png(output_filename=fileElevation,min_elevation=wr.MinAltitude,max_elevation=wr.MaxAltitude)     
     base64ElevationTable = wr.FileToDataUrlBase64(fileElevation)
     if os.path.exists(fileElevation):
        os.remove(fileElevation)
@@ -100,8 +100,8 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     GeraStaticIcon("GpsAtivo")
     GeraStaticIcon("Kml")
     
-    GeraElevationTable()    
-    
+    # GeraElevationTable()    
+
     if static:
        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
        staticResources = AbrirArquivoComoString("static/StaticResources.js")  

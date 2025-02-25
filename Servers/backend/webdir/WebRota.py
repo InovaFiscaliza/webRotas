@@ -250,80 +250,179 @@ def hsl_to_hex(h, s, l):
 
     return f'#{r:02x}{g:02x}{b:02x}'
 ###########################################################################################################################
-# Função para calcular a cor com base na elevação
-def elevation_color(elevation, max_elevation=1000):
-    # Limita a elevação ao intervalo 0-1000
-    elevation = max(0, min(max_elevation, elevation))
-    
-    # Normaliza a elevação para o intervalo 0-1
-    normalized = elevation / max_elevation
-    
-    # Calcula o valor do matiz (hue) entre azul (240°) e vermelho (0°)
-    hue = (1 - normalized) * 240
-    
-    return hsl_to_hex(hue, 100, 50)
-###########################################################################################################################
-def generate_elevations(step, max_elevation):
+def elevation_color(elevation, min_elevation=0, max_elevation=1000):
     """
-    Gera uma lista de elevações com um intervalo definido pelo passo.
-    
+    Calcula a cor associada a uma elevação específica, mapeando de azul (baixa altitude) a vermelho (alta altitude).
+
     Parâmetros:
-    step (int): O passo em metros entre cada elevação.
-    max_elevation (int): A elevação máxima que a sequência pode atingir.
-    
-    Retorna:
-    list: Uma lista de elevações com o passo definido até a elevação máxima.
+    - elevation (int): Altitude a ser convertida em cor.
+    - min_elevation (int): Altitude mínima considerada na escala.
+    - max_elevation (int): Altitude máxima considerada na escala.
+
+    Retorno:
+    - str: Código hexadecimal da cor correspondente.
     """
-    # Cria uma lista de elevacões começando de 0 até o valor máximo, com o passo definido
-    elevations = list(range(0, max_elevation + step, step))
-    
-    # Se a elevação máxima já está na lista, a removemos para evitar duplicação
-    if elevations[-1] > max_elevation:
-        elevations.pop()
-    
-    return elevations
+
+    # Evita divisão por zero caso min_elevation == max_elevation
+    if max_elevation == min_elevation:
+        normalized = 0  # Define um valor padrão (evita erro)
+    else:
+        # Normaliza a elevação para o intervalo 0-1, considerando MinAltitude e MaxAltitude
+        elevation = max(min_elevation, min(max_elevation, elevation))  # Garante que esteja dentro dos limites
+        normalized = (elevation - min_elevation) / (max_elevation - min_elevation)
+
+    # Calcula a cor baseada na escala de matiz (azul 240° → vermelho 0°)
+    hue = (1 - normalized) * 240
+
+    return hsl_to_hex(hue, 100, 50)  # Mantém saturação e luminosidade fixas
 ###########################################################################################################################
-# Função para gerar a imagem com a tabela
-import matplotlib.pyplot as plt
+import numpy as np
 ###########################################################################################################################
-def generate_elevation_table_png(output_filename='elevation_table.png',max_elevation=1500):
-    # Definir as elevacões e gerar as cores associadas
-    # elevations = [0, 50, 100, 150, 200, 250, 300, 8900]
-    num_itensdisplay = 18
-    max_elev=max_elevation
-    elevationSteps = int(max_elev/num_itensdisplay)
-    elevationItens = int(max_elev/elevationSteps)
-    elevations = generate_elevations(elevationSteps, max_elev)
-    # print(elevations)
-    colors = [elevation_color(elevation,max_elevation=max_elev) for elevation in elevations]
+# Paleta Parula aproximada (Interpolação RGB)
+parula_colors = [
+    (53, 42, 135),   # Azul escuro
+    (45, 53, 140),   # Azul médio
+    (38, 63, 146),   # Ciano
+    (30, 73, 151),   # Verde-azulado
+    (23, 84, 157),   # Verde
+    (16, 94, 162),   # Verde claro
+    (11, 103, 167),  # Verde claro 2
+    (8, 110, 170),   # Azul claro
+    (6, 118, 173),   # Azul claro 2
+    (5, 125, 176),   # Azul mais claro
+    (5, 131, 178),   # Azul esverdeado
+    (6, 138, 180),   # Azul esverdeado 2
+    (8, 144, 182),   # Azul mais esverdeado
+    (11, 150, 183),  # Azul suave
+    (14, 156, 185),  # Azul suave 2
+    (18, 161, 186),  # Azul esverdeado suave
+    (23, 165, 187),  # Azul verde-água
+    (30, 170, 186),  # Azul claro esverdeado
+    (37, 174, 186),  # Azul mais claro
+    (46, 177, 185),  # Azul mais intenso
+    (54, 180, 184),  # Azul mais intenso 2
+    (64, 183, 183),  # Azul suave intenso
+    (74, 185, 181),  # Azul muito suave
+    (85, 188, 179),  # Azul quase esverdeado
+    (96, 190, 176),  # Azul esverdeado
+    (106, 192, 174), # Azul esverdeado 2
+    (116, 194, 171), # Azul claro
+    (127, 197, 167), # Azul claro 2
+    (138, 199, 164), # Azul mais claro
+    (149, 202, 160), # Azul suave
+    (159, 204, 156), # Azul suave 2
+    (170, 204, 152), # Verde mais claro
+    (181, 206, 147), # Verde claro
+    (192, 208, 142), # Verde suave
+    (202, 210, 137), # Verde mais suave
+    (213, 212, 131), # Amarelo suave
+    (223, 214, 126), # Amarelo suave 2
+    (233, 216, 120), # Amarelo brilhante
+    (242, 217, 114), # Amarelo mais brilhante
+    (250, 218, 109), # Amarelo muito brilhante
+    (255, 219, 103), # Amarelo intenso
+    (255, 217, 96),  # Amarelo forte
+    (255, 215, 90),  # Amarelo forte 2
+    (255, 211, 77),  # Amarelo muito forte
+    (255, 206, 63),  # Amarelo super forte
+    (255, 204, 57),  # Amarelo quase dourado
+    (255, 200, 51)   # Amarelo dourado
+]
+###########################################################################################################################
+def elevation_color_parula(elevation, min_elevation=0, max_elevation=1000):
+    """
+    Retorna uma cor Parula baseada na elevação.
+
+    Parâmetros:
+    - elevation (float): Altitude a ser convertida em cor.
+    - min_elevation (float): Menor altitude da escala.
+    - max_elevation (float): Maior altitude da escala.
+
+    Retorna:
+    - str: Cor em formato hexadecimal.
+    """
+    if max_elevation == min_elevation:
+        normalized = 0
+    else:
+        elevation = np.clip(elevation, min_elevation, max_elevation)
+        normalized = (elevation - min_elevation) / (max_elevation - min_elevation)
+
+    # Determina os índices de interpolação
+    idx = int(normalized * (len(parula_colors) - 1))
+    r, g, b = parula_colors[idx]
+
+    return "#{:02x}{:02x}{:02x}".format(r, g, b)
+  
+###########################################################################################################################
+def generate_elevation_table_png(output_filename='elevation_table.png', min_elevation=0, max_elevation=1500):
+    """
+    Gera uma tabela de cores representando diferentes faixas de elevação, agora de forma inversa.
+
+    Parâmetros:
+    output_filename (str): Nome do arquivo de saída da imagem.
+    min_elevation (int): Elevação mínima a ser considerada na escala.
+    max_elevation (int): Elevação máxima a ser considerada na escala.
+    """
+
+    num_itensdisplay = 15  # Número de divisões na tabela
+    elevation_range = max_elevation - min_elevation  # Faixa total de elevação
     
-    # Tamanho da imagem
+    if elevation_range <= 0:
+        print("Erro: min_elevation deve ser menor que max_elevation")
+        return
+
+    elevationSteps = round(elevation_range / num_itensdisplay)  # Passo entre cada nível de elevação
+    elevationItens = round(elevation_range / elevationSteps)  # Número total de níveis
+    
+    elevations = generate_elevations(min_elevation, elevationSteps, max_elevation)
+    colors = [elevation_color_parula(elevation, min_elevation=min_elevation, max_elevation=max_elevation) for elevation in elevations]
+
+    # **Inverte as listas para que a maior altitude fique no topo**
+    elevations.reverse()
+    colors.reverse()
+
+    # Configuração da imagem
     img_width = 150
     img_height = 600
-    font = ImageFont.truetype("arial.ttf", 8) 
-    
-    # Criar uma nova imagem em branco
+    font = ImageFont.truetype("arial.ttf", 8)
+
     img = Image.new('RGB', (img_width, img_height), color='white')
     draw = ImageDraw.Draw(img)
-    
-    # Tamanho da célula da tabela
-    # cell_height = 10      
-    cell_height = int(img_height/elevationItens)
-    cell_width = int(img_width * 0.7)
-    
-    # Desenhar a tabela
+
+    # Ajustar tamanho da célula
+    cell_height = round(img_height / elevationItens)
+    cell_width = round(img_width * 0.7)
+
+    # **Desenhar a tabela na ordem inversa**
     for i, (elevation, color) in enumerate(zip(elevations, colors)):
-        # Desenhar a linha de elevação
         draw.rectangle([0, i * cell_height, cell_width, (i + 1) * cell_height], fill=color)
         draw.text((cell_width + 10, i * cell_height + 10), f'{elevation} m', fill='black', font=font)
-    
+
     # Salvar a imagem
-    # plt.figure(facecolor='black') 
-    # plt.imshow(img)
-    # plt.axis('off')  # Remover as barras de eixo
-    # plt.show()
     img.save(output_filename)
-    wLog(f'Tabelas de cores de altitudes salva como {output_filename}')
+    wLog(f'Tabela de cores de altitudes salva como {output_filename}')
+    
+###########################################################################################################################
+def generate_elevations(min_elevation, step, max_elevation):
+    """
+    Gera uma lista de elevações dentro da faixa definida.
+
+    Parâmetros:
+    min_elevation (int): O valor mínimo da elevação.
+    step (int): O passo em metros entre cada elevação.
+    max_elevation (int): O valor máximo da elevação.
+
+    Retorna:
+    list: Lista de elevações entre min_elevation e max_elevation.
+    """
+    elevations = list(range(min_elevation, max_elevation + step, step))
+
+    # Evita duplicação do valor máximo
+    # if elevations[-1] > max_elevation:
+    #    elevations.pop()
+
+    return elevations
+
 ###########################################################################################################################
 import numpy as np
 ###########################################################################################################################
@@ -435,11 +534,63 @@ def getElevationOpenElev(latitude, longitude):
         # Captura erros de chave ausente no JSON
         print(f"getElevationOpenElev Erro no formato da resposta: {e}")
         return 0
-###########################################################################################################################
-MinAltitude=0
+###########################################################################################################################    
+def getElevationOpenElevBatch(lat_lons, batch_size):
+    """
+    Obtém a elevação de múltiplas localizações usando a API Open-Elevation em lotes de 100.
+    
+    Args:
+        lat_lons (list): Lista de tuplas contendo latitude e longitude.
+    
+    Returns:
+        list: Lista de elevações em metros. Retorna 0 para coordenadas com erro.
+    """
+    url = "https://api.open-elevation.com/api/v1/lookup"
+    elevations = []
+    
+    for i in range(0, len(lat_lons), batch_size):
+        batch = lat_lons[i:i + batch_size]
+        locations = "|".join([f"{lat},{lon}" for lat, lon in batch])
+        params = {"locations": locations}
+        zbuf = url + "?" + "&".join([f"{key}={value}" for key, value in params.items()])
+        wLog(f"---------------------------------------------------------") 
+        wLog(f"getElevationOpenElevBatch URL da requisição: {zbuf}")  # Imprime a URL para depuração
+        wLog(str(len(zbuf)))
+        wLog(str(len(lat_lons)))
+        wLog(f"---------------------------------------------------------") 
+        try:
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            if "results" in data:
+                elevations.extend([round(res["elevation"]) for res in data["results"]])
+            else:
+                elevations.extend([0] * len(batch))
+        
+        except requests.exceptions.RequestException as e:
+            wLog(f"getElevationOpenElevBatch Erro na requisição: {e}")
+            elevations.extend([0] * len(batch))
+        except ValueError as e:
+            wLog(f"getElevationOpenElevBatch Erro ao decodificar JSON: {e}")
+            elevations.extend([0] * len(batch))
+        except KeyError as e:
+            wLog(f"getElevationOpenElevBatch Erro no formato da resposta: {e}")
+            elevations.extend([0] * len(batch))
+    
+    return elevations    
+###########################################################################################################################    
+MinAltitude=50000 # Valor alto para garantir que a primeira altitude seja menor
 MaxAltitude=0
 ###########################################################################################################################
-def AltitudeAnatelServer(latitude, longitude):
+def ResetAltitudes():
+    global MinAltitude
+    global MaxAltitude
+    MinAltitude=50000
+    MaxAltitude=0
+    return
+###########################################################################################################################
+def AltitudeOpenElevation(latitude, longitude):
     
     global MinAltitude
     global MaxAltitude
@@ -450,47 +601,23 @@ def AltitudeAnatelServer(latitude, longitude):
         MaxAltitude = altitude
 
     # Atualiza a altitude mínima
-    # if altitude < MinAltitude:
-    #    MinAltitude = altitude    
+    if altitude < MinAltitude:
+        MinAltitude = altitude    
     
     return altitude
-    """
-    Retorna a altitude (elevation) de uma localização a partir das coordenadas latitude e longitude.
-    
-    Args:
-        latitude (float): Latitude da localização.
-        longitude (float): Longitude da localização.
-    
-    Returns:
-        float: Altitude em metros.
-    """
-    url = f"https://fiscalizacao.anatel.gov.br/api/v1/lookup?locations={latitude},{longitude}"
-    print(f"URL da requisição: {url}")  # Imprime a URL para depuração
-    
-    try:
-        # Faz a requisição à API
-        response = requests.get(url)
-        print(f"Status da resposta: {response.status_code}")  # Imprime o status da resposta
-        print(f"Conteúdo da resposta: {response.text}")  # Imprime o conteúdo da resposta para depuração
-        
-        # Verifica se a requisição foi bem-sucedida
-        response.raise_for_status()
-        
-        # Tenta interpretar a resposta como JSON
-        data = response.json()
-        
-        # Extrai a altitude do resultado
-        elevation = data['results'][0]['elevation']
-        return elevation
-    except requests.RequestException as e:
-        print(f"Erro ao acessar a API: {e}")
-        return 0
-    except (KeyError, IndexError) as e:
-        print(f"Erro ao processar os dados da resposta: {e}")
-        return 0
-    except ValueError as e:
-        print(f"Erro ao decodificar JSON: {e}")
-        return 0
+###########################################################################################################################
+def AltitudeOpenElevationBatch(batch,batch_size):
+    global MinAltitude
+    global MaxAltitude
+    ResetAltitudes()
+    lat_lons = [(p[0], p[1]) for p in batch]
+    altitudes = getElevationOpenElevBatch(lat_lons,batch_size)
+    if altitudes:  # Verifica se a lista não está vazia
+        MinAltitude = min(MinAltitude, min(altitudes)) 
+        MaxAltitude = max(MaxAltitude, max(altitudes))   
+        MinAltitude = int(MinAltitude) 
+        MaxAltitude = int(MaxAltitude)  
+    return altitudes    
 ###########################################################################################################################
 import xarray as xr  # pip install xarray netCDF4 numpy
 import numpy as np
@@ -1894,7 +2021,7 @@ def GeraPontosVisitaDados(pontosvisita):
     pontosvisitaDados=[]
     for ponto in pontosvisita:
         lat, lon = ponto    
-        alt=AltitudeAnatelServer(lat,lon)
+        alt=0
         dado = (lat, lon,f"P{i}","Local","",alt)
         pontosvisitaDados.append(dado)   
         i=i+1     
@@ -1906,7 +2033,7 @@ def MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False):
     for ponto in pontosvisita:
         latitude, longitude = ponto
         linha=PegaLinhaPontosVisitaDados(pontosvisitaDados,latitude,longitude)    
-        alt=AltitudeAnatelServer(latitude,latitude)
+        alt=0
         if(new):
            lin2=linha[3] 
            lin3=linha[4] 
@@ -1950,8 +2077,21 @@ def PegaAltitudesPVD(pontosvisitaDados):
         ponto = pontosvisitaDados[i]
         lat = ponto[0]
         lon = ponto[1]
-        alt = AltitudeAnatelServer(lat, lon)
+        alt = AltitudeOpenElevation(lat, lon)
         pontosvisitaDados[i] = (lat, lon, ponto[2], ponto[3], ponto[4], alt)
+    return pontosvisitaDados
+################################################################################
+def PegaAltitudesPVD_Batch(pontosvisitaDados): # Batch faz chamadas em lote para o OpenElevation
+    batch_size = 100
+    for i in range(0, len(pontosvisitaDados), batch_size):
+        batch = pontosvisitaDados[i:i + batch_size]
+        altitudes = AltitudeOpenElevationBatch(batch,batch_size)
+        for j in range(len(batch)):
+            ponto = batch[j]
+            lat, lon = ponto[0], ponto[1]
+            alt = altitudes[j]
+            pontosvisitaDados[i + j] = (lat, lon, ponto[2], ponto[3], ponto[4], alt)
+
     return pontosvisitaDados
 ################################################################################
 def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
@@ -1974,12 +2114,12 @@ def PlotaPontosVisita(RouteDetail,pontosvisita,pontosvisitaDados):
 
     if(pontosvisitaDados!=[]):
         pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=False)
-        pontosvisitaDados = PegaAltitudesPVD(pontosvisitaDados)  
+        pontosvisitaDados = PegaAltitudesPVD_Batch(pontosvisitaDados)  # Batch faz chamadas em lote para o OpenElevation
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
     else:
         pontosvisitaDados = GeraPontosVisitaDados(pontosvisita) 
         pontosvisitaDados=MesmaOrdenacaoPontosVisita(pontosvisitaDados,pontosvisita,new=True)
-        pontosvisitaDados = PegaAltitudesPVD(pontosvisitaDados)
+        pontosvisitaDados = PegaAltitudesPVD_Batch(pontosvisitaDados) # Batch faz chamadas em lote para o OpenElevation
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)   
        
       

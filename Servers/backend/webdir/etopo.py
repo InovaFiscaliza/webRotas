@@ -4,7 +4,7 @@ import WebRota as wr
 
 lat = -22.919802062945383
 lon = -43.043920503331314 
-alt=wr.AltitudeAnatelServer(lat,lon)
+alt=wr.AltitudeOpenElevation(lat,lon)
 
 print(f"Altitude {lat},{lon} - {alt}")
 

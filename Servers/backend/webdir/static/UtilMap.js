@@ -8,19 +8,27 @@
  */
 
 var  gpsMarker = null;
+
+var debugLevel =0; // 0 - no debug, 1 - debug
+function wLog(msg) 
+{
+   if(debugLevel == 1)
+      console.log(msg);    
+}    
+
 gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map);
 
 
 document.addEventListener("DOMContentLoaded", function () {
     // Sua função aqui
 
-    console.log("A página foi carregada (DOM completamente construído).");
+    wLog("A página foi carregada (DOM completamente construído).");
 });
 
 window.addEventListener("load", function () {
     // Sua função aqui
     CreateControls();
-    console.log("Todos os recursos da página foram carregados.");
+    wLog("Todos os recursos da página foram carregados.");
 });
 
 
@@ -110,16 +118,70 @@ function createSvgIconAzulHalf(number) {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function ElevationColor(elevation) {
-    // Limita a elevação ao intervalo 0-8900
-    max_elevation = globalMaxElevation;
-    elevation = Math.max(0, Math.min(max_elevation, elevation));
+    // Usa os valores globais de elevação mínima e máxima
+    const min_elevation = globalMinElevation;
+    const max_elevation = globalMaxElevation;
 
-    // Normaliza a elevação para o intervalo 0-1
-    const normalized = elevation / max_elevation;
+    // Evita erro se min_elevation for igual a max_elevation
+    if (max_elevation === min_elevation) {
+        return hslToHex(240, 100, 50); // Retorna azul fixo se não houver variação de elevação
+    }
 
-    // Converte a normalização em cores do arco-íris
-    const hue = (1 - normalized) * 240; // 240° (azul) a 0° (vermelho)
+    // Garante que a elevação esteja dentro dos limites
+    elevation = Math.max(min_elevation, Math.min(max_elevation, elevation));
+
+    // Normaliza a elevação para o intervalo 0-1 considerando min_elevation
+    const normalized = (elevation - min_elevation) / (max_elevation - min_elevation);
+
+    // Converte a normalização em cores do arco-íris (240° azul → 0° vermelho)
+    const hue = (1 - normalized) * 240;
+    
     return hslToHex(hue, 100, 50); // Saturação 100%, Luminosidade 50%
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function ElevationColorParula(elevation) {
+    const minElevation = globalMinElevation;
+    const maxElevation = globalMaxElevation;
+
+    if (maxElevation === minElevation) {
+        return rgbToHex(53, 42, 135); // Cor fixa (azul Parula)
+    }
+
+    elevation = Math.max(minElevation, Math.min(maxElevation, elevation));
+    const normalized = (elevation - minElevation) / (maxElevation - minElevation);
+
+    // Paleta de cores Parula
+    const parulaColors = [
+        [53, 42, 135], [45, 53, 140], [38, 63, 146], [30, 73, 151], [23, 84, 157], [16, 94, 162], 
+        [11, 103, 167], [8, 110, 170], [6, 118, 173], [5, 125, 176], [5, 131, 178], [6, 138, 180], 
+        [8, 144, 182], [11, 150, 183], [14, 156, 185], [18, 161, 186], [23, 165, 187], [30, 170, 186], 
+        [37, 174, 186], [46, 177, 185], [54, 180, 184], [64, 183, 183], [74, 185, 181], [85, 188, 179], 
+        [96, 190, 176], [106, 192, 174], [116, 194, 171], [127, 197, 167], [138, 199, 164], [149, 202, 160], 
+        [159, 204, 156], [170, 204, 152], [181, 206, 147], [192, 208, 142], [202, 210, 137], [213, 212, 131], 
+        [223, 214, 126], [233, 216, 120], [242, 217, 114], [250, 218, 109], [255, 219, 103], [255, 217, 96],  
+        [255, 215, 90], [255, 211, 77], [255, 206, 63], [255, 204, 57], [255, 200, 51]
+    ];
+
+    // Índice interpolado
+    const scaledIndex = normalized * (parulaColors.length - 1);
+    const index = Math.floor(scaledIndex);
+    const t = scaledIndex - index; // Posição relativa entre os dois pontos
+
+    // Obtém as cores para interpolação
+    const [r1, g1, b1] = parulaColors[index];
+    const [r2, g2, b2] = parulaColors[Math.min(index + 1, parulaColors.length - 1)];
+
+    // Interpolação linear entre os dois pontos
+    const r = Math.round(r1 + t * (r2 - r1));
+    const g = Math.round(g1 + t * (g2 - g1));
+    const b = Math.round(b1 + t * (b2 - b1));
+
+    return rgbToHex(r, g, b);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função para converter RGB em Hex
+function rgbToHex(r, g, b) {
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Função auxiliar: converte HSL para HEX
@@ -145,7 +207,7 @@ function getElevationSync(latitude, longitude){
     getElevation(latitude, longitude)
     .then(elevation => {
         if (elevation !== null) {
-            console.log(`Elevation - ${elevation}`)
+            wLog(`Elevation - ${elevation}`)
             return elevation;
         } else {
             return 0;
@@ -175,12 +237,15 @@ async function getElevation(latitude, longitude) {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconColorAltitude(number,altitude) {
-    color = ElevationColor(altitude);
+    // color = ElevationColor(altitude);
+    color = ElevationColorParula(altitude);
+
     return createCustomSvgIcon(number,[25, 41],[12, 41],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconColorAltitudeHalf(number,altitude) {
-    color = ElevationColor(altitude);
+    // color = ElevationColor(altitude);
+    color = ElevationColorParula(altitude);
     return createCustomSvgIcon(number,[12, 20],[6, 20],color);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -220,8 +285,9 @@ function createSvg(iconSz, iconColor, text) {
         <svg id="iconSvg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"
              xmlns="http://www.w3.org/2000/svg">
             <path d="${dynamicPath}" fill="${iconColor}"/>
-            <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="${Math.min(width, height) * 0.55}"
-                  fill="white" font-weight="bold">${text}</text>
+            <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" 
+                  font-size="${Math.min(width, height) * 0.55}" fill="white" 
+                  font-weight="bold" stroke="black" stroke-width="0.5">${text}</text>
         </svg>`;
 }
 
@@ -249,7 +315,7 @@ function AtualizaPontosvisitaDadosMarquerData(currentMarker,ColunaAtualizar,Novo
     // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"]
     position = currentMarker.getLatLng();
     pontosVisitaDados =  AtualizaPontosvisitaDados(pontosvisitaDados,position.lat, position.lng,ColunaAtualizar,NovoDado);
-    console.log(JSON.stringify(pontosvisitaDados, null, 2));
+    wLog(JSON.stringify(pontosvisitaDados, null, 2));
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function salvarEmCookies(nomeCookie, valor, dias)
@@ -295,11 +361,11 @@ function onMarkerClick(e) {
     const markerId = currentMarker._icon.getAttribute('data-id');
     const clicado = currentMarker._icon.getAttribute('clicado');
     const altitude = currentMarker._icon.getAttribute('altitude');
-    console.log(`Marquer clicado - ID - ${markerId} - Clicado - ${clicado}`)
+    wLog(`Marquer clicado - ID - ${markerId} - Clicado - ${clicado}`)
     // Verifica o ícone atual e troca para o outro
     if (HeadingNorte==0)
     {
-        // console.log(`aqui`)
+        // wLog(`aqui`)
         if (clicado === "0")
         {
             currentMarker.setIcon(clickedIcon);
@@ -337,7 +403,7 @@ function onMarkerClick(e) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function DisableMarker(e)
 {
-    console.log("DisableMarker");
+    wLog("DisableMarker");
     const currentMarker = e;
     const markerId = currentMarker._icon.getAttribute('data-id');
     const clicado = currentMarker._icon.getAttribute('clicado');
@@ -508,7 +574,7 @@ function GetNearestPoint(lat, lon) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
 {
-    console.log("DesabilitaMarquerNoGPSRaioDaEstacao");
+    wLog("DesabilitaMarquerNoGPSRaioDaEstacao");
     const userLocation = {lat: lat, lng: lon};
 
     // Lista de marcadores já adicionados ao mapa
@@ -520,9 +586,9 @@ function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
     markerVet.forEach(marker => {
         const markerCoords = marker.getLatLng(); // Obtém as coordenadas do marcador
         const distance = haversineDistance(userLocation, markerCoords);
-        // console.log("   userLocation - "+String(userLocation));
-        // console.log("   markerCoords - "+String(markerCoords));
-        // console.log("   distance - "+String(distance));
+        // wLog("   userLocation - "+String(userLocation));
+        // wLog("   markerCoords - "+String(markerCoords));
+        // wLog("   distance - "+String(distance));
         if (distance < RaioDaEstacao)
         {
             DisableMarker(marker);
@@ -532,12 +598,12 @@ function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Exemplo de uso
 // const nearestPoint = GetNearestPoint(-22.9000, -43.0500);
-// console.log("Marcador mais próximo está em:", nearestPoint.lat, nearestPoint.lng);
+// wLog("Marcador mais próximo está em:", nearestPoint.lat, nearestPoint.lng);
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function calcularMediaUltimasNCoordenadas(coordinates, n) {
     // Verifica se há coordenadas suficientes
     if (coordinates.length < n) {
-        console.log("Não há coordenadas suficientes para calcular a média");
+        wLog("Não há coordenadas suficientes para calcular a média");
         return null;
     }
 
@@ -567,7 +633,7 @@ function DesenhaRota(coordinates)
         polyRotaAux.remove();
         polyRotaAux = null; // Opcional: redefinir a variável para null
     }
-    console.log("Plotando nova rota auxiliar")
+    wLog("Plotando nova rota auxiliar")
     polyRotaAux = L.polyline(coordinates, {color: 'red', "opacity": 0.7}).addTo(map);
 
     // armazena o inicio da rota para a simulação de movimento buscar a rota ok
@@ -594,7 +660,7 @@ function ServerUrl()
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 async function getRoute(startCoords, endCoords){
-    console.log("getRoute");
+    wLog("getRoute");
     if(ServerTec == "OSMR")
     {
         return getRouteOSMR(startCoords, endCoords);
@@ -612,7 +678,7 @@ async function getRouteGHopper(startCoords, endCoords) {
     // "http://localhost:8989/route?point=-22.87248975925445,-43.08681365669065&point=-22.885656291854495,-43.05230110610495"
 
     const url = `${serverUrl}/route?point=${startCoords[0]},${startCoords[1]}&point=${endCoords[0]},${endCoords[1]}`;
-    console.log("\n\n" + url + "\n");
+    wLog("\n\n" + url + "\n");
 
     try {
         // Fazer a solicitação usando fetch
@@ -626,7 +692,7 @@ async function getRouteGHopper(startCoords, endCoords) {
 
             // Decodificar a geometria usando uma biblioteca como @mapbox/polyline
             coordinates = decodePolyline(geometry); // polyline precisa estar disponível/importada
-            console.log("Coordinates:", coordinates);
+            wLog("Coordinates:", coordinates);
             DesenhaRota(coordinates);
             return coordinates;
         } else {
@@ -645,7 +711,7 @@ async function getRouteOSMR(startCoords, endCoords) {
     // const baseUrl = "{{ url_for('proxy') }}"
 
     // serverUrl = ServerUrl()  // Falhou no ngrock a resposta em json
-    // console.log("URL do servidor:", serverUrl);
+    // wLog("URL do servidor:", serverUrl);
     // const url = `${serverUrl}/osmr/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=polyline&steps=true`;
 
     // ngrok http 5001
@@ -661,7 +727,7 @@ async function getRouteOSMR(startCoords, endCoords) {
        serverUrl = `${window.location.protocol}//${window.location.hostname}`;
        url = `${serverUrl}/route?porta=${OSRMPort}&start=${startCoords[1]},${startCoords[0]}&end=${endCoords[1]},${endCoords[0]}`
     }
-    console.log("\n\n" + url + "\n");
+    wLog("\n\n" + url + "\n");
 
     try {
         // Fazer a solicitação usando fetch
@@ -675,7 +741,7 @@ async function getRouteOSMR(startCoords, endCoords) {
 
             // Decodificar a geometria usando uma biblioteca como @mapbox/polyline
             coordinates = decodePolyline(geometry); // polyline precisa estar disponível/importada
-            // console.log("Coordinates:", coordinates);
+            // wLog("Coordinates:", coordinates);
             DesenhaRota(coordinates);
             return coordinates;
         } else {
@@ -792,7 +858,7 @@ async function obterHeadingOsrm(lat, lon) {
             if (data.waypoints && data.waypoints.length > 0) {
                 // Captura o bearing (heading)
                 const heading = data.waypoints[0].bearing;
-                console.log(`Heading encontrado: ${heading} graus`);
+                wLog(`Heading encontrado: ${heading} graus`);
                 return heading;
             } else {
                 console.error("Nenhum waypoint encontrado.");
@@ -912,7 +978,7 @@ function updateGPSPositionKalman(position) {
         }
     }
 
-    console.log(`Posição estimada: Latitude: ${kalmanState.latitude}, Longitude: ${kalmanState.longitude}, Heading: ${kalmanState.heading}`);
+    wLog(`Posição estimada: Latitude: ${kalmanState.latitude}, Longitude: ${kalmanState.longitude}, Heading: ${kalmanState.heading}`);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function updateGPSPosition(position) {
@@ -920,13 +986,13 @@ function updateGPSPosition(position) {
     if(gpsAtivado==false)
         return
     if (position === undefined) {
-        console.log("A posição é undefined.");
+        wLog("A posição é undefined.");
         return;
     }
 
     latitude = position.coords.latitude;
     longitude = position.coords.longitude;
-    console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+    wLog(`Latitude: ${latitude}, Longitude: ${longitude}`);
     heading = position.coords.heading;
     speed = position.coords.speed;
 
@@ -970,30 +1036,30 @@ function updateGPSPosition(position) {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetNextActivePoint() {
-    console.log("GetNextActivePoint");
+    wLog("GetNextActivePoint");
 
     let ind = 0;
 
     for (let ponto of pontosVisitaOrdenados) {
         let [lati, loni] = ponto;
-        console.log("------------");
-        console.log("lati - " + String(lati));
-        console.log("loni - " + String(loni));
+        wLog("------------");
+        wLog("lati - " + String(lati));
+        wLog("loni - " + String(loni));
 
         let stringPn = "P" + String(ind);
         let bAtivo = EncontrarDado(pontosvisitaDados, lati, loni, 6);
 
-        console.log("bAtivo - " + bAtivo);
+        wLog("bAtivo - " + bAtivo);
 
         if (bAtivo === "Ativo") {
-            console.log("Encontrou ponto ativo");
+            wLog("Encontrou ponto ativo");
 
             let pnt = {
                 lat: lati,
                 lng: loni
             };
 
-            console.log("pnt.lat - " + String(pnt.lat));
+            wLog("pnt.lat - " + String(pnt.lat));
             return pnt; // Retorna o primeiro ponto ativo encontrado
         }
 
@@ -1006,7 +1072,7 @@ function GetNextActivePoint() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetRouteCarFromHere(latitude,longitude)
 {
-   console.log("Tentando pegar rota")
+   wLog("Tentando pegar rota")
    startCoords = [];
    endCoords = [];
 
@@ -1016,18 +1082,18 @@ function GetRouteCarFromHere(latitude,longitude)
 
    if(GpsProximoPonto=="ProximoDaRota")
    {
-      console.log("ProximoDaRota algoritmo");
+      wLog("ProximoDaRota algoritmo");
       nearestPoint = GetNextActivePoint();
    } 
    else  // "MaisProximo"   2.856775150175865, -60.634694963294585
    { 
-      console.log("MaisProximo algoritmo");
+      wLog("MaisProximo algoritmo");
       nearestPoint = GetNearestPoint(latitude, longitude);
    }   
-   // console.log("nearestPoint - "+String(nearestPoint))
+   // wLog("nearestPoint - "+String(nearestPoint))
    if (nearestPoint==null) // Apaga rota auxiliar
    {
-       console.log("nearestPoint - null");
+       wLog("nearestPoint - null");
        if (polyRotaAux) {
            polyRotaAux.remove();
            polyRotaAux = null; // Opcional: redefinir a variável para null
@@ -1038,7 +1104,7 @@ function GetRouteCarFromHere(latitude,longitude)
    startCoords[1] = longitude;
    endCoords[0] = nearestPoint.lat;
    endCoords[1] = nearestPoint.lng;
-   console.log("getRoute");
+   wLog("getRoute");
    getRoute(startCoords, endCoords);
 }
 
@@ -1296,6 +1362,188 @@ function createColorTable() {
     document.body.appendChild(compassDiv);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function createDivScaleSvg() {
+    // Verifica se o elemento já existe para evitar duplicação
+    if (document.getElementById("resizableDiv")) 
+    {
+        document.getElementById("resizableDiv").remove();
+        return;
+    }    
+        
+
+    // Criar o div principal
+    const resizableDiv = document.createElement("div");
+    resizableDiv.id = "resizableDiv";
+    resizableDiv.style.position = "absolute";
+    resizableDiv.style.bottom = "18px";
+    resizableDiv.style.right = "-13px";
+    resizableDiv.style.zIndex = "1001";
+    resizableDiv.style.width = "100px";
+    resizableDiv.style.height = "500px";
+    // resizableDiv.style.border = "0px solid black"; // Apenas para visualização
+    // resizableDiv.style.backgroundColor = "white"; // Para destacar o SVG
+
+    // Criar o container para o SVG
+    const svgContainer = document.createElement("div");
+    svgContainer.id = "svgContainer";
+    svgContainer.style.position = "absolute"; // Garante que ocupe todo o espaço
+    svgContainer.style.top = "0";
+    svgContainer.style.left = "0";
+    svgContainer.style.width = "100%";
+    svgContainer.style.height = "100%";
+
+    // Adicionar o svgContainer dentro do resizableDiv
+    resizableDiv.appendChild(svgContainer);
+
+    // Adicionar resizableDiv ao body
+    document.body.appendChild(resizableDiv);
+
+    // Adicionar evento de roda do mouse para alterar o zoom
+    resizableDiv.addEventListener("wheel", function (e) {
+        e.preventDefault(); // Impede o comportamento padrão de scroll
+
+        // Calcular o fator de zoom
+        const zoomFactor = 0.1;
+        let newWidth = parseFloat(resizableDiv.style.width);
+        let newHeight = parseFloat(resizableDiv.style.height);
+
+        if (e.deltaY < 0) {
+            // Roda para cima - aumenta o zoom
+            newWidth += newWidth * zoomFactor;
+            newHeight += newHeight * zoomFactor;
+        } else {
+            // Roda para baixo - diminui o zoom
+            newWidth -= newWidth * zoomFactor;
+            newHeight -= newHeight * zoomFactor;
+        }
+
+        // Definir os novos valores de largura e altura, com limites para evitar que fique muito pequeno
+        resizableDiv.style.width = Math.max(newWidth, 50) + "px";
+        resizableDiv.style.height = Math.max(newHeight, 100) + "px"; // Evita que o div desapareça
+    });
+
+    // Gerar e inserir o SVG
+    updateScale();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function generateScaleSVG(minValue, maxValue) {
+    const step = (maxValue - minValue) / 15;
+    
+    // Criando o elemento SVG diretamente via JavaScript
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 100 1000");
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    svg.style.width = "100%"; // Garante que ele ocupa todo o espaço do container
+    svg.style.height = "100%";
+
+    // Criando o gradiente
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const linearGradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+    linearGradient.setAttribute("id", "grad");
+    linearGradient.setAttribute("x1", "0");
+    linearGradient.setAttribute("y1", "1");
+    linearGradient.setAttribute("x2", "0");
+    linearGradient.setAttribute("y2", "0");
+
+    // Cores do gradiente
+    var colors = [
+        "rgb(255, 200, 51)", "rgb(255, 204, 57)", "rgb(255, 206, 63)",
+        "rgb(255, 211, 77)", "rgb(255, 215, 90)", "rgb(255, 217, 96)", "rgb(255, 219, 103)",
+        "rgb(250, 218, 109)", "rgb(242, 217, 114)", "rgb(233, 216, 120)", "rgb(223, 214, 126)",
+        "rgb(213, 212, 131)", "rgb(202, 210, 137)", "rgb(192, 208, 142)", "rgb(181, 206, 147)",
+        "rgb(170, 204, 152)", "rgb(159, 204, 156)", "rgb(149, 202, 160)", "rgb(138, 199, 164)",
+        "rgb(127, 197, 167)", "rgb(116, 194, 171)", "rgb(106, 192, 174)", "rgb(96, 190, 176)",
+        "rgb(85, 188, 179)", "rgb(74, 185, 181)", "rgb(64, 183, 183)", "rgb(54, 180, 184)",
+        "rgb(46, 177, 185)", "rgb(37, 174, 186)", "rgb(30, 170, 186)", "rgb(23, 165, 187)",
+        "rgb(18, 161, 186)", "rgb(14, 156, 185)", "rgb(11, 150, 183)", "rgb(8, 144, 182)",
+        "rgb(6, 138, 180)", "rgb(5, 131, 178)", "rgb(5, 125, 176)", "rgb(6, 118, 173)",
+        "rgb(8, 110, 170)", "rgb(11, 103, 167)", "rgb(16, 94, 162)", "rgb(23, 84, 157)",
+        "rgb(30, 73, 151)", "rgb(38, 63, 146)", "rgb(45, 53, 140)", "rgb(53, 42, 135)"
+    ];
+    colors = colors.reverse();
+    // Criando os "stops" no gradiente
+    colors.forEach((color, index) => {
+        const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop.setAttribute("offset", `${index * (100 / (colors.length - 1))}%`); // Percentual de cada cor no gradiente
+        stop.setAttribute("style", `stop-color:${color}; stop-opacity:1`);
+        linearGradient.appendChild(stop);
+    });
+
+
+    defs.appendChild(linearGradient);
+    svg.appendChild(defs);
+
+    // Criando o fundo branco
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("x", "0");
+    background.setAttribute("y", "0");
+    background.setAttribute("width", "120");
+    background.setAttribute("height", "1000");
+    background.setAttribute("rx", "10");
+    background.setAttribute("ry", "10");
+    background.setAttribute("fill", "white");
+    background.setAttribute("fill-opacity", "0.8");
+    svg.appendChild(background);
+
+    // Criando o retângulo de escala com gradiente
+    const scaleRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    scaleRect.setAttribute("x", "5");
+    scaleRect.setAttribute("y", "5");
+    scaleRect.setAttribute("width", "45");
+    scaleRect.setAttribute("height", "990");
+    scaleRect.setAttribute("rx", "10");
+    scaleRect.setAttribute("ry", "10");
+    scaleRect.setAttribute("fill", "url(#grad)");
+    svg.appendChild(scaleRect);
+
+    // Criando as marcações e os textos da escala
+    for (let i = 0; i < 16; i++) {
+        const y = 985 - (i * 969) / 15;
+        const value = (minValue + i * step).toFixed(1);
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", "5");
+        line.setAttribute("x2", "50");
+        line.setAttribute("y1", y);
+        line.setAttribute("y2", y);
+        line.setAttribute("stroke", "white");
+        line.setAttribute("stroke-opacity", "0.3");
+        line.setAttribute("stroke-width", "2");
+        svg.appendChild(line);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", "114");
+        text.setAttribute("y", y + 7);
+        text.setAttribute("font-family", "sans-serif");
+        text.setAttribute("font-size", "19");
+        text.setAttribute("fill", "black");
+        text.setAttribute("text-anchor", "end");
+        text.textContent = `${Math.round(value)}m`;
+        svg.appendChild(text);
+    }
+
+    return svg;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+function updateScale() {
+
+    // Certifica-se de que o container existe antes de inserir o SVG
+    const svgContainer = document.getElementById("svgContainer");
+    if (!svgContainer) return;
+
+    // Limpa o conteúdo anterior
+    svgContainer.innerHTML = "";
+    
+    // Insere o novo SVG
+    svgContainer.appendChild(generateScaleSVG(globalMinElevation, globalMaxElevation));
+}
+
+// Chama a função para criar o elemento e atualizar a escala
+// createDivScaleSvg();
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Função para destivar um elmento html
 function ativaElementoHtml(id, estado) {
     const elemento = document.getElementById(id);
@@ -1383,7 +1631,7 @@ function EncontrarDadoPn(pontosvisitaDados, Pn,iDado) {
 function limparMarcadores(markerVet) {
     // Verifica se o array tem marcadores
     if (!markerVet || markerVet.length === 0) {
-        console.log("Nenhum marcador para remover.");
+        wLog("Nenhum marcador para remover.");
         return;
     }
 
@@ -1401,7 +1649,7 @@ function limparMarcadores(markerVet) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function AtualizaPontosvisitaDadosCampoPN(pontosvisitaDados,lat, lon,iPn,iPnDados)
 {
-    // console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+    // wLog(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
     i_posicaoiPnDados = pontosvisitaDados.findIndex(ponto => ponto[2] === iPnDados );
     i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
 
@@ -1413,7 +1661,7 @@ function AtualizaPontosvisitaDadosCampoPN(pontosvisitaDados,lat, lon,iPn,iPnDado
 // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
 function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,ColunaAtualizar,NovoDado)
 {
-    // console.log(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
+    // wLog(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
     i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
     pontosvisitaDados[i_posicaolatlon][ColunaAtualizar]=NovoDado;
     return pontosvisitaDados;
@@ -1435,8 +1683,8 @@ function ReordenaPontosTela(rotaSel)
         tooltip = EncontrarDado(pontosvisitaDados, lat, lon,4);
         alt = EncontrarDado(pontosvisitaDados, lat, lon,5);
         tooltip = `Altitude: ${alt}<br>${tooltip}`
-        // console.log(`---->>> lat ${lat}, lon ${lat}, tooltip - ${tooltip}`);
-        // console.log(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}, alt - ${alt}`);
+        // wLog(`---->>> lat ${lat}, lon ${lat}, tooltip - ${tooltip}`);
+        // wLog(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}, alt - ${alt}`);
 
         if(iPn!=iPnDados)
         {
@@ -1631,12 +1879,12 @@ async function enviarJson(payload, url) {
 
         // Verifica se a requisição foi bem-sucedida
         if (response.ok) {
-            console.log("-----------------------------------------------");
-            console.log("Requisição bem-sucedida:");
+            wLog("-----------------------------------------------");
+            wLog("Requisição bem-sucedida:");
 
             const responseData = await response.json();
-            console.log(responseData);
-            console.log("-----------------------------------------------");
+            wLog(responseData);
+            wLog("-----------------------------------------------");
             return(responseData);
             // const redirectUrl = responseData.Url;
             // if (redirectUrl) {
@@ -1758,7 +2006,9 @@ function createMacOSDock() {
             img.style.borderRadius = '10px';
             iconDiv.appendChild(img);
             img.onclick = () => {
-                createColorTable();
+                // createColorTable();
+                createDivScaleSvg();
+                
             };
 
         }
