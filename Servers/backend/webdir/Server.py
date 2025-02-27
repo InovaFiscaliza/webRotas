@@ -28,16 +28,7 @@ Compress(app)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # Ativa o auto-reload dos templates
 
-################################################################################
-@app.route('/recebe<ip>.html', methods=['POST','GET'])   # exemplo /recebe<18.64.207.107>.html
-def SaveIp(ip):
-    # htm.GetGeolocation(ip)
-    return "ok"
-################################################################################
-@app.route('/')                # return render_template('index.html')
-def index():
-    id = request.args.get('news') # parametro news da url
-    return # htm.GeraPaginaBlog(id)
+
 ################################################################################
 @app.route('/ok', methods=['GET'])
 def ok():

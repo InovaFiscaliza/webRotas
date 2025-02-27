@@ -70,17 +70,6 @@ def WriteToFile(file_path, content):
     except Exception as e:
         print(f"Erro ao gravar no arquivo: {e}")
 ###########################################################################################################################    
-def GeraElevationTable():
-    wr.wLog(f"GeraElevationTable")
-    nomeuser=wr.UserData.nome
-    fileElevation = f'static/elevation_table{nomeuser}.png'
-    wr.generate_elevation_table_png(output_filename=fileElevation,min_elevation=wr.MinAltitude,max_elevation=wr.MaxAltitude)     
-    base64ElevationTable = wr.FileToDataUrlBase64(fileElevation)
-    if os.path.exists(fileElevation):
-       os.remove(fileElevation)
-    content = f"imgElevationTable = 'url(\"{base64ElevationTable}\")';"
-    WriteToFile('static/tmpStaticResources.js', content)    
-###########################################################################################################################    
 def GeraStaticIcon(name):
     wr.wLog(f"GeraStaticIcon - {name}")
     nomeuser=wr.UserData.nome

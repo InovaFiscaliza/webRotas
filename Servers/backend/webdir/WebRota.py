@@ -15,106 +15,26 @@ import math
 import subprocess
 import requests
 import polyline # pip install polyline
-import simplekml # pip install simplekml
-import json
-
 
 # conda create --name webrotas python=3.11
 # conda activate webrotas
 
-# from osgeo import ogr # conda install -c conda-forge gdal 
-                      # conda install conda-forge::gdal 
-                      # conda install -c conda-forge gdal=3.0.2
-                      # set USE_PATH_FOR_GDAL_PYTHON=YES
-                      # set PATH=%PATH%;C:\Users\andre\anaconda3\Library\bin
-###########################################################################################################################
-def GerarGeojson(coordenadas, filename="output.geojson"):
-    # Estrutura GeoJSON
-    geojson_data = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [[lon, lat] for lat, lon in coordenadas]  # GeoJSON usa formato [longitude, latitude]
-                },
-                "properties": {
-                    "name": "Rota"
-                }
-            }
-        ]
-    }
-
-    # Salvar arquivo GeoJSON
-    with open(filename, 'w') as geojson_file:
-        json.dump(geojson_data, geojson_file, indent=4)
-    wLog(f"Arquivo {filename} gerado com sucesso!")
-                      
-###########################################################################################################################
-def GetCurl(url):
-    # função criada para resolver o problema do requests.get(url) não funcionar no locahost do OpenRoute
-    result = subprocess.run(
-    ["curl", "-X", "GET", url, "-H", "Accept: application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8"],
-    capture_output=True,
-    text=True
-    )
-    ret = result
-    ret.status_code = result.stdout
-    ret.reason = result.stderr
-    return result.stdout
-###########################################################################################################################
-class ClRouteDetail:
-    # The constructor method
-    def __init__(self, lat, lon,street):
-        self.lat = lat 
-        self.lon = lon
-        self.street = street
-        self.azimute = 0
-        self.distm = 0
-        
 ###########################################################################################################################
 class ClRouteDetailList:
     def __init__(self):
         self.list = []
         self.ind=0    
-        self.waypnts = [] 
-        self.instructions = [] 
         self.coordinates = []
         self.pontosvisitaDados = []
-        self.mapcode = ""  
+        self.mapcode = ""   
         self.pontoinicial = None    
         self.DistanceTotal = 0
-    #---------------------------------------------------    
-    def NewPiece(self, lat, lon,street):   
-       self.list.append(ClRouteDetail(lat, lon,street))
-       if self.ind>0:
-          lati = self.list[self.ind-1].lat
-          loni = self.list[self.ind-1].lon
-          latf = self.list[self.ind].lat
-          lonf = self.list[self.ind].lon
-          self.list[self.ind-1].azimute = Azimute(lati,loni,latf,lonf) 
-          self.list[self.ind-1].distm = Haversine(lati,loni,latf,lonf)   # Em metros
-          
-          wLog(f"Trecho anterior = {self.list[self.ind-1].street} , Azim = {self.list[self.ind-1].azimute}, distm {self.list[self.ind-1].distm}")
-          
-       else:
-          wLog("Primeiro trecho rota")    
-       self.ind=self.ind+1
-       return
+
     #---------------------------------------------------
     def GeraMapPolylineCaminho(self):
         wLog("Plotando polyline rota")
         self.mapcode += "\n"
-        # self.mapcode += """var poly_lineRota = L.polyline([""" 
-        # for i, (lat, lon) in enumerate(self.coordinates):
-        #     if i == len(self.coordinates) - 1:  # Último elemento
-        #        self.mapcode += f"[{lat}, {lon}]"
-        #    else:
-        #       self.mapcode += f"[{lat}, {lon}], "    
-        #self.mapcode += """],{"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
-        #                   ).addTo(map);\n"""
-                   
+                  
         self.mapcode += """var polylineRotaDat = ["""     
         for ind,poliLine in enumerate(self.coordinates):  
             self.mapcode += """["""  
@@ -142,25 +62,7 @@ class ClRouteDetailList:
            }
            ListaRotasCalculadas[0].polylineRotaDat = polylineRotaDat;    
         """                          
-        return
-    #---------------------------------------------------
-    def NewWaypoint(self,waypoint,lat,lon):
-        self.waypnts.append(ClRouteDetail(lat, lon,waypoint))
-        return
-    #---------------------------------------------------
-    def NewInstruction(self,string):
-        self.instructions.append(string)
-        return
-    #---------------------------------------------------
-    # Função para imprimir todos os waypoints
-    def PrintWaypoints(self):
-        if len(self.waypnts) == 0:
-            wLog("Nenhum waypoint adicionado.")
-        else:
-            wLog("Waypoints:")
-            for idx, waypoint in enumerate(self.waypnts):
-                wLog(f"{idx + 1}. Nome: {waypoint.street}, Latitude: {waypoint.lat}, Longitude: {waypoint.lon}")
-        return        
+        return   
 ###########################################################################################################################
 def Haversine(lat1, lon1, lat2, lon2):
     # Raio da Terra em metros
@@ -185,307 +87,7 @@ def Haversine(lat1, lon1, lat2, lon2):
     
     return distancia
 ###########################################################################################################################
-def Azimute(lat1, lon1, lat2, lon2):
-    # Converter graus para radianos
-    lat1 = math.radians(lat1)
-    lon1 = math.radians(lon1)
-    lat2 = math.radians(lat2)
-    lon2 = math.radians(lon2)
-    
-    # Calcular a diferença de longitudes
-    delta_lon = lon2 - lon1
-    
-    # Calcular o azimute
-    x = math.sin(delta_lon) * math.cos(lat2)
-    y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(delta_lon))
-    azimute = math.atan2(x, y)
-    
-    # Converter de radianos para graus
-    azimute = math.degrees(azimute)
-    
-    # Normalizar o azimute para um intervalo de 0 a 360 graus
-    azimute = (azimute + 360) % 360
-    
-    return azimute
-
-###########################################################################################################################
-def ReverseGeocode(lat, lon):
-    return 'Rua não encontrada'
-    driver = ogr.GetDriverByName('OSM')
-    dataSource = driver.Open('./MapaBrasil/brazil-latest.osm.pbf', 0)
-    layer = dataSource.GetLayer()
-
-    point = ogr.Geometry(ogr.wkbPoint)
-    point.AddPoint(lon, lat)
-
-    layer.SetSpatialFilter(point)
-    for feature in layer:
-        if feature.GetField('name'):
-            return feature.GetField('name')
-
-    return 'Rua não encontrada'
-
-# Exemplo de uso
-# lat = -22.941704
-# lon = -43.370423
-# print(ReverseGeocode(lat, lon))
-###########################################################################################################################
-###########################################################################################################################
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
-import matplotlib.colors as mcolors
-###########################################################################################################################
-# Função para converter HSL para HEX
-def hsl_to_hex(h, s, l):
-    s /= 100
-    l /= 100
-
-    k = lambda n: (n + h / 30) % 12
-    a = s * min(l, 1 - l)
-    f = lambda n: l - a * max(-1, min(k(n) - 3, min(9 - k(n), 1)))
-
-    r = round(255 * f(0))
-    g = round(255 * f(8))
-    b = round(255 * f(4))
-
-    return f'#{r:02x}{g:02x}{b:02x}'
-###########################################################################################################################
-def elevation_color(elevation, min_elevation=0, max_elevation=1000):
-    """
-    Calcula a cor associada a uma elevação específica, mapeando de azul (baixa altitude) a vermelho (alta altitude).
-
-    Parâmetros:
-    - elevation (int): Altitude a ser convertida em cor.
-    - min_elevation (int): Altitude mínima considerada na escala.
-    - max_elevation (int): Altitude máxima considerada na escala.
-
-    Retorno:
-    - str: Código hexadecimal da cor correspondente.
-    """
-
-    # Evita divisão por zero caso min_elevation == max_elevation
-    if max_elevation == min_elevation:
-        normalized = 0  # Define um valor padrão (evita erro)
-    else:
-        # Normaliza a elevação para o intervalo 0-1, considerando MinAltitude e MaxAltitude
-        elevation = max(min_elevation, min(max_elevation, elevation))  # Garante que esteja dentro dos limites
-        normalized = (elevation - min_elevation) / (max_elevation - min_elevation)
-
-    # Calcula a cor baseada na escala de matiz (azul 240° → vermelho 0°)
-    hue = (1 - normalized) * 240
-
-    return hsl_to_hex(hue, 100, 50)  # Mantém saturação e luminosidade fixas
-###########################################################################################################################
-import numpy as np
-###########################################################################################################################
-# Paleta Parula aproximada (Interpolação RGB)
-parula_colors = [
-    (53, 42, 135),   # Azul escuro
-    (45, 53, 140),   # Azul médio
-    (38, 63, 146),   # Ciano
-    (30, 73, 151),   # Verde-azulado
-    (23, 84, 157),   # Verde
-    (16, 94, 162),   # Verde claro
-    (11, 103, 167),  # Verde claro 2
-    (8, 110, 170),   # Azul claro
-    (6, 118, 173),   # Azul claro 2
-    (5, 125, 176),   # Azul mais claro
-    (5, 131, 178),   # Azul esverdeado
-    (6, 138, 180),   # Azul esverdeado 2
-    (8, 144, 182),   # Azul mais esverdeado
-    (11, 150, 183),  # Azul suave
-    (14, 156, 185),  # Azul suave 2
-    (18, 161, 186),  # Azul esverdeado suave
-    (23, 165, 187),  # Azul verde-água
-    (30, 170, 186),  # Azul claro esverdeado
-    (37, 174, 186),  # Azul mais claro
-    (46, 177, 185),  # Azul mais intenso
-    (54, 180, 184),  # Azul mais intenso 2
-    (64, 183, 183),  # Azul suave intenso
-    (74, 185, 181),  # Azul muito suave
-    (85, 188, 179),  # Azul quase esverdeado
-    (96, 190, 176),  # Azul esverdeado
-    (106, 192, 174), # Azul esverdeado 2
-    (116, 194, 171), # Azul claro
-    (127, 197, 167), # Azul claro 2
-    (138, 199, 164), # Azul mais claro
-    (149, 202, 160), # Azul suave
-    (159, 204, 156), # Azul suave 2
-    (170, 204, 152), # Verde mais claro
-    (181, 206, 147), # Verde claro
-    (192, 208, 142), # Verde suave
-    (202, 210, 137), # Verde mais suave
-    (213, 212, 131), # Amarelo suave
-    (223, 214, 126), # Amarelo suave 2
-    (233, 216, 120), # Amarelo brilhante
-    (242, 217, 114), # Amarelo mais brilhante
-    (250, 218, 109), # Amarelo muito brilhante
-    (255, 219, 103), # Amarelo intenso
-    (255, 217, 96),  # Amarelo forte
-    (255, 215, 90),  # Amarelo forte 2
-    (255, 211, 77),  # Amarelo muito forte
-    (255, 206, 63),  # Amarelo super forte
-    (255, 204, 57),  # Amarelo quase dourado
-    (255, 200, 51)   # Amarelo dourado
-]
-###########################################################################################################################
-def elevation_color_parula(elevation, min_elevation=0, max_elevation=1000):
-    """
-    Retorna uma cor Parula baseada na elevação.
-
-    Parâmetros:
-    - elevation (float): Altitude a ser convertida em cor.
-    - min_elevation (float): Menor altitude da escala.
-    - max_elevation (float): Maior altitude da escala.
-
-    Retorna:
-    - str: Cor em formato hexadecimal.
-    """
-    if max_elevation == min_elevation:
-        normalized = 0
-    else:
-        elevation = np.clip(elevation, min_elevation, max_elevation)
-        normalized = (elevation - min_elevation) / (max_elevation - min_elevation)
-
-    # Determina os índices de interpolação
-    idx = int(normalized * (len(parula_colors) - 1))
-    r, g, b = parula_colors[idx]
-
-    return "#{:02x}{:02x}{:02x}".format(r, g, b)
-  
-###########################################################################################################################
-def generate_elevation_table_png(output_filename='elevation_table.png', min_elevation=0, max_elevation=1500):
-    """
-    Gera uma tabela de cores representando diferentes faixas de elevação, agora de forma inversa.
-
-    Parâmetros:
-    output_filename (str): Nome do arquivo de saída da imagem.
-    min_elevation (int): Elevação mínima a ser considerada na escala.
-    max_elevation (int): Elevação máxima a ser considerada na escala.
-    """
-
-    num_itensdisplay = 15  # Número de divisões na tabela
-    elevation_range = max_elevation - min_elevation  # Faixa total de elevação
-    
-    if elevation_range <= 0:
-        print("Erro: min_elevation deve ser menor que max_elevation")
-        return
-
-    elevationSteps = round(elevation_range / num_itensdisplay)  # Passo entre cada nível de elevação
-    elevationItens = round(elevation_range / elevationSteps)  # Número total de níveis
-    
-    elevations = generate_elevations(min_elevation, elevationSteps, max_elevation)
-    colors = [elevation_color_parula(elevation, min_elevation=min_elevation, max_elevation=max_elevation) for elevation in elevations]
-
-    # **Inverte as listas para que a maior altitude fique no topo**
-    elevations.reverse()
-    colors.reverse()
-
-    # Configuração da imagem
-    img_width = 150
-    img_height = 600
-    font = ImageFont.truetype("arial.ttf", 8)
-
-    img = Image.new('RGB', (img_width, img_height), color='white')
-    draw = ImageDraw.Draw(img)
-
-    # Ajustar tamanho da célula
-    cell_height = round(img_height / elevationItens)
-    cell_width = round(img_width * 0.7)
-
-    # **Desenhar a tabela na ordem inversa**
-    for i, (elevation, color) in enumerate(zip(elevations, colors)):
-        draw.rectangle([0, i * cell_height, cell_width, (i + 1) * cell_height], fill=color)
-        draw.text((cell_width + 10, i * cell_height + 10), f'{elevation} m', fill='black', font=font)
-
-    # Salvar a imagem
-    img.save(output_filename)
-    wLog(f'Tabela de cores de altitudes salva como {output_filename}')
-    
-###########################################################################################################################
-def generate_elevations(min_elevation, step, max_elevation):
-    """
-    Gera uma lista de elevações dentro da faixa definida.
-
-    Parâmetros:
-    min_elevation (int): O valor mínimo da elevação.
-    step (int): O passo em metros entre cada elevação.
-    max_elevation (int): O valor máximo da elevação.
-
-    Retorna:
-    list: Lista de elevações entre min_elevation e max_elevation.
-    """
-    elevations = list(range(min_elevation, max_elevation + step, step))
-
-    # Evita duplicação do valor máximo
-    # if elevations[-1] > max_elevation:
-    #    elevations.pop()
-
-    return elevations
-
-###########################################################################################################################
-import numpy as np
-###########################################################################################################################
-def load_etopo2(file_path):
-    """
-    Carrega o arquivo ETOPO2 em um array NumPy.
-    """
-    nrows, ncols = 5400, 10800
-    total_elements = nrows * ncols
-
-    # Leia os dados binários
-    data = np.fromfile(file_path, dtype=np.int16)
-
-    # Verifique o tamanho do array lido
-    if len(data) > total_elements:
-        print("Aviso: Dados extras detectados no arquivo.")
-        data = data[:total_elements]  # Cortar os dados extras
-    elif len(data) < total_elements:
-        raise ValueError("O arquivo não contém dados suficientes para o grid especificado.")
-
-    # Ajuste o fator de escala se necessário (ex: divide por 10 para considerar a escala em metros)
-    data = data * (378/12525)  # Ajuste para o fator correto (pode ser 10, 100, etc.)
-
-    # Reshape para a grade
-    return data.reshape((nrows, ncols)), (nrows, ncols)
-###########################################################################################################################
-def get_altitude(data, grid_size, lat, lon):              
-    """
-    Retorna a altitude para uma dada latitude e longitude.
-    """
-    nrows, ncols = grid_size
-    lat_idx = int((90 - lat) * (nrows / 180))
-    lon_idx = int((180 + lon) * (ncols / 360))
-
-    # Validar índices
-    if 0 <= lat_idx < nrows and 0 <= lon_idx < ncols:
-        return data[lat_idx, lon_idx]
-    else:
-        raise ValueError("Coordenadas fora dos limites do grid.")
-###########################################################################################################################
-def AltitudeEtopo2(lat,lon):
-    file_path = "../../OpenElevation/data/etopo2.i2"
-    
-    # Carregar o arquivo
-    data, grid_size = load_etopo2(file_path)
-    
-    # Coordenadas de exemplo
-    latitude = lat
-    longitude = lon
-    
-    # Obter altitude
-    altitude = get_altitude(data, grid_size, latitude, longitude)
-    wLog(f"A altitude em ({latitude}, {longitude}) é {altitude} metros.")
-    return altitude;
-###########################################################################################################################
-def AltitudeEtopo2New(lat,lon):
-    latitude = lat
-    longitude = lon
-    
-    # Obter altitude
-    altitude = get_altitudeNetCDF(latitude, longitude)
-    wLog(f"A altitude em ({latitude}, {longitude}) é {altitude} metros.")
-    return altitude;
 ###########################################################################################################################    
 def getElevationOpenElev(latitude, longitude):
     """
@@ -497,43 +99,62 @@ def getElevationOpenElev(latitude, longitude):
 
     Returns:
         float: Elevação em metros. Retorna 0 em caso de erro.
+       
+        Anatel, precisa login implementado em python
+        fiscalizacao.anatel.gov.br/api/v1/lookup?locations=-22.919802062945383,-43.043920503331314
+         
+        Anatel, logado na vpn  
+        http://rhfisnspdex02.anatel.gov.br/api/v1/lookup?locations=-22.919802062945383,-43.043920503331314
+         
+        Servidor free web 
+        api.open-elevation.com/api/v1/lookup?locations=-22.919802062945383,-43.043920503331314  
+        
     """
     url = "https://api.open-elevation.com/api/v1/lookup"
+    urlVpn = "http://rhfisnspdex02.anatel.gov.br/api/v1/lookup"
     params = {
         "locations": f"{latitude},{longitude}"
     }
 
-    try:
-        # Faz a requisição à API
-        response = requests.get(url, params=params, timeout=10)  # Timeout de 10 segundos
+    def fetch_elevation(url):
+        try:
+            # Faz a requisição à API
+            response = requests.get(url, params=params, timeout=10)  # Timeout de 10 segundos
 
-        # Verifica se a requisição foi bem-sucedida
-        response.raise_for_status()
+            # Verifica se a requisição foi bem-sucedida
+            response.raise_for_status()
 
-        # Tenta decodificar o JSON da resposta
-        data = response.json()
+            # Tenta decodificar o JSON da resposta
+            data = response.json()
 
-        # Verifica se a resposta contém os dados esperados
-        if "results" in data and len(data["results"]) > 0:
-            return round(data['results'][0]['elevation'])
-        else:
-            wLog("getElevationOpenElev Erro: Resposta da API não contém dados válidos.")
+            # Verifica se a resposta contém os dados esperados
+            if "results" in data and len(data["results"]) > 0:
+                return round(data['results'][0]['elevation'])
+            else:
+                wLog("getElevationOpenElev Erro: Resposta da API não contém dados válidos.")
+                return 0
+
+        except requests.exceptions.RequestException as e:
+            # Captura erros relacionados à requisição (conexão, timeout, etc.)
+            print(f"getElevationOpenElev Erro na requisição: {e}")
+            raise  # Re-lança a exceção para ser capturada no bloco externo
+
+        except ValueError as e:
+            # Captura erros de decodificação JSON
+            print(f"getElevationOpenElev Erro ao decodificar JSON: {e}")
             return 0
 
-    except requests.exceptions.RequestException as e:
-        # Captura erros relacionados à requisição (conexão, timeout, etc.)
-        print(f"getElevationOpenElev Erro na requisição: {e}")
-        return 0
+        except KeyError as e:
+            # Captura erros de chave ausente no JSON
+            print(f"getElevationOpenElev Erro no formato da resposta: {e}")
+            return 0
 
-    except ValueError as e:
-        # Captura erros de decodificação JSON
-        print(f"getElevationOpenElev Erro ao decodificar JSON: {e}")
-        return 0
-
-    except KeyError as e:
-        # Captura erros de chave ausente no JSON
-        print(f"getElevationOpenElev Erro no formato da resposta: {e}")
-        return 0
+    try:
+        return fetch_elevation(url)
+    except requests.exceptions.RequestException:
+        # Se a requisição à URL principal falhar, tenta a URL alternativa
+        print("Tentando URL alternativa (VPN)...")
+        return fetch_elevation(urlVpn)
 ###########################################################################################################################    
 def getElevationOpenElevBatch(lat_lons, batch_size):
     """
@@ -541,44 +162,62 @@ def getElevationOpenElevBatch(lat_lons, batch_size):
     
     Args:
         lat_lons (list): Lista de tuplas contendo latitude e longitude.
+        batch_size (int): Tamanho do lote para processamento.
     
     Returns:
         list: Lista de elevações em metros. Retorna 0 para coordenadas com erro.
+        
+        fiscalizacao.anatel.gov.br/api/v1/lookup?locations=-22.919802062945383,-43.043920503331314
+        ou
+        api.open-elevation.com/api/v1/lookup?locations=-22.919802062945383,-43.043920503331314
     """
     url = "https://api.open-elevation.com/api/v1/lookup"
+    urlVpn = "http://rhfisnspdex02.anatel.gov.br/api/v1/lookup"
     elevations = []
     
-    for i in range(0, len(lat_lons), batch_size):
-        batch = lat_lons[i:i + batch_size]
+    def fetch_batch_elevations(url, batch):
+        """Função interna para buscar elevações de um lote."""
         locations = "|".join([f"{lat},{lon}" for lat, lon in batch])
         params = {"locations": locations}
         zbuf = url + "?" + "&".join([f"{key}={value}" for key, value in params.items()])
+        
         wLog(f"---------------------------------------------------------") 
         wLog(f"getElevationOpenElevBatch URL da requisição: {zbuf}")  # Imprime a URL para depuração
-        wLog(str(len(zbuf)))
-        wLog(str(len(lat_lons)))
+        wLog(f"Tamanho do lote: {len(batch)}")
         wLog(f"---------------------------------------------------------") 
+        
         try:
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
             
             if "results" in data:
-                elevations.extend([round(res["elevation"]) for res in data["results"]])
+                return [round(res["elevation"]) for res in data["results"]]
             else:
-                elevations.extend([0] * len(batch))
+                wLog("getElevationOpenElevBatch Erro: Resposta da API não contém dados válidos.")
+                return [0] * len(batch)
         
         except requests.exceptions.RequestException as e:
             wLog(f"getElevationOpenElevBatch Erro na requisição: {e}")
-            elevations.extend([0] * len(batch))
+            raise  # Re-lança a exceção para ser capturada no bloco externo
         except ValueError as e:
             wLog(f"getElevationOpenElevBatch Erro ao decodificar JSON: {e}")
-            elevations.extend([0] * len(batch))
+            return [0] * len(batch)
         except KeyError as e:
             wLog(f"getElevationOpenElevBatch Erro no formato da resposta: {e}")
-            elevations.extend([0] * len(batch))
+            return [0] * len(batch)
     
-    return elevations    
+    for i in range(0, len(lat_lons), batch_size):
+        batch = lat_lons[i:i + batch_size]
+        try:
+            # Tenta a URL principal primeiro
+            elevations.extend(fetch_batch_elevations(url, batch))
+        except requests.exceptions.RequestException:
+            # Se a URL principal falhar, tenta a URL alternativa
+            wLog("Tentando URL alternativa (VPN)...")
+            elevations.extend(fetch_batch_elevations(urlVpn, batch))
+    
+    return elevations  
 ###########################################################################################################################    
 MinAltitude=50000 # Valor alto para garantir que a primeira altitude seja menor
 MaxAltitude=0
@@ -647,67 +286,6 @@ def get_nc_file_paths(directory):
     
     return file_paths
 ###########################################################################################################################
-def get_altitudeNetCDF(lat, lon):
-    """
-    Retorna a altitude correspondente para uma dada latitude e longitude
-    a partir de arquivos NetCDF.
-    
-    Args:
-        lat (float): Latitude em graus.
-        lon (float): Longitude em graus.
-    
-    Returns:
-        float: Altitude correspondente em metros.
-    """
-    file_paths = get_nc_file_paths("../../OpenElevation/data")
-    print("Arquivos encontrados:")
-    for path in file_paths:
-        print(path)
-
-    # Corrigir longitude para formato 0° a 360° se necessário
-    # if lon < 0:
-    #     lon = 360 + lon
-
-    for file_path in file_paths:
-        try:
-            # Abre o arquivo NetCDF
-            ds = xr.open_dataset(file_path)
-            
-            # Verifica se a latitude e longitude estão dentro do intervalo do arquivo
-            lat_range = ds['lat'].values
-            lon_range = ds['lon'].values
-            
-            print(f"Latitude: {lat}, Longitude: {lon}")
-            print(f"Latitude range: {lat_range.min()} to {lat_range.max()}")
-            print(f"Longitude range: {lon_range.min()} to {lon_range.max()}")
-            
-            if lat_range.min() <= lat <= lat_range.max() and lon_range.min() <= lon <= lon_range.max():
-                # Localiza o índice mais próximo das coordenadas
-                lat_idx = np.abs(lat_range - lat).argmin()
-                lon_idx = np.abs(lon_range - lon).argmin()
-
-                print(f"Índice da latitude: {lat_idx}, Índice da longitude: {lon_idx}")
-
-                # Extrai a altitude correspondente
-                altitude = ds['bed'].isel(lat=lat_idx, lon=lon_idx).values
-                
-                ds.close()
-                return altitude
-
-        except Exception as e:
-            print(f"Erro ao processar o arquivo {file_path}: {e}")
-    
-    raise ValueError("Coordenadas fora do alcance dos arquivos fornecidos.")
-
-###########################################################################################################################
-# Exemplo de uso
-# arquivo_tif = "caminho_para_seu_arquivo.tif"
-# latitude = -23.55052  # São Paulo
-# longitude = -46.633308
-
-# elevacao = obter_elevacao(arquivo_tif, latitude, longitude)
-# print(f"A elevação em ({latitude}, {longitude}) é {elevacao} metros.")
-###########################################################################################################################
 def InverterCoordenadas(lat_lon_coords):
     """
     Inverte coordenadas do formato (latitude, longitude) para (longitude, latitude).
@@ -720,33 +298,6 @@ def InverterCoordenadas(lat_lon_coords):
     """
     lon_lat_coords = [(lon, lat) for lat, lon in lat_lon_coords]
     return lon_lat_coords
-
-###########################################################################################################################
-def GerarKml(coord, filename="rota.kml"):
-    import simplekml
-
-    # Inverter coordenadas para o formato correto
-    coordenadas = InverterCoordenadas(coord)
-
-    # Criar um objeto KML
-    kml = simplekml.Kml()
-
-    # Adicionar uma linha ao KML com as coordenadas decodificadas
-    linha = kml.newlinestring(name="Rota")
-    linha.coords = coordenadas  # Adiciona as coordenadas à linha
-    linha.extrude = 1  # Mantém a extrusão, mas sem altitude
-    linha.style.linestyle.color = simplekml.Color.red  # Cor da linha
-    linha.style.linestyle.width = 3  # Largura da linha
-
-    # Adicionar pontos nos vértices
-    for lon, lat in coordenadas:
-        ponto = kml.newpoint(name=f"Ponto ({lon:.4f}, {lat:.4f})", coords=[(lon, lat)])
-        ponto.style.iconstyle.icon.href = "http://maps.google.com/mapfiles/kml/paddle/blu-circle.png"  # Ícone azul
-        ponto.style.iconstyle.color = simplekml.Color.blue  # Cor do ícone do ponto (opcional)
-
-    # Salvar o arquivo KML
-    kml.save(filename)
-    wLog(f"Arquivo {filename} gerado com sucesso!")
 ###########################################################################################################################
 import datetime
 ###########################################################################################################################
@@ -809,8 +360,6 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
 
 ###########################################################################################################################
 ServerTec = "OSMR"
-# ServerTec = "GHopper"
-# http://localhost:8989/route?point=-22.88945995932843,-43.10142517089844&point=-22.890725107354616,-43.06228637695313 
 ###########################################################################################################################
 def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
    # 
@@ -821,9 +370,6 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
    if ServerTec == "OSMR":
       # URL da solicitação ao servidor OSRM
       url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{start_coords[1]},{start_coords[0]};{end_coords[1]},{end_coords[0]}?overview=full&geometries=polyline&steps=true"
-   if ServerTec == "GHopper":
-      # URL da solicitação ao servidor GHopper
-      url = f"http://localhost:8989/route?point={start_lat},{start_lon}&point={end_lat},{end_lon}"
    
    wLog(url)
    # Fazer a solicitação
@@ -832,7 +378,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
 ###########################################################################################################################
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 ###########################################################################################################################
 def DeleteOldFilesAndFolders(directory, days=30):
     """
@@ -872,27 +418,6 @@ def DeleteOldFilesAndFolders(directory, days=30):
 def GenerateRouteMap(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
     if ServerTec == "OSMR":
         return GenerateRouteMapOSMR(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon)
-    if ServerTec == "GHopper":
-        return GenerateRouteMapGHopper(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon)
-    return RouteDetailLoc
-###########################################################################################################################
-def GenerateRouteMapGHopper(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
-    response = GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
-    data = response.json()
-    # Verificar se a solicitação foi bem-sucedida
-    if response.status_code == 200 and 'paths' in data:
-       geometry =  data["paths"][0]["points"]
-       coordinates = polyline.decode(geometry)
-       RouteDetailLoc.coordinates += coordinates
-       instructions = data["paths"][0]["instructions"]
-       wLog("Imprimindo rota")    
-       for step in instructions:
-            RouteDetailLoc.NewInstruction(step['text'])    
-            wLog(f"{step['text']}")        
-    else:
-       wLog(f"Erro na solicitação: {data}")    
-       return RouteDetailLoc
-            
     return RouteDetailLoc
 ###########################################################################################################################
 def GenerateRouteMapOSMR(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
@@ -917,35 +442,13 @@ def GenerateRouteMapOSMR(RouteDetailLoc,start_lat, start_lon, end_lat, end_lon):
        route = data['routes'][0]
        geometry = route['geometry']
        coordinates = polyline.decode(geometry)
-       # RouteDetailLoc.coordinates += coordinates
        RouteDetailLoc.coordinates.append(coordinates)
-       
-       RouteDetailLoc.DistanceTotal = RouteDetailLoc.DistanceTotal + calcular_distancia_totalOSMR(data)
-       # Pegando nomes das ruas e rota
-       # waypoints = data['waypoints']
-
-       # GerarKml(coordinates, filename="rota.kml")    
-       # GerarGeojson(coordinates, filename="rota.geojson")
-             
+       RouteDetailLoc.DistanceTotal = RouteDetailLoc.DistanceTotal + calcular_distancia_totalOSMR(data)            
     else:
        wLog(f"Erro na solicitação: {data}")    
        return RouteDetailLoc
             
     return RouteDetailLoc
-###########################################################################################################################
-# Exemplo de uso
-# start_lat = -23.55052   # Latitude de São Paulo, Brasil
-# start_lon = -46.633308  # Longitude de São Paulo, Brasil
-# end_lat = -23.5733      # Latitude de um ponto próximo em São Paulo, Brasil
-# end_lon = -46.6417      # Longitude de um ponto próximo em São Paulo, Brasil
-# api_key = 'YOUR_API_KEY'  # Substitua pela sua chave de API do OpenRouteService
-
-# Gera o mapa com a rota
-# map_with_route = generate_route_map(start_lat, start_lon, end_lat, end_lon, api_key)
-
-# Salva o mapa em um arquivo HTML
-# map_with_route.save('route_map.html')  
-    
 ###########################################################################################################################
 def GeneratePointsAround(latitude, longitude, radius_km=5, num_points=8):
     """
@@ -988,68 +491,7 @@ def GeneratePointsAround(latitude, longitude, radius_km=5, num_points=8):
         points.append((new_lat, new_lon))
 
     return points
-###########################################################################################################################
-import gpxpy # pip install gpxpy
-import gpxpy.gpx
-###########################################################################################################################
-def GerarGpx_com_Waypoints(RouteDetail,filename="waypoints.gpx"):
-    # Criar um objeto GPX
-    gpx = gpxpy.gpx.GPX()
-
-    #waypoints = []
-    #for wp in RouteDetail.waypnts:
-        # print(f"Nome: {wp.street}, Latitude: {wp.lat}, Longitude: {wp.lon}")
-    #    waypoints.append({'name': wp.street, 'lat': wp.lat, 'lon': wp.lon})
-        
-    # Criar três waypoints com coordenadas diferentes
-    # waypoints = [
-    #    {'name': 'Waypoint 1', 'lat': -22.87017, 'lon': -43.16546},
-    #    {'name': 'Waypoint 2', 'lat': -22.86967, 'lon': -43.17104},
-    #    {'name': 'Waypoint 3', 'lat': -22.8684,  'lon': -43.18506}
-    # ]
-    
-    # Adicionar os waypoints ao GPX
-    for wp in RouteDetail.waypnts:
-        waypoint = gpxpy.gpx.GPXWaypoint(latitude= wp.lat, longitude=wp.lon, name=wp.street)
-        gpx.waypoints.append(waypoint)
-    
-    # Gerar o conteúdo do arquivo GPX
-    gpx_data = gpx.to_xml()
-
-    # Salvar o arquivo GPX
-    with open(filename, 'w') as f:
-        f.write(gpx_data)
-
-    wLog(f"Arquivo {filename} gerado com sucesso!")
 ###########################################################################################################################    
-def GerarGpx_com_Tracks(RouteDetail, nome_arquivo='track.gpx'):
-    """
-    Salva um arquivo GPX com uma lista de coordenadas.
-    
-    :param coordenadas: Lista de tuplas contendo (latitude, longitude, elevação)
-    :param nome_arquivo: Nome do arquivo GPX de saída
-    """
-    # Cria um objeto GPX
-    gpx = gpxpy.gpx.GPX()
-
-    # Cria uma nova trilha (track)
-    gpx_track = gpxpy.gpx.GPXTrack()
-    gpx.tracks.append(gpx_track)
-
-    # Cria um novo segmento de trilha
-    gpx_segment = gpxpy.gpx.GPXTrackSegment()
-    gpx_track.segments.append(gpx_segment)
-
-    # Adiciona as coordenadas fornecidas ao segmento da trilha
-    for wp in RouteDetail.waypnts:
-        gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(wp.lat, wp.lon, elevation=0.0))
-
-    # Salva o arquivo GPX
-    with open(nome_arquivo, 'w') as f:
-        f.write(gpx.to_xml())
-
-    wLog(f"Arquivo GPX '{nome_arquivo}' criado com sucesso.")
-################################################################################
 import datetime
 def TimeStringTmp():
     # Obtém a data e hora atuais
@@ -1058,81 +500,7 @@ def TimeStringTmp():
     buf = agora.strftime("%Y-%m-%d_%H-%M-%S")
     return buf    
 ################################################################################
-from math import radians, sin, cos, sqrt, atan2
-################################################################################
-def calcular_distancia_haversine(ponto1, ponto2):
-    """
-    Calcula a distância entre dois pontos geográficos usando a fórmula de Haversine.
-    
-    Args:
-        ponto1 (list): Coordenadas [latitude, longitude] do ponto 1.
-        ponto2 (list): Coordenadas [latitude, longitude] do ponto 2.
-    
-    Returns:
-        float: Distância em quilômetros entre os dois pontos.
-    """
-    # Raio médio da Terra em quilômetros
-    R = 6371.0
-
-    # Coordenadas em radianos
-    lat1, lon1 = radians(ponto1[0]), radians(ponto1[1])
-    lat2, lon2 = radians(ponto2[0]), radians(ponto2[1])
-
-    # Diferenças das coordenadas
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-
-    # Fórmula de Haversine
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    distancia = R * c
-
-    return distancia
-################################################################################
 import numpy as np
-import torch_directml as dml  # Substituto para GPUs não CUDA # pip install torch-directml
-                              # pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-  
-################################################################################
-def OrdenarPontosDistanciaOSMR_DML(pontosvisita, pontoinicial):
-    """
-    Ordena os pontos de visita usando a métrica DistanciaRota com DirectML.
-
-    Args:
-        pontosvisita (list): Lista de pontos (lat, lon) a serem visitados.
-        pontoinicial (tuple): Coordenadas (lat, lon) do ponto inicial.
-
-    Returns:
-        list: Lista de pontos ordenados.
-    """
-    # Dispositivo DirectML
-    device = dml.device()
-    
-    # Converta os pontos para tensores no dispositivo DirectML
-    pontos_lat = torch.tensor([p[0] for p in pontosvisita], device=device, dtype=torch.float32)
-    pontos_lon = torch.tensor([p[1] for p in pontosvisita], device=device, dtype=torch.float32)
-    ordenados = [pontoinicial]
-    
-    while pontos_lat.numel() > 0:  # Enquanto houver pontos para visitar
-        ultimo_ponto = ordenados[-1]
-        lat1 = torch.tensor(ultimo_ponto[0], device=device, dtype=torch.float32)
-        lon1 = torch.tensor(ultimo_ponto[1], device=device, dtype=torch.float32)
-
-        # Calcular distâncias para todos os pontos restantes
-        distancias = DistanciaRota(lat1, lon1, pontos_lat, pontos_lon)
-        
-        # Encontrar o índice do ponto mais próximo
-        idx_proximo_ponto = torch.argmin(distancias).item()
-
-        # Adicionar o ponto mais próximo à lista de ordenados
-        ordenados.append((pontos_lat[idx_proximo_ponto].item(), pontos_lon[idx_proximo_ponto].item()))
-
-        # Remover o ponto selecionado dos tensores
-        pontos_lat = torch.cat((pontos_lat[:idx_proximo_ponto], pontos_lat[idx_proximo_ponto + 1:]))
-        pontos_lon = torch.cat((pontos_lon[:idx_proximo_ponto], pontos_lon[idx_proximo_ponto + 1:]))
-
-    return ordenados
-
 ################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso... 
 def OrdenarPontos(pontosvisita,pontoinicial):  
@@ -1640,50 +1008,6 @@ def MataServidorWebRotas():
     return
 ################################################################################
 import subprocess
-import sys
-import os
-import urllib.request
-################################################################################
-def verificar_podman_instalado():
-    """Verifica se o Podman está instalado no Windows."""
-    try:
-        # Verifica se o podman está disponível no sistema
-        result = subprocess.run(["podman", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if result.returncode == 0:
-            wLog("Podman já está instalado.")
-            return True
-        else:
-            wLog("Podman não encontrado.")
-            return False
-    except FileNotFoundError:
-        wLog("Podman não encontrado.")
-        return False
-################################################################################
-def baixar_instalar_podman():
-    """Baixa e instala o Podman no Windows usando o setup.exe."""
-    # URL do instalador do Podman para Windows
-    url = "https://github.com/containers/podman/releases/download/v5.3.1/podman-5.3.1-setup.exe"
-    destino = "podman-setup.exe"
-
-    wLog("Baixando o instalador do Podman...")
-    # Baixa o arquivo setup.exe
-    urllib.request.urlretrieve(url, destino)
-    
-    wLog("Instalando o Podman...")
-    # Executa o instalador de forma silenciosa
-    subprocess.run([destino, "/S"], check=True)
-    
-    # Verifica se a instalação foi bem-sucedida
-    if verificar_podman_instalado():
-        wLog("Podman foi instalado com sucesso!")
-    
-    # Remove o arquivo de instalação
-    os.remove(destino)
-################################################################################
-def VerificaPodman():
-    if not verificar_podman_instalado():
-       baixar_instalar_podman()
-################################################################################
 import os
 import filecmp
 ################################################################################

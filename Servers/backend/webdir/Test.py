@@ -3,14 +3,6 @@ import webbrowser
 import WebRota as wr
 
 
-# wr.FileLog="WebRotasServer.log"
-# wr.FileLog="" # ativa servidores com janela de depuração
-# wr.MataServidorWebRotas()
-# wr.AtivaServidorWebRotas()
-
-# polMunicipio = wr.GetBoundMunicipio("Niterói", "RJ")
-# print(polMunicipio)
-# quit()
 
 ##################################################################################################
 def enviar_json(payload, url):
