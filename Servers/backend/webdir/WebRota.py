@@ -1159,26 +1159,10 @@ def GeneratePointsWithinCity(city_boundary,regioes, distance):
 
     return points_within_city
 ################################################################################
-# Exemplo de uso
-# city_boundary = [
-#     (-23.5505, -46.6333),  # São Paulo exemplo
-#     (-23.5485, -46.6340),
-#     (-23.5470, -46.6300),
-#     (-23.5500, -46.6280),
-#     (-23.5505, -46.6333)   # Fechando o polígono
-# ]
-
-# distance_between_points = 100  # Distância entre pontos em metros
-# points = generate_points_within_city(city_boundary, distance_between_points)
-# print(f"Número de pontos gerados: {len(points)}")
-# print(points[:10])  # Mostra os primeiros 10 pontos gerados
-################################################################################
 def ServerSetupJavaScript(RouteDetail):
     if ServerTec == "OSMR":
        RouteDetail.mapcode += f"    const ServerTec = 'OSMR';\n"
        RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
-    if ServerTec == "GHopper":
-       RouteDetail.mapcode += f"    const ServerTec = 'GHopper';\n"
     return RouteDetail
 ################################################################################
 def DesenhaComunidades(RouteDetail,regioes):
@@ -1251,10 +1235,10 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
       
       
           
-    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,pontosvisita,'CompAbrangencia')      
+    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,'CompAbrangencia')      
     return fileMap,fileNameStatic,fileKml
 ################################################################################
-def GeraArquivosSaida(RouteDetail,pontosvisita,tipoServico):
+def GeraArquivosSaida(RouteDetail,tipoServico):
     buf = TimeStringTmp()   
     fileMap = f"Mapa{tipoServico}{buf}.html"     
     fileName = f"templates/{fileMap}"
@@ -1580,7 +1564,7 @@ def RoutePontosVisita(data,user,pontoinicial,pontosvisitaDados,regioes):
 
     # servidor temp     python3 -m http.server 8080
     #           
-    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,pontosvisita,'PontosVisita')
+    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,'PontosVisita')
     return fileMap,fileNameStatic,fileKml
 ###########################################################################################################################
 import math
@@ -1699,19 +1683,10 @@ def RouteDriveTest(data,user,pontoinicial,central_point,regioes,radius_km=5, num
     
     # servidor temp     python3 -m http.server 8080
     #           
-    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,pontosvisita,'DriveTest')
+    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,'DriveTest')
     return fileMap,fileNameStatic,fileKml
 ###########################################################################################################################
 def main():
-    # Coordenadas do ponto central (latitude, longitude)
-    # central_point = [40.712776, -74.005974]  # Exemplo: Nova York
-    # central_point = [-22.90941986104239, -43.16486081793237] # Santos Dumont
-    central_point = [-22.891147608655164, -43.05261174054559] #   Niteroi IFR
-    # central_point = [-21.701103198880247, -41.308194753766394] #   Aeroporto de Campos
- 
-    #central_point = [-22.9864182585604, -43.37041245345915] 
-    
-    RouteDriveTest(central_point,radius_km=5)
     return
 ###########################################################################################################################
 if __name__ == "__main__":
