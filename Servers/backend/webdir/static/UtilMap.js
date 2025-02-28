@@ -51,72 +51,12 @@ const clickedIconHalf = L.icon({
     className: 'clicked-marker' // Adiciona uma classe para diferenciar visualmente
 });
 
-/*
-var iMarquerVerde = L.icon({
-    iconUrl: '/static/MarkerVerde.png', // Icone clicado
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    className: 'marker' // Adiciona uma classe para diferenciar visualmente
-});
-*/
+
 var iMarquerVerde = createCustomSvgIcon("o",[25, 41],[12, 41],"#007b22");
 
-var iMarquerAzul = L.icon({
-    iconUrl: '/static/MarkerAzul.png', // Icone clicado
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    className: 'marker' // Adiciona uma classe para diferenciar visualmente
-});
-
-var iMarquerVerdeHalf = L.icon({
-    iconUrl: '/static/MarkerVerde.png', // Icone clicado
-    iconSize: [12, 20],
-    iconAnchor: [6, 20],
-    className: 'marker' // Adiciona uma classe para diferenciar visualmente
-});
-
-var iMarquerAzulHalf  = L.icon({
-    iconUrl: '/static/MarkerAzul.png', // Icone clicado
-    iconSize: [12, 20],
-    iconAnchor: [6, 20],
-    className: 'marker' // Adiciona uma classe para diferenciar visualmente
-});
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-var newIcon=null; // Não funciona
-function ChangeMarquerIconSize(marker,div, newSize,newAnchor)
-{
-    // Chamar a função para alterar o tamanho do ícone para metade do original
-    // changeIconSize(marker, [25, 41]);
-    // Criar um novo ícone com o novo tamanho
-    newIcon = L.icon({
-        iconUrl: marker.options.icon.options.iconUrl,
-        iconSize: [newSize[0]/2 , newSize[1]/2 ],
-        iconAnchor: [newAnchor[0]/2 , newAnchor[1]/2 ],
-        className: 'changed'
-    });
-
-    // Atualizar o ícone do marcador
-    marker.setIcon(newIcon);
-} */
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-// Função para criar um icone svg numerado
-function createSvgIcon(number) {
-
-    return createCustomSvgIcon(number,[25, 41],[12, 41],"#007bff");
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconAzul(number) {
-
-    return createCustomSvgIcon(number,[25, 41],[12, 41],"#007bff");
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-function createSvgIconAzulHalf(number) {
-
-    return createCustomSvgIcon(number,[12, 20],[6, 20],"#007bff");
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Core arco iris
 function ElevationColor(elevation) {
     // Usa os valores globais de elevação mínima e máxima
     const min_elevation = globalMinElevation;
@@ -203,39 +143,6 @@ function hslToHex(h, s, l) {
         .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function getElevationSync(latitude, longitude){
-    getElevation(latitude, longitude)
-    .then(elevation => {
-        if (elevation !== null) {
-            wLog(`Elevation - ${elevation}`)
-            return elevation;
-        } else {
-            return 0;
-        }
-    });
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-async function getElevation(latitude, longitude) {
-    const apiUrl = `https://api.open-elevation.com/api/v1/lookup?locations=${latitude},${longitude}`;
-
-    try {
-        const response = await fetch(apiUrl); // Faz a requisição à API
-        if (!response.ok) {
-            throw new Error(`Erro ao buscar elevação: ${response.statusText}`);
-        }
-
-        const data = await response.json(); // Converte a resposta para JSON
-        if (data.results && data.results.length > 0) {
-            return data.results[0].elevation; // Retorna a elevação
-        } else {
-            throw new Error("Nenhum dado de elevação encontrado.");
-        }
-    } catch (error) {
-        console.error("Erro ao obter elevação:", error.message);
-        return null; // Retorna `null` em caso de erro
-    }
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 function createSvgIconColorAltitude(number,altitude) {
     // color = ElevationColor(altitude);
     color = ElevationColorParula(altitude);
@@ -293,14 +200,6 @@ function createSvg(iconSz, iconColor, text) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createCustomSvgIcon(text,iconSz,iconAnc,iconColor) {
-    /*
-    datHtml = `<svg id="iconSvg" width="${iconSz[0]}" height="${iconSz[1]}" viewBox="0 0 ${iconSz[0]} ${iconSz[1]}"
-               xmlns="http://www.w3.org/2000/svg">
-               <path d="M12.5 0C19.4 0 25 5.6 25 12.5C25 19.4 12.5 41 12.5 41C12.5 41 0 19.4 0 12.5C0 5.6 5.6 0 12.5 0Z"
-               fill="${iconColor}"/> <text x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" font-size="12"
-               fill="white" font-weight="bold">${text}</text>
-               </svg>`;
-    */
     datHtml = createSvg(iconSz, iconColor, text)
     return L.divIcon({
         className: '', // Sem classe adicional
@@ -316,44 +215,6 @@ function AtualizaPontosvisitaDadosMarquerData(currentMarker,ColunaAtualizar,Novo
     position = currentMarker.getLatLng();
     pontosVisitaDados =  AtualizaPontosvisitaDados(pontosvisitaDados,position.lat, position.lng,ColunaAtualizar,NovoDado);
     wLog(JSON.stringify(pontosvisitaDados, null, 2));
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-function salvarEmCookies(nomeCookie, valor, dias)
-{
-    const data = new Date();
-    data.setTime(data.getTime() + (dias * 24 * 60 * 60 * 1000));
-    const expiracao = "expires=" + data.toUTCString();
-    document.cookie = nomeCookie + "=" + encodeURIComponent(JSON.stringify(valor)) + ";" + expiracao + ";path=/";
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-function carregarDeCookies(nomeCookie) {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.startsWith(nomeCookie + "=")) {
-            const valor = cookie.substring(nomeCookie.length + 1);
-            return JSON.parse(decodeURIComponent(valor));
-        }
-    }
-    return null; // Retorna null se o cookie não for encontrado
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-function CarregarCookies()
-{
-   // Carregar variáveis de cookies
-   const polylineRotaDatCarregado = carregarDeCookies('polylineRotaDat');
-   const RaioDaEstacaoCarregado = carregarDeCookies('RaioDaEstacao');
-   const pontosVisitaOrdenadosCarregado = carregarDeCookies('pontosVisitaOrdenados');
-   const pontosvisitaDadosCarregado = carregarDeCookies('pontosvisitaDados');
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-function SalvarCookies()
-{
-   // Salvar variáveis em cookies
-   salvarEmCookies('polylineRotaDat', polylineRotaDat, 7);
-   salvarEmCookies('RaioDaEstacao', RaioDaEstacao, 7);
-   salvarEmCookies('pontosVisitaOrdenados', pontosVisitaOrdenados, 7);
-   salvarEmCookies('pontosvisitaDados', pontosvisitaDados, 7);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function onMarkerClick(e) {
@@ -428,7 +289,7 @@ function DisableMarker(e)
     currentMarker._icon.setAttribute('altitude', String(altitude));
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-// Fução que rotaciona um icone no Leaflet
+// Fução que rotaciona um icone no Leaflet usada na rotação do carro na tela
 (function () {
     // save these original methods before they are overwritten
     var proto_initIcon = L.Marker.prototype._initIcon;
@@ -488,7 +349,6 @@ function DisableMarker(e)
         }
     });
 })();
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function decodePolyline(encoded) {
     let index = 0;
@@ -596,10 +456,6 @@ function DesabilitaMarquerNoGPSRaioDaEstacao(lat, lon)
     });
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-// Exemplo de uso
-// const nearestPoint = GetNearestPoint(-22.9000, -43.0500);
-// wLog("Marcador mais próximo está em:", nearestPoint.lat, nearestPoint.lng);
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 function calcularMediaUltimasNCoordenadas(coordinates, n) {
     // Verifica se há coordenadas suficientes
     if (coordinates.length < n) {
@@ -642,8 +498,6 @@ function DesenhaRota(coordinates)
     }
     else
        inicioRota = null;
-    // Ajuste a visualização do mapa para mostrar a polyline inteira
-    // map.fitBounds(poly_line.getBounds());
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function ServerUrl()
