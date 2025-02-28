@@ -519,44 +519,6 @@ async function getRoute(startCoords, endCoords){
     {
         return getRouteOSMR(startCoords, endCoords);
     }
-    if(ServerTec == "GHopper")
-    {
-        return getRouteGHopper(startCoords, endCoords);
-    }
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-// Função para obter a rota do OSRM por roteamento do mesmo site externo
-async function getRouteGHopper(startCoords, endCoords) {
-    serverUrl = "http://localhost:8989"
-
-    // "http://localhost:8989/route?point=-22.87248975925445,-43.08681365669065&point=-22.885656291854495,-43.05230110610495"
-
-    const url = `${serverUrl}/route?point=${startCoords[0]},${startCoords[1]}&point=${endCoords[0]},${endCoords[1]}`;
-    wLog("\n\n" + url + "\n");
-
-    try {
-        // Fazer a solicitação usando fetch
-        const response = await fetch(url);
-        const data = await response.json();
-
-        // Verificar se a solicitação foi bem-sucedida
-        if (response.ok && data.paths) {
-            const route = data.paths[0];
-            const geometry = route.points;
-
-            // Decodificar a geometria usando uma biblioteca como @mapbox/polyline
-            coordinates = decodePolyline(geometry); // polyline precisa estar disponível/importada
-            wLog("Coordinates:", coordinates);
-            DesenhaRota(coordinates);
-            return coordinates;
-        } else {
-            console.error("Erro ao obter a rota:", data.message || "Resposta inválida");
-            return null;
-        }
-    } catch (error) {
-        console.error("Erro de rede:", error);
-        return null;
-    }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Função para obter a rota do OSRM por roteamento do mesmo site externo
@@ -608,7 +570,6 @@ async function getRouteOSMR(startCoords, endCoords) {
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-
 var headingError=0
 function AtualizaMapaHeading(heading)
 {
@@ -618,8 +579,6 @@ function AtualizaMapaHeading(heading)
        // Mapa fixo direção sul e carro rotacionando
        RodaMapaPorCss(0);
        gpsMarker.setRotationAngle(heading-90);
-
-
     }
     else
     {
@@ -628,7 +587,6 @@ function AtualizaMapaHeading(heading)
         headingError=heading -(2*heading)
         gpsMarker.setRotationAngle(-90-headingError);
     }
-
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 let latitude = -22.91745583955038;  // Latitude inicial
@@ -697,40 +655,8 @@ function simularMovimento() {
 // Simular movimento
 // setInterval(simularMovimento, 800); // Atualiza a cada 300ms (aproximadamente)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-async function obterHeadingOsrm(lat, lon) {
-    serverUrl = `http://localhost:${OSRMPort}`
-    const url = `${serverUrl}/nearest/v1/driving/${lon},${lat}?number=1`;
-
-    try {
-        // Faz a requisição para o OSRM
-        const response = await fetch(url);
-
-        if (response.ok) {
-            const data = await response.json();
-
-            // Verifica se há waypoints na resposta
-            if (data.waypoints && data.waypoints.length > 0) {
-                // Captura o bearing (heading)
-                const heading = data.waypoints[0].bearing;
-                wLog(`Heading encontrado: ${heading} graus`);
-                return heading;
-            } else {
-                console.error("Nenhum waypoint encontrado.");
-                return null;
-            }
-        } else {
-            console.error(`Erro na requisição: ${response.status} - ${response.statusText}`);
-            return null;
-        }
-    } catch (error) {
-        console.error(`Erro ao conectar ao OSRM: ${error.message}`);
-        return null;
-    }
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adiciona o evento de clique no mapa
 // Simula posição do carro em clique para debugar
-
 map.on('click', function(e) {
     // Obtém as coordenadas do clique
     var lat = e.latlng.lat;
@@ -766,75 +692,6 @@ var positionHistory = [];
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 var gpsAtivado = false; // Defina como false para desabilitar a geolocalização
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-// Variáveis globais para o estado do filtro de Kalman
-let kalmanState = {
-    latitude: null,
-    longitude: null,
-    heading: null,
-    variancePosition: 1, // Variância inicial para latitude e longitude
-    varianceHeading: 1,  // Variância inicial para heading
-
-    // Constantes do filtro de Kalman
-    noise: {
-        processPosition: 1,      // Ruído do processo para posição
-        measurementPosition: 5,  // Ruído de medição para posição
-        processHeading: 0.5,     // Ruído do processo para heading
-        measurementHeading: 2    // Ruído de medição para heading
-    }
-};
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-// Função de atualização do estado pelo Filtro de Kalman
-function kalmanFilter(measured, estimated, variance, processNoise, measurementNoise) {
-    const kalmanGain = variance / (variance + measurementNoise); // Ganho de Kalman
-    const updatedEstimate = estimated + kalmanGain * (measured - estimated);
-    const updatedVariance = (1 - kalmanGain) * variance + processNoise;
-    return [updatedEstimate, updatedVariance];
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-// Função para atualizar a posição GPS e o heading usando o Filtro de Kalman
-function updateGPSPositionKalman(position) {
-    const { latitude, longitude, heading } = position.coords;
-
-    // Inicializar ou atualizar o estado do filtro
-    if (kalmanState.latitude === null) {
-        // Inicializar o filtro com a primeira leitura
-        kalmanState.latitude = latitude;
-        kalmanState.longitude = longitude;
-        kalmanState.heading = heading || 0; // Heading pode ser null inicialmente
-    } else {
-        // Atualizar latitude e longitude
-        [kalmanState.latitude, kalmanState.variancePosition] = kalmanFilter(
-            latitude,
-            kalmanState.latitude,
-            kalmanState.variancePosition,
-            kalmanState.noise.processPosition,
-            kalmanState.noise.measurementPosition
-        );
-
-        [kalmanState.longitude, kalmanState.variancePosition] = kalmanFilter(
-            longitude,
-            kalmanState.longitude,
-            kalmanState.variancePosition,
-            kalmanState.noise.processPosition,
-            kalmanState.noise.measurementPosition
-        );
-
-        // Atualizar heading, caso esteja disponível
-        if (heading !== null && heading !== undefined) {
-            [kalmanState.heading, kalmanState.varianceHeading] = kalmanFilter(
-                heading,
-                kalmanState.heading,
-                kalmanState.varianceHeading,
-                kalmanState.noise.processHeading,
-                kalmanState.noise.measurementHeading
-            );
-        }
-    }
-
-    wLog(`Posição estimada: Latitude: ${kalmanState.latitude}, Longitude: ${kalmanState.longitude}, Heading: ${kalmanState.heading}`);
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 function updateGPSPosition(position) {
     console.trace("updateGPSPosition");
     if(gpsAtivado==false)
@@ -843,20 +700,11 @@ function updateGPSPosition(position) {
         wLog("A posição é undefined.");
         return;
     }
-
     latitude = position.coords.latitude;
     longitude = position.coords.longitude;
     wLog(`Latitude: ${latitude}, Longitude: ${longitude}`);
     heading = position.coords.heading;
     speed = position.coords.speed;
-
-
-
-
-    // degub lat e lon RETIRAR EM PRODUÇÃO
-    // latitude = -22.87714906709627;
-    // longitude = -42.98235891833397;
-
     if (heading !== null || !isNaN(heading))
     {
         // heading = Math.round(heading);
@@ -873,9 +721,6 @@ function updateGPSPosition(position) {
     {
         speed = 'N/A';
     }
-
-
-
     // Move o marcador para a nova posição
     gpsMarker.setLatLng([latitude, longitude]);
     // Centraliza o mapa na nova posição do marcador
@@ -883,7 +728,6 @@ function updateGPSPosition(position) {
     // Rotaciona o marcador com base no heading
     gpsMarker.setRotationAngle(heading);
     document.getElementById("gpsInfo").innerText = `Velocidade: ${speed} Km/h\nHeading: ${heading} graus\nDistancia: ${DistMakerMaisProximo} Km`;
-
     AtualizaMapaHeading(LastHeading);
     GetRouteCarFromHere(latitude,longitude);
     DesabilitaMarquerNoGPSRaioDaEstacao(latitude, latitude);
@@ -891,49 +735,37 @@ function updateGPSPosition(position) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetNextActivePoint() {
     wLog("GetNextActivePoint");
-
     let ind = 0;
-
     for (let ponto of pontosVisitaOrdenados) {
         let [lati, loni] = ponto;
         wLog("------------");
         wLog("lati - " + String(lati));
         wLog("loni - " + String(loni));
-
         let stringPn = "P" + String(ind);
         let bAtivo = EncontrarDado(pontosvisitaDados, lati, loni, 6);
-
         wLog("bAtivo - " + bAtivo);
-
         if (bAtivo === "Ativo") {
             wLog("Encontrou ponto ativo");
-
             let pnt = {
                 lat: lati,
                 lng: loni
             };
-
             wLog("pnt.lat - " + String(pnt.lat));
             return pnt; // Retorna o primeiro ponto ativo encontrado
         }
-
         ind++;
     }
-
     return null; // Se nenhum ponto ativo for encontrado
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetRouteCarFromHere(latitude,longitude)
 {
    wLog("Tentando pegar rota")
    startCoords = [];
    endCoords = [];
-
    // Colocar a opção de buscar a rota para o ponto mais próximo ou o próximo ponto ativo da lista
    if(typeof GpsProximoPonto == "undefined") // Evita erro da variável não inicializada
       return;
-
    if(GpsProximoPonto=="ProximoDaRota")
    {
       wLog("ProximoDaRota algoritmo");
@@ -961,7 +793,6 @@ function GetRouteCarFromHere(latitude,longitude)
    wLog("getRoute");
    getRoute(startCoords, endCoords);
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Monitora a posição do usuário e chama updateGPSPosition a cada atualização
 geoLocationId=null;
@@ -975,7 +806,8 @@ if (navigator.geolocation)
     alert("Geolocalização não é suportada pelo seu navegador.");
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
- function AtualizaGps() {
+ function AtualizaGps() 
+ {
     if(gpsAtivado==false)
         return;
     // navigator.geolocation.getCurrentPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
@@ -994,7 +826,6 @@ function AtualizaGpsTimer(bAtiva)
        clearInterval(timerGps);
     }
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function SelIconHalf(marker,flagHeadingNorte)
 {
@@ -1017,14 +848,11 @@ function SelIconHalf(marker,flagHeadingNorte)
     else
        if (flagHeadingNorte==0)
        {
-           // aaaaaaaaaaaaaa createSvgIconColorAltitude
-           // marker.setIcon(createSvgIconAzul(String(markerId)));
            marker.setIcon(createSvgIconColorAltitude(String(markerId),String(altitude)));
            marker._icon.setAttribute('tamanho',"full");
        }
        else
        {
-           // marker.setIcon(createSvgIconAzulHalf(String(markerId)));
            marker.setIcon(createSvgIconColorAltitudeHalf(String(markerId),String(altitude)));
            marker._icon.setAttribute('tamanho',"half");
        }
@@ -1090,65 +918,6 @@ function RodaMapaPorCss(angle) // Não funciona bem
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Define se o mapa é rotacionado se HeadingNorte=1
 HeadingNorte=0
-function createCompassIcon() {
-    // Cria a div para a bússola
-    const compassDiv = document.createElement('div');
-    compassDiv.id = 'compassIconDirecaoMapa';
-
-    // Define os estilos inline da bússola
-    compassDiv.style.position = 'absolute';
-    compassDiv.style.top = '10px';
-    compassDiv.style.right = '10px';
-    compassDiv.style.width = '45px';              // Largura da bússola
-    compassDiv.style.height = '45px';             // Altura da bússola
-    // compassDiv.style.backgroundImage = 'url("/static/PointerNorte.png")'; // URL da imagem da bússola
-    compassDiv.style.backgroundImage = imgPointerNorte;
-    compassDiv.style.backgroundSize = '35px 35px';    // Redimensiona a imagem para cobrir a div
-    compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
-    compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
-    compassDiv.style.backgroundColor = 'white';
-    compassDiv.style.display = 'flex';
-    compassDiv.style.alignItems = 'center';
-    compassDiv.style.justifyContent = 'center';
-    compassDiv.style.borderRadius = '50%';        // Bordas arredondadas
-    compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
-    compassDiv.style.zIndex = 1000;
-
-    // Cria o ícone da bússola (seta para o norte)
-    const icon = document.createElement('i');
-
-    // Estilos inline do ícone
-    // icon.style.fontSize = '20px';
-    // icon.style.color = '#fff';
-    //icon.style.transform = 'rotate(0deg)';        // Alinhado ao norte
-
-    // Adiciona um evento de clique à bússola
-    compassDiv.addEventListener('click', function() {
-        // alert('Você clicou na bússola!');         // Alerta ou função quando clicado
-        if (HeadingNorte==0)
-        {
-            // alert('Clicou para PointerNorte.png',HeadingNorte)
-            // compassDiv.style.backgroundImage = 'url("/static/Pointer.png")';
-            compassDiv.style.backgroundImage = imgPointer;
-            HeadingNorte=1;
-            AtualizaMapaHeading(LastHeading);
-        }
-        else
-        {
-            // alert('Clicou para Pointer.png',HeadingNorte)
-            // compassDiv.style.backgroundImage = 'url("/static/PointerNorte.png")';
-            compassDiv.style.backgroundImage = imgPointerNorte;
-            HeadingNorte=0
-            AtualizaMapaHeading(LastHeading);
-        }
-    });
-
-    // Adiciona o ícone dentro da bússola
-    // compassDiv.appendChild(icon);
-
-    // Adiciona a bússola ao corpo da página
-    document.body.appendChild(compassDiv);
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function SetHeadingNorte_SemRodarMapa()
 {
@@ -1158,64 +927,6 @@ function SetHeadingNorte_SemRodarMapa()
    AtualizaMapaHeading(LastHeading);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-ElevationTableOpen = false;
-function createColorTable() {
-    colorTableDiv = document.getElementById('colorTableDiv');
-    // alert(`ElevationTableOpen - ${ElevationTableOpen}, colorTableDiv - ${colorTableDiv}`)
-    if(colorTableDiv!=null)
-      if (ElevationTableOpen == true)
-      {
-          colorTableDiv.remove();
-          ElevationTableOpen=false;
-          return;
-      }
-    ElevationTableOpen = true;
-    const compassDiv = document.createElement('div');
-    compassDiv.id = 'colorTableDiv'; // Define o ID da div
-    compassDiv.style.position = 'absolute';
-    compassDiv.style.top = '80px';
-    compassDiv.style.left = '10px';
-
-    compassDiv.style.width = '150px';
-    compassDiv.style.height = '500px';
-    compassDiv.style.backgroundSize = '150px 500px';
-    compassDiv.style.borderRadius = '2%';
-    // compassDiv.style.backgroundImage = 'url("/static/OpenElevTable.png")';
-    compassDiv.style.backgroundImage = imgElevationTable;
-    compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
-    compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
-    compassDiv.style.backgroundColor = 'white';
-    compassDiv.style.display = 'flex';
-    compassDiv.style.alignItems = 'center';
-    compassDiv.style.justifyContent = 'center';
-    compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
-    compassDiv.style.zIndex = 1000;
-
-
-    const icon = document.createElement('i');
-
-    // Estilos inline do ícone
-    // icon.style.fontSize = '20px';
-    // icon.style.color = '#fff';
-    //icon.style.transform = 'rotate(0deg)';        // Alinhado ao norte
-
-    // Adiciona um evento de clique à bússola
-    compassDiv.addEventListener('click', function() {
-        // Alerta ou função quando clicado
-        if (ElevationTableOpen == false)
-        {
-            compassDiv.style.backgroundImage = imgElevationTable;
-            ElevationTableOpen=true;
-        }
-        else
-        {
-            compassDiv.remove();
-            ElevationTableOpen=false;
-        }
-    });
-    document.body.appendChild(compassDiv);
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 function createDivScaleSvg() {
     // Verifica se o elemento já existe para evitar duplicação
     if (document.getElementById("resizableDiv")) 
@@ -1223,8 +934,6 @@ function createDivScaleSvg() {
         document.getElementById("resizableDiv").remove();
         return;
     }    
-        
-
     // Criar o div principal
     const resizableDiv = document.createElement("div");
     resizableDiv.id = "resizableDiv";
@@ -1419,65 +1128,10 @@ function ativaElementoHtml(id, estado) {
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-// https://base64.guru/converter/encode/file
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-function createDivOrdemPontos() {
-    // Cria a div para a bússola
-    // Desabilita modo mapa girar com o veículopara evitar bugs
-
-    const compassDiv = document.createElement('div');
-
-    // Define os estilos inline da bússola
-    compassDiv.style.position = 'absolute';
-    compassDiv.style.top = '130px';
-    compassDiv.style.left = '10px';
-    compassDiv.style.width = '45px';
-    compassDiv.style.height = '45px';
-    compassDiv.style.borderRadius = '50%';        // Bordas arredondadas
-    compassDiv.style.backgroundSize = '45px 45px';
-    // compassDiv.style.backgroundImage = 'url("/static/OrdemPontos.png")';
-    compassDiv.style.backgroundImage = imgOrdemPontos;
-    compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
-    compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
-    compassDiv.style.backgroundColor = 'white';
-    compassDiv.style.display = 'flex';
-    compassDiv.style.alignItems = 'center';
-    compassDiv.style.justifyContent = 'center';
-    compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
-    compassDiv.style.zIndex = 999;
-
-
-    const icon = document.createElement('i');
-
-    // Estilos inline do ícone
-    // icon.style.fontSize = '20px';
-    // icon.style.color = '#fff';
-    //icon.style.transform = 'rotate(0deg)';        // Alinhado ao norte
-
-    // Adiciona um evento de clique à bússola
-    compassDiv.addEventListener('click', function() {
-        // Alerta ou função quando clicado
-        clDivOrdenaPontos();
-    });
-    // Adiciona o ícone dentro da bússola
-    // compassDiv.appendChild(icon);
-
-    // Adiciona a bússola ao corpo da página
-    document.body.appendChild(compassDiv);
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 function EncontrarDado(pontosvisitaDados, lat, lon,iDado) {
     // Procura o ponto com a mesma latitude e longitude
     const ponto = pontosvisitaDados.find(p => p[0] === lat && p[1] === lon);
 
-    // Retorna o endereço se o ponto for encontrado, ou uma mensagem padrão
-    return ponto ? ponto[iDado] : "Idado não encontrado";
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-function EncontrarDadoPn(pontosvisitaDados, Pn,iDado) {
-    // Procura o ponto com a mesma latitude e longitude
-    ponto = pontosvisitaDados.find(p => p[2] === Pn);
     // Retorna o endereço se o ponto for encontrado, ou uma mensagem padrão
     return ponto ? ponto[iDado] : "Idado não encontrado";
 }
@@ -1501,17 +1155,6 @@ function limparMarcadores(markerVet) {
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-function AtualizaPontosvisitaDadosCampoPN(pontosvisitaDados,lat, lon,iPn,iPnDados)
-{
-    // wLog(`lat ${lat}, lon ${lat}, iPn - ${iPn}, iPnDados -  ${iPnDados}`);
-    i_posicaoiPnDados = pontosvisitaDados.findIndex(ponto => ponto[2] === iPnDados );
-    i_posicaolatlon = pontosvisitaDados.findIndex(ponto => ponto[0] === lat && ponto[1] === lon );
-
-    pontosvisitaDados[i_posicaoiPnDados][2]=iPnDados;
-    pontosvisitaDados[i_posicaolatlon][2]=iPn;
-    return pontosvisitaDados;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Estrutura pontosvisitaDados [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
 function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,ColunaAtualizar,NovoDado)
 {
@@ -1524,14 +1167,12 @@ function AtualizaPontosvisitaDados(pontosvisitaDados,lat, lon,ColunaAtualizar,No
 function ReordenaPontosTela(rotaSel)
 {
     pontosVisita = rotaSel.pontosVisitaOrdenados;
-
     limparMarcadores(markerVet)
     markerVet = [];
     i=0;
     pontosVisita.forEach(point => {
         lat = point[0];
         lon = point[1];
-
         iPn = `P${i}`;
         iPnDados=EncontrarDado(pontosvisitaDados, lat, lon,2);
         tooltip = EncontrarDado(pontosvisitaDados, lat, lon,4);
@@ -1539,12 +1180,6 @@ function ReordenaPontosTela(rotaSel)
         tooltip = `Altitude: ${alt}<br>${tooltip}`
         // wLog(`---->>> lat ${lat}, lon ${lat}, tooltip - ${tooltip}`);
         // wLog(`---->>> iPn - ${iPn}, iPnDados -  ${iPnDados}, alt - ${alt}`);
-
-        if(iPn!=iPnDados)
-        {
-            // pontosvisitaDados=AtualizaPontosvisitaDadosCampoPN(pontosvisitaDados,lat, lon,iPn,iPnDados);
-        }
-
         markerbufTemp = L.marker([lat, lon]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude(i,alt));
         markerbufTemp._icon.setAttribute('data-id', `${i}`);
         markerbufTemp._icon.setAttribute('clicado', '0');
@@ -1556,7 +1191,6 @@ function ReordenaPontosTela(rotaSel)
     });
 
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function getFormattedTimestamp() {
     const now = new Date();
@@ -1649,7 +1283,6 @@ function exibirMensagemComTimeout(mensagem, timeout = 3000) {
 function exibirMensagem(mensagem) {
     // Criar a div principal da mensagem
     const mensagemDiv = document.createElement('div');
-
     // Estilizar a div principal
     mensagemDiv.style.position = 'fixed'; // Fixo em relação à janela
     mensagemDiv.style.top = '50%';
@@ -1672,7 +1305,6 @@ function exibirMensagem(mensagem) {
     mensagemDiv.style.webkitUserSelect = 'none';     // Para navegadores baseados no WebKit
     mensagemDiv.style.mozUserSelect = 'none';        // Para Firefox
     mensagemDiv.style.msUserSelect = 'none';
-
     // Criar a div da ampulheta
     const ampulhetaDiv = document.createElement('div');
     ampulhetaDiv.style.width = '20px';
@@ -1687,7 +1319,6 @@ function exibirMensagem(mensagem) {
     textoMensagem.textContent = mensagem;
     // Estilos definidos em uma tag <style> ou arquivo CSS:
     const styleElement = document.createElement('style');
-
     styleElement.textContent = `
         .mensagem-texto {
             font-family: Arial, sans-serif;
@@ -1695,10 +1326,7 @@ function exibirMensagem(mensagem) {
             color: #333;
 
     }`;
-
-
     document.head.appendChild(styleElement);
-
     // Adicionar a ampulheta e o texto à div principal
     mensagemDiv.appendChild(ampulhetaDiv);
     mensagemDiv.appendChild(textoMensagem);
@@ -1750,70 +1378,6 @@ async function enviarJson(payload, url) {
     } catch (error) {
         console.error("Erro na requisição:", error);
     }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-function createAtivaGps() {
-    // Cria a div para a bússola
-    const compassDiv = document.createElement('div');
-
-    // Define os estilos inline da bússola
-    compassDiv.style.position = 'absolute';
-    compassDiv.style.top = '60px';
-    compassDiv.style.right = '10px';
-    compassDiv.style.width = '45px';              // Largura da bússola
-    compassDiv.style.height = '45px';             // Altura da bússola
-    // compassDiv.style.backgroundImage = 'url("/static/GpsAtivo.png")'; // URL da imagem da bússola
-    if(gpsAtivado)
-        compassDiv.style.backgroundImage = imgGpsAtivo;
-    else
-        compassDiv.style.backgroundImage = imgGpsInativo;
-    compassDiv.style.backgroundSize = '35px 35px';    // Redimensiona a imagem para cobrir a div
-    compassDiv.style.backgroundPosition = 'center'; // Centraliza o background
-    compassDiv.style.backgroundRepeat = 'no-repeat'; // Evita repetição da imagem
-    compassDiv.style.backgroundColor = 'white';
-    compassDiv.style.display = 'flex';
-    compassDiv.style.alignItems = 'center';
-    compassDiv.style.justifyContent = 'center';
-    compassDiv.style.borderRadius = '50%';        // Bordas arredondadas
-    compassDiv.style.cursor = 'pointer';          // Mostra o cursor de clique
-    compassDiv.style.zIndex = 1000;
-
-    // Cria o ícone da bússola (seta para o norte)
-    const icon = document.createElement('i');
-
-    // Estilos inline do ícone
-    // icon.style.fontSize = '20px';
-    // icon.style.color = '#fff';
-    //icon.style.transform = 'rotate(0deg)';        // Alinhado ao norte
-
-    // Adiciona um evento de clique à bússola
-    compassDiv.addEventListener('click', function() {
-        // alert('Você clicou na bússola!');         // Alerta ou função quando clicado
-        if (gpsAtivado)
-        {
-            // alert('Clicou para PointerNorte.png',HeadingNorte)
-            // compassDiv.style.backgroundImage = 'url("/static/GpsInativo.png")';
-            compassDiv.style.backgroundImage = imgGpsInativo;
-            gpsAtivado=false;
-            navigator.geolocation.clearWatch(geoLocationId);
-
-        }
-        else
-        {
-            // alert('Clicou para Pointer.png',HeadingNorte)
-            // compassDiv.style.backgroundImage = 'url("/static/GpsAtivo.png")';
-            compassDiv.style.backgroundImage = imgGpsAtivo;
-            gpsAtivado=true;
-            geoLocationId=navigator.geolocation.watchPosition(updateGPSPosition,error => console.error(error),{enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
-        }
-    });
-
-    // Adiciona o ícone dentro da bússola
-    // compassDiv.appendChild(icon);
-
-    // Adiciona a bússola ao corpo da página
-    document.body.appendChild(compassDiv);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function createMacOSDock() {
@@ -1999,37 +1563,33 @@ function createMacOSDock() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function GerarKML(polylineRota, pontosVisita, pontosVisitaDados) 
 {
-
     exibirMensagemComTimeout("Gerando e salvando o arquivo KML para uso em aplicativos como MapsMe, Google Earth e outros. 📌 No MapsMe, envie o arquivo KML ao motorista via WhatsApp. Para abrir, basta clicar no arquivo e selecionar MapsMe como aplicativo.", 
               timeout = 9000)
     // Cabeçalho do KML
     let kmlInicio = `<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2">
-  <Document>
-    <name>Pontos e Rotas</name>
-    <!-- Definir estilos -->
-    <Style id="lineStyleBlue">
-      <LineStyle>
-        <color>ff00ff00</color> <!-- verde em formato ABGR -->
-        <width>4</width>
-      </LineStyle>
-    </Style>
-
-
-`;
+    <kml xmlns="http://www.opengis.net/kml/2.2">
+    <Document>
+        <name>Pontos e Rotas</name>
+        <!-- Definir estilos -->
+        <Style id="lineStyleBlue">
+        <LineStyle>
+            <color>ff00ff00</color> <!-- verde em formato ABGR -->
+            <width>4</width>
+        </LineStyle>
+        </Style>
+    `;
 
     // Footer do KML
     let kmlFim = `
-  </Document>
-</kml>`;
+    </Document>
+    </kml>`;
 
     // Adicionar os pontos de visita
     let kmlPontos = "";
     ind = 0;
     pontosVisita.forEach(([latitude, longitude]) => {
-            descricao = EncontrarDado(pontosvisitaDados, latitude, longitude, 4);
-            altitude  = EncontrarDado(pontosvisitaDados, latitude, longitude, 5);
-            // ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+            descricao = EncontrarDado(pontosVisitaDados, latitude, longitude, 4);
+            altitude  = EncontrarDado(pontosVisitaDados, latitude, longitude, 5);
             kmlPontos += `
                 <Placemark>
                 <name>P${ind}  ${descricao}</name>
@@ -2092,6 +1652,7 @@ function gerarDataHoraAtual() {
     return `${ano}-${mes}-${dia}-${horas}:${minutos}:${segundos}`;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+// Cria a interface na tela primeira execução
 function CreateControls()
 {
     HeadingNorte=0;

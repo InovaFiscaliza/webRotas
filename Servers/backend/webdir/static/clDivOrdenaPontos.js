@@ -5,6 +5,7 @@ clicouPipetaPontoInicial=false; // Flag para indicar que clicou na pipeta
 var arrayPnts = null;
 var arrayLinhas = null;
 // var servidorOnline = true;
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 function clDivOrdenaPontos() {
     // Cria a div principal
     
@@ -111,50 +112,6 @@ function clDivOrdenaPontos() {
     label.style.fontSize = fontSize;
     label.style.color = '#333';
 
-    // Cria o botão de lixeira
-    /*
-    trashButton = document.createElement('button');
-    trashButton.innerHTML = '🗑️'; // Ícone de lixeira
-    trashButton.style.border = 'none';
-    trashButton.style.background = 'transparent';
-    trashButton.style.cursor = 'pointer';
-    trashButton.style.fontSize = fontSize;
-    trashButton.style.marginLeft = '10px'; // Adiciona um espaçamento entre o label e a lixeira
-    DisableTrashButton(); // Desabilita o botão de lixeira inicialmente
-    function DisableTrashButton()
-    {
-        trashButton.style.cursor = 'not-allowed'; // Cursor indicando que está desabilitado
-        trashButton.style.opacity = '0.5'; // Deixa o botão visualmente mais "fraco"
-        trashButton.disabled = true; // Desabilita a interação do botão
-    }
-    function EnableTrashButton()
-    {
-        trashButton.disabled = false;
-        trashButton.style.opacity = '1';
-        trashButton.style.cursor = 'pointer';
-    }
-
-    // Adiciona um evento para limpar a lista ao clicar no botão de lixeira
-    trashButton.addEventListener('click', () => {
-        // document.getElementById('listaRotas').innerHTML = ''; // Limpa o select de rotas
-        // LoadSelectPontos(selectRotas.value)
-        if(selectRotas.value==0)
-            return;
-
-        // Obtém o ID selecionado
-        const idSelecionado = parseInt(selectRotas.value, 10); // Converte para número inteiro base 10
-        index = ListaRotasCalculadas.findIndex(item => item.id === idSelecionado); // Encontra o índice da rota selecionada
-        // Se o item for encontrado, remove do array
-        if (index !== -1) {
-            ListaRotasCalculadas.splice(index, 1);
-            console.log(`Item com ID ${idSelecionado} removido.`);
-        } else {
-            console.log(`Item com ID ${idSelecionado} não encontrado.`);
-        }
-
-        CarregaRotasCalculadas(0)
-    });
-    */
     // Adiciona os elementos ao contêiner
     container.appendChild(label);
     // container.appendChild(trashButton);
@@ -261,17 +218,6 @@ function clDivOrdenaPontos() {
     // Adicionando o contêiner ao corpo do documento
     iDlg.appendChild(container);
 
-    /*
-    label = document.createElement('label');
-    label.htmlFor = 'listaRotas';
-    label.textContent = 'Ponto Inicial:';
-    label.style.marginTop = '5px';
-    label.style.marginBottom = '5px';
-    label.style.fontFamily = 'Arial, sans-serif';
-    label.style.fontSize = fontSize;
-    label.style.color = '#333';
-    iDlg.appendChild(label);
-    */ 
     //-----------------------------------------------------------------------------------
     // Div ponto inicial com lat, lon e descrição 
     let divPai = document.createElement('div');
@@ -583,8 +529,6 @@ function clDivOrdenaPontos() {
             // alert(`Value: ${option.value}, Text: ${option.textContent}`);
             //Pn = option.textContent.split(" ")[0]; // Pega o texto antes do primeiro espaço;
             [lat, lon] = option.value.split(',').map(Number); // Converte de volta para números
-            // lat = EncontrarDadoPn(pontosvisitaDados, Pn,0)
-            // lon = EncontrarDadoPn(pontosvisitaDados, Pn,1)
             pontosVisitaNew.push([lat, lon]);
         });
         pontosVisitaOrdenados = pontosVisitaNew;
@@ -627,10 +571,7 @@ function clDivOrdenaPontos() {
             pntinicialBuf = [];
             pntinicialBuf[0] = document.getElementById('latitude').value;
             pntinicialBuf[1] = document.getElementById('longitude').value;
-            pntinicialBuf[2] = document.getElementById('descricao').value;
-            
-            
-            
+            pntinicialBuf[2] = document.getElementById('descricao').value; 
 
             maiorId = ListaRotasCalculadas.reduce((max, item) => {return item.id > max ? item.id : max;}, 0);
             bufdados = {};
@@ -862,19 +803,6 @@ function clDivOrdenaPontos() {
             poly_lineRota.push(tempBuf);    
         }
      
-        // Exibir Lat/Lon ao clicar na Polyline
-        /*
-        poly_lineRota.on('click', function () {
-            let coords = poly_lineRota.getLatLngs(); // Obtém as coordenadas
-            let coordText = coords.map(c => `${c.lat},${c.lng}`).join('\n');
-            
-            alert("Coordenadas da Polyline:\n" + coordText);
-            console.log(coords); // Exibe no console também
-        });   
-        */ 
-        // clearPlottedPoints(arrayPnts, map); 
-        // removLines(arrayLinhas);
-        // arrayPnts = plotPolylineAsPoints(map, polylineRotaDat, color = 'red')
         return poly_lineRota;     
     }
     ////////////////////////////////
@@ -967,25 +895,6 @@ function clDivOrdenaPontos() {
 
     ////////////////////////////////
     // Função para mover opções na lista
-    /*
-    function moveOption(direction) {
-        const selectedIndex = select.selectedIndex;
-        if (selectedIndex === -1) return; // Nenhuma opção selecionada
-
-        const selectedOption = select.options[selectedIndex];
-        const newIndex = selectedIndex + direction;
-
-        // Verificar limites
-        if (newIndex < 0 || newIndex >= select.options.length) return;
-
-        // Mover a opção
-        select.removeChild(selectedOption);
-        select.insertBefore(selectedOption, select.options[newIndex]);
-
-        // Atualizar o índice selecionado
-        select.selectedIndex = newIndex;
-    }
-    */
     function moveOption(direction) {
         const options = Array.from(select.options);
         const selectedOptions = options.filter(option => option.selected);
