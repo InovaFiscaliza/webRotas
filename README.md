@@ -1,7 +1,5 @@
 # webRotas
 
-Vehicle route management toolkit, for inspection activities of the Brazilian Regulatory Telecommunications Agency, Anatel.
-
 Kit de ferramentas para gerenciamento de rotas de veículos, para atividades de inspeção da Agência Nacional de Telecomunicações do Brasil, Anatel.
 
 <p align="center">
@@ -10,122 +8,268 @@ Kit de ferramentas para gerenciamento de rotas de veículos, para atividades de 
   <img src="images/abrangencia.jpg" width="200">
 </p>
 
-Instalação
+## Requisitos do sistema
+
+- Windows 10 1709 (build 16299) ou posterior
+- PowerShell 7.4 ou posterior
+- WinGet 1.10 ou posterior
+  
+- 8GB of RAM
+- 10GB de espaço livre em disco
+  
+- Conexão de internet
+
+## Verificaçao do ambiente
+
+    Verifique a versão do Windows usando o comando
+
+    ```shell
+    winver
+    ```
+
+    Verifique se dispõe do Winget digitando o comando:
+
+    ```shell
+    winget --version
+    ```
+
+   `Winget` não estará disponível até que você tenha feito login no Windows como usuário pela primeira vez, acionando o Microsoft Store para registrar o Windows Package Manager como parte de um processo assíncrono. Consulte [MS Use o WinGet tool para instalar e gerenciar aplicativos](https://learn.microsoft.com/en-us/windows/package-manager/winget/) para mais informações.
+
+    Verifique a versão PowerShell usando o comando
+    
+    ```shell
+    $PSVersionTable.PSVersion
+    ```
+
+    PowerShell pode ser atualizado para a versão mais recente utilizando o seguinte comando ou por métodos alternativos conforme [procedimeento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
+
+    ```shell
+    winget install Microsoft.PowerShell
+    ```
+
+## Instalação
 
 1. Verifique se o Git está instalado
 
    Abra o Prompt de Comando (cmd) ou PowerShell e digite:
 
-   git --version
+    ```shell
+    git --version
+    ```
 
-   Se não estiver instalado acesse o site abaixo e o instale.
+   Caso negativo, instale usando:
 
-   https://git-scm.com/downloads
+    ```shell
+    winget install Git.Git
+    ```
 
-   Em caso de falha no uso após as instalações, recarregue os prompts para os novos paths estarem atualizados.
-2. Instalar o utilitário de download wget
+2. Clonar o repositório
 
-   Abra o Prompt de Comando (cmd) ou PowerShell e digite:
+   Utilize uma pasta para salvar o projeto. De preferência escolha uma pasta que atenda aos seguintes critérios:
 
-   winget install wget
-3. Clonar o repositório
+   - fácil acesso;
+   - não protegida por permissões de administrador;
+   - não sincronizadas com serviços de nuvem.
 
-   No terminal (cmd, PowerShell ou Git Bash), navegue até o diretório onde deseja salvar o projeto e execute:
+    Por exemplo, crie uma pasta chamada `C:\Users\<SeuNomeDeUsuario>\anatel`
+    
+    Utilizando os seguintes comandos para criar a pasta e navegar até ela:
 
-   git clone https://github.com/InovaFiscaliza/webRotas.git
-4. Instalar o wsl
+    ```shell
+    mkdir C:\Users\<SeuNomeDeUsuario>\appdata\Local\anatel
 
-   Instalar o Windows Subsystem for Linux e reinicie o computador
+    cd C:\Users\<SeuNomeDeUsuario>\appdata\Local\anatel
+    ```
 
-   wsl.exe --install
+    Clone o repositório com o comando:
 
-   Em alguns sistemas, pode ser necessário habilitar o recurso de máquina virtual. Neste site, você encontrará mais detalhes sobre esse processo.
+    ```shell
+    git clone https://github.com/InovaFiscaliza/webRotas.git
+    ```
 
-   https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature
+    Após esse comando, será criada uma pasta chamada `webRotas` com todos os arquivos do projeto.
 
-   Se for necessário habilitar essa opção na BIOS, o procedimento pode variar dependendo do modelo da BIOS e do tipo de CPU, seja Intel ou AMD.
+    A pasta raiz escolhida para o projeto será referenciada nos passos seguintes apenas como `.\webRotas`
+
+3. Instalar o wsl
+
+    Verifique se WSL está instalado utiliz
+
+    ```shell
+    wsl.exe --version
+    ```
+
+    Caso não esteja instalado, execute:
+
+    ```shell
+    wsl.exe --install
+    ```
+
+   Em alguns sistemas, pode ser necessário habilitar o recurso de máquina virtual. Neste site, você encontrará mais detalhes na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature)
+
+   O procedimento pode variar dependendo do modelo da BIOS e do tipo de CPU.
 
    Em algumas máquinas, pode ser necessário habilitar a opção manualmente. Outra alternativa é abrir o PowerShell como administrador e executar o seguinte comando:
 
-   dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    ```shell
+    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    ```
 
-   Feitas essa operações, repita a instalação do wsl
+    Feitas essa operações, repita a instalação do wsl com o comando `wsl.exe --install`
 
-   wsl.exe --install
-5. Baixar e instalar o podman desktop
+4. Baixar o podman engine
 
-   Faça o download deste url e instale
+    Instale o podman engine utilizando winget
+    
+    ```shell
+    winget install RedHat.Podman
+    ```
 
-   https://podman-desktop.io/downloads/windows
+    Para facilitar o uso do podman, vc pode também instalar o podman desktop, que é uma interface gráfica para o podman engine.
 
-   Ou execute este comando e instale
+    ```shell	
+    winget install RedHat.PodmanDesktop
+    ```
 
-   wget https://github.com/podman-desktop/podman-desktop/releases/download/v1.16.1/podman-desktop-1.16.1-setup-x64.exe
+    Utilize a opção: `docker-compose with Podman, enable docker compatibility` quando solicitado.
 
-   Se o instalador pergutar: "Note: If you would like to use docker compose up or docker-compose with Podman, enable docker
-   compatibility.", habilite.
+    Após instalado, o sistema deverá ser reinicializado.
 
-   Após isso abra o podman desktop novamente
+5. Baixar e instalar o python
 
-   Dentro do podman desktop na página Dashboard e selecione "Install" para terminar a instalação do podman. Você deve ter ao
-   menos 5gb de memória para o executar.
-   Após instalado, o sistema deverá ser reinicializado, Volte para página Dasboard e novamente inicialize o podman.
-6. Baixar e instalar o python
+    ```shell
+    winget install miniconda3
+    ```
 
-   wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
+    Após a instalação, abra o Anaconda Prompt e execute o comando:
 
-   Anote o diretório de instalação (Geralmente c:/User/SeuNomeDeUsuario)
-7. Configure seu ambiente de trabalho
+    ```shell
+    conda init
+    ```
 
-   Abra um Anaconda Prompt que aparecera no menu de aplicativos do Windows 11 e crie o ambiente webrotas do python
+    Feche o terminal de comando e abra novamente.
 
-   conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
-9. Baixar os arquivos de dados
+6. Configure seu ambiente de trabalho
 
-   a - Ir para o diretório \webRotas\Servers\BR_Municipios_2022 e baixar os shapefiles dos limites municipais
+    Crie o ambiente de trabalho com o comando:
 
-   wget https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/BR_Municipios_2022.zip
+    ```shell
+    conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
+    ```
 
-   Descomprimir todo o conteudo deste arquivo neste diretório.
+    Ative o ambiente de trabalho com o comando:
 
-   b - Ir para o diretório \webRotas\Servers\Comunidades
+    ```shell
+    conda activate webRotas
+    ```
 
-   Abrir o site https://inde.gov.br/AreaDownload#
+    Verifique se o caminho onde o ambiente criado usando o comando:
 
-   Procurar os dados - Favelas e Comunidades Urbanas - 2022 IBGE - Instituto Brasileiro de Geografia e Estatística
-   Baixar a opção "Shapefile" essa opção fará o download do arquivo qg_2022_670_fcu_agreg.zip, descomprimir todo seu contendo no
-   diretório \webRotas\Servers\Comunidades
+    ```shell
+    conda env list
+    ```
 
-   c - Ir para o diretório \webRotas\Servers\Osmosis>
+7.  Baixar os arquivos de dados
 
-   Rodar os seguintes comandos para gerar um imagem estática osmosis_webrota.tar do container osmosis para funcionamento caso o docker.io saia do ar ou esse container desapareça. Atenção, redes wifi antigas em ponto de sinal fraco ocorrem erros no download dos containeres, esteja atento quando o podman run falhar mais de uma vez.
+    * Dados de **limites municipais** com a seguinte sequência de comandos:
 
-   mkdir TempData
-   mkdir brazil
-   podman run --name osmosis -v .:/data yagajs/osmosis osmosis
-   podman commit osmosis osmosis_webrota
-   podman save -o osmosis_webrota.tar osmosis_webrota
+        ```shell
+        cd .\webRotas\Servers\BR_Municipios #! Ajustar diretório para versão 2023
+        
+        Invoke-WebRequest -OutFile Invoke-WebRequest -OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
+        
+        Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
 
-   d - Ir para o diretório \webRotas\Servers\Osmosis\brazil>
+        rm BR_Municipios_2023.zip
+        ```
 
-   Baixar mapa de todo o Brasil do site https://download.geofabrik.de/south-america/brazil.html usando o comando abaixo
+    * Dados de [**Favelas e Comunidades Urbanas - 2022**](https://inde.gov.br/AreaDownload#) com a seguinte sequência de comandos:
 
-   wget https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
+        ```shell
+        cd .\webRotas\Servers\Comunidades
 
-   e - Ir para o diretório \webRotas\Servers\OSMR\data>
+        Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP
 
-   Rodar os seguintes comandos
+        Expand-Archive -LiteralPath qg_2022_670_fcu_agreg.zip -DestinationPath .\
 
-   mkdir TempData
-   podman run --name osmr -v .:/data osrm/osrm-backend
-   podman commit osmr osmr_webrota
-   podman save -o osmr_webrota.tar osmr_webrota
+        rm qg_2022_670_fcu_agreg.zip
+        ```
 
-   f - Ir para o diretório \webRotas\Servers\backend\webdir
+    * Dados de [**Áreas Urbanizadas do Brasil - 2019**](https://inde.gov.br/AreaDownload#) com a seguinte sequência de comandos:
 
-   mkdir logs
-   mkdir templates
-10. Testar a execução do sistema
+        ```shell
+        cd .\webRotas\Servers\Urbanizacao
+
+        Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP
+
+        Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
+
+        rm areas_urbanizadas_2019.zip
+        ```
+
+   * Dados de [**Arrumento**](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
+
+        ```shell
+        cd .\webRotas\Servers\Osmosis\brazil
+
+        Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
+
+        ```
+
+    * Imagens de containeres a serem utilizados [**osmosis**](https://github.com/yagajs/docker-osmosis) e [**osrm-backend**](https://github.com/Project-OSRM/osrm-backend) com a seguinte sequência de comandos:
+
+        ```shell
+        podman pull yagajs/osmosis
+
+        podman pull osrm/osrm-backend
+        ```
+
+
+8. Preparar pastas e imagem do container para o Osmosis
+
+    ```shell
+    cd .\webRotas\Servers\Osmosis
+
+    mkdir TempData
+
+    mkdir brazil
+
+    podman run --name osmr -v .:/data osrm/osrm-backend
+
+    podman commit osmr osmr_webrota
+
+    podman save -o osmr_webrota.tar osmr_webrota
+    ```	
+
+    Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmosis_webrota.tar` no diretório `.\webRotas\Servers\Osmosis`.
+
+9. Preparar pastas e imagem do container para o OSRM
+
+    ```shell
+    cd .\webRotas\Servers\OSRM
+
+    mkdir TempData
+
+    podman run --name osmr -v .:/data osrm/osrm-backend
+
+    podman commit osmr osmr_webrota
+
+    podman save -o osmr_webrota.tar osmr_webrota
+    ```
+
+    Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmr_webrota.tar` no diretório `.\webRotas\Servers\OSRM`.
+
+10. Preparar pastas e arquivos para o servidor
+
+    ```shell
+    cd .\webRotas\Servers\backend\webdir
+    
+    mkdir logs
+    
+    mkdir templates
+    ```
+
+11. Testar a execução do sistema
 
     Clique no arquivo C:\Users\SeuNomeDeUsuario\webRotas\Servers\backend\webdir\promptwork.bat por duas vezes e abra dois prompts de trabalho.
 
