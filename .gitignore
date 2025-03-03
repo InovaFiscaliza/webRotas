@@ -48,10 +48,6 @@ Servers/Osmosis/TempData/exclusion_Andre.poly.old
 /Servers/OpenElevation/data/
 /Servers/Osmosis/brazil/
 /Servers/Osmosis/TempData/
-/Servers/Comunidades/qg_2022_670_fcu_agregPolygon.shx
-/Servers/Comunidades/qg_2022_670_fcu_agregPolygon.shp
-/Servers/Comunidades/qg_2022_670_fcu_agregPolygon.cst
-/Servers/Comunidades/qg_2022_670_fcu_agreg.zip
-/Servers/Comunidades/qg_2022_670_fcu_agregPolygon.prj
-/Servers/Comunidades/qg_2022_670_fcu_agregPolygon.dbf
-/Servers/OSMR/data/osmr_webrota.tar
+/Servers/Comunidades/
+osmr_webrota.tar
+BR_Municipios_2023.zip
