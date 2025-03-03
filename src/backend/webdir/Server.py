@@ -236,31 +236,7 @@ def download_file(filename):
 def process_location():
     # Obtém o JSON da requisição
     data = request.get_json()
-
     return ProcessaRequisicoesAoServidor(data)
-
-    """"
-    if not (key in data for key in ("TipoRequisicao")):
-       return jsonify({"error": "Tipo requisicao: 'TipoRequisicao' nao informado."}), 400
-    user=data["User"]
-    tiporequisicao=data["TipoRequisicao"]
-
-    for dado in ListaTarefas:
-       if dado[0] == user and dado[1] == tiporequisicao:
-            if dado[2].done():
-                ret = dado[2].result()
-                ListaTarefas.remove(dado)
-                return ret
-            if dado[2].running():
-                return jsonify({"Tarefa em execucao": "OK"}), 202
-
-    # Usando executor para processar a requisição em uma thread separada
-    future = executor.submit(ProcessaRequisicoesAoServidor, data)
-    ListaTarefas.append([user,tiporequisicao,future])
-    # Aguardar até que a tarefa seja concluída e acessar o resultado
-    # result = future.result()  # Esse comando vai bloquear até a execução da tarefa ser concluída
-    """
-    return jsonify({"Tarefa em execucao": "OK"}), 202
 ################################################################################
 if __name__ == '__main__':
     app.run(debug=True,port=5001)

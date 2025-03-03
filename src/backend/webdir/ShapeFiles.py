@@ -61,7 +61,7 @@ def FiltrarComunidadesBoundingBox(bounding_box):
     :param bounding_box: Lista ou tupla contendo os limites do bounding box (minx, miny, maxx, maxy)
     """
     # Caminho para o arquivo Shapefile
-    shapefile_path = "../../Comunidades/qg_2022_670_fcu_agregPolygon.shp"
+    shapefile_path = "../../resources/Comunidades/qg_2022_670_fcu_agregPolygon.shp"
     # Carregar o arquivo Shapefile
     data = gpd.read_file(shapefile_path)
 

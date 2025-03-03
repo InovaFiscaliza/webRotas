@@ -5,9 +5,9 @@ Vehicle route management toolkit, for inspection activities of the Brazilian Reg
 Kit de ferramentas para gerenciamento de rotas de veículos, para atividades de inspeção da Agência Nacional de Telecomunicações do Brasil, Anatel.
 
 <p align="center">
-  <img src="images/pntsVisita.jpg" width="200" style="margin-right: 10px;">
-  <img src="images/drvTest.jpg" width="200" style="margin-right: 10px;">
-  <img src="images/abrangencia.jpg" width="200">
+  <img src="docs/images/pntsVisita.jpg" width="200" style="margin-right: 10px;">
+  <img src="docs/images/drvTest.jpg" width="200" style="margin-right: 10px;">
+  <img src="docs/images/abrangencia.jpg" width="200">
 </p>
 
 Instalação

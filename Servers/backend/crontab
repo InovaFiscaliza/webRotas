@@ -1,5 +1,0 @@
-# Executa o script Python todos os dias às 6h da manhã e a cada 59 minutos
-# 0 6 * * * root /usr/local/bin/python /code/webdir/PostBlog.py > /code/webdir/cron.log 2>&1
-*/59 * * * *  root /usr/local/bin/python /code/webdir/PostBlog.py > /code/webdir/cron.log 2>&1
-# Executa o script a cada 2 horas no minuto 35 da hora
-# 35 */2 * * *  root /usr/local/bin/python /code/webdir/ColAreaVip.py > /code/webdir/cronAreaVip.log 2>&1
