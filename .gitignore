@@ -98,3 +98,8 @@ Servers/Osmosis/TempData/exclusion_Andre.poly.old
 /src/backend/webdir/templates/MapaDriveTestStatic2025-03-03_13-38-47.html
 /src/backend/webdir/ngrok.exe
 /src/backend/webdir/__pycache__/
+/src/resources/BR_Municipios_2022/BR_Municipios_2022.cpg
+/src/resources/BR_Municipios_2022/BR_Municipios_2022.shx
+/src/resources/BR_Municipios_2022/BR_Municipios_2022.shp
+/src/resources/BR_Municipios_2022/BR_Municipios_2022.dbf
+/src/resources/BR_Municipios_2022/BR_Municipios_2022.prj

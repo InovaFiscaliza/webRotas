@@ -22,7 +22,7 @@ def GetBoundMunicipio(nome_municipio, estado_sigla):
     """
     wr.wLog(f"GetBoundMunicipio - {nome_municipio} - {estado_sigla}")
     # Carregar o arquivo Shapefile BR_Municipios_2022.shp
-    shapefile_path = '../../BR_Municipios_2022/BR_Municipios_2022.shp'
+    shapefile_path = '../../resources/BR_Municipios_2022/BR_Municipios_2022.shp'
     gdf = gpd.read_file(shapefile_path)
     
     # Filtrar município e estado
