@@ -85,38 +85,67 @@ function parse_winget_list {
 
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new() 
 
+# Test if winget is available
+if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+    # display message with hyperlink 
+    Write-Host "Winget not activated. Please install winget and try again."
+    Write-Host "Access: https://learn.microsoft.com/en-us/windows/package-manager/winget/"
+    exit 1
+}
+
 # Parse the winget list output into object
 $wgl = (winget list) -match '^(\p{L}|-)' | parse_winget_list | Sort-Object Id
 
 # Initialize the result object with the applications to check
 $result = @{
     "Microsoft.WSL" = @{
+        Name = ""
         Installed = $false
         Version = $null
     }
     "RedHat.Podman" = @{
+        Name = ""
         Installed = $false
         Version = $null
     }
+    "Anaconda.Miniconda3" = @{
+        Name = ""
+        Installed = $false
+        Version = $null
+    }
+    "Git.Git" = @{
+        Name = ""
+        Installed = $false
+        Version = $null
+    }
+
     # Add more applications here if needed
 }
 
 # Create the applications list from the keys of the result object
 $applications = $result.Keys
 
+# Get the keys from the first object in $wgl
+$keys = $wgl[0].PSObject.Properties.Name
+
 # Iterate over the applications and update the result object
 foreach ($app in $applications) {
-    $appInfo = $wgl | Where-Object { $_.ID -match $app }
+    $appInfo = $wgl | Where-Object { $_.Id -eq $app }
     if ($null -eq $appInfo) {
         Write-Host "$app is not installed."
     } else {
-        $appVersion = $appInfo.Versão
+        $appName = $appInfo."$($keys[0])" # Access the property dynamically using the indexed key to avoid problem with localization
+        $appVersion = $appInfo."$($keys[2])"  
+        
+
+        $result.$app.Name = $appName
         $result.$app.Installed = $true
         $result.$app.Version = $appVersion
         Write-Host "$app is installed. Version: $appVersion"
     }
 }
 
+$indexedKeys.GetEnumerator() | ForEach-Object { Write-Host "$($_.Key): $($_.Value)" }
 # Convert the result object to JSON and save it to a file
 $jsonOutput = $result | ConvertTo-Json -Depth 3
 $jsonOutput | Out-File -FilePath "D:/github/webRotas/Install/output.json"
