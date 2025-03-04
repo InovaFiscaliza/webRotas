@@ -1,3 +1,12 @@
+Mapa*
+WebRotasServer.log*
+BR_Municipios_2022.*
+filtro_*
+osmr_webrota.tar
+osmosis_webrota.tar
+*.pbf
+exclusion_*
+__pycache__
 /Servers/BR_Municipios_2022/BR_Municipios_2022.shx
 /Servers/BR_Municipios_2022/BR_Municipios_2022.shp
 /Servers/BR_Municipios_2022/BR_Municipios_2022.cpg
@@ -114,10 +123,3 @@ Servers/Osmosis/TempData/exclusion_Andre.poly.old
 /src/backend/webdir/templates/MapaPontosVisita2025-03-04_13-24-32.kml
 /src/backend/webdir/templates/MapaDriveTest2025-03-04_13-31-41.kml
 /src/backend/webdir/templates/MapaDriveTestStatic2025-03-04_13-31-41.html
-Mapa*
-WebRotasServer.log*
-BR_Municipios_*
-filtro_*
-osmr_webrota.tar
-osmosis_webrota.tar
-*.pbf
