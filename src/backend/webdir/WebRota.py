@@ -754,7 +754,7 @@ import os
 def FiltrarRegiãoComOsmosis():
     # Salvar o diretório atual
     diretorio_atual = os.getcwd()
-    os.chdir("../../Osmosis")
+    os.chdir("../../resources/Osmosis")
     # Inicia e configura a máquina do Podman
     subprocess.run(["filter.bat",UserData.nome])
     os.chdir(diretorio_atual)
@@ -806,7 +806,7 @@ def AtivaServidorOSMR():
     # startserver filtro 8001 osmr_server8001
     StopOldContainers(days=30)
     diretorio_atual = os.getcwd() 
-    os.chdir("../../OSMR/data")
+    os.chdir("../../resources/OSMR/data")
     UserData.OSMRport =  FindFreePort(start_port=50000, max_port=65535)
     wLog(f"Porta tcp/ip disponivel encontrada: {UserData.OSMRport}")
     if FileLog=="":
@@ -822,7 +822,7 @@ def AtivaServidorOSMR():
 def GerarIndicesExecutarOSRMServer():
     # Salvar o diretório atual
     diretorio_atual = os.getcwd()
-    os.chdir("../../OSMR/data")
+    os.chdir("../../resources/OSMR/data")
     DeleteOldFilesAndFolders("TempData", days=30)
     subprocess.run(["GeraIndices.bat", UserData.nome])
     os.chdir(diretorio_atual)
@@ -1026,9 +1026,9 @@ def VerificaArquivosIguais(arquivo_atual, arquivo_backup):
 ################################################################################
 def PreparaServidorRoteamento(regioes):
     DeleteOldFilesAndFolders("logs", days=30)
-    DeleteOldFilesAndFolders("../../Osmosis/TempData", days=30)
-    GeraArquivoExclusoes(regioes, arquivo_saida=f"../../Osmosis/TempData/exclusion_{UserData.nome}.poly")
-    if not VerificaArquivosIguais(f"../../Osmosis/TempData/exclusion_{UserData.nome}.poly", f"../../Osmosis/TempData/exclusion_{UserData.nome}.poly.old"):
+    DeleteOldFilesAndFolders("../../resources/Osmosis/TempData", days=30)
+    GeraArquivoExclusoes(regioes, arquivo_saida=f"../../resources/Osmosis/TempData/exclusion_{UserData.nome}.poly")
+    if not VerificaArquivosIguais(f"../../resources/Osmosis/TempData/exclusion_{UserData.nome}.poly", f"../../resources/Osmosis/TempData/exclusion_{UserData.nome}.poly.old"):
        wLog("FiltrarRegiãoComOsmosis")  
        FiltrarRegiãoComOsmosis()       
        wLog("GerarIndicesExecutarOSRMServer")  
