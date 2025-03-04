@@ -7,6 +7,7 @@ osmosis_webrota.tar
 *.pbf
 exclusion_*
 qg_20*
+tmpStatic*
 __pycache__
 /Servers/BR_Municipios_2022/BR_Municipios_2022.shx
 /Servers/BR_Municipios_2022/BR_Municipios_2022.shp
