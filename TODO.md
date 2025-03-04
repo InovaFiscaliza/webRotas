@@ -49,15 +49,12 @@
 - Repositório de polígonos editados por usuários
 
 
-
-
-
+Requisitos ultima reunião sexta pré carnaval - 28/02/2025
 
 * Mudar nome da pasta de "Servers" para "src". OK
 * Migrar "images" para "docs/images" e ajustar path do Readme.md. OK
 * Migrar arquivos testes "Test.py", "Test1.py" e "Test2.py" para pasta "tests".
-* Migrar arquivos de suporte ao código para uma subpasta "src/resources". Por exemplo: "src/resources/IBGE" ou "src/resources/Docker" etc (não lembro os nomes exatamente). Ajustar os paths dos arquivos que os requisitam.
-* Eliminar todo e qualquer experimento que não é abarcado na versão atual da aplicação.
-
+* Migrar arquivos de suporte ao código para uma subpasta "src/resources". Por exemplo: "src/resources/IBGE" ou "src/resources/Docker" etc (não lembro os nomes exatamente). Ajustar os paths dos arquivos que os requisitam. OK
+* Eliminar todo e qualquer experimento que não é abarcado na versão atual da aplicação. OK
 
 Outro ponto é que os arquivos de testes sejam descritivos e comecem com `test_` . Tipo `test_<funcionalidade>.py`. Assim bibliotecas de teste identificam automaticamente. Em python nenhum arquivo ou pasta começa com caixa alta...isso é coisa de outras linguagens.
