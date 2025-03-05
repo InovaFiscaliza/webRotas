@@ -1,289 +1,520 @@
-# webRotas
+<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
+<a name="indexerd-md-top"></a>
+
+<!-- PROJECT SHIELDS -->
+<!--
+*** based on https://github.com/othneildrew/Best-README-Template
+*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
+*** See the bottom of this document for the declaration of the reference variables
+*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
+*** https://www.markdownguide.org/basic-syntax/#reference-style-links
+-->
+
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#sobre-o-webrotas">Sobre o WebRotas</a></li>
+    <li><a href="#requisitos-do-sistema">Requisitos do sistema</a></li>
+    <li><a href="#instalação">Instalação</a></li>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#licença">License</a></li>
+    <li><a href="#additional-references">Additional References</a></li>
+  </ol>
+</details>
+
+<!-- ABOUT -->
+# Sobre o WebRotas
 
 Kit de ferramentas para gerenciamento de rotas de veículos, para atividades de inspeção da Agência Nacional de Telecomunicações do Brasil, Anatel.
 
-<p align="center">
-  <img src="images/pntsVisita.jpg" width="200" style="margin-right: 10px;">
-  <img src="images/drvTest.jpg" width="200" style="margin-right: 10px;">
-  <img src="images/abrangencia.jpg" width="200">
-</p>
+As imagens à seguir apresentam os 3 principais modos de cálculo, que são:
 
-## Requisitos do sistema
+1. **Pontos de Visita** - Cálculo de rotas para visitas a pontos de inspeção, com a possibilidade de definir a ordem de visitação dos pontos. Por exemplo, para verificação de um conjunto de estações de rádio base. Para este modo, é necessário definir os pontos a serem visitados.
+
+    ![Pontos de Visita](images/pntsVisita.jpg)
+
+2. **Abrangência** - Cálculo de rotas para verificação de pontos regulares distribuídos em uma área. Para este modo, é necessário definir o polígono da área a ser inspecionada e a densidade de pontos a serem visitados em termos da distância entre estes. O sistema calcula as coordenadas dos pontos a serem visitados.
+
+    ![Abrangência](images/abrangencia.jpg)
+
+3. **Contorno** - Cálculo de rota para verificação de pontos regularmente distribuídos em torno de um ponto central. Pare este modo é necessário definir o ponto central, o raio e o distanciamento entre os pontos. O sistema calcula as coordenadas dos pontos a serem visitados.
+
+    ![Contorno](images/drvTest.jpg)
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+<!-- System requirements -->
+# Requisitos do sistema
 
 - Windows 10 1709 (build 16299) ou posterior
 - PowerShell 7.4 ou posterior
 - WinGet 1.10 ou posterior
-  
 - 8GB of RAM
 - 10GB de espaço livre em disco
-  
 - Conexão de internet
 
-## Verificaçao do ambiente
+Vc pode verificar a versão do Windows usando o comando
 
-    Verifique a versão do Windows usando o comando
+```shell
+winver
+```
 
-    ```shell
-    winver
-    ```
+Verifique se dispõe do Winget digitando o comando:
 
-    Verifique se dispõe do Winget digitando o comando:
+```shell
+winget --version
+```
 
-    ```shell
-    winget --version
-    ```
+`Winget` não estará disponível até que você tenha feito login no Windows como usuário pela primeira vez, acionando o Microsoft Store para registrar o Windows Package Manager como parte de um processo assíncrono. Consulte [MS Use o WinGet tool para instalar e gerenciar aplicativos](https://learn.microsoft.com/en-us/windows/package-manager/winget/) para mais informações.
 
-   `Winget` não estará disponível até que você tenha feito login no Windows como usuário pela primeira vez, acionando o Microsoft Store para registrar o Windows Package Manager como parte de um processo assíncrono. Consulte [MS Use o WinGet tool para instalar e gerenciar aplicativos](https://learn.microsoft.com/en-us/windows/package-manager/winget/) para mais informações.
+Verifique a versão PowerShell usando o comando
 
-    Verifique a versão PowerShell usando o comando
-    
-    ```shell
-    $PSVersionTable.PSVersion
-    ```
+```shell
+$PSVersionTable.PSVersion
+```
 
-    PowerShell pode ser atualizado para a versão mais recente utilizando o seguinte comando ou por métodos alternativos conforme [procedimeento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
+PowerShell pode ser atualizado para a versão mais recente utilizando winget com o seguinte comando:
 
-    ```shell
-    winget install Microsoft.PowerShell
-    ```
+```shell
+winget install Microsoft.PowerShell
+```
 
-## Instalação
+ Para outros métodos, verifique o [procedimeento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
 
-1. Verifique se o Git está instalado
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-   Abra o Prompt de Comando (cmd) ou PowerShell e digite:
+<!-- Install -->
+# Instalação
 
-    ```shell
-    git --version
-    ```
+## 1. Instale o **Git**
 
-   Caso negativo, instale usando:
+Mas antes, verifique se já não está instalado utilizando o seguinte comando no terminal do Prompt de Comando (cmd) ou PowerShell:
 
-    ```shell
-    winget install Git.Git
-    ```
+```shell
+git --version
+```
 
-2. Clonar o repositório
+Caso negativo, instale git usando:
 
-   Utilize uma pasta para salvar o projeto. De preferência escolha uma pasta que atenda aos seguintes critérios:
+```shell
+winget install Git.Git
+```
 
-   - fácil acesso;
-   - não protegida por permissões de administrador;
-   - não sincronizadas com serviços de nuvem.
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-    Por exemplo, crie uma pasta chamada `C:\Users\<SeuNomeDeUsuario>\anatel`
-    
-    Utilizando os seguintes comandos para criar a pasta e navegar até ela:
+## 2. Baixe o **WebRotas**
 
-    ```shell
-    mkdir C:\Users\<SeuNomeDeUsuario>\appdata\Local\anatel
+Utilize uma pasta para salvar o projeto. De preferência escolha uma pasta que atenda aos seguintes critérios:
 
-    cd C:\Users\<SeuNomeDeUsuario>\appdata\Local\anatel
-    ```
+- fácil acesso;
+- não protegida por permissões de administrador;
+- não sincronizadas com serviços de nuvem como OneDrive, Google Drive, etc.
 
-    Clone o repositório com o comando:
+Por exemplo, crie uma pasta chamada `C:\Users\<SeuNomeDeUsuario>\anatel`.
 
-    ```shell
-    git clone https://github.com/InovaFiscaliza/webRotas.git
-    ```
+Utilizando os seguintes comandos para criar a pasta e navegar até ela:
 
-    Após esse comando, será criada uma pasta chamada `webRotas` com todos os arquivos do projeto.
+```shell
+mkdir C:\Users\<SeuNomeDeUsuario>\appdata\Local\anatel
 
-    A pasta raiz escolhida para o projeto será referenciada nos passos seguintes apenas como `.\webRotas`
+cd C:\Users\<SeuNomeDeUsuario>\appdata\Local\anatel
+```
 
-3. Instalar o wsl
+Clone o repositório com o comando:
 
-    Verifique se WSL está instalado utiliz
+```shell
+git clone https://github.com/InovaFiscaliza/webRotas.git
+```
 
-    ```shell
-    wsl.exe --version
-    ```
+Após esse comando, será criada uma pasta chamada `webRotas` com todos os arquivos do projeto.
 
-    Caso não esteja instalado, execute:
+A pasta raiz escolhida para o projeto será referenciada nos passos seguintes apenas como `.\webRotas`
 
-    ```shell
-    wsl.exe --install
-    ```
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-   Em alguns sistemas, pode ser necessário habilitar o recurso de máquina virtual. Neste site, você encontrará mais detalhes na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature)
+## 3. Instalar o **wsl**
 
-   O procedimento pode variar dependendo do modelo da BIOS e do tipo de CPU.
+Verifique se WSL está instalado utilizando o comando:
 
-   Em algumas máquinas, pode ser necessário habilitar a opção manualmente. Outra alternativa é abrir o PowerShell como administrador e executar o seguinte comando:
+```shell
+wsl.exe --version
+```
 
-    ```shell
-    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-    ```
+Caso não esteja instalado, execute:
 
-    Feitas essa operações, repita a instalação do wsl com o comando `wsl.exe --install`
+```shell
+wsl.exe --install
+```
 
-4. Baixar o podman engine
+Em alguns sistemas, pode ser necessário habilitar o recurso de máquina virtual. Neste site, você encontrará mais detalhes na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature)
 
-    Instale o podman engine utilizando winget
-    
-    ```shell
-    winget install RedHat.Podman
-    ```
+O procedimento pode variar dependendo do modelo da BIOS e do tipo de CPU.
 
-    Para facilitar o uso do podman, vc pode também instalar o podman desktop, que é uma interface gráfica para o podman engine.
+Em algumas máquinas, pode ser necessário habilitar a opção manualmente. Outra alternativa é abrir o PowerShell como administrador e executar o seguinte comando:
 
-    ```shell	
-    winget install RedHat.PodmanDesktop
-    ```
+```shell
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+```
 
-    Utilize a opção: `docker-compose with Podman, enable docker compatibility` quando solicitado.
+Feitas essa operações, repita a instalação do wsl com o comando `wsl.exe --install`
 
-    Após instalado, o sistema deverá ser reinicializado.
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-5. Baixar e instalar o python
+## 4. Instale o **podman**
 
-    ```shell
-    winget install miniconda3
-    ```
+Instale o podman engine utilizando winget
 
-    Após a instalação, abra o Anaconda Prompt e execute o comando:
+```shell
+winget install RedHat.Podman
+```
 
-    ```shell
-    conda init
-    ```
+Para facilitar o uso do podman, vc pode também instalar o podman desktop, que é uma interface gráfica para o podman engine.
 
-    Feche o terminal de comando e abra novamente.
+```shell	
+winget install RedHat.PodmanDesktop
+```
 
-6. Configure seu ambiente de trabalho
+Utilize a opção: `docker-compose with Podman, enable docker compatibility` quando solicitado.
 
-    Crie o ambiente de trabalho com o comando:
+Após instalado, o sistema deverá ser reinicializado.
 
-    ```shell
-    conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
-    ```
+Para facilitar o uso do podman, você pode também instalar o `Podman Desktop`, que é uma interface gráfica para o `Podman Engine`. Use o comando e siga as instruções do instalador.
 
-    Ative o ambiente de trabalho com o comando:
+```shell
+winget install RedHat.PodmanDesktop
+```
 
-    ```shell
-    conda activate webRotas
-    ```
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-    Verifique se o caminho onde o ambiente criado usando o comando:
+## 5. Baixar e instalar o python
 
-    ```shell
-    conda env list
-    ```
+```shell
+winget install miniconda3
+```
 
-7.  Baixar os arquivos de dados
+Após a instalação, abra o Anaconda Prompt e execute o comando:
 
-    * Dados de **limites municipais** com a seguinte sequência de comandos:
+```shell
+conda init
+```
 
-        ```shell
-        cd .\webRotas\Servers\BR_Municipios #! Ajustar diretório para versão 2023
-        
-        Invoke-WebRequest -OutFile Invoke-WebRequest -OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
-        
-        Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
+Feche o terminal de comando e abra novamente.
 
-        rm BR_Municipios_2023.zip
-        ```
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-    * Dados de [**Favelas e Comunidades Urbanas - 2022**](https://inde.gov.br/AreaDownload#) com a seguinte sequência de comandos:
+## 6. Configure seu ambiente de trabalho
 
-        ```shell
-        cd .\webRotas\Servers\Comunidades
+Crie o ambiente de trabalho com o comando:
 
-        Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP
+```shell
+conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
+```
 
-        Expand-Archive -LiteralPath qg_2022_670_fcu_agreg.zip -DestinationPath .\
+Ative o ambiente de trabalho com o comando:
 
-        rm qg_2022_670_fcu_agreg.zip
-        ```
+```shell
+conda activate webRotas
+```
 
-    * Dados de [**Áreas Urbanizadas do Brasil - 2019**](https://inde.gov.br/AreaDownload#) com a seguinte sequência de comandos:
+Verifique se o caminho onde o ambiente criado usando o comando:
 
-        ```shell
-        cd .\webRotas\Servers\Urbanizacao
+```shell
+conda env list
+```
 
-        Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-        Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
+## 7.  Baixar os arquivos de dados
 
-        rm areas_urbanizadas_2019.zip
-        ```
+### - **limites municipais** 
 
-   * Dados de [**Arrumento**](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
+Baixe os dados de limites políticos municipais brasileiros com a seguinte sequência de comandos:
 
-        ```shell
-        cd .\webRotas\Servers\Osmosis\brazil
+```shell
+cd .\webRotas\Servers\BR_Municipios #! Ajustar diretório para versão 2023
 
-        Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
+Invoke-WebRequest -OutFile Invoke-WebRequest -OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
 
-        ```
+Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
 
-    * Imagens de containeres a serem utilizados [**osmosis**](https://github.com/yagajs/docker-osmosis) e [**osrm-backend**](https://github.com/Project-OSRM/osrm-backend) com a seguinte sequência de comandos:
+rm BR_Municipios_2023.zip
+```
 
-        ```shell
-        podman pull yagajs/osmosis
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-        podman pull osrm/osrm-backend
-        ```
+### Favelas e Comunidades Urbanas - 2022**
 
+Baixe os dados de [favelas](https://inde.gov.br/AreaDownload#) brasileiras com a seguinte sequência de comandos:
 
-8. Preparar pastas e imagem do container para o Osmosis
+```shell
+cd .\webRotas\Servers\Comunidades
 
-    ```shell
-    cd .\webRotas\Servers\Osmosis
+Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP
 
-    mkdir TempData
+Expand-Archive -LiteralPath qg_2022_670_fcu_agreg.zip -DestinationPath .\
 
-    mkdir brazil
+rm qg_2022_670_fcu_agreg.zip
+```
 
-    podman run --name osmr -v .:/data osrm/osrm-backend
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-    podman commit osmr osmr_webrota
+### - Áreas Urbanizadas do Brasil - 2019
 
-    podman save -o osmr_webrota.tar osmr_webrota
-    ```	
+Baixe os dados de [áreas urbanizadas](https://inde.gov.br/AreaDownload#) do Brasil com a seguinte sequência de comandos:
 
-    Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmosis_webrota.tar` no diretório `.\webRotas\Servers\Osmosis`.
+```shell
+cd .\webRotas\Servers\Urbanizacao
 
-9. Preparar pastas e imagem do container para o OSRM
+Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP
 
-    ```shell
-    cd .\webRotas\Servers\OSRM
+Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
 
-    mkdir TempData
+rm areas_urbanizadas_2019.zip
+```
 
-    podman run --name osmr -v .:/data osrm/osrm-backend
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-    podman commit osmr osmr_webrota
+### - Arruamento para cálculo de rotas OSM
 
-    podman save -o osmr_webrota.tar osmr_webrota
-    ```
+Baixe os dados de [**Arrumento**](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
 
-    Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmr_webrota.tar` no diretório `.\webRotas\Servers\OSRM`.
+```shell
+cd .\webRotas\Servers\Osmosis\brazil
 
-10. Preparar pastas e arquivos para o servidor
+Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
 
-    ```shell
-    cd .\webRotas\Servers\backend\webdir
-    
-    mkdir logs
-    
-    mkdir templates
-    ```
+```
 
-11. Testar a execução do sistema
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-    Clique no arquivo C:\Users\SeuNomeDeUsuario\webRotas\Servers\backend\webdir\promptwork.bat por duas vezes e abra dois prompts de trabalho.
+### - Imagens de Containeres
 
-    Verifique no Podman Desktop se o podman está executando, Olhe nas ultimas linhas do Dashboard e verifique se ele está com o status RUNNING.
+São utilizados containeres para pré-processamento dos mapas de arruamento e cálculo de rotas. Estes incluem  [**osmosis**](https://github.com/yagajs/docker-osmosis) e [**osrm-backend**](https://github.com/Project-OSRM/osrm-backend)..
 
-    No primeiro prompt digite python Server.py para executar o servidor python.
+Descarregue as imagens dos containeres com a seguinte sequência de comandos:
 
-    No segundo prompt digite python Test2.py para executar um testa de execução do sistema.
+```shell
+podman pull yagajs/osmosis
 
-    Ao fim da execução do script Test2.py ele mostrará a resposta json do server e se for posível abrirá uma janela web com a resposta
-    em html.
+podman pull osrm/osrm-backend
+```
 
-    Importante, durante o desenvolvimento pode ocorrer de o sistema falhar no meio de uma criação de indices, mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script \webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-    No diretório \webRotas\Servers\backend\webdir\logs você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
+## 8. Configuração do ambiente de trabalho
 
-    Outra opção para depurar os containers é usar o Podman Desktop. Na interface, você pode visualizar a lista de containers em execução, clicar sobre um deles e acessar suas telas de saída e logs.
+Prepare pastas e imagem do container para o Osmosis com a seguinte sequência de comandos:
+
+```shell
+cd .\webRotas\Servers\Osmosis
+
+mkdir TempData
+
+mkdir brazil
+
+podman run --name osmr -v .:/data osrm/osrm-backend
+
+podman commit osmr osmr_webrota
+
+podman save -o osmr_webrota.tar osmr_webrota
+```
+
+Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmosis_webrota.tar` no diretório `.\webRotas\Servers\Osmosis`.
+
+Preparar pastas e imagem do container para o OSRM com a seguinte sequência de comandos:
+
+```shell
+cd .\webRotas\Servers\OSRM
+
+mkdir TempData
+
+podman run --name osmr -v .:/data osrm/osrm-backend
+
+podman commit osmr osmr_webrota
+
+podman save -o osmr_webrota.tar osmr_webrota
+```
+
+Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmr_webrota.tar` no diretório `.\webRotas\Servers\OSRM`.
+
+Preparar pastas e arquivos para o servidor com a seguinte sequência de comandos:
+
+```shell
+cd .\webRotas\Servers\backend\webdir
+
+mkdir logs
+
+mkdir templates
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+<!-- Server init -->
+# Inicializando o Servidor
+
+Abra um terminal do prompt de comando e ative o ambiente de trabalho com o comando:
+
+```shell
+conda activate webRotas
+```
+
+Execute o servidor python com o comando:
+
+```shell
+python .\webRotas\Servers\backend\webdir\Server.py
+```
+
+A inicialização do servidor pode levar alguns minutos, dependendo do hardware do computador. Quando concluída a inicialização, o script indicará a situação do servidor e como acessar o serviço, conforme a imagem a seguir:
+
+![Server](images/server-cmd.png)
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+# Testando o sistema
+
+Alguns testes foram disponibilizados. Para executar um teste, abra um novo terminal do prompt de comando e ative o ambiente de trabalho com o comando:
+
+```shell
+conda activate webRotas
+```
+
+```shell
+python .\webRotas\Servers\backend\webdir\Test2.py
+```
+
+Novamente a execução do teste pode levar alguns minutos, dependendo do hardware do computador.
+
+Ao fim da execução do script Test2.py será apresentado no terminal a resposta json do servervidor e se for posível abrirá uma janela web com a resposta em html.
+
+![Test2-cmd](images/test2-cmd.png)
+
+![Test2-html](images/test2-html.png)
+
+
+
+> **⚠️ Importante:** Pode ocorrer falha no processo de criação de índices, mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script:
+
+```shell
+\webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
+```
+
+No diretório `\webRotas\Servers\backend\webdir\logs` você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
+
+Outra opção para depurar os containers é usar o Podman Desktop. Na interface, você pode visualizar a lista de containers em execução, clicar sobre um deles e acessar suas telas de saída e logs.
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+<!-- CONTRIBUTING -->
+# Contribuindo
+
+Contribuições são o que tornam a comunidade de código aberto um lugar incrível para aprender, inspirar e criar. Qualquer contribuição que você fizer é **muito apreciada**.
+
+Se você tiver uma sugestão que tornaria isso melhor, por favor, faça um fork do repositório e crie um pull request. Você também pode simplesmente abrir uma issue com a tag "enhancement".
+
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+<!-- LICENSE -->
+# Licença
+
+Distribuído sob a licença GNU General Public License (GPL), versão 3. Veja [`LICENSE.txt`](../../LICENSE).
+
+Para informações adicionais, consulte [https://www.gnu.org/licenses/quick-guide-gplv3.html](https://www.gnu.org/licenses/quick-guide-gplv3.html)
+
+Este modelo de licença foi selecionado com a ideia de permitir a colaboração de qualquer pessoa interessada nos projetos listados dentro deste grupo.
+
+Está em linha com as diretrizes de Software Público Brasileiro, conforme publicado em: [https://softwarepublico.gov.br/social/articles/0004/5936/Manual_do_Ofertante_Temporario_04.10.2016.pdf](https://softwarepublico.gov.br/social/articles/0004/5936/Manual_do_Ofertante_Temporario_04.10.2016.pdf)
+
+Material adicional pode ser encontrado em:
+
+- [http://copyfree.org/policy/copyleft](http://copyfree.org/policy/copyleft)
+- [https://opensource.stackexchange.com/questions/9805/can-i-license-my-project-with-an-open-source-license-but-disallow-commercial-use](https://opensource.stackexchange.com/questions/9805/can-i-license-my-project-with-an-open-source-license-but-disallow-commercial-use)
+- [https://opensource.stackexchange.com/questions/21/whats-the-difference-between-permissive-and-copyleft-licenses/42#42](https://opensource.stackexchange.com/questions/21/whats-the-difference-between-permissive-and-copyleft-licenses/42#42)
+  
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+<!-- REFERENCES -->
+## Referências adicionais
+
+- [UV Short Guide](https://www.saaspegasus.com/guides/uv-deep-dive/)
+- [Readme Template](https://github.com/othneildrew/Best-README-Template)
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>

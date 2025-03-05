@@ -51,3 +51,6 @@ Servers/Osmosis/TempData/exclusion_Andre.poly.old
 /Servers/Comunidades/
 osmr_webrota.tar
 BR_Municipios_2023.zip
+Servers/backend/webdir/__pycache__
+Servers/backend/webdir/static/tmpStaticResources.js
+Servers/backend/webdir/templates/MapaPontosVisita*
