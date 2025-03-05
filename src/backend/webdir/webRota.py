@@ -1,6 +1,6 @@
 ###########################################################################################################################
-import GeraMapa as gm
-import ShapeFiles as sf
+import geraMapa as gm
+import shapeFiles as sf
 
 # Salvar enviroment
 # conda env export > environment.yml

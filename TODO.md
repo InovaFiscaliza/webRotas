@@ -48,8 +48,7 @@
 - Para integração no appColeta, considerar multiView, manter o serviço para acesso pelo motorista em paralelo com a apresentação para o fiscal.
 - Repositório de polígonos editados por usuários
 
-
-Requisitos ultima reunião sexta pré carnaval - 28/02/2025
+# Requisitos ultima reunião sexta pré carnaval - 28/02/2025
 
 * Mudar nome da pasta de "Servers" para "src". OK
 * Migrar "images" para "docs/images" e ajustar path do Readme.md. OK

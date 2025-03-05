@@ -1,5 +1,5 @@
 ###########################################################################################################################
-import WebRota as wr
+import webRota as wr
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from shapely.geometry import box
