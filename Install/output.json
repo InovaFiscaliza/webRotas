@@ -1,0 +1,13 @@
+{
+  "Microsoft.WSL": {
+    "Version": "2.4.11.0",
+    "Installed": true
+  },
+  "RedHat.Podman": {
+    "Version": [
+      "5.4.0",
+      "1.16.2"
+    ],
+    "Installed": true
+  }
+}
