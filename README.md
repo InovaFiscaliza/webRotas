@@ -17,10 +17,31 @@
     <li><a href="#sobre-o-webrotas">Sobre o WebRotas</a></li>
     <li><a href="#requisitos-do-sistema">Requisitos do sistema</a></li>
     <li><a href="#instalação">Instalação</a></li>
-    <li><a href="#getting-started">Getting Started</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#licença">License</a></li>
-    <li><a href="#additional-references">Additional References</a></li>
+        <ul>
+            <li><a href="#1-instale-o-git">Instale o Git</a></li>
+            <li><a href="#2-baixe-o-webrotas">Baixe o WebRotas</a></li>
+            <li><a href="#3-instale-o-wsl">Instale o WSL</a></li>
+            <li><a href="#4-instale-o-podman">Instale o Podman</a></li>
+            <li><a href="#5-baixe-e-instale-o-conda">Baixe e instale o Conda</a></li>
+        </ul>
+    <li><a href="#baixar-dados-de-referência">Baixar Dados de Referência</a></li>
+        <ul>
+            <li><a href="#1---limites-municipais-brasileiros---2023">Limites Municipais Brasileiros - 2023</a></li>
+            <li><a href="#2---favelas-e-comunidades-urbanas---2022">Favelas e Comunidades Urbanas - 2022</a></li>
+            <li><a href="#3---áreas-urbanizadas-do-brasil---2019">Áreas Urbanizadas do Brasil - 2019</a></li>
+            <li><a href="#4---arruamento-para-cálculo-de-rotas-osm">Arruamento para cálculo de rotas OSM</a></li>
+        </ul>
+    <li><a href="#configuração-do-ambiente-de-trabalho">Configuração do ambiente de trabalho</a></li>
+        <ul>
+            <li><a href="#1--criação-do-ambiente-conda">Criação do Ambiente Conda</a></li>
+            <li><a href="#2--criação-do-ambiente-podman">Criação do Ambiente Podman</a></li>
+        </ul>
+    <li><a href="#inicializando-o-servidor">Inicializando o Servidor</a></li>
+    <li><a href="#testando-o-sistema">Testando o sistema</a></li>
+    <li><a href="#contribuindo">Contribuindo</a></li>
+    <li><a href="#licença">Licença</a></li>
+    <li><a href="#referências-adicionais">Referências adicionais</a></li>
+
   </ol>
 </details>
 
@@ -212,7 +233,7 @@ winget install RedHat.PodmanDesktop
     </a>
 </div>
 
-## 5. Baixar e instalar o python
+## 5. Baixar e instalar o **Conda**
 
 ```shell
 winget install miniconda3
@@ -232,7 +253,88 @@ Feche o terminal de comando e abra novamente.
     </a>
 </div>
 
-## 6. Configure seu ambiente de trabalho
+# Baixar Dados de Referência
+
+## 1 - limites municipais brasileiros - 2023
+
+Baixe os dados de limites políticos municipais brasileiros com a seguinte sequência de comandos:
+
+```shell
+cd .\webRotas\Servers\BR_Municipios #! Ajustar diretório para versão 2023
+
+Invoke-WebRequest -OutFile Invoke-WebRequest -OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
+
+Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
+
+rm BR_Municipios_2023.zip
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+## 2 - Favelas e Comunidades Urbanas - 2022
+
+Baixe os dados de [favelas](https://inde.gov.br/AreaDownload#) brasileiras com a seguinte sequência de comandos:
+
+```shell
+cd .\webRotas\Servers\Comunidades
+
+Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP
+
+Expand-Archive -LiteralPath qg_2022_670_fcu_agreg.zip -DestinationPath .\
+
+rm qg_2022_670_fcu_agreg.zip
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+## 3 - Áreas Urbanizadas do Brasil - 2019
+
+Baixe os dados de [áreas urbanizadas](https://inde.gov.br/AreaDownload#) do Brasil com a seguinte sequência de comandos:
+
+```shell
+cd .\webRotas\Servers\Urbanizacao
+
+Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP
+
+Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
+
+rm areas_urbanizadas_2019.zip
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+## 4 - Arruamento para cálculo de rotas OSM
+
+Baixe os dados de [Arrumento](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
+
+```shell
+cd .\webRotas\Servers\Osmosis\brazil
+
+Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
+
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+# Configuração do ambiente de trabalho
+
+## 1- Criação do Ambiente Conda
 
 Crie o ambiente de trabalho com o comando:
 
@@ -258,86 +360,7 @@ conda env list
     </a>
 </div>
 
-## 7.  Baixar os arquivos de dados
-
-### - **limites municipais** 
-
-Baixe os dados de limites políticos municipais brasileiros com a seguinte sequência de comandos:
-
-```shell
-cd .\webRotas\Servers\BR_Municipios #! Ajustar diretório para versão 2023
-
-Invoke-WebRequest -OutFile Invoke-WebRequest -OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
-
-Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
-
-rm BR_Municipios_2023.zip
-```
-
-<div align="right">
-    <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
-    </a>
-</div>
-
-### Favelas e Comunidades Urbanas - 2022**
-
-Baixe os dados de [favelas](https://inde.gov.br/AreaDownload#) brasileiras com a seguinte sequência de comandos:
-
-```shell
-cd .\webRotas\Servers\Comunidades
-
-Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP
-
-Expand-Archive -LiteralPath qg_2022_670_fcu_agreg.zip -DestinationPath .\
-
-rm qg_2022_670_fcu_agreg.zip
-```
-
-<div align="right">
-    <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
-    </a>
-</div>
-
-### - Áreas Urbanizadas do Brasil - 2019
-
-Baixe os dados de [áreas urbanizadas](https://inde.gov.br/AreaDownload#) do Brasil com a seguinte sequência de comandos:
-
-```shell
-cd .\webRotas\Servers\Urbanizacao
-
-Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP
-
-Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
-
-rm areas_urbanizadas_2019.zip
-```
-
-<div align="right">
-    <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
-    </a>
-</div>
-
-### - Arruamento para cálculo de rotas OSM
-
-Baixe os dados de [**Arrumento**](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
-
-```shell
-cd .\webRotas\Servers\Osmosis\brazil
-
-Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
-
-```
-
-<div align="right">
-    <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
-    </a>
-</div>
-
-### - Imagens de Containeres
+## 2- Criação do Ambiente Podman
 
 São utilizados containeres para pré-processamento dos mapas de arruamento e cálculo de rotas. Estes incluem  [**osmosis**](https://github.com/yagajs/docker-osmosis) e [**osrm-backend**](https://github.com/Project-OSRM/osrm-backend)..
 
@@ -354,8 +377,6 @@ podman pull osrm/osrm-backend
         <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
-
-## 8. Configuração do ambiente de trabalho
 
 Prepare pastas e imagem do container para o Osmosis com a seguinte sequência de comandos:
 
