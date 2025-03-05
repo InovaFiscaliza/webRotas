@@ -22,7 +22,7 @@
             <li><a href="#2-baixe-o-webrotas">Baixe o WebRotas</a></li>
             <li><a href="#3-instale-o-wsl">Instale o WSL</a></li>
             <li><a href="#4-instale-o-podman">Instale o Podman</a></li>
-            <li><a href="#5-baixe-e-instale-o-conda">Baixe e instale o Conda</a></li>
+            <li><a href="#5-instale-o-conda">Instale o Conda</a></li>
         </ul>
     <li><a href="#baixar-dados-de-referência">Baixar Dados de Referência</a></li>
         <ul>
@@ -171,7 +171,7 @@ A pasta raiz escolhida para o projeto será referenciada nos passos seguintes ap
     </a>
 </div>
 
-## 3. Instalar o **wsl**
+## 3. Instale o **wsl**
 
 Verifique se WSL está instalado utilizando o comando:
 
@@ -233,7 +233,7 @@ winget install RedHat.PodmanDesktop
     </a>
 </div>
 
-## 5. Baixar e instalar o **Conda**
+## 5. Instale o **Conda**
 
 ```shell
 winget install miniconda3
