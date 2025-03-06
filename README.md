@@ -1,7 +1,9 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="indexerd-md-top"></a>
+
+`<a name="indexerd-md-top"></a>`
 
 <!-- PROJECT SHIELDS -->
+
 <!--
 *** based on https://github.com/othneildrew/Best-README-Template
 *** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
@@ -11,6 +13,7 @@
 -->
 
 <!-- TABLE OF CONTENTS -->
+
 <details>
   <summary>Table of Contents</summary>
   <ol>
@@ -42,10 +45,11 @@
     <li><a href="#licença">Licença</a></li>
     <li><a href="#referências-adicionais">Referências adicionais</a></li>
 
-  </ol>
+</ol>
 </details>
 
 <!-- ABOUT -->
+
 # Sobre o WebRotas
 
 Kit de ferramentas para gerenciamento de rotas de veículos, para atividades de inspeção da Agência Nacional de Telecomunicações do Brasil, Anatel.
@@ -54,23 +58,22 @@ As imagens à seguir apresentam os 3 principais modos de cálculo, que são:
 
 1. **Pontos de Visita** - Cálculo de rotas para visitas a pontos de inspeção, com a possibilidade de definir a ordem de visitação dos pontos. Por exemplo, para verificação de um conjunto de estações de rádio base. Para este modo, é necessário definir os pontos a serem visitados.
 
-    ![Pontos de Visita](images/pntsVisita.jpg)
-
+   ![Pontos de Visita](docs/images/pntsVisita.jpg)
 2. **Abrangência** - Cálculo de rotas para verificação de pontos regulares distribuídos em uma área. Para este modo, é necessário definir o polígono da área a ser inspecionada e a densidade de pontos a serem visitados em termos da distância entre estes. O sistema calcula as coordenadas dos pontos a serem visitados.
 
-    ![Abrangência](images/abrangencia.jpg)
-
+   ![Abrangência](docs/images/abrangencia.jpg)
 3. **Contorno** - Cálculo de rota para verificação de pontos regularmente distribuídos em torno de um ponto central. Pare este modo é necessário definir o ponto central, o raio e o distanciamento entre os pontos. O sistema calcula as coordenadas dos pontos a serem visitados.
 
-    ![Contorno](images/drvTest.jpg)
+   ![Contorno](docs/images/drvTest.jpg)
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
 <!-- System requirements -->
+
 # Requisitos do sistema
 
 - Windows 10 1709 (build 16299) ou posterior
@@ -110,11 +113,12 @@ winget install Microsoft.PowerShell
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
 <!-- Install -->
+
 # Instalação
 
 ## 1. Instale o **Git**
@@ -133,7 +137,7 @@ winget install Git.Git
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -167,7 +171,7 @@ A pasta raiz escolhida para o projeto será referenciada nos passos seguintes ap
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -199,7 +203,7 @@ Feitas essa operações, repita a instalação do wsl com o comando `wsl.exe --i
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -213,7 +217,7 @@ winget install RedHat.Podman
 
 Para facilitar o uso do podman, vc pode também instalar o podman desktop, que é uma interface gráfica para o podman engine.
 
-```shell	
+```shell
 winget install RedHat.PodmanDesktop
 ```
 
@@ -229,7 +233,7 @@ winget install RedHat.PodmanDesktop
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -249,7 +253,7 @@ Feche o terminal de comando e abra novamente.
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -271,7 +275,7 @@ rm BR_Municipios_2023.zip
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -291,7 +295,7 @@ rm qg_2022_670_fcu_agreg.zip
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -311,13 +315,13 @@ rm areas_urbanizadas_2019.zip
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
 ## 4 - Arruamento para cálculo de rotas OSM
 
-Baixe os dados de [Arrumento](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
+Baixe os dados de [Arruamento](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
 
 ```shell
 cd .\webRotas\Servers\Osmosis\brazil
@@ -328,7 +332,7 @@ Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -356,7 +360,7 @@ conda env list
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -374,7 +378,7 @@ podman pull osrm/osrm-backend
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -424,11 +428,12 @@ mkdir templates
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
 <!-- Server init -->
+
 # Inicializando o Servidor
 
 Abra um terminal do prompt de comando e ative o ambiente de trabalho com o comando:
@@ -449,7 +454,7 @@ A inicialização do servidor pode levar alguns minutos, dependendo do hardware 
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -469,11 +474,9 @@ Novamente a execução do teste pode levar alguns minutos, dependendo do hardwar
 
 Ao fim da execução do script Test2.py será apresentado no terminal a resposta json do servervidor e se for posível abrirá uma janela web com a resposta em html.
 
-![Test2-cmd](images/test2-cmd.png)
+![Test2-cmd](docs/images/test2-cmd.png)
 
-![Test2-html](images/test2-html.png)
-
-
+![Test2-html](docs/images/test2-html.png)
 
 > **⚠️ Importante:** Pode ocorrer falha no processo de criação de índices, mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script:
 
@@ -487,25 +490,26 @@ Outra opção para depurar os containers é usar o Podman Desktop. Na interface,
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
 <!-- CONTRIBUTING -->
+
 # Contribuindo
 
 Contribuições são o que tornam a comunidade de código aberto um lugar incrível para aprender, inspirar e criar. Qualquer contribuição que você fizer é **muito apreciada**.
 
 Se você tiver uma sugestão que tornaria isso melhor, por favor, faça um fork do repositório e crie um pull request. Você também pode simplesmente abrir uma issue com a tag "enhancement".
 
-
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
 <!-- LICENSE -->
+
 # Licença
 
 Distribuído sob a licença GNU General Public License (GPL), versão 3. Veja [`LICENSE.txt`](../../LICENSE).
@@ -521,7 +525,7 @@ Material adicional pode ser encontrado em:
 - [http://copyfree.org/policy/copyleft](http://copyfree.org/policy/copyleft)
 - [https://opensource.stackexchange.com/questions/9805/can-i-license-my-project-with-an-open-source-license-but-disallow-commercial-use](https://opensource.stackexchange.com/questions/9805/can-i-license-my-project-with-an-open-source-license-but-disallow-commercial-use)
 - [https://opensource.stackexchange.com/questions/21/whats-the-difference-between-permissive-and-copyleft-licenses/42#42](https://opensource.stackexchange.com/questions/21/whats-the-difference-between-permissive-and-copyleft-licenses/42#42)
-  
+
 <div align="right">
     <a href="#indexerd-md-top">
         <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
@@ -529,6 +533,7 @@ Material adicional pode ser encontrado em:
 </div>
 
 <!-- REFERENCES -->
+
 ## Referências adicionais
 
 - [Conda Cheat Sheet](https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf)
@@ -536,6 +541,6 @@ Material adicional pode ser encontrado em:
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
