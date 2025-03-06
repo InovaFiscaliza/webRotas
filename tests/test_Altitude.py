@@ -8,7 +8,7 @@ relative_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 # Adiciona o caminho ao sys.path
 sys.path.append(relative_path)
 
-import WebRota as wr
+import webRota as wr
 
 # Exemplo de uso
 latitude = -15.7942  # Exemplo de latitude (Brasília)
