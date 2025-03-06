@@ -67,7 +67,6 @@ class ClRouteDetailList:
 def Haversine(lat1, lon1, lat2, lon2):
     # Raio da Terra em metros
     R = 6371000
-    
     # Converter graus para radianos
     lat1 = math.radians(lat1)
     lon1 = math.radians(lon1)
@@ -258,46 +257,9 @@ def AltitudeOpenElevationBatch(batch,batch_size):
         MaxAltitude = int(MaxAltitude)  
     return altitudes    
 ###########################################################################################################################
-import xarray as xr  # pip install xarray netCDF4 numpy
 import numpy as np
 ###########################################################################################################################
 import os
-###########################################################################################################################
-def get_nc_file_paths(directory):
-    """
-    Constrói uma lista de caminhos para todos os arquivos .nc em um diretório dado.
-    
-    Args:
-        directory (str): Caminho para o diretório onde os arquivos NetCDF estão localizados.
-    
-    Returns:
-        list: Lista de caminhos para os arquivos NetCDF encontrados.
-    """
-    file_paths = []
-    
-    # Percorre o diretório e verifica os arquivos com extensão .nc
-    for root, _, files in os.walk(directory):
-        for file in files:
-            if file.endswith(".nc"):
-                file_paths.append(os.path.join(root, file))
-    
-    # Ordena os arquivos para garantir consistência
-    file_paths.sort()
-    
-    return file_paths
-###########################################################################################################################
-def InverterCoordenadas(lat_lon_coords):
-    """
-    Inverte coordenadas do formato (latitude, longitude) para (longitude, latitude).
-
-    Args:
-        lat_lon_coords (list of tuple): Lista de coordenadas no formato (latitude, longitude).
-
-    Returns:
-        list of tuple: Lista de coordenadas no formato (longitude, latitude).
-    """
-    lon_lat_coords = [(lon, lat) for lat, lon in lat_lon_coords]
-    return lon_lat_coords
 ###########################################################################################################################
 import datetime
 ###########################################################################################################################
