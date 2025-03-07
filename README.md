@@ -528,7 +528,7 @@ Material adicional pode ser encontrado em:
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
