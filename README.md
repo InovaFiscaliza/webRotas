@@ -1,6 +1,6 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
-`<a name="indexerd-md-top"></a>`
+<a name="indexerd-md-top"></a>
 
 <!-- PROJECT SHIELDS -->
 
@@ -450,7 +450,7 @@ python .\webRotas\Servers\backend\webdir\Server.py
 
 A inicialização do servidor pode levar alguns minutos, dependendo do hardware do computador. Quando concluída a inicialização, o script indicará a situação do servidor e como acessar o serviço, conforme a imagem a seguir:
 
-![Server](images/server-cmd.png)
+![Server](docs/images/server-cmd.png)
 
 <div align="right">
     <a href="#indexerd-md-top">
