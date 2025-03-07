@@ -1,6 +1,6 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
-`<a name="indexerd-md-top"></a>`
+<a name="indexerd-md-top"></a>
 
 <!-- PROJECT SHIELDS -->
 
@@ -264,7 +264,7 @@ Feche o terminal de comando e abra novamente.
 Baixe os dados de limites políticos municipais brasileiros com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\src\resources\BR_Municipios #! Ajustar diretório para versão 2023
+cd .\webRotas\Servers\BR_Municipios #! Ajustar diretório para versão 2023
 
 Invoke-WebRequest -OutFile Invoke-WebRequest -OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
 
@@ -284,7 +284,7 @@ rm BR_Municipios_2023.zip
 Baixe os dados de [favelas](https://inde.gov.br/AreaDownload#) brasileiras com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\src\resources\Comunidades
+cd .\webRotas\Servers\Comunidades
 
 Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP
 
@@ -304,7 +304,7 @@ rm qg_2022_670_fcu_agreg.zip
 Baixe os dados de [áreas urbanizadas](https://inde.gov.br/AreaDownload#) do Brasil com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\src\resources\Urbanizacao
+cd .\webRotas\Servers\Urbanizacao
 
 Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP
 
@@ -324,7 +324,7 @@ rm areas_urbanizadas_2019.zip
 Baixe os dados de [Arruamento](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\src\resources\Osmosis\brazil
+cd .\webRotas\Servers\Osmosis\brazil
 
 Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
 
@@ -385,7 +385,11 @@ podman pull osrm/osrm-backend
 Prepare pastas e imagem do container para o Osmosis com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\src\resources\Osmosis
+cd .\webRotas\Servers\Osmosis
+
+mkdir TempData
+
+mkdir brazil
 
 podman run --name osmr -v .:/data osrm/osrm-backend
 
@@ -399,7 +403,7 @@ Tendo sido realizadas todas as operações, deve ser possível visualizar cópia
 Preparar pastas e imagem do container para o OSRM com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\src\resources\OSRM
+cd .\webRotas\Servers\OSRM
 
 mkdir TempData
 
@@ -415,7 +419,7 @@ Tendo sido realizadas todas as operações, deve ser possível visualizar cópia
 Preparar pastas e arquivos para o servidor com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\src\resources\backend\webdir
+cd .\webRotas\Servers\backend\webdir
 
 mkdir logs
 
@@ -441,12 +445,12 @@ conda activate webRotas
 Execute o servidor python com o comando:
 
 ```shell
-python .\webRotas\src\backend\webdir\Server.py
+python .\webRotas\Servers\backend\webdir\Server.py
 ```
 
 A inicialização do servidor pode levar alguns minutos, dependendo do hardware do computador. Quando concluída a inicialização, o script indicará a situação do servidor e como acessar o serviço, conforme a imagem a seguir:
 
-![Server](images/server-cmd.png)
+![Server](docs/images/server-cmd.png)
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -463,7 +467,7 @@ conda activate webRotas
 ```
 
 ```shell
-python .\webRotas\src\backend\webdir\test_PontosVisitaReduzido.py
+python .\webRotas\Servers\backend\webdir\Test2.py
 ```
 
 Novamente a execução do teste pode levar alguns minutos, dependendo do hardware do computador.
@@ -477,10 +481,10 @@ Ao fim da execução do script Test2.py será apresentado no terminal a resposta
 > **⚠️ Importante:** Pode ocorrer falha no processo de criação de índices, mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script:
 
 ```shell
-\webRotas\src\backend\webdir\limpaTodosArquivosTemporarios.bat.
+\webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
 ```
 
-No diretório `\webRotas\src\backend\webdir\logs` você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
+No diretório `\webRotas\Servers\backend\webdir\logs` você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
 
 Outra opção para depurar os containers é usar o Podman Desktop. Na interface, você pode visualizar a lista de containers em execução, clicar sobre um deles e acessar suas telas de saída e logs.
 
@@ -524,7 +528,7 @@ Material adicional pode ser encontrado em:
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
