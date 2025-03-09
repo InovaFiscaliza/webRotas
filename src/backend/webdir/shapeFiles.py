@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry import box
 from shapely.geometry import Polygon, MultiPolygon
 
+
 ###########################################################################################################################
 # https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/BR_Municipios_2022.zip
 ##########################################################################################################################
@@ -101,25 +102,4 @@ def FiltrarComunidadesBoundingBox(bounding_box):
         
     return polylines
 
-##############################################################################################################
-def main():
-    """
-    Função principal para executar o script.
-    """
-
-
-    # Definir os limites do bounding box para Niterói (RJ)
-    bounding_box = (-43.1363, -22.9488, -43.0329, -22.8708)
-
-    # Chamar a função para filtrar e plotar
-    dados=FiltrarComunidadesBoundingBox(bounding_box)
-    
-     # Plotar os dados filtrados
-    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-    dados.plot(ax=ax, color="blue", edgecolor="black")
-    plt.title("Área Filtrada")
-    plt.show()   
-##############################################################################################################
-if __name__ == "__main__":
-    main()
 ##############################################################################################################

@@ -123,12 +123,12 @@ def ProcessaRequisicoesAoServidor(data):
   with app.app_context():
     #---------------------------------------------------------------------------------------------
     TipoReq = data["TipoRequisicao"]
-    if TipoReq=="DriveTest":
+    if TipoReq=="Contorno":    # if TipoReq=="DriveTest":
        # Obtém valores do JSON
            # Verifica se todos os campos necessários estão presentes
 
        print("\n\n#############################################################################################")
-       print("Recebida solicitação de drivetest\n")
+       print("Recebida solicitação de contorno em torno de ponto ou aeroporto\n")
        if not all(key in data for key in ("latitude", "longitude", "raio")):
           return jsonify({"error": "Campos latitude, longitude e raio são necessários"}), 400
 
@@ -144,7 +144,7 @@ def ProcessaRequisicoesAoServidor(data):
        # Processa os dados (exemplo: exibe no console)
        print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}")
        central_point = [latitude, longitude]
-       fileName,fileNameStatic,fileKml=wr.RouteDriveTest(data,user,pontoinicial,central_point,regioes,radius_km=raio,num_points=numeropontos)
+       fileName,fileNameStatic,fileKml=wr.RouteContorno(data,user,pontoinicial,central_point,regioes,radius_km=raio,num_points=numeropontos)
        # Retorna uma resposta de confirmação
        return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
                        "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",

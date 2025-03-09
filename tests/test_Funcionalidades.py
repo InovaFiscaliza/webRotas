@@ -125,7 +125,7 @@ regioesBuf =  [
 # -22.910555413451096, -43.16360553394545     Santos Dummont
 payload = {
     "User": "Andre",
-    "TipoRequisicao": "DriveTest",
+    "TipoRequisicao": "Contorno",
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS

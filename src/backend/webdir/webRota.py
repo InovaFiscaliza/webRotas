@@ -1176,6 +1176,8 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
     polMunicipio= sf.GetBoundMunicipio(cidade, uf)
+    # polMunicipio= sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
+    
     pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
@@ -1202,15 +1204,15 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
 ################################################################################
 def GeraArquivosSaida(RouteDetail,tipoServico):
     buf = TimeStringTmp()   
-    fileMap = f"Mapa{tipoServico}{buf}.html"     
+    fileMap = f"WebRotas{tipoServico}{buf}.html"     
     fileName = f"templates/{fileMap}"
     gm.GeraMapaLeaflet(fileName,RouteDetail)
     
-    fileMapStatic = f"Mapa{tipoServico}Static{buf}.html"     
+    fileMapStatic = f"WebRotas{tipoServico}Static{buf}.html"     
     fileNameStaticF = f"templates/{fileMapStatic}"
     gm.GeraMapaLeaflet(fileNameStaticF,RouteDetail,static=True)
     
-    fileKml = f"Mapa{tipoServico}{buf}.kml"     
+    fileKml = f"WebRotas{tipoServico}{buf}.kml"     
     fileKmlF = f"templates/{fileKml}"    
     # GerarKml(pontosvisita,fileKmlF)    
     Gerar_Kml(RouteDetail.coordinates, RouteDetail.pontosvisitaDados,filename=fileKmlF)
@@ -1598,7 +1600,7 @@ def calcula_bounding_box_pontos(pontos, margem_km=50):
     return lat_min,lat_max,lon_min,lon_max
 
 ###########################################################################################################################
-def RouteDriveTest(data,user,pontoinicial,central_point,regioes,radius_km=5, num_points=8):
+def RouteContorno(data,user,pontoinicial,central_point,regioes,radius_km=5, num_points=8):
     # Coordenadas do ponto central (latitude, longitude)
     # central_point = [40.712776, -74.005974]  # Exemplo: Nova York
     #central_point = [-22.90941986104239, -43.16486081793237] # Santos Dumont
@@ -1645,7 +1647,7 @@ def RouteDriveTest(data,user,pontoinicial,central_point,regioes,radius_km=5, num
     
     # servidor temp     python3 -m http.server 8080
     #           
-    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,'DriveTest')
+    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,'Contorno')
     return fileMap,fileNameStatic,fileKml
 ###########################################################################################################################
 def main():
