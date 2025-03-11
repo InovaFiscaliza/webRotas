@@ -4,7 +4,7 @@ fontSize = '10px';   // Tamanho da fonte
 clicouPipetaPontoInicial=false; // Flag para indicar que clicou na pipeta
 var arrayPnts = null;
 var arrayLinhas = null;
-// var servidorOnline = true;
+var servidorOsmrOnline = true;
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function clDivOrdenaPontos() {
     // Cria a div principal
@@ -392,7 +392,10 @@ function clDivOrdenaPontos() {
     iDlg.appendChild(select);
     bMudouOrdemPontos = false;
     // Adiciona um event listener para monitorar mudanças
-    select.addEventListener("change", function () {
+    select.addEventListener("change", function () 
+    {
+        if(servidorOsmrOnline==false)
+            return;
         bMudouOrdemPontos = true;
         recalcularRotaPontoInicial = false;
         ativaElementoHtml('idPontoInicial', false); 
@@ -477,8 +480,18 @@ function clDivOrdenaPontos() {
 
     if(verificarServidorOSMR()==false)
     {
+        servidorOsmrOnline = false;
         ativaElementoHtml('idBtnRecalcRota', false); 
+        ativaElementoHtml('idPipetaLatLon', false); 
+        ativaElementoHtml('latitude', false); 
+        ativaElementoHtml('longitude', false); 
+        ativaElementoHtml('descricao', false); 
+        ativaElementoHtml('idSetaParaCima', false); 
+        ativaElementoHtml('idSetaParaBaixo', false); 
+        // ativaElementoHtml('listaPontos', false); 
+        ativaElementoHtml('idBtnApagaRota', false);      
         alert("Servidor OSMR fora do ar");
+        console.log("Este arquivo HTML foi gerado pelo webRotas para visualização offline e independente do servidor. Por isso, a criação de novas rotas não está disponível.");
     }    
 
     // Adiciona um evento para limpar a lista ao clicar no botão de lixeira

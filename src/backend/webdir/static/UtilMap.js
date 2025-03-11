@@ -1414,7 +1414,7 @@ function createMacOSDock() {
 
 
         //---------------------------------------------------------------------------
-        if (index === 0) {
+        if (index === 0) { // Tabela de elevação dos pontos
             // Add the imgElevationTable image to the first icon
             iconDiv.innerText = '';
             const img = document.createElement('img');
@@ -1431,7 +1431,7 @@ function createMacOSDock() {
 
         }
         //---------------------------------------------------------------------------
-        if (index === 1) {
+        if (index === 1) { // Dialogo de ordem pontos
             iconDiv.innerText = '';
             const img = document.createElement('img');
             img.src = imgOrdemPontos;
@@ -1445,8 +1445,7 @@ function createMacOSDock() {
 
         }
         //---------------------------------------------------------------------------
-        if (index === 2) {
-            // Add the imgElevationTable image to the first icon
+        if (index === 2) { // Botão de heading do mapa
             iconDiv.innerText = '';
             const img = document.createElement('img');
             img.id="imgPointerNorte";
@@ -1472,8 +1471,7 @@ function createMacOSDock() {
 
         }
         //---------------------------------------------------------------------------
-        if (index === 3) {
-            // Add the imgElevationTable image to the first icon
+        if (index === 3) { // Botão de GPS
             iconDiv.innerText = '';
             const img = document.createElement('img');
             img.id="imgGps";
@@ -1502,8 +1500,24 @@ function createMacOSDock() {
             };
 
         }
+
         //---------------------------------------------------------------------------
-        if (index === 5) {
+        if (index === 4) { // Botão de gerar KML 
+            iconDiv.innerText = '';
+            const img = document.createElement('img');
+            img.src = imgKml;
+            img.style.width = '40px';
+            img.style.height = '40px';
+            img.style.borderRadius = '10px';
+            img.style.zIndex ="999";
+            iconDiv.appendChild(img);
+            img.onclick = () => {
+                GerarKML(polylineRotaDat, pontosVisitaOrdenados, pontosvisitaDados);
+            };
+
+        }
+        //---------------------------------------------------------------------------
+        if (index === 5) { // Botão de controle dos layers
             iconDiv.innerText = '';
             const img = document.createElement('div');
             img.id="divLayers";
@@ -1527,22 +1541,7 @@ function createMacOSDock() {
             img.onclick = () => {
 
             };
-        }
-        //---------------------------------------------------------------------------
-        if (index === 4) {
-            iconDiv.innerText = '';
-            const img = document.createElement('img');
-            img.src = imgKml;
-            img.style.width = '40px';
-            img.style.height = '40px';
-            img.style.borderRadius = '10px';
-            img.style.zIndex ="999";
-            iconDiv.appendChild(img);
-            img.onclick = () => {
-                GerarKML(polylineRotaDat, pontosVisita, pontosvisitaDados);
-            };
-
-        }
+        }        
         //---------------------------------------------------------------------------
 
         // Add hover effect for scaling
@@ -1569,7 +1568,7 @@ function GerarKML(polylineRota, pontosVisita, pontosVisitaDados)
     let kmlInicio = `<?xml version="1.0" encoding="UTF-8"?>
     <kml xmlns="http://www.opengis.net/kml/2.2">
     <Document>
-        <name>Pontos e Rotas</name>
+        <name>WebRotas Pontos e Rotas</name>
         <!-- Definir estilos -->
         <Style id="lineStyleBlue">
         <LineStyle>
