@@ -26,13 +26,13 @@ def enviar_json(payload, url):
 payload = {
     "User": "Fabio",
     "TipoRequisicao": "Abrangencia",
-    "PontoInicial": [-23.587577163638976, -46.63326070110086,"Anatel São Paulo"],            
+    "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
     "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "1800",  # distancia entre pontos em metros
+    "distancia_pontos": "1700",  # distancia entre pontos em metros
     "regioes": ""
 }
 enviar_json(payload, "http://localhost:5001/webrotas")

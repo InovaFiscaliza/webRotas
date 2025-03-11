@@ -1047,7 +1047,25 @@ def DesenhaMunicipio(RouteDetail,nome,polMunicipio):
             i=i+1   
         RouteDetail.mapcode += f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
         indPol=indPol+1
-    return RouteDetail          
+    return RouteDetail         
+################################################################################    
+def DesenhaMunicipioAreasUrbanizadas(RouteDetail,nome,polMunicipioAreas):         
+    indPol=0
+    nome=SubstAcentos(nome).replace(" ", "_")
+    for poligons in polMunicipioAreas:
+        i=0
+        RouteDetail.mapcode += f"    municipioAreasUrbanizadas{nome}Pol{indPol} = [\n"
+        for coordenada in poligons:
+            # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
+            longitude,latitude = coordenada
+            if i == len(poligons) - 1:  # Verifica se é o último elemento
+               RouteDetail.mapcode += f"       [{latitude}, {longitude}]]\n"               
+            else: 
+               RouteDetail.mapcode += f"       [{latitude}, {longitude}]," 
+            i=i+1   
+        RouteDetail.mapcode += f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);\n"
+        indPol=indPol+1
+    return RouteDetail         
 ################################################################################
 # 
 from shapely.geometry import Point, Polygon
@@ -1175,10 +1193,12 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
+    wLog("GetBoundMunicipio e FiltrarAreasUrbanizadasPorMunicipio")
     polMunicipio= sf.GetBoundMunicipio(cidade, uf)
-    # polMunicipio= sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
+    polMunicipioAreasUrbanizadas= sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
     
-    pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
+    pontosvisita = GeneratePointsWithinCity(polMunicipioAreasUrbanizadas, regioes, distanciaPontos)
+    
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
@@ -1187,8 +1207,10 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
     RouteDetail = ServerSetupJavaScript(RouteDetail)   
     RouteDetail.mapcode += f"    const TipoRoute = 'CompAbrangencia';\n"  
     RouteDetail = DesenhaComunidades(RouteDetail,regioes)
+
+    RouteDetail = DesenhaMunicipioAreasUrbanizadas(RouteDetail,cidade,polMunicipioAreasUrbanizadas)
     RouteDetail = DesenhaMunicipio(RouteDetail,cidade,polMunicipio)
-    
+        
     wLog("Ordenando e processando Pontos de Visita:")
   
     pontosvisita = OrdenarPontos(pontosvisita,pontoinicial) 
