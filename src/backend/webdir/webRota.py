@@ -1124,7 +1124,10 @@ def GeneratePointsWithinCity(city_boundary,regioes, distance):
     lon_range = np.arange(min_lon, max_lon, lon_step)
 
     # Filtrar pontos dentro do polígono
-    points_within_city = []
+    # points_within_city = []
+    # Usar um conjunto para evitar pontos duplicados
+    points_within_city = set()
+
     for lat in lat_range:
         for lon in lon_range:
             point = Point(lon, lat)
@@ -1135,9 +1138,11 @@ def GeneratePointsWithinCity(city_boundary,regioes, distance):
                         if polygonAvoid.contains(point):
                            insideAvoidRegion=1 
                     if(insideAvoidRegion==0):       
-                        points_within_city.append((lon, lat))
+                        # points_within_city.append((lon, lat))
+                        points_within_city.add((lon, lat))  # Adiciona ao conjunto
 
-    return points_within_city
+    # return points_within_city
+    return list(points_within_city)  # Converte o conjunto de volta para uma lista
 ################################################################################
 def ServerSetupJavaScript(RouteDetail):
     if ServerTec == "OSMR":
