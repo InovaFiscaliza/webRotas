@@ -1186,7 +1186,7 @@ def DesenhaComunidades(RouteDetail,regioes):
         i=i+1  
     return RouteDetail            
 ################################################################################
-def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioes):
+def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,escopo,distanciaPontos,regioes):
     
     UserData.nome=user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
@@ -1194,10 +1194,14 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioe
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
     wLog("GetBoundMunicipio e FiltrarAreasUrbanizadasPorMunicipio")
+    
     polMunicipio= sf.GetBoundMunicipio(cidade, uf)
     polMunicipioAreasUrbanizadas= sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
     
-    pontosvisita = GeneratePointsWithinCity(polMunicipioAreasUrbanizadas, regioes, distanciaPontos)
+    if(escopo=="AreasUrbanizadas"):  # Opções: "Municipio" ou "AreasUrbanizadas" 
+        pontosvisita = GeneratePointsWithinCity(polMunicipioAreasUrbanizadas, regioes, distanciaPontos)  
+    else:
+        pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
     
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)

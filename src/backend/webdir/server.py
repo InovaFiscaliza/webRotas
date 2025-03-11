@@ -185,12 +185,13 @@ def ProcessaRequisicoesAoServidor(data):
        pontoinicial = data.get("PontoInicial", [])
        cidade = data["cidade"]
        uf = data["uf"]
+       escopo = data["Escopo"]
        distanciaPontos = data["distancia_pontos"]
        regioes = data["regioes"]
 
        # Processa os dados (exemplo: exibe no console)
        print(f"Cidade: {cidade},Uf: {uf}, distancia_pontos: {distanciaPontos} m, Regiões Evitar: {regioes}")
-       fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,distanciaPontos,regioes)
+       fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,escopo,distanciaPontos,regioes)
        # Retorna uma resposta de confirmação
        return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
                        "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
