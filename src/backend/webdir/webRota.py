@@ -268,7 +268,7 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     kml_inicio = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>Pontos e Rotas</name>
+    <name>WebRotas Pontos e Rotas</name>
     <!-- Definir estilos -->
     <Style id="lineStyleBlue">
       <LineStyle>
@@ -1013,7 +1013,7 @@ def DesenhaRegioes(RouteDetail,regioes):
         else:
             RegiaoExclusão = False    
             
-        RouteDetail.mapcode += f"    região{nome} = [\n"
+        RouteDetail.mapcode += f"    regiao{nome} = [\n"
         coordenadas = regiao.get("coord", [])
         wLog(f"  Região: {nome}")
         i=0
@@ -1026,9 +1026,9 @@ def DesenhaRegioes(RouteDetail,regioes):
             i=i+1   
         RouteDetail.mapcode += f"    ];\n"
         if(RegiaoExclusão):
-           RouteDetail.mapcode += f"var polygon{nome} = L.polygon(região{nome}, {{ color: 'red',fillColor: 'lightred',fillOpacity: 0.2, weight: 1}}).addTo(map);\n"
+           RouteDetail.mapcode += f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'red',fillColor: 'lightred',fillOpacity: 0.2, weight: 1}}).addTo(map);\n"
         else:
-           RouteDetail.mapcode += f"var polygon{nome} = L.polygon(região{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
+           RouteDetail.mapcode += f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
     return RouteDetail          
 ################################################################################    
 def DesenhaMunicipio(RouteDetail,nome,polMunicipio):         
