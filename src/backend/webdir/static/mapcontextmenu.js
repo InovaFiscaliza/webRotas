@@ -70,7 +70,7 @@ addMenuItem('Visualizar no StreetView', 'streetView', () => {
     closeMenu();
 });
 
-addMenuItem('Atualizar posição do veículo (offline)', 'updateVehicle', () => {
+addMenuItem('Atualizar posição do veículo (offline', 'updateVehicle', () => {
     const coords = contextMenu.querySelector('#coords').textContent.match(/-?\d+\.\d+/g);
     const [lat, lon] = coords;
     simulaVeiculoNesteLocal(lat,lon) ;

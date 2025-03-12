@@ -720,6 +720,27 @@ function simulaVeiculoNesteLocal(lat,lon)
     DesabilitaMarquerNoGPSRaioDaEstacao(latitude, longitude);
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função para capturar as coordenadas de um clique com o botão esquerdo
+function cliqueNoMapa(event)
+{
+    const { lat, lng } = event.latlng; // Obtém a latitude e longitude do clique
+    if(clicouPipetaPontoInicial)
+    {     
+        latitude =lat;
+        longitude = lng;    
+        // Carrega coordenadas se o diálogo de ordenação de pontos estiver aberto
+        if (document.getElementById("latitude")) document.getElementById("latitude").value = latitude;
+        if (document.getElementById("longitude")) document.getElementById("longitude").value = longitude;
+        clicouPipetaPontoInicial = false;
+        document.getElementById('latitude').dispatchEvent(new Event('input', { bubbles: true }));
+        document.getElementById('longitude').dispatchEvent(new Event('input', { bubbles: true }));
+        ativaElementoHtml('idPipetaLatLon', true); 
+        return;
+    }
+}
+// Adiciona o evento de clique ao mapa
+map.on('click', cliqueNoMapa);
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 var LastHeading = 0;
 var maxHistorySize = 5;
 var positionHistory = [];
