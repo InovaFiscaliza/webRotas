@@ -682,7 +682,6 @@ function openStreetView(lat, lng) {
 
     // URL do Google Street View
     const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-
     // Abre a nova janela
     const newWindow = window.open(streetViewUrl, "_blank", windowFeatures);
 
