@@ -655,6 +655,28 @@ function simularMovimento() {
 // Simular movimento
 // setInterval(simularMovimento, 800); // Atualiza a cada 300ms (aproximadamente)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+function openStreetView(lat, lng) {
+    const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+    const windowFeatures = `
+        width=1000,
+        height=400,
+        left=10px,
+        top=40px, 
+        menubar=no, // Remove o menu
+        toolbar=no, // Remove a barra de ferramentas
+        location=no, // Remove a barra de endereço
+        status=no, // Remove a barra de status
+        resizable=no, // Impede o redimensionamento
+        scrollbars=no // Remove as barras de rolagem
+    `;
+    const newWindow = window.open(streetViewUrl, "_blank", windowFeatures);
+
+    // Verifica se a janela foi bloqueada pelo navegador
+    if (!newWindow) {
+        alert("A janela pop-up foi bloqueada. Por favor, permita pop-ups para este site.");
+    }
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Captura o evento de clique com o botão direito do mouse para mostrar as coordenadas
 map.on('contextmenu', function (e) {
     const lat = e.latlng.lat; // Latitude do ponto clicado
@@ -668,6 +690,7 @@ map.on('contextmenu', function (e) {
         .setLatLng(e.latlng)
         .setContent(`${lat}, ${lng}`)
         .openOn(map);
+    openStreetView(lat, lng);    
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adiciona o evento de clique no mapa
