@@ -655,6 +655,21 @@ function simularMovimento() {
 // Simular movimento
 // setInterval(simularMovimento, 800); // Atualiza a cada 300ms (aproximadamente)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+// Captura o evento de clique com o botão direito do mouse para mostrar as coordenadas
+map.on('contextmenu', function (e) {
+    const lat = e.latlng.lat; // Latitude do ponto clicado
+    const lng = e.latlng.lng; // Longitude do ponto clicado
+
+    // Exibe as coordenadas no console
+    wLog(`Latitude: ${lat}, Longitude: ${lng}`);
+
+    // Exibe as coordenadas em um popup no mapa
+    L.popup()
+        .setLatLng(e.latlng)
+        .setContent(`${lat}, ${lng}`)
+        .openOn(map);
+});
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adiciona o evento de clique no mapa
 // Simula posição do carro em clique para debugar
 map.on('click', function(e) {
