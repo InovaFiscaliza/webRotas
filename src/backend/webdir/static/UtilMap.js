@@ -686,10 +686,16 @@ map.on('contextmenu', function (e) {
     wLog(`Latitude: ${lat}, Longitude: ${lng}`);
 
     // Exibe as coordenadas em um popup no mapa
-    L.popup()
-        .setLatLng(e.latlng)
-        .setContent(`${lat}, ${lng}`)
-        .openOn(map);
+    const popup = L.popup()
+    .setLatLng(e.latlng)
+    .setContent(`${lat}, ${lng}`)
+    .openOn(map);
+
+    // Fecha o popup após 3 segundos (3000 milissegundos)
+    setTimeout(() => {
+        map.closePopup(popup);
+    }, 9000);
+
     openStreetView(lat, lng);    
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////////
