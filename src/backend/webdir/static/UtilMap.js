@@ -692,57 +692,10 @@ function openStreetView(lat, lng) {
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-// Variável para rastrear se a tecla "S" está pressionada
-let isSKeyPressed = false;
-
-// Captura o evento de pressionar uma tecla
-document.addEventListener('keydown', function (e) {
-    if (e.key === 's' || e.key === 'S') {
-        isSKeyPressed = true; // Tecla "S" pressionada
-    }
-});
-
-// Captura o evento de soltar uma tecla
-document.addEventListener('keyup', function (e) {
-    if (e.key === 's' || e.key === 'S') {
-        isSKeyPressed = false; // Tecla "S" solta
-    }
-});
-//////////////////////////////////////////////////////////////////////////////////////////////////////        
-// Captura o evento de clique com o botão direito do mouse para mostrar as coordenadas
-map.on('contextmenu', function (e) {
-    const lat = e.latlng.lat; // Latitude do ponto clicado
-    const lng = e.latlng.lng; // Longitude do ponto clicado
-
-    // Exibe as coordenadas no console
-    wLog(`Latitude: ${lat}, Longitude: ${lng}`);
-    
-    if (isSKeyPressed) {
-        openStreetView(lat, lng); 
-        return;
-    }      
-
-    // Exibe as coordenadas em um popup no mapa
-    const popup = L.popup()
-    .setLatLng(e.latlng)
-    .setContent(`${lat}, ${lng}`)
-    .openOn(map);
-
-    // Fecha o popup após 3 segundos (3000 milissegundos)
-    setTimeout(() => {
-        map.closePopup(popup);
-    }, 9000);
-    
-
-});
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adiciona o evento de clique no mapa
 // Simula posição do carro em clique para debugar
-map.on('click', function(e) {
-    // Obtém as coordenadas do clique
-    var lat = e.latlng.lat;
-    var lon = e.latlng.lng;
-
+function simulaVeiculoNesteLocal(lat,lon) 
+{
     gpsMarker.setLatLng([lat, lon]);
     // Centraliza o mapa na nova posição do marcador
     map.setView([lat, lon]);
@@ -765,7 +718,7 @@ map.on('click', function(e) {
     velocidade = 0;
     GetRouteCarFromHere(latitude,longitude);
     DesabilitaMarquerNoGPSRaioDaEstacao(latitude, longitude);
-});
+};
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 var LastHeading = 0;
 var maxHistorySize = 5;
@@ -1644,7 +1597,7 @@ function createMacOSDock() {
 function GerarKML(polylineRota, pontosVisita, pontosVisitaDados) 
 {
     exibirMensagemComTimeout("Gerando e salvando o arquivo KML para uso em aplicativos como MapsMe, Google Earth e outros. 📌 No MapsMe, envie o arquivo KML ao motorista via WhatsApp. Para abrir, basta clicar no arquivo e selecionar MapsMe como aplicativo.", 
-              timeout = 9000)
+              timeout = 9000);
     // Cabeçalho do KML
     let kmlInicio = `<?xml version="1.0" encoding="UTF-8"?>
     <kml xmlns="http://www.opengis.net/kml/2.2">
