@@ -652,23 +652,38 @@ function simularMovimento() {
     // Atualiza o GPS a cada 300ms
     updateGPSPosition({ coords: { latitude, longitude, heading, speed: velocidade } });
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Simular movimento
 // setInterval(simularMovimento, 800); // Atualiza a cada 300ms (aproximadamente)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função para abrir uma nova janela com 70% das dimensões da janela atual
 function openStreetView(lat, lng) {
-    const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+    // Calcula 70% da largura e altura da janela atual
+    const width = window.innerWidth * 0.7;
+    const height = window.innerHeight * 0.7;
+
+    // Calcula a posição para centralizar a nova janela
+    const left = (window.innerWidth - width) / 2 + window.screenX;
+    const top = (window.innerHeight - height) / 2 + window.screenY;
+
+    // Configurações da nova janela
     const windowFeatures = `
-        width=1000,
-        height=400,
-        left=10px,
-        top=40px, 
-        menubar=no, // Remove o menu
-        toolbar=no, // Remove a barra de ferramentas
-        location=no, // Remove a barra de endereço
-        status=no, // Remove a barra de status
-        resizable=no, // Impede o redimensionamento
-        scrollbars=no // Remove as barras de rolagem
+        width=${width},
+        height=${height},
+        left=${left},
+        top=${top},
+        menubar=no,
+        toolbar=no,
+        location=no,
+        status=no,
+        resizable=yes,
+        scrollbars=yes
     `;
+
+    // URL do Google Street View
+    const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+
+    // Abre a nova janela
     const newWindow = window.open(streetViewUrl, "_blank", windowFeatures);
 
     // Verifica se a janela foi bloqueada pelo navegador
@@ -677,6 +692,23 @@ function openStreetView(lat, lng) {
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+// Variável para rastrear se a tecla "S" está pressionada
+let isSKeyPressed = false;
+
+// Captura o evento de pressionar uma tecla
+document.addEventListener('keydown', function (e) {
+    if (e.key === 's' || e.key === 'S') {
+        isSKeyPressed = true; // Tecla "S" pressionada
+    }
+});
+
+// Captura o evento de soltar uma tecla
+document.addEventListener('keyup', function (e) {
+    if (e.key === 's' || e.key === 'S') {
+        isSKeyPressed = false; // Tecla "S" solta
+    }
+});
+//////////////////////////////////////////////////////////////////////////////////////////////////////        
 // Captura o evento de clique com o botão direito do mouse para mostrar as coordenadas
 map.on('contextmenu', function (e) {
     const lat = e.latlng.lat; // Latitude do ponto clicado
@@ -684,6 +716,11 @@ map.on('contextmenu', function (e) {
 
     // Exibe as coordenadas no console
     wLog(`Latitude: ${lat}, Longitude: ${lng}`);
+    
+    if (isSKeyPressed) {
+        openStreetView(lat, lng); 
+        return;
+    }      
 
     // Exibe as coordenadas em um popup no mapa
     const popup = L.popup()
@@ -695,8 +732,8 @@ map.on('contextmenu', function (e) {
     setTimeout(() => {
         map.closePopup(popup);
     }, 9000);
+    
 
-    openStreetView(lat, lng);    
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adiciona o evento de clique no mapa
