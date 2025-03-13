@@ -1,9 +1,6 @@
 import requests
 import webbrowser
 
-
-
-
 ##################################################################################################
 def enviar_json(payload, url):
     # Envia uma requisição POST com o JSON para o URL especificado
@@ -176,7 +173,7 @@ payload = {
     "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "2000",  # distancia entre pontos em metros
+    "distancia_pontos": "800",  # distancia entre pontos em metros
     "regioes": regioesBuf
 }
 

@@ -1,27 +1,49 @@
-import requests
-import webbrowser
 
+import os
+import sys
 
-##################################################################################################
-def enviar_json(payload, url):
-    # Envia uma requisição POST com o JSON para o URL especificado
-    try:
-        response = requests.post(url, json=payload)
-        # Verifica se a requisição foi bem-sucedida
-        if response.status_code == 200:
-            print("-----------------------------------------------")
-            print("Requisição bem-sucedida:")
-            print(response.json())
-            print("-----------------------------------------------")
-            url = response.json().get("Url", None)
-            if url:
-               webbrowser.open(url)
-        else:
-            print(f"Erro {response.status_code}: {response.text}")
-    except requests.RequestException as e:
-        print("Erro na requisição:", e)
-##################################################################################################
+# Caminho relativo da pasta "tests" para "webdir"
+relative_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "backend", "webdir"))
+# Adiciona o caminho ao sys.path
+sys.path.append(relative_path)
 
+import client as cl
+
+regioesBuf =  [       
+        {
+            "nome": "!Jacare",
+            "coord": [
+                [-22.918740407473486, -43.046581350886925],
+                [-22.91621425399815, -43.03460034948952],
+                [-22.93363046037466, -43.038786482507895],
+                [-22.93030692975052, -43.04441610967053],
+                [-22.926717425070326, -43.05177792980626],                
+                [-22.918341544265797, -43.04383871201282]
+            ]
+        },
+        {
+            "nome": "!Parque da Cidade",
+            "coord": [
+                [-22.920468800811552, -43.09392796446328],
+                [-22.92139946519323, -43.08829833730066],
+                [-22.9233937244859, -43.08238001130917],
+                [-22.929908100265653, -43.07862692653409],
+                [-22.93628922581668, -43.08468960194],                
+                [-22.93602335158884, -43.09768104923836]
+            ]
+        },
+        {
+            "nome": "!Outra",
+            "coord": [
+                [-22.87731577172224, -43.09040921338159],   
+                [-22.880204254693243, -43.0450646121466],     
+                [-22.908733527841232, -43.05294065586869],      
+                [-22.90788830229889, -43.092856139586516]
+
+            ]
+        }        
+    ]
+    
 
 payload = {
     "User": "Fabio",
@@ -32,8 +54,8 @@ payload = {
     "Escopo":"AreasUrbanizadas",                   # Opções: "Municipio" ou "AreasUrbanizadas" 
     "cidade": "Niterói",
     "uf": "RJ",
-    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "1600",  # distancia entre pontos em metros
-    "regioes": ""
+    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
+    "distancia_pontos": "700",  # distancia entre pontos em metros
+    "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+cl.enviar_json(payload, "http://localhost:5001/webrotas")
