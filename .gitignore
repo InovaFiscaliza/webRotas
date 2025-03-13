@@ -5,6 +5,7 @@ BR_Municipios_2023.*
 filtro_*
 osmr_webrota.tar
 osmosis_webrota.tar
+*.poly
 *.pbf
 exclusion_*
 qg_20*
