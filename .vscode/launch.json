@@ -39,7 +39,7 @@
             "name": "client -h",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/backend/webdir/webrota_client.py",
+            "program": "${workspaceFolder}/src/ucli/webrota_client.py",
             "console": "integratedTerminal",
             "args": ["-h"]
         },
@@ -47,7 +47,7 @@
             "name": "client payload.json",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/backend/webdir/webrota_client.py",
+            "program": "${workspaceFolder}/src/ucli/webrota_client.py",
             "console": "integratedTerminal",
             "args": ["payload.json"]
         },
@@ -55,7 +55,7 @@
             "name": "client no args",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/backend/webdir/webrota_client.py",
+            "program": "${workspaceFolder}/src/ucli/webrota_client.py",
             "console": "integratedTerminal"
         },
         {
