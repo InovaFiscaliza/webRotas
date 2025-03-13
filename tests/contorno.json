@@ -1,5 +1,6 @@
 {
     "User": "Andre",
+    "Descricao": "Teste de contorno de uma estação no Rio de Janeiro com 3 regiões de exclusão",
     "TipoRequisicao": "DriveTest",
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],
     "RaioDaEstacao": 200,
