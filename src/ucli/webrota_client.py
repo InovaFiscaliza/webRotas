@@ -10,12 +10,23 @@ import sys
 import os
 import time
 import logging
+import coloredlogs
 import json
 import argparse
 
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+coloredlogs.install(
+    level='INFO',
+    fmt='%(asctime)s: %(levelname)s, %(message)s',
+    field_styles={'asctime': {'color': 'green'}},
+    level_styles={
+        'info': {'color': 'blue'},
+        'warning': {'color': 'yellow'},
+        'error': {'color': 'red'},
+        'critical': {'color': 'red', 'bold': True}
+    }
+)
 
 DEMO_PAYLOAD = {
     "User": "Alessandro",
@@ -104,9 +115,9 @@ class ServerData:
         """ Server status. True if server is running, False otherwise."""
         self.port: int = SERVER_PORT
         """ Server port number. """
-        self.test_url: str = f"{SERVER_ROOT_URL}{self.port}{SERVER_TEST_URL_FOLDER}"
+        self.test_url: str
         """ URL to test if the server is running. """	
-        self.url: str = f"{SERVER_ROOT_URL}{self.port}{SERVER_URL_FOLDER}"
+        self.url: str
         """ URL to send the JSON payload. """
         self.base_path: str = os.path.realpath(__file__)
         """ Path to the script file. """
@@ -116,6 +127,7 @@ class ServerData:
         """ Path to the server data file. """
         
         self.load_server_data()
+        self.update_url_port()
 
     # ------------------------------------------------------------------------------------------
     def build_project_path(self) -> str:
@@ -124,15 +136,24 @@ class ServerData:
         
         :return: Path to the project folder.
         """
-        return self.base_path[:self.base_path.find(PROJECT_FOLDER_NAME) + len(PROJECT_FOLDER_NAME)]
+        return os.path.normpath(self.base_path[:self.base_path.find(PROJECT_FOLDER_NAME) + len(PROJECT_FOLDER_NAME)])
     
+    # ------------------------------------------------------------------------------------------
     def build_server_data_filename(self) -> str:
         """
         Make the server data file path from the project path.
         
         :return: Path to the server data file.
         """
-        return os.path.join(os.path.dirname(self.server_project_path), SERVER_DATA_FILE)
+        return os.path.normpath(os.path.join(self.server_project_path, SERVER_DATA_FILE))
+    
+    # ------------------------------------------------------------------------------------------    
+    def update_url_port(self) -> None:
+        """
+        Update URL values using the server port number.
+        """
+        self.test_url = f"{SERVER_ROOT_URL}{self.port}{SERVER_TEST_URL_FOLDER}"
+        self.url = f"{SERVER_ROOT_URL}{self.port}{SERVER_URL_FOLDER}"
     
     # ------------------------------------------------------------------------------------------
     def load_server_data(self):
@@ -143,11 +164,9 @@ class ServerData:
             with open(self.server_data_file, "r") as f:
                 server_data = json.load(f)
                 self.port = server_data.get("port", SERVER_PORT)
-                self.test_url = f"{SERVER_ROOT_URL}{self.port}{SERVER_TEST_URL_FOLDER}"
-                self.url = f"{SERVER_ROOT_URL}{self.port}{SERVER_URL_FOLDER}"
                 self.status_up = True
         except FileNotFoundError:
-            logging.error(f"File {self.server_data_file} not found.")
+            logging.info(f"File {self.server_data_file} not found. Server will be started")
             self.status_up = False
         except json.JSONDecodeError:
             logging.error(f"Error decoding data from file {self.server_data_file}.")
@@ -157,7 +176,7 @@ class ServerData:
             self.status_up = False
 
 # ----------------------------------------------------------------------------------------------
-def is_server_running(url: str) -> bool:
+def is_server_url_ok(url: str) -> bool:
     """
     Test if server is running.
 
@@ -178,16 +197,21 @@ def server_is_fine(server: ServerData) -> bool:
     :param test_url: URL to test if the server is running.
     :return: True if the server is running, False otherwise.
     """
-    
-    # Initial value of server.status_up reflects the presence of server.json status file.
-    # Actual server test must be performed before continuing.
+
+    # If server data file is missing, server.status_up is False and just move to start the server passing 2 ifs.
+    # Else test the access to server page before continuing.
     if server.status_up:
-        server.status_up = is_server_running(url=server.test_url)
+        server.status_up = is_server_url_ok(url=server.test_url)
     
+    # If server page is up, return True.
     if server.status_up:
         logging.info("Server is ok.")
     else:
-        command = f"title {server.name} && cd {server.server_project_path} && uv run .\\src\\backend\\webdir\\server.py --port {server.port}"
+        command = (
+            f"title {server.name} && "
+            f"cd {server.server_project_path} && "
+            f"uv run .\\src\\backend\\webdir\\server.py --port {server.port}"
+        )
 
         subprocess.Popen(command, creationflags=DETACHED_PROCESS, shell=True)
     
@@ -197,7 +221,7 @@ def server_is_fine(server: ServerData) -> bool:
             countdown -= 1
             
             server.load_server_data()
-            server.status_up = is_server_running(url=server.test_url)
+            server.status_up = is_server_url_ok(url=server.test_url)
             
             if countdown <= 0:
                 logging.info("Timeout. Server not started.")
@@ -224,10 +248,10 @@ def send_json(payload: dict, url: str) -> None:
 
         if response.status_code == 200:
             response_dict = response.json()
-            logging.info(   "-----------------------------------------------\n",
-                            f" Interactive page: {response_dict['Url']}\n",
-                            f" Download kml: {response_dict['Kml']}\n",
-                            f" Download http: {response_dict['HtmlStatic']}\n",
+            logging.info(   "\n-----------------------------------------------\n"
+                            f" Interactive page: {response_dict['Url']}\n"
+                            f" Download kml: {response_dict['Kml']}\n"
+                            f" Download http: {response_dict['HtmlStatic']}\n"
                             "-----------------------------------------------")
             webbrowser.open(response_dict['Url'])
         else:
@@ -239,18 +263,23 @@ def send_json(payload: dict, url: str) -> None:
 # ----------------------------------------------------------------------------------------------
 def main() -> int:
 
+    print("\n")
+    logging.info("Starting WebRotas CLI.")
     parser = argparse.ArgumentParser(description="Send a JSON payload to the WebRotas server.")
     parser.add_argument("payload", nargs="?", default=None, help="Name of the JSON file containing the payload to be sent.")
     args = parser.parse_args()
 
     if args.payload is None:
-        logging.warning("Using default payload as example.")
+        logging.warning("Using default payload example.")
+        print("\n")
         parser.print_help()
+        print("\n")
         payload = DEMO_PAYLOAD
     else:
         try:
             with open(args.payload, "r") as f:
                 payload = json.load(f)
+            logging.info(f"Payload loaded from {args.payload}.")
         except FileNotFoundError:
             logging.error(f"\nFile {args.payload} not found.\n")
             parser.print_help()
@@ -261,6 +290,7 @@ def main() -> int:
     if server_is_fine(server=server):
         send_json(payload=payload, url=server.url)
 
+    logging.info("End of script.")
 
 if __name__ == "__main__":
     sys.exit(main())
