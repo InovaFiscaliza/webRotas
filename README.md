@@ -456,7 +456,7 @@ Alguns exemplos foram disponibilizados para teste e uso do WebRotas.
 | --- | --- |
 | [visita_pontos.py](./tests/visita_pontos.py) | Calcula a rota para visitar pontos de inspeção |
 | abrangencia.py | Calcula a rota para visitar pontos regularmente distribuídos em uma área |
-| contorno.py | Calcula a rota para visitar pontos regularmente distribuídos em torno de um ponto central |
+| contorno.json | Exemplo no Rio de Janeiro de contorno de um ponto central com 3 regiões de exclusão |
 
 Para executar um dos exemplos:
 
