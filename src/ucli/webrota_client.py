@@ -103,6 +103,7 @@ SERVER_START_TIMEOUT = 10 # Tempo de espera para o servidor iniciar em segundos
 SERVER_WAIT_TIMEOUT = 60 # Tempo para desistir de esperar o servidor em segundos
 URL_RESPONSE_TIMEOUT = 5 # Tempo de espera para resposta do servidor em segundos
 VALID_STATUS_CODES = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 404]
+HELP_TITLE = " TIP "
 
 DETACHED_PROCESS = 0x00000008
 
@@ -259,6 +260,22 @@ def send_json(payload: dict, url: str) -> None:
     except requests.RequestException as e:
         logging.error(f"Request error: {e}")
 
+def print_help(parser: argparse.ArgumentParser) -> None:
+    """
+    Print help message.
+
+    :param parser: Argument parser.
+    """
+    # get the terminal size to adjust the help message
+    terminal_width = os.get_terminal_size().columns
+    title_side_bar_length = (terminal_width - len(HELP_TITLE)) // 2
+    side_bar = "-" * title_side_bar_length
+    title = f"\033[90m\n{side_bar}{HELP_TITLE}{side_bar}"
+    if len(title) < terminal_width:
+        title += "-"
+    print(title)
+    parser.print_help()
+    print("-" * terminal_width + "\n\033[0m")
 
 # ----------------------------------------------------------------------------------------------
 def main() -> int:
@@ -271,9 +288,7 @@ def main() -> int:
 
     if args.payload is None:
         logging.warning("Using default payload example.")
-        print("\n")
-        parser.print_help()
-        print("\n")
+        print_help(parser)
         payload = DEMO_PAYLOAD
     else:
         try:
@@ -282,7 +297,7 @@ def main() -> int:
             logging.info(f"Payload loaded from {args.payload}.")
         except FileNotFoundError:
             logging.error(f"\nFile {args.payload} not found.\n")
-            parser.print_help()
+            print_help(parser)
             return 1    
     
     server = ServerData()
