@@ -1,26 +1,12 @@
-import requests
-import webbrowser
+import os
+import sys
 
+# Caminho relativo da pasta "tests" para "webdir"
+relative_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "backend", "webdir"))
+# Adiciona o caminho ao sys.path
+sys.path.append(relative_path)
 
-##################################################################################################
-def enviar_json(payload, url):
-    # Envia uma requisição POST com o JSON para o URL especificado
-    try:
-        response = requests.post(url, json=payload)
-        # Verifica se a requisição foi bem-sucedida
-        if response.status_code == 200:
-            print("-----------------------------------------------")
-            print("Requisição bem-sucedida:")
-            print(response.json())
-            print("-----------------------------------------------")
-            url = response.json().get("Url", None)
-            if url:
-               webbrowser.open(url)
-        else:
-            print(f"Erro {response.status_code}: {response.text}")
-    except requests.RequestException as e:
-        print("Erro na requisição:", e)
-##################################################################################################
+import client as cl
 
 
 payload = {
@@ -36,4 +22,4 @@ payload = {
     "distancia_pontos": "3000",  # distancia entre pontos em metros
     "regioes": ""
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+cl.enviar_json(payload, "http://localhost:5001/webrotas")

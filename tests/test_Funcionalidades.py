@@ -1,28 +1,13 @@
-import requests
-import webbrowser
+import os
+import sys
 
+# Caminho relativo da pasta "tests" para "webdir"
+relative_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "backend", "webdir"))
+# Adiciona o caminho ao sys.path
+sys.path.append(relative_path)
 
+import client as cl
 
-
-##################################################################################################
-def enviar_json(payload, url):
-    # Envia uma requisição POST com o JSON para o URL especificado
-    try:
-        response = requests.post(url, json=payload)
-        # Verifica se a requisição foi bem-sucedida
-        if response.status_code == 200:
-            print("-----------------------------------------------")
-            print("Requisição bem-sucedida:")
-            print(response.json())
-            print("-----------------------------------------------")
-            url = response.json().get("Url", None)
-            if url:
-               webbrowser.open(url)
-        else:
-            print(f"Erro {response.status_code}: {response.text}")
-    except requests.RequestException as e:
-        print("Erro na requisição:", e)
-##################################################################################################
 # Exemplo de uso
 # Aeroporto de Guarulhos -23.42886118100462, -46.47216661114135
 # Minha casa -22.91745583955038, -43.08681365669065
@@ -77,7 +62,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+cl.enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 # Aplicativo MapsMe - verificar
@@ -136,7 +121,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+cl.enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -162,7 +147,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+# cl.enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência      
@@ -176,11 +161,11 @@ payload = {
     "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "2000",  # distancia entre pontos em metros
+    "distancia_pontos": "700",  # distancia entre pontos em metros
     "regioes": regioesBuf
 }
 
-enviar_json(payload, "http://localhost:5001/webrotas")
+cl.enviar_json(payload, "http://localhost:5001/webrotas")
 
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência
@@ -197,7 +182,7 @@ payload = {
     "distancia_pontos": "2000",  # distancia entre pontos em metros
     "regioes": regioesBuf
 }
-# enviar_json(payload, "http://localhost:5001/webrotas")
+# cl.enviar_json(payload, "http://localhost:5001/webrotas")
 
 payload = {
     "User": "Fabio",
@@ -213,7 +198,7 @@ payload = {
     "regioes": ""
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+# cl.enviar_json(payload, "http://localhost:5001/webrotas")
 
 # exemplo pedido para regerar a rota para uma lista de pontos já roteados, restorna o polyline da rota
 # usado a partir de um cliente html que sabe o número de porta dos OSMR server já ativo de um usuário.    
@@ -230,5 +215,5 @@ payload = {
     ]
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+# cl.enviar_json(payload, "http://localhost:5001/webrotas")
 #------------------------------------------------------
