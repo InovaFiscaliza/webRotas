@@ -80,7 +80,7 @@ class uiShow:
         Print log header.
         """
         print(f"\033[90m\n{self.line}\033[0m")
-        print("\033[92mTIMESTAMP          | \033[0mLEVEL    | \033[94mMESSAGE\033[0m")
+        print("\033[92mTIMESTAMP\033[0m           | LEVEL    | \033[94mMESSAGE\033[0m")
 
 # ----------------------------------------------------------------------------------------------
 def main() -> int:
