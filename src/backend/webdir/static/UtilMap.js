@@ -689,6 +689,15 @@ function openStreetView(lat, lng) {
     if (!newWindow) {
         alert("A janela pop-up foi bloqueada. Por favor, permita pop-ups para este site.");
     }
+    // Tenta aplicar zoom no conteúdo da janela pop-up
+    newWindow.onload = () => {
+        try {
+            // Aplica zoom no conteúdo da janela pop-up
+            newWindow.document.body.style.zoom = '67%';
+        } catch (error) {
+            console.error("Não foi possível aplicar zoom na janela pop-up:", error);
+        }
+    };
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adiciona o evento de clique no mapa
