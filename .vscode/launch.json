@@ -44,12 +44,12 @@
             "args": ["-h"]
         },
         {
-            "name": "client payload.json",
+            "name": "client exemplo_visita_rj.json",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/ucli/webrota_client.py",
             "console": "integratedTerminal",
-            "args": ["payload.json"]
+            "args": ["${workspaceFolder}/tests/exemplo_visita_rj.json"]
         },
         {
             "name": "client no args",
