@@ -84,4 +84,5 @@ dependencies = [
     "zstandard==0.23.0",
     "podman>=5.4.0.1",
     "coloredlogs>=15.0.1",
+    "jsonschema>=4.23.0",
 ]
