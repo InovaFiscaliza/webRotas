@@ -123,7 +123,11 @@ def main() -> int:
     # send payload to server
     server = si.ServerData()
     if server.is_running():
-        server.send_payload(payload=payload)
+        try:
+            server.send_payload(payload=payload)
+        except si.ServerError as e:
+            logging.error(f"Error sending payload: {e}")
+            return 1
 
     logging.info("Happy end of the script.\n")
 

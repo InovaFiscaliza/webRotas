@@ -25,6 +25,10 @@ VALID_STATUS_CODES = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 404]
 DETACHED_PROCESS = 0x00000008
 
 # ----------------------------------------------------------------------------------------------
+class ServerError(Exception):
+    pass
+
+# ----------------------------------------------------------------------------------------------
 class ServerData:
     def __init__(self):
         self.name: str = SERVER_NAME
@@ -171,6 +175,6 @@ class ServerData:
                                 "-----------------------------------------------")
                 webbrowser.open(response_dict['Url'])
             else:
-                logging.error("Error {response.status_code}: {response.text}")
+                raise ServerError(f"Server returned {response.status_code}: {response.text}")
         except requests.RequestException as e:
-            logging.error(f"Request error: {e}")
+            raise ServerError(f"Request error: {e}") from e
