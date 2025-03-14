@@ -23,7 +23,7 @@ DEMO_PAYLOAD_FILE = "demo_payload.json"
 # Configure logging
 coloredlogs.install(
     level='INFO',
-    fmt='%(asctime)s | %(levelname)8s | %(message)s',
+    fmt=' %(asctime)s | %(levelname)8s |  %(message)s',
     field_styles={'asctime': {'color': 'green'}},
     level_styles={
         'info': {'color': 'blue'},
@@ -80,7 +80,7 @@ class uiShow:
         Print log header.
         """
         print(f"\033[90m\n{self.line}\033[0m")
-        print("\033[92mTIMESTAMP\033[0m           | LEVEL    | \033[94mMESSAGE\033[0m")
+        print("\033[92mTIMESTAMP\033[0m            | LEVEL    | \033[94mMESSAGE\033[0m")
 
 # ----------------------------------------------------------------------------------------------
 def main() -> int:
