@@ -46,16 +46,17 @@ def ObterLimiteMunicipioPol(nome_municipio, estado_sigla):
     # Retornar a Polyline (como lista de coordenadas) e o centroide
     return polyline
 ##########################################################################################################################
-# Exemplo de uso
+""" Exemplo de uso
+
 nome_municipio = 'Niterói'
 estado_sigla = 'RJ'
 
-polyline, centroide = obter_limite_municipioPol(nome_municipio, estado_sigla)
+polyline, centroide = obter_limite_municipio(nome_municipio, estado_sigla)
 
 if polyline:
     print(f"Polyline do município de {nome_municipio}: {polyline[:5]}...")  # Mostrar apenas os 5 primeiros pontos
     print(f"Centroide: {centroide}")
-
+"""
 ##########################################################################################################################
 def obter_limite_municipio(nome_municipio, estado_sigla):
     """
