@@ -111,7 +111,7 @@ def FiltrarAreasUrbanizadasPorMunicipio(municipio_nome, estado_sigla):
     wr.wLog(f"FiltrarAreasUrbanizadasPorMunicipio - {municipio_nome} - {estado_sigla}")
     
     caminho_shapefile_areas = "../../resources/Urbanizacao/AU_2022_AreasUrbanizadas2019_Brasil.shp"
-    caminho_shapefile_municipios = "../../resources/BR_Municipios_2022/BR_Municipios_2022.shp"
+    caminho_shapefile_municipios = "../../resources/BR_Municipios/BR_Municipios_2023.shp"
     
     # Carregar os shapefiles
     gdf_areas = gpd.read_file(caminho_shapefile_areas)
@@ -163,7 +163,7 @@ def FiltrarAreasUrbanizadasPorMunicipio(municipio_nome, estado_sigla):
 # Função para filtrar áreas urbanas por município  
 def FiltrarAreasUrbanizadasPorMunicipioOLD(municipio_nome, estado_sigla):    
     caminho_shapefile_areas = "../../resources/Urbanizacao/AU_2022_AreasUrbanizadas2019_Brasil.shp"
-    caminho_shapefile_municipios = "../../resources/BR_Municipios_2022/BR_Municipios_2022.shp"
+    caminho_shapefile_municipios = "../../resources/BR_Municipios/BR_Municipios_2023.shp"
     
     # Carregar o shapefile de áreas urbanizadas
     gdf_areas = gpd.read_file(caminho_shapefile_areas)
