@@ -24,7 +24,7 @@ def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
 
     :return: Lista de coordenadas [(lat, lon), ...] representando o limite do município.
     """
-    wr.wLog(f"GetBoundMunicipio - {nome_municipio},  - {estado_sigla}")
+    wr.wLog(f"GetBoundMunicipio - {nome_municipio},  {estado_sigla}")
 
     # Carregar o arquivo Shapefile BR_Municipios_2023.shp
 
