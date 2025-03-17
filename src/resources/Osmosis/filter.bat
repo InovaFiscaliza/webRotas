@@ -1,3 +1,6 @@
+@echo off
+rem Script para filtrar o arquivo .osm.pbf de acordo com o arquivo .poly
+rem .
 rem Comandos iniciais para salvar o osmosis_webrota.tar
 rem podman run --rm -v .:/data yagajs/osmosis osmosis --read-pbf file="/data/brazil/brazil-latest.osm.pbf" --bounding-polygon file="/data/exclusion.poly" completeWays=no --write-pbf file="/data/filtro/filtro-latest.osm.pbf"
 rem podman commit d7e1629f274f  osmosis_webrota
@@ -12,11 +15,14 @@ if "%1"=="" goto Erro
 set USER=%1
 set FILTRO=TempData/filtro_%USER%
 
+echo %date% %time% : Preparing Podman machine...
 podman machine init
 podman machine start
 podman load -i osmosis_webrota.tar
 wsl rm -rf %FILTRO%
 wsl mkdir -p %FILTRO%
+
+echo %date% %time% : Running osmosis container...
 podman run --rm -v .:/data --name osmosis_%USER% localhost/osmosis_webrota osmosis --read-pbf file="/data/brazil/brazil-latest.osm.pbf" --bounding-polygon file="/data/TempData/exclusion_%USER%.poly" completeWays=no --write-pbf file="/data/%FILTRO%/filtro-latest.osm.pbf"
 wsl rm -rf ../OSMR/data/%FILTRO%
 wsl mkdir -p ../OSMR/data/%FILTRO%
