@@ -30,6 +30,16 @@ import server_env as se
 ################################################################################
 """ Variáveis globais """
 
+REQUIRED_KEYS = {   "Contorno":
+                        {"latitude", "longitude", "raio"},
+                    "PontosVisita":
+                        {"pontosvisita"},
+                    "Abrangencia":
+                        {"cidade", "uf", "escopo", "distancia_pontos"},
+                    "RoteamentoOSMR":
+                        {"PortaOSRMServer"}
+                    }
+
 env = se.ServerEnv()
 
 ################################################################################
@@ -138,153 +148,185 @@ def SalvaDataArq(data):
         print(f"Erro ao salvar os dados: {e}")
         return jsonify({"error": "Erro ao salvar os dados"}), 500
 
+###9
+
+def default_points(radi:int) -> int:
+    """Calcula o número de pontos padrão para a rota de contorno à partir do raio
+    
+    :param radi: Raio em metros
+    :return: Número de pontos padrão
+    """
+    MIN_POINTS = 9
+    POINTS_PER_KM = 2
+    TWO_PI = 6.28318530718
+    
+    return max(MIN_POINTS, int(TWO_PI * radi * POINTS_PER_KM /1000))
+
 
 ################################################################################
 # pyinstaller --onefile --add-data "C:\\Users\\andre\\miniconda3\\envs\\webrotas/Lib/site-packages/flask;flask" Server.py
 ################################################################################
-def ProcessaRequisicoesAoServidor(data):
-  wr.wLog("Executando em paralelo requisição ao servidor")
-  with app.app_context():
-    #---------------------------------------------------------------------------------------------
-    TipoReq = data["TipoRequisicao"]
-    if TipoReq=="Contorno":    # if TipoReq=="DriveTest":
-        # Obtém valores do JSON
-            # Verifica se todos os campos necessários estão presentes
+def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
+    """Processa as requisições ao servidor WebRotas.
+    
+    :param data: Dicionário com os dados da requisição.
+    :return: Tupla com a resposta da requisição e o código HTTP.
+    """
+    
+    wr.wLog("Executando em paralelo requisição ao servidor")
 
-        print("\n\n#############################################################################################")
-        print("Recebida solicitação de contorno em torno de ponto ou aeroporto\n")
-        if not all(key in data for key in ("latitude", "longitude", "raio")):
-            return jsonify({"error": "Campos latitude, longitude e raio são necessários"}), 400
+    with app.app_context():
+    
+        try:
+            request_type = data["TipoRequisicao"]
+        except KeyError as e:
+            return jsonify({"error": f"Campo TipoRequisicao não encontrado: {e}"}), 400
+        
+        if not REQUIRED_KEYS[request_type].issubset(data.keys()):
+            return jsonify({"error": f"Campos necessários: {REQUIRED_KEYS[request_type]}"}), 400
+        
+        match request_type:
+        
+            #---------------------------------------------------------------------------------------------
+            case "Contorno":
+                print("\n\n#############################################################################################")
+                print("Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)\n")
 
-        user = data["User"]
+                # mandatory arguments
+                latitude = data["latitude"]
+                longitude = data["longitude"]
+                raio = data["raio"]
 
-        latitude = data["latitude"]
-        longitude = data["longitude"]
-        raio = data["raio"]
-        regioes = data.get("regioes", [])
-        numeropontos = data["numeropontos"]
-        pontoinicial = data.get("PontoInicial", [])
+                # optional arguments (with defaults)
+                user = data.get("User", "Anatel")
+                regioes = data.get("regioes", [])
+                numeropontos = data.get("numeropontos", default_points(raio))
+                pontoinicial = data.get("PontoInicial", [])
 
-        # Processa os dados (exemplo: exibe no console)
-        print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}")
-        central_point = [latitude, longitude]
-        fileName,fileNameStatic,fileKml=wr.RouteContorno(data,user,pontoinicial,central_point,regioes,radius_km=raio,num_points=numeropontos)
-        # Retorna uma resposta de confirmação
-        return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
-                        "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
-                        "Kml":f"http://127.0.0.1:5001/download/{fileKml}"}
-                        ), 200
-    #---------------------------------------------------------------------------------------------
-    TipoReq = data["TipoRequisicao"]
-    if TipoReq=="PontosVisita":
-        # Obtém valores do JSON
-        print("\n\n#############################################################################################")
-        print("Recebida solicitação pontos de visita\n")
-        if not all(key in data for key in ("pontosvisita", "regioes")):
-            return jsonify({"error": "Campos pontosvisita, regioes são necessários"}), 400
-
-            user = data["User"]
-            pontosvisita = data.get("pontosvisita", [])
-            regioes = data.get("regioes", [])
-            pontoinicial = data.get("PontoInicial", [])
-            # Processa os dados (exemplo: exibe no console)
-            print(f"pontosvisita: {pontosvisita},  Regiões Evitar: {regioes}")
-            fileName, fileNameStatic, fileKml = wr.RoutePontosVisita(
-                data, user, pontoinicial, pontosvisita, regioes
-            )
-            # Retorna uma resposta de confirmação
-            return jsonify(
-                {
-                    "MapaOk": fileName,
-                    "Url": f"http://127.0.0.1:{env.port}/map/{fileName}",
-                    "HtmlStatic": f"http://127.0.0.1:{env.port}/download/{fileNameStatic}",
-                    "Kml": f"http://127.0.0.1:{env.port}/download/{fileKml}",
-                }
-            ), 200
-        # ---------------------------------------------------------------------------------------------
-        TipoReq = data["TipoRequisicao"]
-        if TipoReq == "Abrangencia":
-            # Obtém valores do JSON
-            print(
-                "\n\n#############################################################################################"
-            )
-            print("Recebida solicitação de compromisso de abrangência\n")
-            # https://informacoes.anatel.gov.br/legislacao/procedimentos-de-fiscalizacao/1724-portaria-2453
-            if not all(
-                key in data for key in ("cidade", "distancia_pontos", "regioes")
-            ):
-                return jsonify(
-                    {
-                        "error": "Campos cidade, distancia_pontos e regioes são necessários"
-                    }
-                ), 400
-
-        user=data["User"]
-        pontoinicial = data.get("PontoInicial", [])
-        cidade = data["cidade"]
-        uf = data["uf"]
-        escopo = data["Escopo"]
-        distanciaPontos = data["distancia_pontos"]
-        regioes = data["regioes"]
-
-        # Processa os dados (exemplo: exibe no console)
-        print(f"Cidade: {cidade},Uf: {uf}, distancia_pontos: {distanciaPontos} m, Regiões Evitar: {regioes}")
-        fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,escopo,distanciaPontos,regioes)
-        # Retorna uma resposta de confirmação
-        return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
-                        "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
-                        "Kml":f"http://127.0.0.1:5001/download/{fileKml}"}
-                        ), 200
-    #---------------------------------------------------------------------------------------------
-    TipoReq = data["TipoRequisicao"]
-    if TipoReq=="RoteamentoOSMR":
-        # Obtém valores do JSON
-        wr.wLog("\n\n#############################################################################################")
-        wr.wLog("Recebida solicitação de RoteamentoOSMR\n")
-
-        if not all(
-                key in data
-                for key in ("TipoRequisicao", "PortaOSRMServer", "pontosvisita")
-            ):
-                return jsonify(
-                    {
-                        "error": "Campos TipoRequisicao, PortaOSRMServer e pontosvisita são necessários"
-                    }
-                ), 400
+                # Present used arguments
+                print(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
+                print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m", f"Número de Pontos: {numeropontos}")
+                print(f"Regiões Evitar: {regioes}")
                 
-        porta = data["PortaOSRMServer"]
-        pontosvisita = data.get("pontosvisita", [])
-        pontoinicial = data.get("pontoinicial", [])
-        recalcularrota = data.get("recalcularrota")
-        polylineRota, DistanceTotal, pontosvisita = wr.RoteamentoOSMR(
-            porta, pontosvisita, pontoinicial, recalcularrota
-        )
+                # Process the received data
+                central_point = [latitude, longitude]
+                fileName,fileNameStatic,fileKml=wr.RouteContorno(   data,
+                                                                    user,
+                                                                    pontoinicial,
+                                                                    central_point,
+                                                                    regioes,radius_km=raio,
+                                                                    num_points=numeropontos)
+                
+            #---------------------------------------------------------------------------------------------
+            case "PontosVisita":
+                print("\n\n#############################################################################################")
+                print("Recebida solicitação pontos de visita\n")
+
+                # mandatory arguments
+                pontosvisita = data["pontosvisita"]
+                
+                # optional arguments (with defaults)
+                user = data.get("User", "Anatel")
+                regioes = data.get("regioes", [])
+                pontoinicial = data.get("PontoInicial", [])
+                
+                # Present used arguments
+                print(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
+                print(f"Pontos de Visita: {pontosvisita}")
+                print(f"Regiões Evitar: {regioes}")
+                
+                # Process the received data
+                fileName, fileNameStatic, fileKml = wr.RoutePontosVisita(   data,
+                                                                            user,
+                                                                            pontoinicial,
+                                                                            pontosvisita,
+                                                                            regioes)
+
+            # ---------------------------------------------------------------------------------------------
+            case "Abrangencia":
+                print("\n\n#############################################################################################")
+                print("Recebida solicitação de compromisso de abrangência\n")
+
+                # mandatory arguments
+                cidade = data["cidade"]
+                uf = data["uf"]
+                escopo = data["Escopo"]
+                distanciaPontos = data["distancia_pontos"]
+                
+                # optional arguments (with defaults)
+                user=data.get("User", "Anatel")
+                pontoinicial = data.get("PontoInicial", [])
+                regioes = data.get("regioes", [])
+
+                # Present used arguments
+                print(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
+                print(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos}m")
+                print(f"Regiões Evitar: {regioes}")
+
+                # Process the received data
+                fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(data,
+                                                                        user,
+                                                                        pontoinicial,
+                                                                        cidade,
+                                                                        uf,
+                                                                        escopo,
+                                                                        distanciaPontos,
+                                                                        regioes)
+            # ---------------------------------------------------------------------------------------------
+            case "RoteamentoOSMR":
+                print("\n\n#############################################################################################")
+                print("Recebida solicitação de RoteamentoOSMR\n")
+                
+                # mandatory arguments
+                porta = data["PortaOSRMServer"]
+                
+                # optional arguments
+                pontosvisita = data.get("pontosvisita", [])
+                pontoinicial = data.get("pontoinicial", [])
+                recalcularrota = data.get("recalcularrota",1)
+            
+                # Processa a requisição
+                polylineRota, DistanceTotal, pontosvisita = wr.RoteamentoOSMR(  porta,
+                                                                                pontosvisita,
+                                                                                pontoinicial,
+                                                                                recalcularrota)
+                
+                # Retorna uma resposta de confirmação
+                wr.wLog(
+                    json.dumps(
+                        {
+                            "polylineRota": polylineRota,
+                            "DistanceTotal": DistanceTotal,
+                            "RotaRecalculada": recalcularrota,
+                            "pontosVisita": pontosvisita,
+                        }
+                    )
+                )
+                wr.wLog(
+                    "\n\n#############################################################################################"
+                )
+                return jsonify(
+                    {
+                        "polylineRota": polylineRota,
+                        "DistanceTotal": DistanceTotal,
+                        "RotaRecalculada": recalcularrota,
+                        "pontosVisita": pontosvisita,
+                    }
+                ), 200
+
+            # ---------------------------------------------------------------------------------------------
+            case _:
+                return jsonify({"error": f"Tipo de requisição parcialmente definido. Favor atualizar webrota para processamento da requisição `{request_type}`"}), 400
+
         # Retorna uma resposta de confirmação
-        wr.wLog(
-            json.dumps(
-                {
-                    "polylineRota": polylineRota,
-                    "DistanceTotal": DistanceTotal,
-                    "RotaRecalculada": recalcularrota,
-                    "pontosVisita": pontosvisita,
-                }
-            )
-        )
-        wr.wLog(
-            "\n\n#############################################################################################"
-        )
         return jsonify(
             {
-                "polylineRota": polylineRota,
-                "DistanceTotal": DistanceTotal,
-                "RotaRecalculada": recalcularrota,
-                "pontosVisita": pontosvisita,
+                "MapaOk": fileName,
+                "Url": f"http://127.0.0.1:{env.port}/map/{fileName}",
+                "HtmlStatic": f"http://127.0.0.1:{env.port}/download/{fileNameStatic}",
+                "Kml": f"http://127.0.0.1:{env.port}/download/{fileKml}",
             }
         ), 200
-
-        # ---------------------------------------------------------------------------------------------
-    return jsonify({"ErroPedido": "ErroPedido"}), 200
-
 
 ################################################################################
 executor = ThreadPoolExecutor(max_workers=40)
