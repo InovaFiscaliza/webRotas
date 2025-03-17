@@ -312,7 +312,7 @@ Baixe os dados de [áreas urbanizadas](https://inde.gov.br/AreaDownload#) do Bra
 ```shell
 cd .\webRotas\Servers\Urbanizacao
 
-Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP
+Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri "https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP"
 
 Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
 
