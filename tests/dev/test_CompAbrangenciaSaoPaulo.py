@@ -19,7 +19,7 @@ payload = {
     "cidade": "São Paulo",
     "uf": "SP",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "3000",  # distancia entre pontos em metros
+    "distancia_pontos": 3000,  # distancia entre pontos em metros
     "regioes": ""
 }
 cl.enviar_json(payload, "http://localhost:5001/webrotas")

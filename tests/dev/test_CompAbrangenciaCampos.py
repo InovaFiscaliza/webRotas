@@ -19,7 +19,7 @@ payload = {
     "cidade": "Campos dos Goytacazes",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "1600",  # distancia entre pontos em metros
+    "distancia_pontos": 1600,  # distancia entre pontos em metros
     "regioes": ""
 }
 cl.enviar_json(payload, "http://localhost:5001/webrotas")

@@ -11,7 +11,8 @@
     "GpsProximoPonto": "ProximoDaRota",
     "cidade": "São Paulo",
     "uf": "SP",
+    "Escopo":"AreasUrbanizadas",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
-    "distancia_pontos": "3000",
+    "distancia_pontos": 3000,
     "regioes": []
 }

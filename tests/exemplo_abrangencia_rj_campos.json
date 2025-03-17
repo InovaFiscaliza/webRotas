@@ -9,6 +9,6 @@
     "cidade": "Campos dos Goytacazes",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
-    "distancia_pontos": "1600",
-    "regioes": ""
+    "distancia_pontos": 1600,
+    "regioes": []
 }

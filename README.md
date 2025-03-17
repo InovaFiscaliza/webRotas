@@ -529,7 +529,7 @@ Material adicional pode ser encontrado em:
 
 ## Referências adicionais
 
-- [Conda Cheat Sheet](https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf)
+- [UV Short Guide](https://www.saaspegasus.com/guides/uv-deep-dive/)
 - [Podman Cheat Sheet](https://people.redhat.com/tmichett/do180/podman_basics.pdf)
 
 <div align="right">

@@ -161,7 +161,7 @@ payload = {
     "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "700",  # distancia entre pontos em metros
+    "distancia_pontos": 700,  # distancia entre pontos em metros
     "regioes": regioesBuf
 }
 
@@ -179,7 +179,7 @@ payload = {
     "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "2000",  # distancia entre pontos em metros
+    "distancia_pontos": 2000,  # distancia entre pontos em metros
     "regioes": regioesBuf
 }
 # cl.enviar_json(payload, "http://localhost:5001/webrotas")
@@ -194,7 +194,7 @@ payload = {
     "cidade": "Teresina",
     "uf": "PI",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "4000",  # distancia entre pontos em metros
+    "distancia_pontos": 4000,  # distancia entre pontos em metros
     "regioes": ""
 }
 
