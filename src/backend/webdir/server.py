@@ -11,6 +11,7 @@ import sys
 import json
 import requests
 import argparse
+from unidecode import unidecode
 
 from flask import (
     Flask,
@@ -185,6 +186,12 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         if not REQUIRED_KEYS[request_type].issubset(data.keys()):
             return jsonify({"error": f"Campos necessários: {REQUIRED_KEYS[request_type]}"}), 400
         
+        # set variables to arguments used in all types of requests
+        user = unidecode(data.get("User", "Anatel"))
+        regioes = data.get("regioes", [])
+        pontoinicial = data.get("PontoInicial", [])
+
+        # Process the request according to the request type
         match request_type:
         
             #---------------------------------------------------------------------------------------------
@@ -198,10 +205,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 raio = data["raio"]
 
                 # optional arguments (with defaults)
-                user = data.get("User", "Anatel")
-                regioes = data.get("regioes", [])
                 numeropontos = data.get("numeropontos", default_points(raio))
-                pontoinicial = data.get("PontoInicial", [])
 
                 # Present used arguments
                 print(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
@@ -224,11 +228,6 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
 
                 # mandatory arguments
                 pontosvisita = data["pontosvisita"]
-                
-                # optional arguments (with defaults)
-                user = data.get("User", "Anatel")
-                regioes = data.get("regioes", [])
-                pontoinicial = data.get("PontoInicial", [])
                 
                 # Present used arguments
                 print(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
@@ -253,11 +252,6 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 escopo = data["Escopo"]
                 distanciaPontos = data["distancia_pontos"]
                 
-                # optional arguments (with defaults)
-                user=data.get("User", "Anatel")
-                pontoinicial = data.get("PontoInicial", [])
-                regioes = data.get("regioes", [])
-
                 # Present used arguments
                 print(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
                 print(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos}m")
