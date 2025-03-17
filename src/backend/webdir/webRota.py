@@ -299,7 +299,7 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     kml_inicio = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>Pontos e Rotas</name>
+    <name>WebRotas Pontos e Rotas</name>
     <!-- Definir estilos -->
     <Style id="lineStyleBlue">
       <LineStyle>
@@ -1274,9 +1274,9 @@ def DesenhaRegioes(RouteDetail, regioes):
             nome = nome.replace("!", "")
             RegiaoExclusão = True
         else:
-            RegiaoExclusão = False
-
-        RouteDetail.mapcode += f"    região{nome} = [\n"
+            RegiaoExclusão = False    
+            
+        RouteDetail.mapcode += f"    regiao{nome} = [\n"
         coordenadas = regiao.get("coord", [])
         wLog(f"  Região: {nome}")
         i = 0
@@ -1288,17 +1288,15 @@ def DesenhaRegioes(RouteDetail, regioes):
                 RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
             i = i + 1
         RouteDetail.mapcode += f"    ];\n"
-        if RegiaoExclusão:
-            RouteDetail.mapcode += f"var polygon{nome} = L.polygon(região{nome}, {{ color: 'red',fillColor: 'lightred',fillOpacity: 0.2, weight: 1}}).addTo(map);\n"
+        if(RegiaoExclusão):
+           RouteDetail.mapcode += f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'red',fillColor: 'lightred',fillOpacity: 0.2, weight: 1}}).addTo(map);\n"
         else:
-            RouteDetail.mapcode += f"var polygon{nome} = L.polygon(região{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
-    return RouteDetail
-
-
-################################################################################
-def DesenhaMunicipio(RouteDetail, nome, polMunicipio):
-    indPol = 0
-    nome = SubstAcentos(nome).replace(" ", "_")
+           RouteDetail.mapcode += f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
+    return RouteDetail          
+################################################################################    
+def DesenhaMunicipio(RouteDetail,nome,polMunicipio):         
+    indPol=0
+    nome=SubstAcentos(nome).replace(" ", "_")
     for poligons in polMunicipio:
         i = 0
         RouteDetail.mapcode += f"    municipio{nome}Pol{indPol} = [\n"
@@ -1311,10 +1309,26 @@ def DesenhaMunicipio(RouteDetail, nome, polMunicipio):
                 RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
             i = i + 1
         RouteDetail.mapcode += f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
-        indPol = indPol + 1
-    return RouteDetail
-
-
+        indPol=indPol+1
+    return RouteDetail         
+################################################################################    
+def DesenhaMunicipioAreasUrbanizadas(RouteDetail,nome,polMunicipioAreas):         
+    indPol=0
+    nome=SubstAcentos(nome).replace(" ", "_")
+    for poligons in polMunicipioAreas:
+        i=0
+        RouteDetail.mapcode += f"    municipioAreasUrbanizadas{nome}Pol{indPol} = [\n"
+        for coordenada in poligons:
+            # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
+            longitude,latitude = coordenada
+            if i == len(poligons) - 1:  # Verifica se é o último elemento
+               RouteDetail.mapcode += f"       [{latitude}, {longitude}]]\n"               
+            else: 
+               RouteDetail.mapcode += f"       [{latitude}, {longitude}]," 
+            i=i+1   
+        RouteDetail.mapcode += f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);\n"
+        indPol=indPol+1
+    return RouteDetail         
 ################################################################################
 #
 from shapely.geometry import Point, Polygon
@@ -1382,7 +1396,10 @@ def GeneratePointsWithinCity(city_boundary, regioes, distance):
     lon_range = np.arange(min_lon, max_lon, lon_step)
 
     # Filtrar pontos dentro do polígono
-    points_within_city = []
+    # points_within_city = []
+    # Usar um conjunto para evitar pontos duplicados
+    points_within_city = set()
+
     for lat in lat_range:
         for lon in lon_range:
             point = Point(lon, lat)
@@ -1391,13 +1408,13 @@ def GeneratePointsWithinCity(city_boundary, regioes, distance):
                     insideAvoidRegion = 0
                     for polygonAvoid in polAvoidList:
                         if polygonAvoid.contains(point):
-                            insideAvoidRegion = 1
-                    if insideAvoidRegion == 0:
-                        points_within_city.append((lon, lat))
+                           insideAvoidRegion=1 
+                    if(insideAvoidRegion==0):       
+                        # points_within_city.append((lon, lat))
+                        points_within_city.add((lon, lat))  # Adiciona ao conjunto
 
-    return points_within_city
-
-
+    # return points_within_city
+    return list(points_within_city)  # Converte o conjunto de volta para uma lista
 ################################################################################
 def ServerSetupJavaScript(RouteDetail):
     if ServerTec == "OSMR":
@@ -1450,26 +1467,35 @@ def DesenhaComunidades(RouteDetail, regioes):
 
 
 ################################################################################
-def RouteCompAbrangencia(
-    data, user, pontoinicial, cidade, uf, distanciaPontos, regioes
-):
-    UserData.nome = user
+def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,escopo,distanciaPontos,regioes):
+    
+    UserData.nome=user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
-
-    polMunicipio = sf.GetBoundMunicipio(cidade, uf)
-    pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
-    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontosvisita)
+    
+    wLog("GetBoundMunicipio e FiltrarAreasUrbanizadasPorMunicipio")
+    
+    polMunicipio= sf.GetBoundMunicipio(cidade, uf)
+    polMunicipioAreasUrbanizadas= sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
+    
+    if(escopo=="AreasUrbanizadas"):  # Opções: "Municipio" ou "AreasUrbanizadas" 
+        pontosvisita = GeneratePointsWithinCity(polMunicipioAreasUrbanizadas, regioes, distanciaPontos)  
+    else:
+        pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
+    
+    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
-    RouteDetail.pontoinicial = pontoinicial
+    RouteDetail.pontoinicial=pontoinicial
+    
+    RouteDetail = ServerSetupJavaScript(RouteDetail)   
+    RouteDetail.mapcode += f"    const TipoRoute = 'CompAbrangencia';\n"  
+    RouteDetail = DesenhaComunidades(RouteDetail,regioes)
 
-    RouteDetail = ServerSetupJavaScript(RouteDetail)
-    RouteDetail.mapcode += f"    const TipoRoute = 'CompAbrangencia';\n"
-    RouteDetail = DesenhaComunidades(RouteDetail, regioes)
-    RouteDetail = DesenhaMunicipio(RouteDetail, cidade, polMunicipio)
-
+    RouteDetail = DesenhaMunicipioAreasUrbanizadas(RouteDetail,cidade,polMunicipioAreasUrbanizadas)
+    RouteDetail = DesenhaMunicipio(RouteDetail,cidade,polMunicipio)
+        
     wLog("Ordenando e processando Pontos de Visita:")
 
     pontosvisita = OrdenarPontos(pontosvisita, pontoinicial)
@@ -1483,24 +1509,22 @@ def RouteCompAbrangencia(
 
 
 ################################################################################
-def GeraArquivosSaida(RouteDetail, tipoServico):
-    buf = TimeStringTmp()
-    fileMap = f"Mapa{tipoServico}{buf}.html"
+def GeraArquivosSaida(RouteDetail,tipoServico):
+    buf = TimeStringTmp()   
+    fileMap = f"WebRotas{tipoServico}{buf}.html"     
     fileName = f"templates/{fileMap}"
-    gm.GeraMapaLeaflet(fileName, RouteDetail)
-
-    fileMapStatic = f"Mapa{tipoServico}Static{buf}.html"
+    gm.GeraMapaLeaflet(fileName,RouteDetail)
+    
+    fileMapStatic = f"WebRotas{tipoServico}Static{buf}.html"     
     fileNameStaticF = f"templates/{fileMapStatic}"
-    gm.GeraMapaLeaflet(fileNameStaticF, RouteDetail, static=True)
-
-    fileKml = f"Mapa{tipoServico}{buf}.kml"
-    fileKmlF = f"templates/{fileKml}"
-    # GerarKml(pontosvisita,fileKmlF)
-    Gerar_Kml(RouteDetail.coordinates, RouteDetail.pontosvisitaDados, filename=fileKmlF)
-
-    return fileMap, fileMapStatic, fileKml
-
-
+    gm.GeraMapaLeaflet(fileNameStaticF,RouteDetail,static=True)
+    
+    fileKml = f"WebRotas{tipoServico}{buf}.kml"     
+    fileKmlF = f"templates/{fileKml}"    
+    # GerarKml(pontosvisita,fileKmlF)    
+    Gerar_Kml(RouteDetail.coordinates, RouteDetail.pontosvisitaDados,filename=fileKmlF)
+    
+    return fileMap,fileMapStatic,fileKml
 ################################################################################
 import base64
 import mimetypes
@@ -1943,9 +1967,7 @@ def calcula_bounding_box_pontos(pontos, margem_km=50):
 
 
 ###########################################################################################################################
-def RouteDriveTest(
-    data, user, pontoinicial, central_point, regioes, radius_km=5, num_points=8
-):
+def RouteContorno(data,user,pontoinicial,central_point,regioes,radius_km=5, num_points=8):
     # Coordenadas do ponto central (latitude, longitude)
     # central_point = [40.712776, -74.005974]  # Exemplo: Nova York
     # central_point = [-22.90941986104239, -43.16486081793237] # Santos Dumont
@@ -1998,11 +2020,9 @@ def RouteDriveTest(
     # GerarKml(coordenadasrota, filename="rota.kml")
 
     # servidor temp     python3 -m http.server 8080
-    #
-    fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "DriveTest")
-    return fileMap, fileNameStatic, fileKml
-
-
+    #           
+    fileMap,fileNameStatic,fileKml=GeraArquivosSaida(RouteDetail,'Contorno')
+    return fileMap,fileNameStatic,fileKml
 ###########################################################################################################################
 def main():
     return

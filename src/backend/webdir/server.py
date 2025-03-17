@@ -143,22 +143,18 @@ def SalvaDataArq(data):
 # pyinstaller --onefile --add-data "C:\\Users\\andre\\miniconda3\\envs\\webrotas/Lib/site-packages/flask;flask" Server.py
 ################################################################################
 def ProcessaRequisicoesAoServidor(data):
-    wr.wLog("Executando em paralelo requisição ao servidor")
-    with app.app_context():
-        # ---------------------------------------------------------------------------------------------
-        TipoReq = data["TipoRequisicao"]
-        if TipoReq == "DriveTest":
-            # Obtém valores do JSON
-            # Verifica se todos os campos necessários estão presentes
+  wr.wLog("Executando em paralelo requisição ao servidor")
+  with app.app_context():
+    #---------------------------------------------------------------------------------------------
+    TipoReq = data["TipoRequisicao"]
+    if TipoReq=="Contorno":    # if TipoReq=="DriveTest":
+       # Obtém valores do JSON
+           # Verifica se todos os campos necessários estão presentes
 
-            print(
-                "\n\n#############################################################################################"
-            )
-            print("Recebida solicitação de drivetest\n")
-            if not all(key in data for key in ("latitude", "longitude", "raio")):
-                return jsonify(
-                    {"error": "Campos latitude, longitude e raio são necessários"}
-                ), 400
+       print("\n\n#############################################################################################")
+       print("Recebida solicitação de contorno em torno de ponto ou aeroporto\n")
+       if not all(key in data for key in ("latitude", "longitude", "raio")):
+          return jsonify({"error": "Campos latitude, longitude e raio são necessários"}), 400
 
             user = data["User"]
 
@@ -169,39 +165,23 @@ def ProcessaRequisicoesAoServidor(data):
             numeropontos = data["numeropontos"]
             pontoinicial = data.get("PontoInicial", [])
 
-            # Processa os dados (exemplo: exibe no console)
-            print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}")
-            central_point = [latitude, longitude]
-            fileName, fileNameStatic, fileKml = wr.RouteDriveTest(
-                data,
-                user,
-                pontoinicial,
-                central_point,
-                regioes,
-                radius_km=raio,
-                num_points=numeropontos,
-            )
-            # Retorna uma resposta de confirmação
-            return jsonify(
-                {
-                    "MapaOk": fileName,
-                    "Url": f"http://127.0.0.1:{env.port}/map/{fileName}",
-                    "HtmlStatic": f"http://127.0.0.1:{env.port}/download/{fileNameStatic}",
-                    "Kml": f"http://127.0.0.1:{env.port}/download/{fileKml}",
-                }
-            ), 200
-        # ---------------------------------------------------------------------------------------------
-        TipoReq = data["TipoRequisicao"]
-        if TipoReq == "PontosVisita":
-            # Obtém valores do JSON
-            print(
-                "\n\n#############################################################################################"
-            )
-            print("Recebida solicitação pontos de visita\n")
-            if not all(key in data for key in ("pontosvisita", "regioes")):
-                return jsonify(
-                    {"error": "Campos pontosvisita, regioes são necessários"}
-                ), 400
+       # Processa os dados (exemplo: exibe no console)
+       print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}")
+       central_point = [latitude, longitude]
+       fileName,fileNameStatic,fileKml=wr.RouteContorno(data,user,pontoinicial,central_point,regioes,radius_km=raio,num_points=numeropontos)
+       # Retorna uma resposta de confirmação
+       return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
+                       "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
+                       "Kml":f"http://127.0.0.1:5001/download/{fileKml}"}
+                      ), 200
+    #---------------------------------------------------------------------------------------------
+    TipoReq = data["TipoRequisicao"]
+    if TipoReq=="PontosVisita":
+       # Obtém valores do JSON
+       print("\n\n#############################################################################################")
+       print("Recebida solicitação pontos de visita\n")
+       if not all(key in data for key in ("pontosvisita", "regioes")):
+          return jsonify({"error": "Campos pontosvisita, regioes são necessários"}), 400
 
             user = data["User"]
             pontosvisita = data.get("pontosvisita", [])
@@ -239,37 +219,28 @@ def ProcessaRequisicoesAoServidor(data):
                     }
                 ), 400
 
-            user = data["User"]
-            pontoinicial = data.get("PontoInicial", [])
-            cidade = data["cidade"]
-            uf = data["uf"]
-            distanciaPontos = data["distancia_pontos"]
-            regioes = data["regioes"]
+       user=data["User"]
+       pontoinicial = data.get("PontoInicial", [])
+       cidade = data["cidade"]
+       uf = data["uf"]
+       escopo = data["Escopo"]
+       distanciaPontos = data["distancia_pontos"]
+       regioes = data["regioes"]
 
-            # Processa os dados (exemplo: exibe no console)
-            print(
-                f"Cidade: {cidade},Uf: {uf}, distancia_pontos: {distanciaPontos} m, Regiões Evitar: {regioes}"
-            )
-            fileName, fileNameStatic, fileKml = wr.RouteCompAbrangencia(
-                data, user, pontoinicial, cidade, uf, distanciaPontos, regioes
-            )
-            # Retorna uma resposta de confirmação
-            return jsonify(
-                {
-                    "MapaOk": fileName,
-                    "Url": f"http://127.0.0.1:{env.port}/map/{fileName}",
-                    "HtmlStatic": f"http://127.0.0.1:{env.port}/download/{fileNameStatic}",
-                    "Kml": f"http://127.0.0.1:{env.port}/download/{fileKml}",
-                }
-            ), 200
-        # ---------------------------------------------------------------------------------------------
-        TipoReq = data["TipoRequisicao"]
-        if TipoReq == "RoteamentoOSMR":
-            # Obtém valores do JSON
-            wr.wLog(
-                "\n\n#############################################################################################"
-            )
-            wr.wLog("Recebida solicitação de RoteamentoOSMR\n")
+       # Processa os dados (exemplo: exibe no console)
+       print(f"Cidade: {cidade},Uf: {uf}, distancia_pontos: {distanciaPontos} m, Regiões Evitar: {regioes}")
+       fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,escopo,distanciaPontos,regioes)
+       # Retorna uma resposta de confirmação
+       return jsonify({"MapaOk": fileName,"Url":f"http://127.0.0.1:5001/map/{fileName}",
+                       "HtmlStatic":f"http://127.0.0.1:5001/download/{fileNameStatic}",
+                       "Kml":f"http://127.0.0.1:5001/download/{fileKml}"}
+                      ), 200
+    #---------------------------------------------------------------------------------------------
+    TipoReq = data["TipoRequisicao"]
+    if TipoReq=="RoteamentoOSMR":
+       # Obtém valores do JSON
+       wr.wLog("\n\n#############################################################################################")
+       wr.wLog("Recebida solicitação de RoteamentoOSMR\n")
 
             if not all(
                 key in data

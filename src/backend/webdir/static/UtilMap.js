@@ -654,16 +654,58 @@ function simularMovimento() {
     // Atualiza o GPS a cada 300ms
     updateGPSPosition({ coords: { latitude, longitude, heading, speed: velocidade } });
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Simular movimento
 // setInterval(simularMovimento, 800); // Atualiza a cada 300ms (aproximadamente)
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função para abrir uma nova janela com 70% das dimensões da janela atual
+function openStreetView(lat, lng) {
+    // Calcula 70% da largura e altura da janela atual
+    const width = window.innerWidth * 0.7;
+    const height = window.innerHeight * 0.7;
+
+    // Calcula a posição para centralizar a nova janela
+    const left = (window.innerWidth - width) / 2 + window.screenX;
+    const top = (window.innerHeight - height) / 2 + window.screenY;
+
+    // Configurações da nova janela
+    const windowFeatures = `
+        width=${width},
+        height=${height},
+        left=${left},
+        top=${top},
+        menubar=no,
+        toolbar=no,
+        location=no,
+        status=no,
+        resizable=yes,
+        scrollbars=yes
+    `;
+
+    // URL do Google Street View
+    const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+    // Abre a nova janela
+    const newWindow = window.open(streetViewUrl, "_blank", windowFeatures);
+
+    // Verifica se a janela foi bloqueada pelo navegador
+    if (!newWindow) {
+        alert("A janela pop-up foi bloqueada. Por favor, permita pop-ups para este site.");
+    }
+    // Tenta aplicar zoom no conteúdo da janela pop-up
+    newWindow.onload = () => {
+        try {
+            // Aplica zoom no conteúdo da janela pop-up
+            newWindow.document.body.style.zoom = '67%';
+        } catch (error) {
+            console.error("Não foi possível aplicar zoom na janela pop-up:", error);
+        }
+    };
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adiciona o evento de clique no mapa
 // Simula posição do carro em clique para debugar
-map.on('click', function(e) {
-    // Obtém as coordenadas do clique
-    var lat = e.latlng.lat;
-    var lon = e.latlng.lng;
-
+function simulaVeiculoNesteLocal(lat,lon) 
+{
     gpsMarker.setLatLng([lat, lon]);
     // Centraliza o mapa na nova posição do marcador
     map.setView([lat, lon]);
@@ -686,7 +728,28 @@ map.on('click', function(e) {
     velocidade = 0;
     GetRouteCarFromHere(latitude,longitude);
     DesabilitaMarquerNoGPSRaioDaEstacao(latitude, longitude);
-});
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Função para capturar as coordenadas de um clique com o botão esquerdo
+function cliqueNoMapa(event)
+{
+    const { lat, lng } = event.latlng; // Obtém a latitude e longitude do clique
+    if(clicouPipetaPontoInicial)
+    {     
+        latitude =lat;
+        longitude = lng;    
+        // Carrega coordenadas se o diálogo de ordenação de pontos estiver aberto
+        if (document.getElementById("latitude")) document.getElementById("latitude").value = latitude;
+        if (document.getElementById("longitude")) document.getElementById("longitude").value = longitude;
+        clicouPipetaPontoInicial = false;
+        document.getElementById('latitude').dispatchEvent(new Event('input', { bubbles: true }));
+        document.getElementById('longitude').dispatchEvent(new Event('input', { bubbles: true }));
+        ativaElementoHtml('idPipetaLatLon', true); 
+        return;
+    }
+}
+// Adiciona o evento de clique ao mapa
+map.on('click', cliqueNoMapa);
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 var LastHeading = 0;
 var maxHistorySize = 5;
@@ -1416,7 +1479,7 @@ function createMacOSDock() {
 
 
         //---------------------------------------------------------------------------
-        if (index === 0) {
+        if (index === 0) { // Tabela de elevação dos pontos
             // Add the imgElevationTable image to the first icon
             iconDiv.innerText = '';
             const img = document.createElement('img');
@@ -1433,7 +1496,7 @@ function createMacOSDock() {
 
         }
         //---------------------------------------------------------------------------
-        if (index === 1) {
+        if (index === 1) { // Dialogo de ordem pontos
             iconDiv.innerText = '';
             const img = document.createElement('img');
             img.src = imgOrdemPontos;
@@ -1447,8 +1510,7 @@ function createMacOSDock() {
 
         }
         //---------------------------------------------------------------------------
-        if (index === 2) {
-            // Add the imgElevationTable image to the first icon
+        if (index === 2) { // Botão de heading do mapa
             iconDiv.innerText = '';
             const img = document.createElement('img');
             img.id="imgPointerNorte";
@@ -1474,8 +1536,7 @@ function createMacOSDock() {
 
         }
         //---------------------------------------------------------------------------
-        if (index === 3) {
-            // Add the imgElevationTable image to the first icon
+        if (index === 3) { // Botão de GPS
             iconDiv.innerText = '';
             const img = document.createElement('img');
             img.id="imgGps";
@@ -1504,8 +1565,24 @@ function createMacOSDock() {
             };
 
         }
+
         //---------------------------------------------------------------------------
-        if (index === 5) {
+        if (index === 4) { // Botão de gerar KML 
+            iconDiv.innerText = '';
+            const img = document.createElement('img');
+            img.src = imgKml;
+            img.style.width = '40px';
+            img.style.height = '40px';
+            img.style.borderRadius = '10px';
+            img.style.zIndex ="999";
+            iconDiv.appendChild(img);
+            img.onclick = () => {
+                GerarKML(polylineRotaDat, pontosVisitaOrdenados, pontosvisitaDados);
+            };
+
+        }
+        //---------------------------------------------------------------------------
+        if (index === 5) { // Botão de controle dos layers
             iconDiv.innerText = '';
             const img = document.createElement('div');
             img.id="divLayers";
@@ -1529,22 +1606,7 @@ function createMacOSDock() {
             img.onclick = () => {
 
             };
-        }
-        //---------------------------------------------------------------------------
-        if (index === 4) {
-            iconDiv.innerText = '';
-            const img = document.createElement('img');
-            img.src = imgKml;
-            img.style.width = '40px';
-            img.style.height = '40px';
-            img.style.borderRadius = '10px';
-            img.style.zIndex ="999";
-            iconDiv.appendChild(img);
-            img.onclick = () => {
-                GerarKML(polylineRotaDat, pontosVisita, pontosvisitaDados);
-            };
-
-        }
+        }        
         //---------------------------------------------------------------------------
 
         // Add hover effect for scaling
@@ -1566,12 +1628,12 @@ function createMacOSDock() {
 function GerarKML(polylineRota, pontosVisita, pontosVisitaDados) 
 {
     exibirMensagemComTimeout("Gerando e salvando o arquivo KML para uso em aplicativos como MapsMe, Google Earth e outros. 📌 No MapsMe, envie o arquivo KML ao motorista via WhatsApp. Para abrir, basta clicar no arquivo e selecionar MapsMe como aplicativo.", 
-              timeout = 9000)
+              timeout = 9000);
     // Cabeçalho do KML
     let kmlInicio = `<?xml version="1.0" encoding="UTF-8"?>
     <kml xmlns="http://www.opengis.net/kml/2.2">
     <Document>
-        <name>Pontos e Rotas</name>
+        <name>WebRotas Pontos e Rotas</name>
         <!-- Definir estilos -->
         <Style id="lineStyleBlue">
         <LineStyle>

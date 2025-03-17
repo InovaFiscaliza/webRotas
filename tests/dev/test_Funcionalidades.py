@@ -1,28 +1,13 @@
-import requests
-import webbrowser
+import os
+import sys
 
+# Caminho relativo da pasta "tests" para "webdir"
+relative_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "backend", "webdir"))
+# Adiciona o caminho ao sys.path
+sys.path.append(relative_path)
 
+import client as cl
 
-
-##################################################################################################
-def enviar_json(payload, url):
-    # Envia uma requisição POST com o JSON para o URL especificado
-    try:
-        response = requests.post(url, json=payload)
-        # Verifica se a requisição foi bem-sucedida
-        if response.status_code == 200:
-            print("-----------------------------------------------")
-            print("Requisição bem-sucedida:")
-            print(response.json())
-            print("-----------------------------------------------")
-            url = response.json().get("Url", None)
-            if url:
-               webbrowser.open(url)
-        else:
-            print(f"Erro {response.status_code}: {response.text}")
-    except requests.RequestException as e:
-        print("Erro na requisição:", e)
-##################################################################################################
 # Exemplo de uso
 # Aeroporto de Guarulhos -23.42886118100462, -46.47216661114135
 # Minha casa -22.91745583955038, -43.08681365669065
@@ -77,7 +62,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+cl.enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 # Aplicativo MapsMe - verificar
@@ -125,7 +110,7 @@ regioesBuf =  [
 # -22.910555413451096, -43.16360553394545     Santos Dummont
 payload = {
     "User": "Andre",
-    "TipoRequisicao": "DriveTest",
+    "TipoRequisicao": "Contorno",
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
@@ -136,7 +121,7 @@ payload = {
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma" 
     "regioes": regioesBuf
 }
-enviar_json(payload, "http://localhost:5001/webrotas")
+cl.enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 
 #------------------------------------------------------
@@ -162,7 +147,7 @@ payload = {
 
 # Aplicativo MapsMe - verificar
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+# cl.enviar_json(payload, "http://localhost:5001/webrotas")
 # quit()
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência      
@@ -172,14 +157,15 @@ payload = {
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698 # "PontoInicial": [-15.805462291348457, -47.882631325568745,"Anatel DF"]
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
+    "Escopo":"AreasUrbanizadas",                   # Opções: "Municipio" ou "AreasUrbanizadas" 
     "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
-    "distancia_pontos": "2000",  # distancia entre pontos em metros
+    "distancia_pontos": "700",  # distancia entre pontos em metros
     "regioes": regioesBuf
 }
 
-enviar_json(payload, "http://localhost:5001/webrotas")
+cl.enviar_json(payload, "http://localhost:5001/webrotas")
 
 #------------------------------------------------------
 # exemplo pontos compromisso de abrangência
@@ -189,13 +175,14 @@ payload = {
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            # Anatel Rio de Janeiro -22.90236790344037, -43.17420024484698
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
+    "Escopo":"AreasUrbanizadas",                   # Opções: "Municipio" ou "AreasUrbanizadas" 
     "cidade": "Niterói",
     "uf": "RJ",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
     "distancia_pontos": "2000",  # distancia entre pontos em metros
     "regioes": regioesBuf
 }
-# enviar_json(payload, "http://localhost:5001/webrotas")
+# cl.enviar_json(payload, "http://localhost:5001/webrotas")
 
 payload = {
     "User": "Fabio",
@@ -203,6 +190,7 @@ payload = {
     "PontoInicial": [-23.587577163638976, -46.63326070110086,"Anatel São Paulo"],            
     "RaioDaEstacao": 200,            # distância em metros para estação/ponto do mapa ser considerada visitada - null - nunca
     "GpsProximoPonto": "ProximoDaRota",           # "ProximoDaRota", "MaisProximo" - próximo ponto da rota a ser selecionada pelo GPS
+    "Escopo":"AreasUrbanizadas",                   # Opções: "Municipio" ou "AreasUrbanizadas" 
     "cidade": "Teresina",
     "uf": "PI",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",     #  "DistanciaGeodesica","DistanciaOSMR", "DistanciaOSMRMultiThread", "Nenhuma"
@@ -210,7 +198,7 @@ payload = {
     "regioes": ""
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+# cl.enviar_json(payload, "http://localhost:5001/webrotas")
 
 # exemplo pedido para regerar a rota para uma lista de pontos já roteados, restorna o polyline da rota
 # usado a partir de um cliente html que sabe o número de porta dos OSMR server já ativo de um usuário.    
@@ -227,5 +215,5 @@ payload = {
     ]
 }
 
-# enviar_json(payload, "http://localhost:5001/webrotas")
+# cl.enviar_json(payload, "http://localhost:5001/webrotas")
 #------------------------------------------------------
