@@ -35,7 +35,7 @@ REQUIRED_KEYS = {   "Contorno":
                     "PontosVisita":
                         {"pontosvisita"},
                     "Abrangencia":
-                        {"cidade", "uf", "escopo", "distancia_pontos"},
+                        {"cidade", "uf", "Escopo", "distancia_pontos"},
                     "RoteamentoOSMR":
                         {"PortaOSRMServer"}
                     }

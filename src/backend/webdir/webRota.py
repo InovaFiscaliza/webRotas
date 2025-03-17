@@ -1,23 +1,30 @@
 ###########################################################################################################################
+import os
+import shutil
+import psutil
+import filecmp
+
+import threading
+import subprocess
+from concurrent.futures import ThreadPoolExecutor
+
+import datetime
+import time
+
+import requests
+import socket
+
+import math
+import numpy as np
+
 import geraMapa as gm
 import shapeFiles as sf
+import polyline
+from shapely.geometry import Point, Polygon
+from geopy.distance import geodesic
 
-# Salvar enviroment
-# conda env export > environment.yml
-
-# Criar em outro computador
-# conda env create -f environment.yml
-
-# https://github.com/anaconda/docker-images
-
-# import folium # pip install folium
-import math
-import subprocess
-import requests
-import polyline  # pip install polyline
-
-# conda create --name webrotas python=3.11
-# conda activate webrotas
+import base64
+import mimetypes
 
 
 ###########################################################################################################################
@@ -51,17 +58,17 @@ class ClRouteDetailList:
         self.mapcode += """];"""
 
         self.mapcode += """
-           poly_lineRota = [];
-           for (let i = 0; i < polylineRotaDat.length; i++) 
-           {            
+            poly_lineRota = [];
+            for (let i = 0; i < polylineRotaDat.length; i++) 
+            {            
                 var tempBuf = L.polyline(polylineRotaDat[i], {
                 "bubblingMouseEvents": true,"color": "blue","dashArray": null,"dashOffset": null,
                 "fill": false,"fillColor": "blue","fillOpacity": 0.2,"fillRule": "evenodd","lineCap": "round",
                 "lineJoin": "round","noClip": false,"opacity": 0.7,"smoothFactor": 1.0,"stroke": true,
                 "weight": 3}).addTo(map);\n
-                 poly_lineRota.push(tempBuf);    
-           }
-           ListaRotasCalculadas[0].polylineRotaDat = polylineRotaDat;    
+                    poly_lineRota.push(tempBuf);    
+            }
+            ListaRotasCalculadas[0].polylineRotaDat = polylineRotaDat;    
         """
         return
 
@@ -91,10 +98,6 @@ def Haversine(lat1, lon1, lat2, lon2):
     distancia = R * c
 
     return distancia
-
-
-###########################################################################################################################
-import numpy as np
 
 
 ###########################################################################################################################
@@ -282,17 +285,6 @@ def AltitudeOpenElevationBatch(batch, batch_size):
         MaxAltitude = int(MaxAltitude)
     return altitudes
 
-
-###########################################################################################################################
-import numpy as np
-
-###########################################################################################################################
-import os
-
-###########################################################################################################################
-import datetime
-
-
 ###########################################################################################################################
 def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     # Cabeçalho do KML
@@ -371,13 +363,6 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     # Fazer a solicitação
     response = requests.get(url)
     return response
-
-
-###########################################################################################################################
-import os
-import time
-from datetime import datetime
-
 
 ###########################################################################################################################
 def DeleteOldFilesAndFolders(directory, days=30):
@@ -508,19 +493,12 @@ def GeneratePointsAround(latitude, longitude, radius_km=5, num_points=8):
 
 
 ###########################################################################################################################
-import datetime
-
-
 def TimeStringTmp():
     # Obtém a data e hora atuais
     agora = datetime.datetime.now()
     # Formata a data e hora em uma string no formato AAAA-MM-DD_HH-MM-SS
     buf = agora.strftime("%Y-%m-%d_%H-%M-%S")
     return buf
-
-
-################################################################################
-import numpy as np
 
 
 ################################################################################
@@ -537,11 +515,6 @@ def OrdenarPontos(pontosvisita, pontoinicial):
     if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMRMultiThread":
         return OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial)
     return pontosvisita  # Nenhuma seleção, não ordena os pontos
-
-
-################################################################################
-from concurrent.futures import ThreadPoolExecutor
-import threading
 
 
 ################################################################################
@@ -668,10 +641,6 @@ def OrdenarPontosDistanciaGeodesica(pontosvisita, pontoinicial):
 
 
 ################################################################################
-import time
-
-
-################################################################################
 def CronometraFuncao(func, *args, **kwargs):
     """
     Mede o tempo de execução de uma função.
@@ -761,11 +730,6 @@ def BenchmarkRotas(pontosvisita, pontoinicial):
 
 
 ################################################################################
-import os
-import shutil
-
-
-################################################################################
 def GeraArquivoExclusoes(regioes, arquivo_saida="exclusion.poly"):
     """
     Gera um arquivo .poly a partir de uma lista de regiões.
@@ -821,9 +785,6 @@ class ClUserData:
 
 ################################################################################
 UserData = ClUserData()
-################################################################################
-import socket
-
 
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
@@ -854,10 +815,6 @@ def FindFreePort(start_port=50000, max_port=65535):
 
 
 ################################################################################
-import subprocess
-import os
-
-
 def FiltrarRegiãoComOsmosis():
     # Salvar o diretório atual
     diretorio_atual = os.getcwd()
@@ -995,11 +952,6 @@ def GerarIndicesExecutarOSRMServer():
 
 
 ################################################################################
-import subprocess
-import datetime
-
-
-################################################################################
 def get_containers():
     """
     Obtém a lista de contêineres, incluindo o ID e a data de criação.
@@ -1065,11 +1017,6 @@ def StopOldContainers(days=30):
         if age_in_days > days:
             print(f"Parando contêiner {container_id} (idade: {age_in_days} dias)")
             subprocess.run(["podman", "stop", container_id])
-
-
-################################################################################
-import requests
-import time
 
 
 ################################################################################
@@ -1180,10 +1127,6 @@ def AtivaServidorWebRotas():
 
 
 ################################################################################
-import psutil  # pip install psutil
-
-
-################################################################################
 def KillProcessByCommand(target_command):
     """
     Encerra processos com base em um comando específico.
@@ -1217,13 +1160,6 @@ def KillProcessByCommand(target_command):
 def MataServidorWebRotas():
     KillProcessByCommand("Server.py")
     return
-
-
-################################################################################
-import subprocess
-import os
-import filecmp
-
 
 ################################################################################
 def VerificaArquivosIguais(arquivo_atual, arquivo_backup):
@@ -1331,13 +1267,9 @@ def DesenhaMunicipioAreasUrbanizadas(RouteDetail,nome,polMunicipioAreas):
     return RouteDetail         
 ################################################################################
 #
-from shapely.geometry import Point, Polygon
-from geopy.distance import geodesic  # pip install geopy
-import numpy as np
-
 
 ################################################################################
-def GeneratePointsWithinCity(city_boundary, regioes, distance):
+def GeneratePointsWithinCity(city_boundary: list, regioes: list, distance: int) -> list:
     """
     Gera uma lista de pontos (lat, lon) distribuídos dentro da área delimitada por um polígono.
 
@@ -1467,7 +1399,29 @@ def DesenhaComunidades(RouteDetail, regioes):
 
 
 ################################################################################
-def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,escopo,distanciaPontos,regioes):
+def RouteCompAbrangencia(   data: dict,
+                            user: str,
+                            pontoinicial: list,
+                            cidade: str,
+                            uf: str,
+                            escopo: str,
+                            distanciaPontos: int,
+                            regioes: list):
+    """ Processa rota do tipo compromisso de abrangência
+    
+    Args:
+        data (dict): Dados do formulário.
+        user (str): Nome do usuário.
+        pontoinicial (list): Coordenadas do ponto inicial.
+        cidade (str): Nome da cidade.
+        uf (str): Sigla do estado.
+        escopo (str): Escopo da rota.
+        distanciaPontos (int): Distância entre os pontos.
+        regioes (list): Lista de regiões.
+        
+    Returns:
+        tuple: Arquivos de saída (mapa, mapa estático, KML).
+    """
     
     UserData.nome=user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
@@ -1528,9 +1482,6 @@ def GeraArquivosSaida(RouteDetail,tipoServico):
     Gerar_Kml(RouteDetail.coordinates, RouteDetail.pontosvisitaDados,filename=fileKmlF)
     
     return fileMap,fileMapStatic,fileKml
-################################################################################
-import base64
-import mimetypes
 
 
 ################################################################################
@@ -1891,10 +1842,6 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     #
     fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "PontosVisita")
     return fileMap, fileNameStatic, fileKml
-
-
-###########################################################################################################################
-import math
 
 
 ###########################################################################################################################
