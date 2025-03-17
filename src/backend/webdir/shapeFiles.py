@@ -1,35 +1,39 @@
 ###########################################################################################################################
 import webRota as wr
+import uf_code as uf
+
 import geopandas as gpd
-import matplotlib.pyplot as plt
-from shapely.geometry import box
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import box, Polygon, MultiPolygon
+
+SHAPEFILE_MUNICIPIO_PATH = "../../resources/BR_Municipios/BR_Municipios_2023.shp"
+SHAPEFILE_FAVELA_PATH = "../../resources/Comunidades/qg_2022_670_fcu_agregPolygon.shp"
+SHAPEFILE_AREA_URBANIZADA_PATH = (
+    "../../resources/Urbanizacao/AU_2022_AreasUrbanizadas2019_Brasil.shp"
+)
 
 
 ###########################################################################################################################
 # https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
 ##########################################################################################################################
-def GetBoundMunicipio(nome_municipio, estado_sigla):
+def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     """
     Função para obter o limite geográfico e o centroide de um município específico e retornar a Polyline.
 
-    Parâmetros:
-        nome_municipio (str): Nome do município.
-        estado_sigla (str): Sigla do estado (ex: 'RJ' para Rio de Janeiro).
+    :param nome_municipio (str): Nome do município.
+    :param estado_sigla (str): Sigla do estado (ex: 'RJ' para Rio de Janeiro).
 
-    Retorna:
-        polyline (list): Lista de coordenadas [(lat, lon), ...] representando o limite do município.
-        centroide (Point): Coordenadas do centroide do município.
+    :return: Lista de coordenadas [(lat, lon), ...] representando o limite do município.
     """
-    wr.wLog(f"GetBoundMunicipio - {nome_municipio} - {estado_sigla}")
+    wr.wLog(f"GetBoundMunicipio - {nome_municipio},  - {estado_sigla}")
 
     # Carregar o arquivo Shapefile BR_Municipios_2023.shp
-    shapefile_path = "../../resources/BR_Municipios/BR_Municipios_2023.shp"
-    gdf = gpd.read_file(shapefile_path)
+
+    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
 
     # Filtrar município e estado
     municipio = gdf[
-        (gdf["NM_MUN"] == nome_municipio) & (gdf["SIGLA_UF"] == estado_sigla)
+        (gdf["NM_MUN"] == nome_municipio)
+        & (gdf["CD_UF"] == uf.SIGLAS_UF[estado_sigla]["CD_UF"])
     ]
 
     if municipio.empty:
@@ -40,7 +44,7 @@ def GetBoundMunicipio(nome_municipio, estado_sigla):
 
     # Obter a geometria do município
     geometria = municipio.geometry.values[0]  # Geometria do limite
-    centroide = geometria.centroid  # Centroide do município
+    # centroide = geometria.centroid  # Centroide do município
 
     # Extrair coordenadas como Polyline
     polyline = []
@@ -59,17 +63,14 @@ def GetBoundMunicipio(nome_municipio, estado_sigla):
 
 
 ##############################################################################################################
-def FiltrarComunidadesBoundingBox(bounding_box):
+def FiltrarComunidadesBoundingBox(bounding_box: tuple) -> list:
     """
     Filtra os dados de um shapefile com base em um bounding box e plota os dados filtrados.
 
-    :param shapefile_path: Caminho para o arquivo Shapefile (.shp)
-    :param bounding_box: Lista ou tupla contendo os limites do bounding box (minx, miny, maxx, maxy)
+    :param bounding_box: Tupla contendo os limites do bounding box (minx, miny, maxx, maxy)
     """
-    # Caminho para o arquivo Shapefile
-    shapefile_path = "../../resources/Comunidades/qg_2022_670_fcu_agregPolygon.shp"
     # Carregar o arquivo Shapefile
-    data = gpd.read_file(shapefile_path)
+    data = gpd.read_file(SHAPEFILE_FAVELA_PATH)
 
     # Inspecionar os dados (opcional)
     # print("Primeiras linhas do shapefile:")
@@ -106,108 +107,137 @@ def FiltrarComunidadesBoundingBox(bounding_box):
     #    print(f"Polyline {i+1}: {polyline}")
 
     return polylines
+
+
 ##############################################################################################################
-def FiltrarAreasUrbanizadasPorMunicipio(municipio_nome, estado_sigla):  
+def FiltrarAreasUrbanizadasPorMunicipio(municipio_nome: str, estado_sigla: str) -> list:
+    """
+    Filtra as áreas urbanizadas de um município específico e retorna as polylines correspondentes.
+
+    :param municipio_nome (str): Nome do município.
+    :param estado_sigla (str): Sigla do estado (ex: 'RJ' para Rio de Janeiro).
+
+    :return: Lista de polylines representando as áreas urbanizadas do município.
+    """
+
     wr.wLog(f"FiltrarAreasUrbanizadasPorMunicipio - {municipio_nome} - {estado_sigla}")
-    
-    caminho_shapefile_areas = "../../resources/Urbanizacao/AU_2022_AreasUrbanizadas2019_Brasil.shp"
-    caminho_shapefile_municipios = "../../resources/BR_Municipios/BR_Municipios_2023.shp"
-    
+
     # Carregar os shapefiles
-    gdf_areas = gpd.read_file(caminho_shapefile_areas)
-    gdf_municipios = gpd.read_file(caminho_shapefile_municipios)
-    
+    gdf_areas = gpd.read_file(SHAPEFILE_AREA_URBANIZADA_PATH)
+    gdf_municipios = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+
     # Filtrar o município pelo nome e estado
-    municipio_filtrado = gdf_municipios[(gdf_municipios['NM_MUN'] == municipio_nome) & 
-                                        (gdf_municipios['SIGLA_UF'] == estado_sigla)]
-    
+    municipio_filtrado = gdf_municipios[
+        (gdf_municipios["NM_MUN"] == municipio_nome)
+        & (gdf_municipios["CD_UF"] == uf.SIGLAS_UF[estado_sigla]["CD_UF"])
+    ]
+
     # Garantir que os sistemas de coordenadas (CRS) são os mesmos
     # print(gdf_areas.crs, gdf_municipios.crs)
     if gdf_areas.crs != gdf_municipios.crs:
         gdf_areas = gdf_areas.to_crs(gdf_municipios.crs)
 
     # Criar um único polígono do município
-    municipio_poligono = municipio_filtrado.unary_union  # Une todas as geometrias do município
-    
+    municipio_poligono = (
+        municipio_filtrado.unary_union
+    )  # Une todas as geometrias do município
+
     # Cortar as áreas urbanizadas que extrapolam o município
-    gdf_areas['geometry'] = gdf_areas['geometry'].intersection(municipio_poligono)
+    gdf_areas["geometry"] = gdf_areas["geometry"].intersection(municipio_poligono)
 
     # print(gdf_areas['geometry'].is_empty.sum())  # Conta quantas geometrias vazias existem
 
     # Remover geometrias vazias (áreas que ficaram totalmente fora do município)
-    gdf_areas = gdf_areas[~gdf_areas['geometry'].is_empty]
-    
+    gdf_areas = gdf_areas[~gdf_areas["geometry"].is_empty]
+
     # Filtrar pelas categorias de densidade
-    densidades = ['Densa', 'Pouco densa', 'Loteamento vazio']
-    gdf_areas = gdf_areas[gdf_areas['densidade'].isin(densidades)]
-    
-    # print(gdf_areas[gdf_areas.intersects(municipio_poligono)]) 
+    densidades = ["Densa", "Pouco densa", "Loteamento vazio"]
+    gdf_areas = gdf_areas[gdf_areas["densidade"].isin(densidades)]
+
+    # print(gdf_areas[gdf_areas.intersects(municipio_poligono)])
     # print(gdf_areas['geometry'].geom_type.value_counts())
 
     # Converter os polígonos em polylines (listas de coordenadas)
     polylines = []
-    for geometry in gdf_areas['geometry']:
+    for geometry in gdf_areas["geometry"]:
         if geometry.is_empty:
             continue
-        if geometry.geom_type == 'Polygon':  
+        if geometry.geom_type == "Polygon":
             polylines.append(list(geometry.exterior.coords))  # Apenas o contorno
-        elif geometry.geom_type == 'MultiPolygon':  
+        elif geometry.geom_type == "MultiPolygon":
             for part in geometry.geoms:
-                polylines.append(list(part.exterior.coords))  # Apenas o contorno de cada parte
-  
+                polylines.append(
+                    list(part.exterior.coords)
+                )  # Apenas o contorno de cada parte
+
     return polylines
+
+
 ##############################################################################################################
 
 
 ##############################################################################################################
-# Função para filtrar áreas urbanas por município  
-def FiltrarAreasUrbanizadasPorMunicipioOLD(municipio_nome, estado_sigla):    
-    caminho_shapefile_areas = "../../resources/Urbanizacao/AU_2022_AreasUrbanizadas2019_Brasil.shp"
-    caminho_shapefile_municipios = "../../resources/BR_Municipios/BR_Municipios_2023.shp"
-    
-    # Carregar o shapefile de áreas urbanizadas
-    gdf_areas = gpd.read_file(caminho_shapefile_areas)
-    
-    # Carregar o shapefile de limites municipais
-    gdf_municipios = gpd.read_file(caminho_shapefile_municipios)
-    
+# Função para filtrar áreas urbanas por município
+def FiltrarAreasUrbanizadasPorMunicipioOLD(
+    municipio_nome: str, estado_sigla: str
+) -> list:
+    """Filtra as áreas urbanizadas de um município específico e retorna as polylines correspondentes.
+
+    :param municipio_nome (str): Nome do município.
+    :param estado_sigla (str): Sigla do estado (ex: 'RJ' para Rio de Janeiro).
+
+    :return: Lista de polylines representando as áreas urbanizadas do município.
+    """
+
+    # Carregar os shapefiles
+    gdf_areas = gpd.read_file(SHAPEFILE_AREA_URBANIZADA_PATH)
+    gdf_municipios = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+
     # Filtrar o município desejado (por nome ou código)
-    municipio_filtrado = gdf_municipios[(gdf_municipios['NM_MUN'] == municipio_nome) & (gdf_municipios['SIGLA_UF'] == estado_sigla)]
-    
+    municipio_filtrado = gdf_municipios[
+        (gdf_municipios["NM_MUN"] == municipio_nome)
+        & (gdf_municipios["CD_UF"] == uf.SIGLAS_UF[estado_sigla]["CD_UF"])
+    ]
+
     # Verificar se o CRS dos dois shapefiles é o mesmo
     if gdf_areas.crs != gdf_municipios.crs:
         gdf_areas = gdf_areas.to_crs(gdf_municipios.crs)
-    
+
     # Realizar a interseção espacial entre as áreas urbanizadas e o município
     # areas_no_municipio = gpd.sjoin(gdf_areas, municipio_filtrado, op='within')
-    areas_no_municipio = gpd.sjoin(gdf_areas, municipio_filtrado, predicate='intersects')
+    areas_no_municipio = gpd.sjoin(
+        gdf_areas, municipio_filtrado, predicate="intersects"
+    )
 
-    
     # Filtrar pelas categorias de densidade
     # densidades = ['Densa', 'Pouco densa', 'Loteamento vazio']
     # areas_filtradas_por_densidade = areas_no_municipio[areas_no_municipio['densidade'].isin(densidades)]
-    
+
     areas_filtradas_por_densidade = areas_no_municipio
-    
+
     # Exibir o resultado filtrado por densidade
     # print(f"Áreas urbanizadas filtradas para o município {municipio_nome} e densidades {densidades}:")
     # print(areas_filtradas_por_densidade)
-    
+
     # Converter as geometrias de polígonos em polylines
     polylines = []
-    for geometry in areas_filtradas_por_densidade['geometry']:
-        if isinstance(geometry, Polygon):  
-            polylines.append(list(geometry.exterior.coords))  # Transforma em lista de coordenadas
-        elif geometry.geom_type == 'MultiPolygon':  
+    for geometry in areas_filtradas_por_densidade["geometry"]:
+        if isinstance(geometry, Polygon):
+            polylines.append(
+                list(geometry.exterior.coords)
+            )  # Transforma em lista de coordenadas
+        elif geometry.geom_type == "MultiPolygon":
             for part in geometry.geoms:
-                polylines.append(list(part.exterior.coords))  # Transforma em lista de coordenadas
-  
-    
+                polylines.append(
+                    list(part.exterior.coords)
+                )  # Transforma em lista de coordenadas
+
     # Exibir as polylines geradas
     # print(f"Polylines geradas para as áreas filtradas:")
     # print(polylines)
-    
 
     # Retornar as polylines
     return polylines
+
+
 ##############################################################################################################

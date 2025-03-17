@@ -290,15 +290,15 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     # Cabeçalho do KML
     kml_inicio = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
-  <Document>
-    <name>WebRotas Pontos e Rotas</name>
-    <!-- Definir estilos -->
-    <Style id="lineStyleBlue">
-      <LineStyle>
-        <color>ff00ff00</color> <!-- verde em formato ABGR -->
-        <width>4</width>
-      </LineStyle>
-    </Style>
+    <Document>
+        <name>WebRotas Pontos e Rotas</name>
+        <!-- Definir estilos -->
+        <Style id="lineStyleBlue">
+        <LineStyle>
+            <color>ff00ff00</color> <!-- verde em formato ABGR -->
+            <width>4</width>
+        </LineStyle>
+        </Style>
 """
 
     # Footer do KML
@@ -311,11 +311,11 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     for latitude, longitude, id_ponto, tipo, descricao, altitude in pontos_visita_dados:
         kml_pontos += f"""
     <Placemark>
-      <name>{id_ponto}</name>
-      <description>{descricao}</description>
-      <Point>
+        <name>{id_ponto}</name>
+        <description>{descricao}</description>
+        <Point>
         <coordinates>{longitude},{latitude},{altitude}</coordinates>
-      </Point>
+        </Point>
     </Placemark>"""
 
     # Adicionar a polilinha (rota)
@@ -1429,6 +1429,7 @@ def RouteCompAbrangencia(   data: dict,
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
     wLog("GetBoundMunicipio e FiltrarAreasUrbanizadasPorMunicipio")
+    
     
     polMunicipio= sf.GetBoundMunicipio(cidade, uf)
     polMunicipioAreasUrbanizadas= sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
