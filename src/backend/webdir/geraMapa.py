@@ -140,12 +140,14 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
             //     attribution: '© OpenTopoMap contributors'
             // }).addTo(map);
             
+        
+            
             // Adiciona a camada padrão (OpenStreetMap)
             tiles.addTo(map);
             // Cria o controle de camadas
             var baseLayers = {
                 "OpenStreetMap": tiles,
-                "Satelite": tiles2,
+                "Satelite": tiles2
             };
 
             // Adiciona o controle de camadas ao mapa

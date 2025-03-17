@@ -31,8 +31,7 @@
         <ul>
             <li><a href="#1---limites-municipais-brasileiros---2023">Limites Municipais Brasileiros - 2023</a></li>
             <li><a href="#2---favelas-e-comunidades-urbanas---2022">Favelas e Comunidades Urbanas - 2022</a></li>
-            <li><a href="#3---áreas-urbanizadas-do-brasil---2019">Áreas Urbanizadas do Brasil - 2019</a></li>
-            <li><a href="#4---arruamento-para-cálculo-de-rotas-osm">Arruamento para cálculo de rotas OSM</a></li>
+            <li><a href="#3---arruamento-para-cálculo-de-rotas-osm">Arruamento para cálculo de rotas OSM</a></li>
         </ul>
     <li><a href="#configuração-do-ambiente-de-trabalho">Configuração do ambiente de trabalho</a></li>
         <ul>
@@ -40,7 +39,7 @@
             <li><a href="#2--criação-do-ambiente-podman">Criação do Ambiente Podman</a></li>
         </ul>
     <li><a href="#inicializando-o-servidor">Inicializando o Servidor</a></li>
-    <li><a href="#testando-o-sistema">Testando o sistema</a></li>
+    <li><a href="#teste-e-uso-do-webrotas">Teste e uso do WebRotas</a></li>
     <li><a href="#contribuindo">Contribuindo</a></li>
     <li><a href="#licença">Licença</a></li>
     <li><a href="#referências-adicionais">Referências adicionais</a></li>
@@ -109,7 +108,14 @@ PowerShell pode ser atualizado para a versão mais recente utilizando winget com
 winget install Microsoft.PowerShell
 ```
 
- Para outros métodos, verifique o [procedimeento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
+
+
+ Para outros métodos, verifique o [procedimento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
+
+<div style="margin: auto; border: 1px solid darkgray; border-radius: 10px; background-color: lightgray; padding: 10px; color: black; width: 80%; align: center;">
+        <strong>⚠️ IMPORTANTE</strong> <br><br>
+        Todos os comandos indicados à seguir devem ser executados no terminal do <strong>PowerShell</strong><br><br>
+</div>
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -167,7 +173,7 @@ git clone https://github.com/InovaFiscaliza/webRotas.git
 
 Após esse comando, será criada uma pasta chamada `webRotas` com todos os arquivos do projeto.
 
-A pasta raiz escolhida para o projeto será referenciada nos passos seguintes apenas como `.\webRotas`
+A pasta raiz escolhida para o projeto será referenciada nos passos seguintes apenas como `.\`, referindo-se à pasta `webRotas` criada no passo anterior.
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -241,12 +247,22 @@ winget install RedHat.PodmanDesktop
 
 ```shell
 winget install miniconda3
+
+uv init
+
+winget install --id=astral-sh.uv  -e
 ```
+
+https://github.com/astral-sh/uv/issues/11466
 
 Após a instalação, abra o Anaconda Prompt e execute o comando:
 
 ```shell
 conda init
+
+uv init
+
+uv pip install https://github.com/cgohlke/geospatial-wheels/releases/download/v2025.1.20/GDAL-3.10.1-cp313-cp313-win_amd64.whl
 ```
 
 Feche o terminal de comando e abra novamente.
@@ -264,9 +280,9 @@ Feche o terminal de comando e abra novamente.
 Baixe os dados de limites políticos municipais brasileiros com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\Servers\BR_Municipios #! Ajustar diretório para versão 2023
+cd \src\resources\BR_Municipios
 
-Invoke-WebRequest -OutFile Invoke-WebRequest -OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
+Invoke-WebRequestdi-OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
 
 Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
 
@@ -284,9 +300,9 @@ rm BR_Municipios_2023.zip
 Baixe os dados de [favelas](https://inde.gov.br/AreaDownload#) brasileiras com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\Servers\Comunidades
+cd .\Servers\Comunidades
 
-Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP
+Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri "https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP"
 
 Expand-Archive -LiteralPath qg_2022_670_fcu_agreg.zip -DestinationPath .\
 
@@ -299,32 +315,12 @@ rm qg_2022_670_fcu_agreg.zip
     </a>
 </div>
 
-## 3 - Áreas Urbanizadas do Brasil - 2019
-
-Baixe os dados de [áreas urbanizadas](https://inde.gov.br/AreaDownload#) do Brasil com a seguinte sequência de comandos:
-
-```shell
-cd .\webRotas\Servers\Urbanizacao
-
-Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP
-
-Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
-
-rm areas_urbanizadas_2019.zip
-```
-
-<div align="right">
-    <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
-    </a>
-</div>
-
-## 4 - Arruamento para cálculo de rotas OSM
+## 3 - Arruamento para cálculo de rotas OSM
 
 Baixe os dados de [Arruamento](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\Servers\Osmosis\brazil
+cd .\Servers\Osmosis\brazil
 
 Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
 
@@ -385,27 +381,21 @@ podman pull osrm/osrm-backend
 Prepare pastas e imagem do container para o Osmosis com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\Servers\Osmosis
+cd .\src\resources\Osmosis
 
-mkdir TempData
+podman run --name osmosis -v .:/data yagajs/osmosis osmosis
 
-mkdir brazil
+podman commit osmosis osmosis_webrota
 
-podman run --name osmr -v .:/data osrm/osrm-backend
-
-podman commit osmr osmr_webrota
-
-podman save -o osmr_webrota.tar osmr_webrota
+podman save -o osmosis_webrota.tar osmosis_webrota
 ```
 
-Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmosis_webrota.tar` no diretório `.\webRotas\Servers\Osmosis`.
+Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmosis_webrota.tar` no diretório `.\Servers\Osmosis`.
 
 Preparar pastas e imagem do container para o OSRM com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\Servers\OSRM
-
-mkdir TempData
+cd .\src\resources\OSMR\data
 
 podman run --name osmr -v .:/data osrm/osrm-backend
 
@@ -414,12 +404,12 @@ podman commit osmr osmr_webrota
 podman save -o osmr_webrota.tar osmr_webrota
 ```
 
-Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmr_webrota.tar` no diretório `.\webRotas\Servers\OSRM`.
+Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmr_webrota.tar` no diretório `.\Servers\OSRM`.
 
 Preparar pastas e arquivos para o servidor com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\Servers\backend\webdir
+cd .\Servers\backend\webdir
 
 mkdir logs
 
@@ -445,7 +435,7 @@ conda activate webRotas
 Execute o servidor python com o comando:
 
 ```shell
-python .\webRotas\Servers\backend\webdir\Server.py
+python .\Servers\backend\webdir\Server.py
 ```
 
 A inicialização do servidor pode levar alguns minutos, dependendo do hardware do computador. Quando concluída a inicialização, o script indicará a situação do servidor e como acessar o serviço, conforme a imagem a seguir:
@@ -458,31 +448,51 @@ A inicialização do servidor pode levar alguns minutos, dependendo do hardware 
     </a>
 </div>
 
-# Testando o sistema
+# Teste e uso do WebRotas
 
-Alguns testes foram disponibilizados. Para executar um teste, abra um novo terminal do prompt de comando e ative o ambiente de trabalho com o comando:
+Alguns exemplos foram disponibilizados para teste e uso do WebRotas.
+
+| Nome do Teste | Descrição |
+| --- | --- |
+| [visita_pontos.py](./tests/visita_pontos.py) | Calcula a rota para visitar pontos de inspeção |
+| abrangencia.py | Calcula a rota para visitar pontos regularmente distribuídos em uma área |
+| contorno.json | Exemplo no Rio de Janeiro de contorno de um ponto central com 3 regiões de exclusão |
+
+Para executar um dos exemplos:
+
+1. Inicialize o servidor conforme descrito [anteriormente](#inicializando-o-servidor).
+2. Em um novo terminal, execute o comando `uv run <nome_do_teste>.py` para executar o teste desejado.
+   
+Por exemplo, para executar o teste `visita_pontos.py`, execute o comando:
 
 ```shell
-conda activate webRotas
+uv run .\tests\visita_pontos.py
 ```
 
-```shell
-python .\webRotas\Servers\backend\webdir\Test2.py
-```
+Utilize os exemplos como base para utilizar o WebRotas em suas próprias aplicações, escolhendo o exemplo mais próximo do desejado e alterando em acordo os campos na variável `payload`, detacada no início script.
 
-Novamente a execução do teste pode levar alguns minutos, dependendo do hardware do computador.
 
-Ao fim da execução do script Test2.py será apresentado no terminal a resposta json do servervidor e se for posível abrirá uma janela web com a resposta em html.
+
+
+
+A execução do teste pode levar alguns minutos, dependendo do hardware do computador.
+
+Ao fim da execução do script de teste, será apresentado no terminal a resposta json do servidor e, caso as configurações do ambiente estejam corretas, será aberta uma janela do navegador padrão com a página html da resposta, onde será possível realizar operações como a alteração da ordem de visita dos pontos, alteração do ponto inicial, exportação da rota em formato kml, etc.
+
+O terminal apresentará também o link para a página html, conforme a imagem a seguir:
 
 ![Test2-cmd](docs/images/test2-cmd.png)
 
 ![Test2-html](docs/images/test2-html.png)
 
-> **⚠️ Importante:** Pode ocorrer falha no processo de criação de índices, mapa ou outros eventos diversos. Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado, execute o script:
+<div style="margin: auto; border: 1px solid darkgray; border-radius: 10px; background-color: lightgray; padding: 10px; color: black; width: 80%; align: center;">
+        <strong>⚠️ IMPORTANTE</strong> <br><br>
+        Pode ocorrer falha no processo de criação de índices, mapa ou outros eventos.<br><br>Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado. Para corrigir esse erro, execute o seguinte script: <br><br> <div style="border-radius: 5px; background-color: darkgray; padding: 10px;"><i><em>\webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.</i></em></div></td></td>
+        </tr>
+    </table>
+</div>
+<br>
 
-```shell
-\webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.
-```
 
 No diretório `\webRotas\Servers\backend\webdir\logs` você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
 

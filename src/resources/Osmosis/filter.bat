@@ -15,7 +15,7 @@ set FILTRO=TempData/filtro_%USER%
 podman machine init
 podman machine start
 podman load -i osmosis_webrota.tar
-wsl rm -rf ../OSMR/data/%FILTRO%
+wsl rm -rf %FILTRO%
 wsl mkdir -p %FILTRO%
 podman run --rm -v .:/data --name osmosis_%USER% localhost/osmosis_webrota osmosis --read-pbf file="/data/brazil/brazil-latest.osm.pbf" --bounding-polygon file="/data/TempData/exclusion_%USER%.poly" completeWays=no --write-pbf file="/data/%FILTRO%/filtro-latest.osm.pbf"
 wsl rm -rf ../OSMR/data/%FILTRO%

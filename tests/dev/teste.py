@@ -1,7 +1,7 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 
-# https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/BR_Municipios_2022.zip
+# https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
 
 
 ##########################################################################################################################
@@ -18,8 +18,8 @@ def ObterLimiteMunicipioPol(nome_municipio, estado_sigla):
         centroide (Point): Coordenadas do centroide do município.
     """
     
-    # Carregar o arquivo Shapefile BR_Municipios_2022.shp
-    shapefile_path = 'BR_Municipios_2022.shp'
+    # Carregar o arquivo Shapefile BR_Municipios_2023.shp
+    shapefile_path = 'BR_Municipios_2023.shp'
     gdf = gpd.read_file(shapefile_path)
     
     # Filtrar município e estado
@@ -46,16 +46,17 @@ def ObterLimiteMunicipioPol(nome_municipio, estado_sigla):
     # Retornar a Polyline (como lista de coordenadas) e o centroide
     return polyline
 ##########################################################################################################################
-# Exemplo de uso
+""" Exemplo de uso
+
 nome_municipio = 'Niterói'
 estado_sigla = 'RJ'
 
-polyline, centroide = obter_limite_municipioPol(nome_municipio, estado_sigla)
+polyline, centroide = obter_limite_municipio(nome_municipio, estado_sigla)
 
 if polyline:
     print(f"Polyline do município de {nome_municipio}: {polyline[:5]}...")  # Mostrar apenas os 5 primeiros pontos
     print(f"Centroide: {centroide}")
-
+"""
 ##########################################################################################################################
 def obter_limite_municipio(nome_municipio, estado_sigla):
     """
@@ -72,8 +73,8 @@ def obter_limite_municipio(nome_municipio, estado_sigla):
     
  
     
-    # Carregar o arquivo Shapefile BR_Municipios_2022.shp
-    shapefile_path = 'BR_Municipios_2022.shp'
+    # Carregar o arquivo Shapefile BR_Municipios_2023.shp
+    shapefile_path = 'BR_Municipios_2023.shp'
     gdf = gpd.read_file(shapefile_path)
     print(gdf.columns) # depurar as colunas
     

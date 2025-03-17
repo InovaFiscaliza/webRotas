@@ -665,19 +665,23 @@ function clDivOrdenaPontos() {
     ////////////////////////////////
     function GetServerUrl()
     {
-        if ( window.location.hostname=="127.0.0.1")
+        // Get protocol and hostname
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        
+        // Get the actual port the page was loaded from
+        const port = window.location.port || "5001"; // Fallback to 5001 if no port in URL
+        
+        if (hostname === "127.0.0.1" || hostname === "localhost")
         {
-                //  sem ngrock
-                serverUrl = `${window.location.protocol}//${window.location.hostname}`;
-                url = `${serverUrl}:5001`
+            // Local development - use the port from the URL
+            return `${protocol}//${hostname}:${port}`;
         }
         else
         {
-                //  no ngrock
-                serverUrl = `${window.location.protocol}//${window.location.hostname}`;
-                url = `${serverUrl}`
+            // Remote access (e.g., through ngrok) - no port needed in URL
+            return `${protocol}//${hostname}`;
         }
-        return(url);
     }
     ////////////////////////////////
     // servidorOnline = verificarServidorOSMR();
@@ -733,12 +737,15 @@ function clDivOrdenaPontos() {
     ////////////////////////////////
     function verificarServidorOSMR() {
 
+        // Get the actual port the page was loaded from
+        const port = window.location.port || "5001"; // Use URL port or fallback to 5001
+
         // http://localhost:50002/route/v1/driving/0,0;1,1?overview=false
         if ( window.location.hostname=="127.0.0.1")
         {
             //  sem ngrock
             serverUrl = `${window.location.protocol}//${window.location.hostname}`;
-            url = `${serverUrl}:5001/health?porta=${OSRMPort}`
+            url = `${serverUrl}:${port}/health?porta=${OSRMPort}`
         }
         else
         {

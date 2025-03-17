@@ -530,12 +530,14 @@ async function getRouteOSMR(startCoords, endCoords) {
     // wLog("URL do servidor:", serverUrl);
     // const url = `${serverUrl}/osmr/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=polyline&steps=true`;
 
+    const port = window.location.port || "5001"; // Use URL port or fallback to 5001
+
     // ngrok http 5001
     if ( window.location.hostname=="127.0.0.1")
     {
        //  sem ngrock
        serverUrl = `${window.location.protocol}//${window.location.hostname}`;
-       url = `${serverUrl}:5001/route?porta=${OSRMPort}&start=${startCoords[1]},${startCoords[0]}&end=${endCoords[1]},${endCoords[0]}`
+       url = `${serverUrl}:${port}/route?porta=${OSRMPort}&start=${startCoords[1]},${startCoords[0]}&end=${endCoords[1]},${endCoords[0]}`
     }
     else
     {
@@ -689,6 +691,15 @@ function openStreetView(lat, lng) {
     if (!newWindow) {
         alert("A janela pop-up foi bloqueada. Por favor, permita pop-ups para este site.");
     }
+    // Tenta aplicar zoom no conteúdo da janela pop-up
+    newWindow.onload = () => {
+        try {
+            // Aplica zoom no conteúdo da janela pop-up
+            newWindow.document.body.style.zoom = '67%';
+        } catch (error) {
+            console.error("Não foi possível aplicar zoom na janela pop-up:", error);
+        }
+    };
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adiciona o evento de clique no mapa
