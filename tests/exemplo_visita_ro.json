@@ -1,6 +1,7 @@
 {
     "User": "Usuário6",
     "TipoRequisicao": "PontosVisita",
+    "Descricao": "Teste de pontos de visita na cidade de Boa Vista com 2 regiões de exclusão e algoritmo de ordenação por distância geodésica",
     "PontoInicial": [
         2.802119889276001,
         -60.68869135518992,

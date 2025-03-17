@@ -1,7 +1,7 @@
 {
     "User": "Usuário4",
     "Descricao": "Teste de contorno de uma estação no Rio de Janeiro com 3 regiões de exclusão",
-    "TipoRequisicao": "DriveTest",
+    "TipoRequisicao": "Contorno",
     "PontoInicial": [
         -22.90236790344037,
         -43.17420024484698,

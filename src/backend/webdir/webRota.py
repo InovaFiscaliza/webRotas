@@ -1479,10 +1479,13 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,escopo,distanciaPontos
     polMunicipio= sf.GetBoundMunicipio(cidade, uf)
     polMunicipioAreasUrbanizadas= sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
     
-    if(escopo=="AreasUrbanizadas"):  # Opções: "Municipio" ou "AreasUrbanizadas" 
-        pontosvisita = GeneratePointsWithinCity(polMunicipioAreasUrbanizadas, regioes, distanciaPontos)  
-    else:
-        pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
+    match escopo:
+        case "AreasUrbanizadas":
+            pontosvisita = GeneratePointsWithinCity(polMunicipioAreasUrbanizadas, regioes, distanciaPontos)
+        case "Municipio":
+            pontosvisita = GeneratePointsWithinCity(polMunicipio, regioes, distanciaPontos)
+        case _:
+            raise ValueError(f"Escopo '{escopo}' não é válido.")
     
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
     PreparaServidorRoteamento(regioes)
@@ -1490,7 +1493,7 @@ def RouteCompAbrangencia(data,user,pontoinicial,cidade,uf,escopo,distanciaPontos
     RouteDetail.pontoinicial=pontoinicial
     
     RouteDetail = ServerSetupJavaScript(RouteDetail)   
-    RouteDetail.mapcode += f"    const TipoRoute = 'CompAbrangencia';\n"  
+    RouteDetail.mapcode += "    const TipoRoute = 'CompAbrangencia';\n"  
     RouteDetail = DesenhaComunidades(RouteDetail,regioes)
 
     RouteDetail = DesenhaMunicipioAreasUrbanizadas(RouteDetail,cidade,polMunicipioAreasUrbanizadas)

@@ -1,5 +1,5 @@
 {
-    "User": "Usuário1",
+    "User": "Usuário2",
     "Descricao": "Teste de abrangência de uma estação em Niterói com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [
@@ -11,6 +11,7 @@
     "GpsProximoPonto": "ProximoDaRota",
     "cidade": "Niterói",
     "uf": "RJ",
+    "Escopo":"AreasUrbanizadas",
     "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",
     "distancia_pontos": "2000",
     "regioes": [

@@ -25,13 +25,14 @@
             <li><a href="#2-baixe-o-webrotas">Baixe o WebRotas</a></li>
             <li><a href="#3-instale-o-wsl">Instale o WSL</a></li>
             <li><a href="#4-instale-o-podman">Instale o Podman</a></li>
-            <li><a href="#5-instale-o-conda">Instale o Conda</a></li>
+            <li><a href="#5-instale-o-uv">Instale o UV</a></li>
         </ul>
     <li><a href="#baixar-dados-de-referência">Baixar Dados de Referência</a></li>
         <ul>
             <li><a href="#1---limites-municipais-brasileiros---2023">Limites Municipais Brasileiros - 2023</a></li>
             <li><a href="#2---favelas-e-comunidades-urbanas---2022">Favelas e Comunidades Urbanas - 2022</a></li>
-            <li><a href="#3---arruamento-para-cálculo-de-rotas-osm">Arruamento para cálculo de rotas OSM</a></li>
+            <li><a href="#3---áreas-urbanizadas-do-brasil---2019">Áreas Urbanizadas do Brasil - 2019</a></li>
+            <li><a href="#4---arruamento-para-cálculo-de-rotas-osm">Arruamento para cálculo de rotas OSM</a></li>
         </ul>
     <li><a href="#configuração-do-ambiente-de-trabalho">Configuração do ambiente de trabalho</a></li>
         <ul>
@@ -223,19 +224,12 @@ winget install RedHat.Podman
 
 Para facilitar o uso do podman, vc pode também instalar o podman desktop, que é uma interface gráfica para o podman engine.
 
-```shell
-winget install RedHat.PodmanDesktop
-```
+No processo de instalação descrito à seguir, não se utilizará diretamente o PodmanDesktop.
 
-Utilize a opção: `docker-compose with Podman, enable docker compatibility` quando solicitado.
+Mais detalhes sobre a instalação e uso deste podem ser obtidos em: [https://podman-desktop.io/docs/installation/windows-install](https://podman-desktop.io/docs/installation/windows-install), incluindo opções para instalação via Winget e Chocolatey.
 
 Após instalado, o sistema deverá ser reinicializado.
 
-Para facilitar o uso do podman, você pode também instalar o `Podman Desktop`, que é uma interface gráfica para o `Podman Engine`. Use o comando e siga as instruções do instalador.
-
-```shell
-winget install RedHat.PodmanDesktop
-```
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -243,29 +237,25 @@ winget install RedHat.PodmanDesktop
     </a>
 </div>
 
-## 5. Instale o **Conda**
+## 5. Instale o **UV**
+
+Instale o `uv` utilizando o comando:
 
 ```shell
-winget install miniconda3
-
-uv init
-
 winget install --id=astral-sh.uv  -e
 ```
 
 https://github.com/astral-sh/uv/issues/11466
 
-Após a instalação, abra o Anaconda Prompt e execute o comando:
+Após a instalação, com o terminal na pasta raiz do projeto WebRotas e execute os seguintes comandos:
 
 ```shell
-conda init
-
 uv init
 
 uv pip install https://github.com/cgohlke/geospatial-wheels/releases/download/v2025.1.20/GDAL-3.10.1-cp313-cp313-win_amd64.whl
 ```
 
-Feche o terminal de comando e abra novamente.
+Com a execução dos comandos acima, serão descarregadas as bibliotecas necessárias e configurado o ambiente python para execução do WebRotas, o que pode levar alguns minutos.
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -315,7 +305,27 @@ rm qg_2022_670_fcu_agreg.zip
     </a>
 </div>
 
-## 3 - Arruamento para cálculo de rotas OSM
+## 3 - Áreas Urbanizadas do Brasil - 2019
+
+Baixe os dados de [áreas urbanizadas](https://inde.gov.br/AreaDownload#) do Brasil com a seguinte sequência de comandos:
+
+```shell
+cd .\webRotas\Servers\Urbanizacao
+
+Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP
+
+Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
+
+rm areas_urbanizadas_2019.zip
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+## 4 - Arruamento para cálculo de rotas OSM
 
 Baixe os dados de [Arruamento](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
 
@@ -334,33 +344,7 @@ Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik
 
 # Configuração do ambiente de trabalho
 
-## 1- Criação do Ambiente Conda
-
-Crie o ambiente de trabalho com o comando:
-
-```shell
-conda env create -f https://raw.githubusercontent.com/InovaFiscaliza/webRotas/refs/heads/main/Servers/backend/webdir/environment.yaml
-```
-
-Ative o ambiente de trabalho com o comando:
-
-```shell
-conda activate webRotas
-```
-
-Verifique se o caminho onde o ambiente criado usando o comando:
-
-```shell
-conda env list
-```
-
-<div align="right">
-    <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
-    </a>
-</div>
-
-## 2- Criação do Ambiente Podman
+## 1- Criação do Ambiente Podman
 
 São utilizados containeres para pré-processamento dos mapas de arruamento e cálculo de rotas. Estes incluem  [**osmosis**](https://github.com/yagajs/docker-osmosis) e [**osrm-backend**](https://github.com/Project-OSRM/osrm-backend)..
 
@@ -426,21 +410,28 @@ mkdir templates
 
 # Inicializando o Servidor
 
-Abra um terminal do prompt de comando e ative o ambiente de trabalho com o comando:
+Abra um terminal do prompt de comando na pasta raiz do projeto WebRotas.
 
+Para iniciar o servidor utilize o comando: 
 ```shell
-conda activate webRotas
-```
-
-Execute o servidor python com o comando:
-
-```shell
-python .\Servers\backend\webdir\Server.py
+uv run .\src\backend\webdir\Server.py
 ```
 
 A inicialização do servidor pode levar alguns minutos, dependendo do hardware do computador. Quando concluída a inicialização, o script indicará a situação do servidor e como acessar o serviço, conforme a imagem a seguir:
 
 ![Server](docs/images/server-cmd.png)
+
+O serviço pode ser acessado para enviar diretamente requisições de roteamento.
+
+Outra alternativa é diretamente para realizar cálculo de rotas à partir das definições de um arquivo json utilizando a aplicação CLI de interface cliente para o servidor. Para isso utilize o comando:
+
+```shell
+uv run .\src\ucli\webrota_client.py .\tests\exemplo_visita_ro.json
+```
+
+Caso o aplicativo cliente seja chamado sem o argumento de nome do arquivo a ser enviado ao servidor, será apresentada a ajuda com as opções disponíveis e executado exemplo de demonstração conforme indicado na seguinte figura:
+
+![Client](docs/images/client-cmd.png)
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -450,32 +441,25 @@ A inicialização do servidor pode levar alguns minutos, dependendo do hardware 
 
 # Teste e uso do WebRotas
 
-Alguns exemplos foram disponibilizados para teste e uso do WebRotas.
+Alguns exemplos foram disponibilizados para teste do WebRotas e poderão ser modificados para atender a necessidades específicas.
 
 | Nome do Teste | Descrição |
 | --- | --- |
-| [visita_pontos.py](./tests/visita_pontos.py) | Calcula a rota para visitar pontos de inspeção |
-| abrangencia.py | Calcula a rota para visitar pontos regularmente distribuídos em uma área |
-| contorno.json | Exemplo no Rio de Janeiro de contorno de um ponto central com 3 regiões de exclusão |
+| [exemplo_abrangencia_rj_campos.json](./tests/exemplo_abrangencia_rj_campos.json) | Teste de abrangência na cidade de em Campos dos Goytacazes sem de exclusão |
+| [exemplo_abrangencia_rj_niteroi_geodesica.json](./tests/exemplo_abrangencia_rj_niteroi_geodesica.json) | Teste de abrangência na cidade de Niterói com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica |
+| [exemplo_abrangencia_sp_pesado.json](./tests/exemplo_abrangencia_sp_pesado.json) | Teste de abrangência pesado, na cidade de São Paulo, sem regiões de exclusão |
+| [exemplo_contorno.json](./tests/exemplo_contorno.json) | Teste de pontos de visita na cidade do Rio de Janeiro com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica |
+| [exemplo_visita_rj.json](./tests/exemplo_visita_rj.json) | Teste de pontos de visita na cidade do Rio de Janeiro com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica |
+| [exemplo_visita_ro.json](./tests/exemplo_visita_ro.json) | Teste de pontos de visita na cidade de Boa Vista com 2 regiões de exclusão e algoritmo de ordenação por distância geodésica |
+| [exemplo_visita_serra_rj.json](./tests/exemplo_visita_serra_rj.json) | Teste de pontos de visita na Serra do Rio de Janeiro, sem regiões de exclusão e algoritmo de ordenação por distância OSMR MultiThread |
 
-Para executar um dos exemplos:
-
-1. Inicialize o servidor conforme descrito [anteriormente](#inicializando-o-servidor).
-2. Em um novo terminal, execute o comando `uv run <nome_do_teste>.py` para executar o teste desejado.
-   
-Por exemplo, para executar o teste `visita_pontos.py`, execute o comando:
+Para executar um dos exemplos execute o comando:
 
 ```shell
-uv run .\tests\visita_pontos.py
+uv run .\src\ucli\webrota_client.py .\tests\<nome_do_teste>.json
 ```
 
-Utilize os exemplos como base para utilizar o WebRotas em suas próprias aplicações, escolhendo o exemplo mais próximo do desejado e alterando em acordo os campos na variável `payload`, detacada no início script.
-
-
-
-
-
-A execução do teste pode levar alguns minutos, dependendo do hardware do computador.
+A execução do teste pode levar alguns minutos, dependendo do hardware do computador, acompanhe as mensagens no terminal onde é executado o script, assim como no terminal adicional que é aberto para o servidor.
 
 Ao fim da execução do script de teste, será apresentado no terminal a resposta json do servidor e, caso as configurações do ambiente estejam corretas, será aberta uma janela do navegador padrão com a página html da resposta, onde será possível realizar operações como a alteração da ordem de visita dos pontos, alteração do ponto inicial, exportação da rota em formato kml, etc.
 
@@ -492,7 +476,6 @@ O terminal apresentará também o link para a página html, conforme a imagem a 
     </table>
 </div>
 <br>
-
 
 No diretório `\webRotas\Servers\backend\webdir\logs` você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
 

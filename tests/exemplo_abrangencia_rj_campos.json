@@ -1,0 +1,14 @@
+{
+    "User": "Usuário1",
+    "Descricao": "Teste de abrangência na cidade de Campos dos Goytacazes, sem regiões de exclusão e algoritmo de ordenação por distância OSMR MultiThread",
+    "TipoRequisicao": "Abrangencia",
+    "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            
+    "RaioDaEstacao": 200,
+    "GpsProximoPonto": "ProximoDaRota",
+    "Escopo":"Municipio",
+    "cidade": "Campos dos Goytacazes",
+    "uf": "RJ",
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
+    "distancia_pontos": "1600",
+    "regioes": ""
+}

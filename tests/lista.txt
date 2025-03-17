@@ -1,0 +1,8 @@
+exemplo_abrangencia_geodesica.json
+exemplo_abrangencia_rj_campos.json
+exemplo_abrangencia_rj_niteroi.json
+exemplo_abrangencia_sp_pesado.json
+exemplo_contorno.json
+exemplo_visita_rj.json
+exemplo_visita_ro.json
+exemplo_visita_serra_rj.json
