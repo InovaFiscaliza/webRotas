@@ -47,7 +47,7 @@
             ""
         ]
     ],
-    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
     "regioes": [
         {
             "nome": "!Jacare",

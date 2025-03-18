@@ -683,7 +683,7 @@ function openStreetView(lat, lng) {
     `;
 
     // URL do Google Street View
-    const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+    const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}&zoom=0`;
     // Abre a nova janela
     const newWindow = window.open(streetViewUrl, "_blank", windowFeatures);
 
@@ -692,14 +692,8 @@ function openStreetView(lat, lng) {
         alert("A janela pop-up foi bloqueada. Por favor, permita pop-ups para este site.");
     }
     // Tenta aplicar zoom no conteúdo da janela pop-up
-    newWindow.onload = () => {
-        try {
-            // Aplica zoom no conteúdo da janela pop-up
-            newWindow.document.body.style.zoom = '67%';
-        } catch (error) {
-            console.error("Não foi possível aplicar zoom na janela pop-up:", error);
-        }
-    };
+    newWindow.document.body.style.zoom = '50%';
+
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adiciona o evento de clique no mapa
