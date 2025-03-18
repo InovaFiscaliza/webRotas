@@ -79,7 +79,7 @@ As imagens à seguir apresentam os 3 principais modos de cálculo, que são:
 - Windows 10 1709 (build 16299) ou posterior
 - PowerShell 7.4 ou posterior
 - WinGet 1.10 ou posterior
-- 8GB of RAM
+- 16GB of RAM
 - 10GB de espaço livre em disco
 - Conexão de internet
 
@@ -95,7 +95,24 @@ Verifique se dispõe do Winget digitando o comando:
 winget --version
 ```
 
-`Winget` não estará disponível até que você tenha feito login no Windows como usuário pela primeira vez, acionando o Microsoft Store para registrar o Windows Package Manager como parte de um processo assíncrono. Consulte [MS Use o WinGet tool para instalar e gerenciar aplicativos](https://learn.microsoft.com/en-us/windows/package-manager/winget/) para mais informações.
+Usualmente `Winget` não estará disponível até que você tenha feito login no Windows como usuário pela primeira vez, acionando o Microsoft Store para registrar o Windows Package Manager como parte de um processo assíncrono. Consulte [MS Use o WinGet tool para instalar e gerenciar aplicativos](https://learn.microsoft.com/en-us/windows/package-manager/winget/) para mais informações.
+
+Alternativamente, winget pode ser obtido usando a seguinte sequência de comandos, conforme sugerido por [Vladan](https://stackoverflow.com/questions/74166150/install-winget-by-the-command-line-powershell#answers-header):
+
+```shell
+# get latest download url
+$URL = "https://api.github.com/repos/microsoft/winget-cli/releases/latest"
+$URL = (Invoke-WebRequest -Uri $URL).Content | ConvertFrom-Json | Select-Object -ExpandProperty "assets" | Where-Object "browser_download_url" -Match '.msixbundle' | Select-Object -ExpandProperty "browser_download_url"
+
+# download
+Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile "Setup.msix"
+
+# install
+Add-AppxPackage -Path "Setup.msix"
+
+# delete file
+Remove-Item "Setup.msix"
+```
 
 Verifique a versão PowerShell usando o comando
 
@@ -108,8 +125,6 @@ PowerShell pode ser atualizado para a versão mais recente utilizando winget com
 ```shell
 winget install Microsoft.PowerShell
 ```
-
-
 
  Para outros métodos, verifique o [procedimento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
 
@@ -156,9 +171,9 @@ Utilize uma pasta para salvar o projeto. De preferência escolha uma pasta que a
 - não protegida por permissões de administrador;
 - não sincronizadas com serviços de nuvem como OneDrive, Google Drive, etc.
 
-Por exemplo, crie uma pasta chamada `C:\Users\<SeuNomeDeUsuario>\anatel`.
+Por exemplo, crie uma pasta chamada `C:\Users\<SeuNomeDeUsuario>\github` ou se tiver um disco de dados, utilize `D:\github`, por exemplo, deixando a pasta com um caminho mais curto e de fácil acesso.
 
-Utilizando os seguintes comandos para criar a pasta e navegar até ela:
+Utilizando os seguintes comandos do poweshell para criar a pasta e navegar até ela:
 
 ```shell
 mkdir C:\Users\<SeuNomeDeUsuario>\appdata\Local\anatel
