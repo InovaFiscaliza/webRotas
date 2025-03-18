@@ -184,7 +184,7 @@ Caso necessário, instale o podman engine utilizando winget
 winget install RedHat.Podman
 ```
 
-O processo de instalação inciará uma janela própria, que demandará a elevação do usuário para administrador.
+O processo de instalação inciará uma janela própria, que demandará a elevação do usuário para administrador, todavia as mensagens de conclusão com sucesso devem ser apresentadas no terminal onde o comando foi executado.
 
 Para facilitar o uso do podman, vc pode também instalar o podman desktop, que é uma interface gráfica para o podman engine.
 
@@ -203,19 +203,59 @@ Após instalado, o sistema deverá ser reinicializado.
 
 ## 5. Instale o **UV**
 
-Instale o `uv` utilizando o comando:
+Verifique se o `uv` está instalado utilizando o comando:
+
+```shell
+uv --version
+```
+
+É esperado que o `uv` seja utilizado em sua última versão, 0.6.7 ou posterior. Caso necessário, instale o utilizando o comando:
 
 ```shell
 winget install --id=astral-sh.uv  -e
 ```
 
-https://github.com/astral-sh/uv/issues/11466
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
-Após a instalação, com o terminal na pasta raiz do projeto *webRotas* e execute os seguintes comandos:
+# Instalação para Usuários Finais
+
+## 1. Instale o *WebRotas*
+
+Devido a restrições de segurança em computadores corporativos da Anatel, a instalação do *webRotas* deve ser feita da pata `C:\ProgramData\Anatel\webRotas`, conforme indicado nos passos à seguir. Para outros ambientes, a instalação pode ser feita em qualquer pasta de sua escolha.
 
 ```shell
-uv init
+mkdir C:\ProgramData\Anatel\webRotas
 
+cd C:\ProgramData\Anatel\webRotas
+```
+
+Baixe o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases) para a pasta criada, usando um navegador ou o seguinte comando:
+
+```shell
+$URL = "https://github.com/InovaFiscaliza/webRotas/releases"
+
+Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile "webrotas.tgz"
+
+tar -xvzf webrotas.tgz
+```
+
+Na pasta raiz do projeto *webRotas* e execute os seguintes comandos:
+
+```shell
+cd .\webRotas
+
+uv sync
+```
+
+O comando irá descarregar as bibliotecas necessárias e configurar o ambiente python para execução do *webRotas*, o que pode levar alguns minutos. O processo pode ser acompanhado pelo terminal.
+
+Devido a uma [limitação do uv](https://github.com/astral-sh/uv/issues/11466), é necessário instalar a biblioteca GDAL manualmente. Para isso, execute o comando:
+
+```shell
 uv pip install https://github.com/cgohlke/geospatial-wheels/releases/download/v2025.1.20/GDAL-3.10.1-cp313-cp313-win_amd64.whl
 ```
 
@@ -226,9 +266,6 @@ Com a execução dos comandos acima, serão descarregadas as bibliotecas necess�
         <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
-
-
-# Instalação para Usuários Finais
 
 # Instalação para Desenvolvedores
 

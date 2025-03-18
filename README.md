@@ -202,8 +202,10 @@ A pasta raiz escolhida para o projeto será referenciada nos passos seguintes ap
 Verifique se WSL está instalado utilizando o comando:
 
 ```shell
-wsl.exe --version
+wsl.exe --status
 ```
+
+É necessário que a versão instalada seja a 2
 
 Caso não esteja instalado, execute:
 
@@ -285,13 +287,15 @@ Com a execução dos comandos acima, serão descarregadas as bibliotecas necess�
 Baixe os dados de limites políticos municipais brasileiros com a seguinte sequência de comandos:
 
 ```shell
-cd \src\resources\BR_Municipios
+cd .\src\resources\BR_Municipios
 
-Invoke-WebRequestdi-OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
+Invoke-WebRequest -OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
 
 Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
 
 rm BR_Municipios_2023.zip
+
+cd ..\..\..
 ```
 
 <div align="right">
@@ -305,13 +309,15 @@ rm BR_Municipios_2023.zip
 Baixe os dados de [favelas](https://inde.gov.br/AreaDownload#) brasileiras com a seguinte sequência de comandos:
 
 ```shell
-cd .\Servers\Comunidades
+cd .\src\resources\Comunidades
 
 Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri "https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP"
 
 Expand-Archive -LiteralPath qg_2022_670_fcu_agreg.zip -DestinationPath .\
 
 rm qg_2022_670_fcu_agreg.zip
+
+cd ..\..\..
 ```
 
 <div align="right">
@@ -325,13 +331,15 @@ rm qg_2022_670_fcu_agreg.zip
 Baixe os dados de [áreas urbanizadas](https://inde.gov.br/AreaDownload#) do Brasil com a seguinte sequência de comandos:
 
 ```shell
-cd .\webRotas\Servers\Urbanizacao
+cd .\src\resources\Urbanizacao
 
 Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri "https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP"
 
 Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
 
 rm areas_urbanizadas_2019.zip
+
+cd ..\..\..
 ```
 
 <div align="right">
@@ -345,10 +353,11 @@ rm areas_urbanizadas_2019.zip
 Baixe os dados de [Arruamento](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
 
 ```shell
-cd .\Servers\Osmosis\brazil
+cd .\src\resources\Osmosis\brazil
 
 Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
 
+cd ..\..\..
 ```
 
 <div align="right">
@@ -366,6 +375,12 @@ São utilizados containeres para pré-processamento dos mapas de arruamento e c�
 Descarregue as imagens dos containeres com a seguinte sequência de comandos:
 
 ```shell
+cd .src\resources
+
+podman machine init
+
+podman machine start
+
 podman pull yagajs/osmosis
 
 podman pull osrm/osrm-backend
