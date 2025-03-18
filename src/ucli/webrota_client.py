@@ -105,7 +105,7 @@ def main() -> int:
     
     # get payload data
     try:
-        with open(payload_file, "r") as f:
+        with open(payload_file, "r", encoding="utf-8") as f:
             payload = json.load(f)
         logging.info(f"Payload loaded from {payload_file}.")
     except FileNotFoundError:
