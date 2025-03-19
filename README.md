@@ -1,6 +1,6 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
-<a name="indexerd-md-top"></a>
+`<a name="indexerd-md-top"></a>`
 
 <!-- PROJECT SHIELDS -->
 
@@ -108,8 +108,6 @@ PowerShell pode ser atualizado para a versão mais recente utilizando winget com
 ```shell
 winget install Microsoft.PowerShell
 ```
-
-
 
  Para outros métodos, verifique o [procedimento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
 
@@ -230,7 +228,6 @@ Mais detalhes sobre a instalação e uso deste podem ser obtidos em: [https://po
 
 Após instalado, o sistema deverá ser reinicializado.
 
-
 <div align="right">
     <a href="#indexerd-md-top">
         <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
@@ -272,7 +269,7 @@ Baixe os dados de limites políticos municipais brasileiros com a seguinte sequ�
 ```shell
 cd \src\resources\BR_Municipios
 
-Invoke-WebRequestdi-OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
+Invoke-WebRequest -Uri "https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip" -OutFile "BR_Municipios_2023.zip"
 
 Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
 
@@ -412,7 +409,8 @@ mkdir templates
 
 Abra um terminal do prompt de comando na pasta raiz do projeto WebRotas.
 
-Para iniciar o servidor utilize o comando: 
+Para iniciar o servidor utilize o comando:
+
 ```shell
 uv run .\src\backend\webdir\Server.py
 ```
@@ -443,15 +441,15 @@ Caso o aplicativo cliente seja chamado sem o argumento de nome do arquivo a ser 
 
 Alguns exemplos foram disponibilizados para teste do WebRotas e poderão ser modificados para atender a necessidades específicas.
 
-| Nome do Teste | Descrição |
-| --- | --- |
-| [exemplo_abrangencia_rj_campos.json](./tests/exemplo_abrangencia_rj_campos.json) | Teste de abrangência na cidade de em Campos dos Goytacazes sem de exclusão |
-| [exemplo_abrangencia_rj_niteroi_geodesica.json](./tests/exemplo_abrangencia_rj_niteroi_geodesica.json) | Teste de abrangência na cidade de Niterói com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica |
-| [exemplo_abrangencia_sp_pesado.json](./tests/exemplo_abrangencia_sp_pesado.json) | Teste de abrangência pesado, na cidade de São Paulo, sem regiões de exclusão |
-| [exemplo_contorno.json](./tests/exemplo_contorno.json) | Teste de pontos de visita na cidade do Rio de Janeiro com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica |
-| [exemplo_visita_rj.json](./tests/exemplo_visita_rj.json) | Teste de pontos de visita na cidade do Rio de Janeiro com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica |
-| [exemplo_visita_ro.json](./tests/exemplo_visita_ro.json) | Teste de pontos de visita na cidade de Boa Vista com 2 regiões de exclusão e algoritmo de ordenação por distância geodésica |
-| [exemplo_visita_serra_rj.json](./tests/exemplo_visita_serra_rj.json) | Teste de pontos de visita na Serra do Rio de Janeiro, sem regiões de exclusão e algoritmo de ordenação por distância OSMR MultiThread |
+| Nome do Teste                                                                                       | Descrição                                                                                                                                |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| [exemplo_abrangencia_rj_campos.json](./tests/exemplo_abrangencia_rj_campos.json)                       | Teste de abrangência na cidade de em Campos dos Goytacazes sem de exclusão                                                               |
+| [exemplo_abrangencia_rj_niteroi_geodesica.json](./tests/exemplo_abrangencia_rj_niteroi_geodesica.json) | Teste de abrangência na cidade de Niterói com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica               |
+| [exemplo_abrangencia_sp_pesado.json](./tests/exemplo_abrangencia_sp_pesado.json)                       | Teste de abrangência pesado, na cidade de São Paulo, sem regiões de exclusão                                                           |
+| [exemplo_contorno.json](./tests/exemplo_contorno.json)                                                 | Teste de pontos de visita na cidade do Rio de Janeiro com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica     |
+| [exemplo_visita_rj.json](./tests/exemplo_visita_rj.json)                                               | Teste de pontos de visita na cidade do Rio de Janeiro com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica     |
+| [exemplo_visita_ro.json](./tests/exemplo_visita_ro.json)                                               | Teste de pontos de visita na cidade de Boa Vista com 2 regiões de exclusão e algoritmo de ordenação por distância geodésica          |
+| [exemplo_visita_serra_rj.json](./tests/exemplo_visita_serra_rj.json)                                   | Teste de pontos de visita na Serra do Rio de Janeiro, sem regiões de exclusão e algoritmo de ordenação por distância OSMR MultiThread |
 
 Para executar um dos exemplos execute o comando:
 
