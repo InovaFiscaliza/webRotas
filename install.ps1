@@ -145,6 +145,38 @@ Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
 rm BR_Municipios_2023.zip
 cd ..\..\..\
 # ----------------------------------------------------------------------------------------------------------------------
+cd src\resources\Comunidades
+Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri "https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP"
+Test-DownloadedFile -outputFile "qg_2022_670_fcu_agreg.zip"
+Expand-Archive -LiteralPath qg_2022_670_fcu_agreg.zip -DestinationPath .\
+rm qg_2022_670_fcu_agreg.zip
+cd ..\..\..\
+# ----------------------------------------------------------------------------------------------------------------------
+cd src\resources\Urbanizacao
+Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri "https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP"
+Test-DownloadedFile -outputFile "areas_urbanizadas_2019.zip"
+Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
+rm areas_urbanizadas_2019.zip
+cd ..\..\..\
+# ----------------------------------------------------------------------------------------------------------------------
+cd src\resources\Osmosis\brazil
+Invoke-WebRequest -OutFile "brazil-latest.osm.pbf" -Uri "https://download.geofabrik.de/south-america/brazil-latest.osm.pbf"
+Test-DownloadedFile -outputFile "brazil-latest.osm.pbf"
+cd ..\..\..\
+# ----------------------------------------------------------------------------------------------------------------------
+podman pull yagajs/osmosis
+podman pull osrm/osrm-backend
+cd src\resources\Osmosis
+podman run --name osmosis -v .:/data yagajs/osmosis osmosis
+podman commit osmosis osmosis_webrota
+podman save -o osmosis_webrota.tar osmosis_webrota
+cd ..\..\..\
+cd src\resources\OSMR\data
+podman run --name osmr -v .:/data osrm/osrm-backend
+podman commit osmr osmr_webrota
+podman save -o osmr_webrota.tar osmr_webrota
+cd ..\..\..\
+# ----------------------------------------------------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------------------------------------------------
 function Test-DownloadedFile {
