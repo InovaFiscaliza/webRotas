@@ -66,6 +66,16 @@ Vc pode verificar a versão do Windows usando o comando
 ```shell
 winver
 ```
+<div style="margin: auto; border: 1px solid darkgray; border-radius: 10px; background-color: lightgray; padding: 10px; color: black; width: 80%; align: center;">
+        <strong>⚠️ IMPORTANTE</strong> <br><br>
+        Em princípio o *webRotas* não é compatível com o uso em máquinas virtuais e demanda que o recurso de virtualização do windows esteja ativos em decorrência do uso do WLS. Mais detalhes são apresentados à seguir ou podem ser obtidos na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature)<br><br>
+</div>
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
 
 # Instalação para Todos os Usuários
 
@@ -223,17 +233,13 @@ winget install --id=astral-sh.uv  -e
 
 # Instalação para Usuários Finais
 
-## 1. Instale o *WebRotas*
+## Instalando o *webRotas*
 
 Devido a restrições de segurança em computadores corporativos da Anatel, a instalação do *webRotas* deve ser feita da pata `C:\ProgramData\Anatel\webRotas`, conforme indicado nos passos à seguir. Para outros ambientes, a instalação pode ser feita em qualquer pasta de sua escolha.
 
-```shell
-mkdir C:\ProgramData\Anatel\webRotas
+Navegue até a pasta de instalação utilizando o comando `cd C:\ProgramData\Anatel` ou crie a pasta com o comando `mkdir C:\ProgramData\Anatel`.
 
-cd C:\ProgramData\Anatel\webRotas
-```
-
-Baixe o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases) para a pasta criada, usando um navegador ou o seguinte comando:
+Baixe e examda o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases) para a pasta criada com os seguintes comandos:
 
 ```shell
 $URL = "https://github.com/InovaFiscaliza/webRotas/releases"
@@ -243,7 +249,7 @@ Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile "webrotas.tgz"
 tar -xvzf webrotas.tgz
 ```
 
-Na pasta raiz do projeto *webRotas* e execute os seguintes comandos:
+Navegue para pasta raiz do projeto *webRotas* e inicialize o ambiente com os seguintes comandos:
 
 ```shell
 cd .\webRotas
@@ -251,15 +257,31 @@ cd .\webRotas
 uv sync
 ```
 
-O comando irá descarregar as bibliotecas necessárias e configurar o ambiente python para execução do *webRotas*, o que pode levar alguns minutos. O processo pode ser acompanhado pelo terminal.
+O comando irá descarregar as bibliotecas necessárias e configurar o ambiente python para execução do *webRotas*, o que pode levar alguns minutos.
 
-Devido a uma [limitação do uv](https://github.com/astral-sh/uv/issues/11466), é necessário instalar a biblioteca GDAL manualmente. Para isso, execute o comando:
+O processo pode ser acompanhado pelo terminal.
+
+## Dados de referência no repositório da Anatel
+
+Além da aplicação, é necessário instalar os dados de referência utilizados por esta para realizar o roteamento.
+
+Caso tenha acesso aos repositórios da Anatel, baixe os dados de referência para o *webRotas* utilizando um navegador para acessar o [Sharepoint](https://anatel365.sharepoint.com/:u:/r/sites/InovaFiscaliza/DataHub%20%20GET/webRotas/resources.zip?csf=1&web=1&e=PU4O04)
+
+Atenção, trata-se de arquivo compactado de grande volume (2.3GB), sendo recomendado o uso de uma conexão de alta velocidade.
+
+Descompacte o arquivo baixado na pasta `.\webRotas` com o comando abaixo, podendo remover o arquivo para liberar espaço em disco:
 
 ```shell
-uv pip install https://github.com/cgohlke/geospatial-wheels/releases/download/v2025.1.20/GDAL-3.10.1-cp313-cp313-win_amd64.whl
+Expand-Archive -Force -LiteralPath .\resources.zip -DestinationPath .\src\
+
+rm .\resources.zip
 ```
 
-Com a execução dos comandos acima, serão descarregadas as bibliotecas necessárias e configurado o ambiente python para execução do *webRotas*, o que pode levar alguns minutos.
+Caso não tenha acesso ao Sharepoint corporativo da Anatel, é possível realizar o download dos dados de referência a partir de repositórios públicos, conforme descrito ao final do presente guia, na seção [Baixar de Repositórios Públicos](#baixar-de-repositórios-públicos).
+
+Para usuários finais, com este passo a instalação do *webRotas* está concluída.
+
+Veja as explicações de uso na página inicial do repositório do [webRotas](..\README.md).
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -270,7 +292,6 @@ Com a execução dos comandos acima, serão descarregadas as bibliotecas necess�
 # Instalação para Desenvolvedores
 
 Os passos descritos a seguir são destinados ao uso por desenvolvedores que desejam contribuir com o projeto *webRotas*.
-
 
 ## 1. Instale o **Git**
 
@@ -324,6 +345,186 @@ Após esse comando ser executado, será criada uma pasta chamada `webRotas` com 
         <strong>⚠️ IMPORTANTE</strong> <br><br>
         A pasta raiz do projeto será referenciada nos passos seguintes apenas como `.\`, referindo-se à pasta `webRotas` criada no passo anterior.
 </div>
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+## 2. Inicialize o ambiente
+
+Navegue para pasta raiz do projeto *webRotas* e inicialize o ambiente com os seguintes comandos:
+
+```shell
+cd .\webRotas
+
+uv sync
+```
+
+O comando irá descarregar as bibliotecas necessárias e configurar o ambiente python para execução do *webRotas*, o que pode levar alguns minutos.
+
+O processo pode ser acompanhado pelo terminal.
+
+# Dados de Referência
+
+Além da aplicação, é necessário instalar os dados de referência utilizados por esta para realizar o roteamento.
+
+Caso tenha acesso aos repositórios da Anatel, siga os passos indicados na seção [Dados de referência no repositório da Anatel](#dados-de-referência-no-repositório-da-anatel).
+
+Caso não tenha acesso ao Sharepoint corporativo da Anatel, é possível realizar o download dos dados de referência a partir de repositórios públicos, conforme descrito a seguir.
+
+# Baixar de Repositórios Públicos
+
+## 1 - limites municipais brasileiros - 2023
+
+Baixe os dados de limites políticos municipais brasileiros com a seguinte sequência de comandos:
+
+```shell
+cd .\src\resources\BR_Municipios
+
+Invoke-WebRequest -OutFile BR_Municipios_2023.zip -Uri https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
+
+Expand-Archive -LiteralPath BR_Municipios_2023.zip -DestinationPath .\
+
+rm BR_Municipios_2023.zip
+
+cd ..\..\..
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+## 2 - Favelas e Comunidades Urbanas - 2022
+
+Baixe os dados de [favelas](https://inde.gov.br/AreaDownload#) brasileiras com a seguinte sequência de comandos:
+
+```shell
+cd .\src\resources\Comunidades
+
+Invoke-WebRequest -OutFile qg_2022_670_fcu_agreg.zip -Uri "https://geoservicos.ibge.gov.br/geoserver/CGMAT/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGMAT:qg_2022_670_fcu_agreg&outputFormat=SHAPE-ZIP"
+
+Expand-Archive -LiteralPath qg_2022_670_fcu_agreg.zip -DestinationPath .\
+
+rm qg_2022_670_fcu_agreg.zip
+
+cd ..\..\..
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+## 3 - Áreas Urbanizadas do Brasil - 2019
+
+Baixe os dados de [áreas urbanizadas](https://inde.gov.br/AreaDownload#) do Brasil com a seguinte sequência de comandos:
+
+```shell
+cd .\src\resources\Urbanizacao
+
+Invoke-WebRequest -OutFile areas_urbanizadas_2019.zip -Uri "https://geoservicos.ibge.gov.br/geoserver/CGEO/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CGEO:AU_2022_AreasUrbanizadas2019_Brasil&outputFormat=SHAPE-ZIP"
+
+Expand-Archive -LiteralPath areas_urbanizadas_2019.zip -DestinationPath .\
+
+rm areas_urbanizadas_2019.zip
+
+cd ..\..\..
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+## 4 - Arruamento para cálculo de rotas OSM
+
+Baixe os dados de [Arruamento](https://download.geofabrik.de/south-america/brazil.html) com a seguinte sequência de comandos:
+
+```shell
+cd .\src\resources\Osmosis\brazil
+
+Invoke-WebRequest -OutFile brazil-latest.osm.pbf -Uri https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
+
+cd ..\..\..
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+# Configuração do ambiente de trabalho
+
+O pacote de dados do repositório corporativo já inclui imagens dos containeres utilizados, caso necessário, siga as instruções a seguir para criar as imagens dos containeres à partir de repositórios públicos.
+
+## 1- Criação do Ambiente Podman
+
+São utilizados containeres para pré-processamento dos mapas de arruamento e cálculo de rotas. Estes incluem  [**osmosis**](https://github.com/yagajs/docker-osmosis) e [**osrm-backend**](https://github.com/Project-OSRM/osrm-backend)..
+
+Descarregue as imagens dos containeres com a seguinte sequência de comandos:
+
+```shell
+cd .src\resources
+
+podman machine init
+
+podman machine start
+
+podman pull yagajs/osmosis
+
+podman pull osrm/osrm-backend
+```
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+Prepare pastas e imagem do container para o Osmosis com a seguinte sequência de comandos:
+
+```shell
+cd .\src\resources\Osmosis
+
+podman run --name osmosis -v .:/data yagajs/osmosis osmosis
+
+podman commit osmosis osmosis_webrota
+
+podman save -o osmosis_webrota.tar osmosis_webrota
+```
+
+Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmosis_webrota.tar` no diretório `.\Servers\Osmosis`.
+
+Preparar pastas e imagem do container para o OSRM com a seguinte sequência de comandos:
+
+```shell
+cd .\src\resources\OSMR\data
+
+podman run --name osmr -v .:/data osrm/osrm-backend
+
+podman commit osmr osmr_webrota
+
+podman save -o osmr_webrota.tar osmr_webrota
+```
+
+Tendo sido realizadas todas as operações, deve ser possível visualizar cópia da imagem do container `osmr_webrota.tar` no diretório `.\Servers\OSRM`.
+
+Preparar pastas e arquivos para o servidor com a seguinte sequência de comandos:
+
+```shell
+cd .\Servers\backend\webdir
+
+mkdir logs
+
+mkdir templates
+```
 
 <div align="right">
     <a href="#indexerd-md-top">
