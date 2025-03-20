@@ -1,3 +1,29 @@
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Functions declarations
+function Test-DownloadedFile {
+    param (
+        [string]$outputFile  # Caminho para o arquivo baixado
+    )
+
+    # Verifica se o arquivo foi baixado com sucesso
+    if (Test-Path $outputFile) {
+        Write-Host "Download concluído com sucesso!" -ForegroundColor Green
+
+        # Verifica o tamanho do arquivo
+        $fileSize = (Get-Item $outputFile).Length
+        if ($fileSize -gt 0) {
+            Write-Host "O arquivo foi baixado com sucesso e seu tamanho é $fileSize bytes." -ForegroundColor Green
+        } else {
+            Write-Host "O arquivo foi baixado, mas está vazio." -ForegroundColor Red
+            exit 1  # Encerra o script com código de erro
+        }
+    } else {
+        Write-Host "Falha no download do arquivo." -ForegroundColor Red
+        exit 1  # Encerra o script com código de erro
+    }
+}
+# ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # Obtém a versão do sistema operacional
 # Define uma variável global para o tempo de espera
@@ -178,27 +204,3 @@ podman save -o osmr_webrota.tar osmr_webrota
 cd ..\..\..\
 # ----------------------------------------------------------------------------------------------------------------------
 
-# ----------------------------------------------------------------------------------------------------------------------
-function Test-DownloadedFile {
-    param (
-        [string]$outputFile  # Caminho para o arquivo baixado
-    )
-
-    # Verifica se o arquivo foi baixado com sucesso
-    if (Test-Path $outputFile) {
-        Write-Host "Download concluído com sucesso!" -ForegroundColor Green
-
-        # Verifica o tamanho do arquivo
-        $fileSize = (Get-Item $outputFile).Length
-        if ($fileSize -gt 0) {
-            Write-Host "O arquivo foi baixado com sucesso e seu tamanho é $fileSize bytes." -ForegroundColor Green
-        } else {
-            Write-Host "O arquivo foi baixado, mas está vazio." -ForegroundColor Red
-            exit 1  # Encerra o script com código de erro
-        }
-    } else {
-        Write-Host "Falha no download do arquivo." -ForegroundColor Red
-        exit 1  # Encerra o script com código de erro
-    }
-}
-# ----------------------------------------------------------------------------------------------------------------------
