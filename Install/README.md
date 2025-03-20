@@ -273,7 +273,10 @@ para a área de trabalho com o comando:
 cp .\src\ucli\webRotas.lnk $env:USERPROFILE\Desktop
 ```
 
-Ou para 
+Durante a primeira execução, é possivel que mecanismos de segurança alertem para o uso da página web local ou o uso de portas de rede. Permita o acesso e a execução do *webRotas* quando solicitado, por exemplo, conforme a seguinte imagem:
+
+![Firewall](docs/images/windows_firewall_alert.png)
+
 <div align="right">
     <a href="#indexerd-md-top">
         <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
