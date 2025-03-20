@@ -67,9 +67,9 @@ Vc pode verificar a versão do Windows usando o comando
 winver
 ```
 
-| ⚠️ *IMPORTANTE* |
-| :--- |
-| Em princípio o *webRotas* não é compatível com o uso em máquinas virtuais e demanda que o recurso de virtualização do windows esteja ativos em decorrência do uso do WLS. Mais detalhes são apresentados à seguir ou podem ser obtidos na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature) |
+> | ⚠️ *IMPORTANTE* |
+> | :--- |
+> | Em princípio o *webRotas* não é compatível com o uso em máquinas virtuais pois faz uso do recurso de virtualização do windows para uso do WLS. Mais detalhes sobre o WSL são apresentados à seguir ou podem ser obtidos na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature) |
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -133,9 +133,9 @@ winget install Microsoft.PowerShell
 
  Para outros métodos, verifique o [procedimento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
 
-| ⚠️ *IMPORTANTE* |
-| :--- |
-| Todos os comandos indicados à seguir devem ser executados no terminal do *PowerShell* |
+> | ⚠️ *IMPORTANTE* |
+> | :--- |
+> | Todos os comandos indicados à seguir devem ser executados no terminal do *PowerShell* |
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -173,7 +173,7 @@ Feitas essa operações, repita a instalação do wsl com o comando `wsl.exe --i
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -206,7 +206,7 @@ Após instalado, o sistema deverá ser reinicializado.
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -226,7 +226,7 @@ winget install --id=astral-sh.uv  -e
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -238,7 +238,11 @@ Devido a restrições de segurança em computadores corporativos da Anatel, a in
 
 Navegue até a pasta de instalação utilizando o comando `cd C:\ProgramData\Anatel` ou crie a pasta com o comando `mkdir C:\ProgramData\Anatel`.
 
-Baixe e examda o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases) para a pasta criada com os seguintes comandos:
+> | ⚠️ *IMPORTANTE* |
+> | :--- |
+> | Caso seja necessário ou desejado instalar em outra pasta, o procedimento não sofrerá alterações, bastando substituir `C:\ProgramData\Anatel` na variável `$WEBROTAS_HOME` pelos caminhos desejados, no aquivo '.\webRotas\src\ucli\webRotas.bat' e criar manualmente um novo atalho para executar esse script. |
+
+Baixe e descomprima o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases) para a pasta criada com os seguintes comandos:
 
 ```shell
 $URL = "https://github.com/InovaFiscaliza/webRotas/releases"
@@ -267,6 +271,7 @@ Para facilitar o acesso, copie o ícone do *webRotas* o menu iniciar, com o coma
 ```shell
 cp .\src\ucli\webRotas.lnk $env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs
 ```
+
 para a área de trabalho com o comando:
 
 ```shell
@@ -275,11 +280,11 @@ cp .\src\ucli\webRotas.lnk $env:USERPROFILE\Desktop
 
 Durante a primeira execução, é possivel que mecanismos de segurança alertem para o uso da página web local ou o uso de portas de rede. Permita o acesso e a execução do *webRotas* quando solicitado, por exemplo, conforme a seguinte imagem:
 
-![Firewall](docs/images/windows_firewall_alert.png)
+![Firewall](../docs/images/windows_firewall_alert.png)
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -307,7 +312,7 @@ Veja as explicações de uso na página inicial do repositório do [webRotas](..
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -331,7 +336,7 @@ winget install Git.Git
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -361,15 +366,15 @@ Clone o repositório com o comando:
 git clone https://github.com/InovaFiscaliza/webRotas.git
 ```
 
-Após esse comando ser executado, será criada uma pasta chamada `webRotas` com todos os arquivos do projeto.
+Após esse comando ser executado, será criada uma pasta chamada `webRotas\` com todos os arquivos do projeto.
 
-| ⚠️ *IMPORTANTE* |
-| :--- |
-| A pasta raiz do projeto será referenciada nos passos seguintes apenas como `.\`, referindo-se à pasta `webRotas` criada no passo anterior. |
+> | ⚠️ *IMPORTANTE* |
+> | :--- |
+> | A pasta raiz do projeto será referenciada nos passos seguintes apenas como `.\`, referindo-se à pasta `webRotas` criada no passo anterior. |
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -387,6 +392,12 @@ O comando irá descarregar as bibliotecas necessárias e configurar o ambiente p
 
 O processo pode ser acompanhado pelo terminal.
 
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
 # Dados de Referência
 
 Além da aplicação, é necessário instalar os dados de referência utilizados por esta para realizar o roteamento.
@@ -395,7 +406,15 @@ Caso tenha acesso aos repositórios da Anatel, siga os passos indicados na seç�
 
 Caso não tenha acesso ao Sharepoint corporativo da Anatel, é possível realizar o download dos dados de referência a partir de repositórios públicos, conforme descrito a seguir.
 
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
 # Baixar de Repositórios Públicos
+
+A seguir são apresentados os passos para baixar os dados de referência a partir de repositórios públicos.
 
 ## 1 - limites municipais brasileiros - 2023
 
@@ -415,7 +434,7 @@ cd ..\..\..
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -437,7 +456,7 @@ cd ..\..\..
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -459,7 +478,7 @@ cd ..\..\..
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -477,7 +496,7 @@ cd ..\..\..
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -505,7 +524,7 @@ podman pull osrm/osrm-backend
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -549,7 +568,7 @@ mkdir templates
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
@@ -572,16 +591,10 @@ Para o aplicativo cliente utilize o comando:
 uv run .\src\ucli\webrota_client.py .\tests\exemplo_visita_ro.json
 ```
 
-Caso o aplicativo cliente seja chamado sem o argumento de nome do arquivo a ser enviado ao servidor, será apresentada a ajuda com as opções disponíveis e executado exemplo de demonstração conforme indicado na seguinte figura:
-
-![Client](docs/images/client-cmd.png)
+Caso o aplicativo cliente seja chamado sem o argumento de nome do arquivo a ser enviado ao servidor, será apresentada a ajuda com as opções disponíveis e executado exemplo de demonstração.
 
 <div align="right">
     <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+        <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
-
-
-
-# Teste e uso do WebRotas
