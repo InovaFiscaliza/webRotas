@@ -66,10 +66,10 @@ Vc pode verificar a versão do Windows usando o comando
 ```shell
 winver
 ```
-<div style="margin: auto; border: 1px solid darkgray; border-radius: 10px; background-color: lightgray; padding: 10px; color: black; width: 80%; align: center;">
-        <strong>⚠️ IMPORTANTE</strong> <br><br>
-        Em princípio o *webRotas* não é compatível com o uso em máquinas virtuais e demanda que o recurso de virtualização do windows esteja ativos em decorrência do uso do WLS. Mais detalhes são apresentados à seguir ou podem ser obtidos na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature)<br><br>
-</div>
+
+| ⚠️ *IMPORTANTE* |
+| :--- |
+| Em princípio o *webRotas* não é compatível com o uso em máquinas virtuais e demanda que o recurso de virtualização do windows esteja ativos em decorrência do uso do WLS. Mais detalhes são apresentados à seguir ou podem ser obtidos na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature) |
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -133,10 +133,9 @@ winget install Microsoft.PowerShell
 
  Para outros métodos, verifique o [procedimento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
 
-<div style="margin: auto; border: 1px solid darkgray; border-radius: 10px; background-color: lightgray; padding: 10px; color: black; width: 80%; align: center;">
-        <strong>⚠️ IMPORTANTE</strong> <br><br>
-        Todos os comandos indicados à seguir devem ser executados no terminal do <strong>PowerShell</strong><br><br>
-</div>
+| ⚠️ *IMPORTANTE* |
+| :--- |
+| Todos os comandos indicados à seguir devem ser executados no terminal do *PowerShell* |
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -361,10 +360,9 @@ git clone https://github.com/InovaFiscaliza/webRotas.git
 
 Após esse comando ser executado, será criada uma pasta chamada `webRotas` com todos os arquivos do projeto.
 
-<div style="margin: auto; border: 1px solid darkgray; border-radius: 10px; background-color: lightgray; padding: 10px; color: black; width: 80%; align: center;">
-        <strong>⚠️ IMPORTANTE</strong> <br><br>
-        A pasta raiz do projeto será referenciada nos passos seguintes apenas como `.\`, referindo-se à pasta `webRotas` criada no passo anterior.
-</div>
+| ⚠️ *IMPORTANTE* |
+| :--- |
+| A pasta raiz do projeto será referenciada nos passos seguintes apenas como `.\`, referindo-se à pasta `webRotas` criada no passo anterior. |
 
 <div align="right">
     <a href="#indexerd-md-top">

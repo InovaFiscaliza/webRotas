@@ -79,7 +79,7 @@ winver
 
 # Instalação
 
-Para utilizar o webRotas, siga os passos descritos na página de [instalação](./install/README.md).
+Para utilizar o webRotas, siga os passos descritos na página de [instalação](./Install/README.md).
 
 A referida página descreve passos para instalação tanto por usuários finais quanto por desenvolvedores.
 
@@ -127,13 +127,9 @@ O terminal apresentará também o link para uma versão estática da página htm
 
 ![image of client console](docs/images/client-cmd.png)
 
-<div style="margin: auto; border: 1px solid darkgray; border-radius: 10px; background-color: lightgray; padding: 10px; color: black; width: 80%; align: center;">
-        <strong>⚠️ IMPORTANTE</strong> <br><br>
-        Pode ocorrer falha no processo de criação de índices, mapa ou outros eventos.<br><br>Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado. Para corrigir esse erro, execute o seguinte script: <br><br> <div style="border-radius: 5px; background-color: darkgray; padding: 10px;"><i><em>\webRotas\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat.</i></em></div></td></td>
-        </tr>
-    </table>
-</div>
-<br>
+| ⚠️ *IMPORTANTE* |
+| --- |
+| Pode ocorrer falha no processo de criação de índices, mapa ou outros eventos.<br><br>Para limpar todos arquivos de cache ou temporários do sistema e reiniciar seu estado. Para corrigir esse erro, execute o seguinte script: `.\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat` |
 
 No diretório `\webRotas\Servers\backend\webdir\logs` você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
 
