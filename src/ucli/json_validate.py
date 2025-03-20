@@ -48,7 +48,7 @@ SCHEMAS = {
             "regioes": {"type": "array", "default": []}
         }
     },
-    "DriveTest": {
+    "Contorno": {
         "type": "object",
         "required": ["User", "TipoRequisicao", "PontoInicial", "latitude", "longitude", "raio"],
         "properties": {
