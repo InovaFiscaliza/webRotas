@@ -242,10 +242,10 @@ Navegue até a pasta de instalação utilizando o comando `cd C:\ProgramData\Ana
 > | :--- |
 > | Caso seja necessário ou desejado instalar em outra pasta, o procedimento não sofrerá alterações, bastando substituir `C:\ProgramData\Anatel` na variável `$WEBROTAS_HOME` pelos caminhos desejados, no aquivo '.\webRotas\src\ucli\webRotas.bat' e criar manualmente um novo atalho para executar esse script. |
 
-Baixe e descomprima o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases) para a pasta criada com os seguintes comandos:
+Baixe e descomprima o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases/latest) para a pasta criada com os seguintes comandos.
 
 ```shell
-$URL = "https://github.com/InovaFiscaliza/webRotas/releases"
+$URL = "https://github.com/InovaFiscaliza/webRotas/releases/latest/download/werbrotas.tgz"
 
 Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile "webrotas.tgz"
 
