@@ -1,4 +1,7 @@
 echo off
+REM Definição de variáveis de ambiente
+set WEBROTAS_HOME=C:\ProgramData\Anatel\webRotas
+
 REM Configura aparência do terminal
 REG QUERY HKCU\Console | findstr /i "VirtualTerminalLevel" >nul
 if errorlevel 1 (
@@ -8,10 +11,10 @@ set PROMPT=$E[32m[webRotas]$E[0m $P$G
 title webRotas
 
 REM Configura o alias com doskey
-doskey webrotas=uv run --project "C:\ProgramData\Anatel\webRotas" "C:\ProgramData\Anatel\webRotas\src\ucli\webrota_client.py" $*
-doskey exemplos=copy C:\ProgramData\Anatel\webRotas\tests\*.json .
-doskey limpa=C:\ProgramData\Anatel\webRotas\src\ucli\limpa.bat
-doskey ajuda=cat C:\ProgramData\Anatel\webRotas\src\ucli\mensagens.txt
+doskey webrotas=uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" $*
+doskey exemplos=copy "%WEBROTAS_HOME%\tests\*.json" .
+doskey limpa="%WEBROTAS_HOME%\src\ucli\limpa.bat"
+doskey ajuda=cat "%WEBROTAS_HOME%\src\ucli\mensagens.txt"
 
 REM Configura a página de código para UTF-8
 chcp 65001 >nul
