@@ -1,3 +1,9 @@
+     Este é o container original que foi salvo com os comandos
+     podman run -p 9966:9966 osrm/osrm-frontend
+     podman commit 572b60c4b455  osrm_webrota
+     podman save -o osrm_webrota.tar osrm_webrota
+
+
 Baixar dados do Brasil
     https://download.geofabrik.de/south-america/brazil.html 
     wsl wget https://download.geofabrik.de/south-america/brazil-latest.osm.pbf

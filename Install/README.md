@@ -261,6 +261,26 @@ O comando irá descarregar as bibliotecas necessárias e configurar o ambiente p
 
 O processo pode ser acompanhado pelo terminal.
 
+Ao concluir, o *webRotas* já pode ser executado de forma simplificada por meio do script `.\src\ucli\webRotas.bat`.
+
+Para facilitar o acesso, copie o ícone do *webRotas* o menu iniciar, com o comando:
+
+```shell
+cp .\src\ucli\webRotas.lnk $env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs
+```
+para a área de trabalho com o comando:
+
+```shell
+cp .\src\ucli\webRotas.lnk $env:USERPROFILE\Desktop
+```
+
+Ou para 
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
 ## Dados de referência no repositório da Anatel
 
 Além da aplicação, é necessário instalar os dados de referência utilizados por esta para realizar o roteamento.
@@ -532,3 +552,35 @@ mkdir templates
     </a>
 </div>
 
+# Teste e uso em ambiente de desenvolvimento
+
+A forma mais prática de trabalhar com o *webRotas* é utilizando o ambiente de desenvolvimento do VSCode, sendo disponibilizado no repositório arquivos para configuração do ambiente na pasta `.vscode`.
+
+Estão disponíveis configurações no `launch.json` para execução do servidor e do cliente com diferentes argumentos, devendo ser utilizado como ambiente o .venv criado pelo `uv sync`.
+
+A inicialização do servidor em modo debug demanda o uso do cliente para envio das requisições, o que pode ser realizado tanto pela execução do script `webrota_client.py` quanto pelo uso de testes adicionais disponíveis na pasta `.\tests\dev`.
+
+Para iniciar o servidor diretamente na linha de comando vc pode utilizar:
+```shell
+uv run .\src\backend\webdir\Server.py
+```
+
+Para o aplicativo cliente utilize o comando:
+
+```shell
+uv run .\src\ucli\webrota_client.py .\tests\exemplo_visita_ro.json
+```
+
+Caso o aplicativo cliente seja chamado sem o argumento de nome do arquivo a ser enviado ao servidor, será apresentada a ajuda com as opções disponíveis e executado exemplo de demonstração conforme indicado na seguinte figura:
+
+![Client](docs/images/client-cmd.png)
+
+<div align="right">
+    <a href="#indexerd-md-top">
+        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
+    </a>
+</div>
+
+
+
+# Teste e uso do WebRotas

@@ -20,31 +20,10 @@
     <li><a href="#sobre-o-webrotas">Sobre o WebRotas</a></li>
     <li><a href="#requisitos-do-sistema">Requisitos do sistema</a></li>
     <li><a href="#instalação">Instalação</a></li>
-        <ul>
-            <li><a href="#1-instale-o-git">Instale o Git</a></li>
-            <li><a href="#2-baixe-o-webrotas">Baixe o WebRotas</a></li>
-            <li><a href="#3-instale-o-wsl">Instale o WSL</a></li>
-            <li><a href="#4-instale-o-podman">Instale o Podman</a></li>
-            <li><a href="#5-instale-o-uv">Instale o UV</a></li>
-        </ul>
-    <li><a href="#baixar-dados-de-referência">Baixar Dados de Referência</a></li>
-        <ul>
-            <li><a href="#1---limites-municipais-brasileiros---2023">Limites Municipais Brasileiros - 2023</a></li>
-            <li><a href="#2---favelas-e-comunidades-urbanas---2022">Favelas e Comunidades Urbanas - 2022</a></li>
-            <li><a href="#3---áreas-urbanizadas-do-brasil---2019">Áreas Urbanizadas do Brasil - 2019</a></li>
-            <li><a href="#4---arruamento-para-cálculo-de-rotas-osm">Arruamento para cálculo de rotas OSM</a></li>
-        </ul>
-    <li><a href="#configuração-do-ambiente-de-trabalho">Configuração do ambiente de trabalho</a></li>
-        <ul>
-            <li><a href="#1--criação-do-ambiente-conda">Criação do Ambiente Conda</a></li>
-            <li><a href="#2--criação-do-ambiente-podman">Criação do Ambiente Podman</a></li>
-        </ul>
-    <li><a href="#inicializando-o-servidor">Inicializando o Servidor</a></li>
-    <li><a href="#teste-e-uso-do-webrotas">Teste e uso do WebRotas</a></li>
+    <li><a href="#uso-do-webrotas">Uso do WebRotas</a></li>
     <li><a href="#contribuindo">Contribuindo</a></li>
     <li><a href="#licença">Licença</a></li>
     <li><a href="#referências-adicionais">Referências adicionais</a></li>
-
 </ol>
 </details>
 
@@ -58,13 +37,13 @@ As imagens à seguir apresentam os 3 principais modos de cálculo, que são:
 
 1. **Pontos de Visita** - Cálculo de rotas para visitas a pontos de inspeção, com a possibilidade de definir a ordem de visitação dos pontos. Por exemplo, para verificação de um conjunto de estações de rádio base. Para este modo, é necessário definir os pontos a serem visitados.
 
-   ![Pontos de Visita](docs/images/pntsVisita.jpg)
+   ![Pontos de Visita](docs/images/exemplo-visita-pontos.png)
 2. **Abrangência** - Cálculo de rotas para verificação de pontos regulares distribuídos em uma área. Para este modo, é necessário definir o polígono da área a ser inspecionada e a densidade de pontos a serem visitados em termos da distância entre estes. O sistema calcula as coordenadas dos pontos a serem visitados.
 
-   ![Abrangência](docs/images/abrangencia.jpg)
+   ![Abrangência](docs/images/exemplo-abrangência.png)
 3. **Contorno** - Cálculo de rota para verificação de pontos regularmente distribuídos em torno de um ponto central. Pare este modo é necessário definir o ponto central, o raio e o distanciamento entre os pontos. O sistema calcula as coordenadas dos pontos a serem visitados.
 
-   ![Contorno](docs/images/drvTest.jpg)
+   ![Contorno](docs/images/exemplo-contorno.png)
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -104,41 +83,17 @@ Para utilizar o webRotas, siga os passos descritos na página de [instalação](
 
 A referida página descreve passos para instalação tanto por usuários finais quanto por desenvolvedores.
 
-# Inicializando o Servidor
+# Uso do *WebRotas*
 
-A forma mais prática de usar o webRotas
-Abra um terminal do prompt de comando na pasta raiz do projeto WebRotas.
+No momento o *WebRotas* possui uma interface de usuário simplificada, via linha de comando.
 
-Para iniciar o servidor utilize o comando: 
-```shell
-uv run .\src\backend\webdir\Server.py
-```
+Para abrir essa interface, utilize o ícone de atalho disponível após a instalação.
 
-A inicialização do servidor pode levar alguns minutos, dependendo do hardware do computador. Quando concluída a inicialização, o script indicará a situação do servidor e como acessar o serviço, conforme a imagem a seguir:
+O atalho dá acesso à janela de prompt com mensagem de ajuda conforme indicado na figura a seguir:
 
-![Server](docs/images/server-cmd.png)
+![Help](docs/images/help-cmd.png)
 
-O serviço pode ser acessado para enviar diretamente requisições de roteamento.
-
-Outra alternativa é diretamente para realizar cálculo de rotas à partir das definições de um arquivo json utilizando a aplicação CLI de interface cliente para o servidor. Para isso utilize o comando:
-
-```shell
-uv run .\src\ucli\webrota_client.py .\tests\exemplo_visita_ro.json
-```
-
-Caso o aplicativo cliente seja chamado sem o argumento de nome do arquivo a ser enviado ao servidor, será apresentada a ajuda com as opções disponíveis e executado exemplo de demonstração conforme indicado na seguinte figura:
-
-![Client](docs/images/client-cmd.png)
-
-<div align="right">
-    <a href="#indexerd-md-top">
-        <img src="./docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
-    </a>
-</div>
-
-
-
-# Teste e uso do WebRotas
+Dentro dessa janela de prompt, o *webRotas* é utilizado por meio do comando `webrotas <arquivo_de_dados>.json`, onde o arquivo de dados é um arquivo json contendo as informações necessárias para o cálculo de rotas, tais como os pontos a serem visitados, a área de abrangência ou o contorno a ser percorrido, dentre outros parâmetros.
 
 Alguns exemplos foram disponibilizados para teste do WebRotas e poderão ser modificados para atender a necessidades específicas.
 
@@ -152,21 +107,25 @@ Alguns exemplos foram disponibilizados para teste do WebRotas e poderão ser mod
 | [exemplo_visita_ro.json](./tests/exemplo_visita_ro.json) | Teste de pontos de visita na cidade de Boa Vista com 2 regiões de exclusão e algoritmo de ordenação por distância geodésica |
 | [exemplo_visita_serra_rj.json](./tests/exemplo_visita_serra_rj.json) | Teste de pontos de visita na Serra do Rio de Janeiro, sem regiões de exclusão e algoritmo de ordenação por distância OSMR MultiThread |
 
-Para executar um dos exemplos execute o comando:
+Para baixar os exemplo e executar, utilize a seguinte sequencia de comandos em uma pasta de trabalho que achar mais conveniente, fora do diretório do *webRotas*.
 
 ```shell
-uv run .\src\ucli\webrota_client.py .\tests\<nome_do_teste>.json
+exemplos
+
+webrotas <nome_do_exemplo>.json
 ```
 
-A execução do teste pode levar alguns minutos, dependendo do hardware do computador, acompanhe as mensagens no terminal onde é executado o script, assim como no terminal adicional que é aberto para o servidor.
+Após a execução do comando, o *WebRotas* irá abrir um segundo terminal, onde será exibido o log de execução do servidor, conforme a imagem a seguir:
+
+![image of server console](docs/images/server-cmd.png)
+
+A execução do teste pode levar alguns minutos, dependendo do hardware do computador utilizado, acompanhe as mensagens nos terminais para verificar o progresso e eventuais erros.
 
 Ao fim da execução do script de teste, será apresentado no terminal a resposta json do servidor e, caso as configurações do ambiente estejam corretas, será aberta uma janela do navegador padrão com a página html da resposta, onde será possível realizar operações como a alteração da ordem de visita dos pontos, alteração do ponto inicial, exportação da rota em formato kml, etc.
 
-O terminal apresentará também o link para a página html, conforme a imagem a seguir:
+O terminal apresentará também o link para uma versão estática da página html, que pode ser compartilhada com outros usuários para visualização, ficando nesse caso inativas funcionalidades como de recálculo da rota pela ordenação dos pontos ou à partir do ponto atual, conforme indicado na imagem a seguir:
 
-![Test2-cmd](docs/images/test2-cmd.png)
-
-![Test2-html](docs/images/test2-html.png)
+![image of client console](docs/images/client-cmd.png)
 
 <div style="margin: auto; border: 1px solid darkgray; border-radius: 10px; background-color: lightgray; padding: 10px; color: black; width: 80%; align: center;">
         <strong>⚠️ IMPORTANTE</strong> <br><br>
@@ -177,8 +136,6 @@ O terminal apresentará também o link para a página html, conforme a imagem a 
 <br>
 
 No diretório `\webRotas\Servers\backend\webdir\logs` você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
-
-Outra opção para depurar os containers é usar o Podman Desktop. Na interface, você pode visualizar a lista de containers em execução, clicar sobre um deles e acessar suas telas de saída e logs.
 
 <div align="right">
     <a href="#indexerd-md-top">
