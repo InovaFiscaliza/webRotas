@@ -5,10 +5,10 @@
     "PontoInicial": [-22.90236790344037, -43.17420024484698,"Anatel Rio de Janeiro"],            
     "RaioDaEstacao": 200,
     "GpsProximoPonto": "ProximoDaRota",
-    "Escopo":"Municipio",
+    "Escopo":"AreasUrbanizadas",
     "cidade": "Campos dos Goytacazes",
     "uf": "RJ",
-    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
+    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",
     "distancia_pontos": 1600,
     "regioes": []
 }

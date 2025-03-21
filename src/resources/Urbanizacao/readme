@@ -1,1 +1,0 @@
-Dados das áreas urbanizasas
