@@ -99,8 +99,7 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     GeraStaticIcon("GpsInativo")
     GeraStaticIcon("GpsAtivo")
     GeraStaticIcon("Kml")
-    
-    # GeraElevationTable()    
+    GeraStaticIcon("MapLayers")
 
     if static:
        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 

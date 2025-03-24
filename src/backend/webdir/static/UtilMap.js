@@ -1578,27 +1578,30 @@ function createMacOSDock() {
         //---------------------------------------------------------------------------
         if (index === 5) { // Botão de controle dos layers
             iconDiv.innerText = '';
-            const img = document.createElement('div');
+            const img = document.createElement('img');
+            img.src = imgMapLayers; 
             img.id="divLayers";
             img.style.width = '35px';
             img.style.height = '35px';
             img.style.borderRadius = '10px';
             img.style.zIndex ="1501";
-            const layersControl = L.control.layers(baseLayers, null);
-            layersControl.addTo(map);
-            const layersContainer =  layersControl.getContainer(); // Obter a interface do controle
-            layersContainer.style.fontFamily = "'Arial', sans-serif"; // Define a família da fonte
-            layersContainer.style.textShadow = '1px 1px 1px white'; // Sombra branca no texto
-            layersContainer.style.fontSize = '12px'; // Define o tamanho da fonte
-            layersContainer.style.color = '#333'; // Define a cor da fonte
-            layersContainer.style.width = '200px'; // Define a largura do menu
-            layersContainer.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.0)'; // Sombra para destacar
-            layersContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.0)';
 
-            img.appendChild(layersContainer); // Adicionar ao div personalizado
             iconDiv.appendChild(img);
-            img.onclick = () => {
+            // Adicionar funcionalidade para alternar os mapas-base ao clicar
+            let baseMapsArray = Object.keys(baseLayers); // Obter lista de nomes dos mapas-base
+            let currentBaseMapIndex = 0;
 
+            img.onclick = () => {
+                currentBaseMapIndex = (currentBaseMapIndex + 1) % baseMapsArray.length; // Avançar para o próximo mapa
+                let selectedBaseMap = baseLayers[baseMapsArray[currentBaseMapIndex]];
+
+                map.eachLayer(layer => {
+                    if (Object.values(baseLayers).includes(layer)) {
+                        map.removeLayer(layer); // Remover o mapa-base atual
+                    }
+                });
+
+                map.addLayer(selectedBaseMap); // Adicionar o novo mapa-base
             };
         }        
         //---------------------------------------------------------------------------
