@@ -4,6 +4,8 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
+        
         {
             "name": "server default args",
             "type": "debugpy",
@@ -51,6 +53,14 @@
             "console": "integratedTerminal",
             "args": ["${workspaceFolder}/tests/exemplo_visita_rj.json"]
         },
+        {
+            "name": "client exemplo_abrangencia_rj_niteroi_geodesica.json",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/ucli/webrota_client.py",
+            "console": "integratedTerminal",
+            "args": ["${workspaceFolder}/tests/exemplo_abrangencia_rj_niteroi_geodesica.json"]
+        },        
         {
             "name": "client no args",
             "type": "debugpy",

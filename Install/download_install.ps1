@@ -100,7 +100,6 @@ if ($?) {
 }
 # ----------------------------------------------------------------------------------------------------------------------
 # Verifica se o Podman está instalado
-# Verifica se o Podman está instalado
 if (Get-Command podman -ErrorAction SilentlyContinue) {
     Write-Host "Podman já está instalado. Versão:" -ForegroundColor Green
     podman --version
@@ -162,6 +161,16 @@ if (Test-Path "pyproject.toml") {
         Write-Host "Falha ao inicializar UV. Verifique manualmente." -ForegroundColor Red
         exit 1
     }
+}
+# ----------------------------------------------------------------------------------------------------------------------
+# Executa o comando uv sync e captura a saída
+$process = Start-Process -FilePath "uv" -ArgumentList "sync" -NoNewWindow -PassThru -Wait
+# Verifica se a execução foi bem-sucedida
+if ($process.ExitCode -eq 0) {
+    Write-Host "O comando 'uv sync' foi executado com sucesso!" -ForegroundColor Green
+} else {
+    Write-Host "Erro ao executar 'uv sync'. Código de saída: $($process.ExitCode)" -ForegroundColor Red
+    exit 1  # Encerra o script com erro
 }
 # ----------------------------------------------------------------------------------------------------------------------
 cd src\resources\BR_Municipios

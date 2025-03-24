@@ -10,6 +10,8 @@ import requests
 import subprocess
 import time
 import webbrowser
+from pathlib import Path
+
 
 SERVER_NAME = "WebRotas Server"
 SERVER_PORT = 5001
@@ -18,6 +20,7 @@ SERVER_TEST_URL_FOLDER = "/ok"
 SERVER_URL_FOLDER = "/webrotas"
 PROJECT_FOLDER_NAME = "webRotas"
 SERVER_DATA_FILE = "src/backend/webdir/TempData/server.json"
+SERVER_PROJECT_RELATIVE_PATH = "src/backend/webdir/server.py" 
 SERVER_START_TIMEOUT = 10 # Tempo de espera para o servidor iniciar em segundos
 SERVER_WAIT_TIMEOUT = 60 # Tempo para desistir de esperar o servidor em segundos
 URL_RESPONSE_TIMEOUT = 5 # Tempo de espera para resposta do servidor em segundos
@@ -127,14 +130,19 @@ class ServerData:
         if self.status_up:
             logging.info("Routing service is running.")
         else:
-            command = (
-                f"title {self.name} && "
-                f"cd {self.server_project_path} && "
-                f"uv run .\\src\\backend\\webdir\\server.py --port {self.port}"
-            )
-
+            #command = (
+            #    f"title {self.name} && "
+            #    f"cd {self.server_project_path} && "
+            #    f"uv run .\\src\\backend\\webdir\\server.py --port {self.port}"
+            #)
+            #print(f"cd {self.server_project_path} && ")
+            #print(f"uv run .\\src\\backend\\webdir\\server.py --port {self.port}")
+            #subprocess.Popen(command, creationflags=DETACHED_PROCESS, shell=True)
+            
+            server_abs_path = Path(self.server_project_path) / SERVER_PROJECT_RELATIVE_PATH
+            command = f"uv run --project {self.server_project_path} {server_abs_path} --port {self.port}"           
             subprocess.Popen(command, creationflags=DETACHED_PROCESS, shell=True)
-        
+            
             countdown = SERVER_WAIT_TIMEOUT / SERVER_START_TIMEOUT
             while not self.status_up:
                 time.sleep(SERVER_START_TIMEOUT)
