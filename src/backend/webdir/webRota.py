@@ -172,7 +172,7 @@ def getElevationOpenElev(latitude, longitude):
 
 
 ###########################################################################################################################
-def getElevationOpenElevBatch(lat_lons, batch_size):
+def getElevationOpenElevBatchOLd(lat_lons, batch_size):
     """
     Obtém a elevação de múltiplas localizações usando a API Open-Elevation em lotes de 100.
 
@@ -239,6 +239,49 @@ def getElevationOpenElevBatch(lat_lons, batch_size):
 
     return elevations
 
+
+def getElevationOpenElevBatch(lat_lons, batch_size):
+    """
+    Obtém a elevação de múltiplas localizações usando a API Open-Elevation em lotes.
+
+    Args:
+        lat_lons (list): Lista de tuplas contendo latitude e longitude.
+        batch_size (int): Tamanho do lote para processamento.
+
+    Returns:
+        list: Lista de elevações em metros. Retorna 0 para coordenadas com erro.
+    """
+    url = "https://api.open-elevation.com/api/v1/lookup"
+    urlVpn = "http://rhfisnspdex02.anatel.gov.br/api/v1/lookup"
+    elevations = []
+
+    def fetch_batch_elevations(url, batch):
+        """Função interna para buscar elevações de um lote."""
+        locations = "|".join([f"{lat},{lon}" for lat, lon in batch])
+        params = {"locations": locations}
+
+        try:
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            if "results" in data:
+                return [round(res["elevation"]) for res in data["results"]]
+            else:
+                return [0] * len(batch)
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            return [0] * len(batch)
+
+    for i in range(0, len(lat_lons), batch_size):
+        batch = lat_lons[i : i + batch_size]
+        batch_elevations = fetch_batch_elevations(url, batch)
+        
+        if all(e == 0 for e in batch_elevations):  # Se todos os valores forem 0, tenta a VPN
+            batch_elevations = fetch_batch_elevations(urlVpn, batch)
+        
+        elevations.extend(batch_elevations)
+
+    return elevations
 
 ###########################################################################################################################
 MinAltitude = 50000  # Valor alto para garantir que a primeira altitude seja menor
