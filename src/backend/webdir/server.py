@@ -47,7 +47,7 @@ env = se.ServerEnv()
 # TODO #4 Use standard paths defined in a configuration section or file. May use ProgramData/Anatel/WebRotas, as other applications from E!, where ProgramData folder should use system variables.
 
 wr.log_filename = env.log_file
-print(f"Arquivo de log: {env.log_file}")
+wr.wLog(f"Arquivo de log: {env.log_file}")
 
 app = Flask(__name__, static_folder="static")
 CORS(app)  # Habilita CORS para todas as rotas
@@ -144,9 +144,9 @@ def SalvaDataArq(data):
         with open(file_name, "w", encoding="utf-8") as file:
             json.dump(data, file, indent=4, ensure_ascii=False)
 
-        print(f"Dados salvos com sucesso no arquivo: {file_name}")
+        wr.wLog(f"Dados salvos com sucesso no arquivo: {file_name}")
     except Exception as e:
-        print(f"Erro ao salvar os dados: {e}")
+        wr.wLog(f"Erro ao salvar os dados: {e}")
         return jsonify({"error": "Erro ao salvar os dados"}), 500
 
 ###9
@@ -196,8 +196,8 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         
             #---------------------------------------------------------------------------------------------
             case "Contorno":
-                print("\n\n#############################################################################################")
-                print("Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)\n")
+                wr.wLog("\n\n#############################################################################################")
+                wr.wLog("Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)\n")
 
                 # mandatory arguments
                 latitude = data["latitude"]
@@ -208,9 +208,9 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 numeropontos = data.get("numeropontos", default_points(raio))
 
                 # Present used arguments
-                print(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
-                print(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m", f"Número de Pontos: {numeropontos}")
-                print(f"Regiões Evitar: {regioes}")
+                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
+                wr.wLog(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m", f"Número de Pontos: {numeropontos}",level="debug")
+                wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
                 
                 # Process the received data
                 central_point = [latitude, longitude]
@@ -223,16 +223,16 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 
             #---------------------------------------------------------------------------------------------
             case "PontosVisita":
-                print("\n\n#############################################################################################")
-                print("Recebida solicitação pontos de visita\n")
+                wr.wLog("\n\n#############################################################################################")
+                wr.wLog("Recebida solicitação pontos de visita\n")
 
                 # mandatory arguments
                 pontosvisita = data["pontosvisita"]
                 
                 # Present used arguments
-                print(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
-                print(f"Pontos de Visita: {pontosvisita}")
-                print(f"Regiões Evitar: {regioes}")
+                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
+                wr.wLog(f"Pontos de Visita: {pontosvisita}",level="debug")
+                wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
                 
                 # Process the received data
                 fileName, fileNameStatic, fileKml = wr.RoutePontosVisita(   data,
@@ -243,8 +243,8 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
 
             # ---------------------------------------------------------------------------------------------
             case "Abrangencia":
-                print("\n\n#############################################################################################")
-                print("Recebida solicitação de compromisso de abrangência\n")
+                wr.wLog("\n\n#############################################################################################")
+                wr.wLog("Recebida solicitação de compromisso de abrangência\n")
 
                 # mandatory arguments
                 cidade = data["cidade"]
@@ -253,9 +253,9 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 distanciaPontos = data["distancia_pontos"]
                 
                 # Present used arguments
-                print(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
-                print(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos}m")
-                print(f"Regiões Evitar: {regioes}")
+                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
+                wr.wLog(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos}m",level="debug")
+                wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
 
                 # Process the received data
                 fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(data,
@@ -268,8 +268,8 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                                                                         regioes)
             # ---------------------------------------------------------------------------------------------
             case "RoteamentoOSMR":
-                print("\n\n#############################################################################################")
-                print("Recebida solicitação de RoteamentoOSMR\n")
+                wr.wLog("\n\n#############################################################################################")
+                wr.wLog("Recebida solicitação de RoteamentoOSMR\n")
                 
                 # mandatory arguments
                 porta = data["PortaOSRMServer"]
@@ -294,10 +294,10 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                             "RotaRecalculada": recalcularrota,
                             "pontosVisita": pontosvisita,
                         }
-                    )
+                    ),level="debug"
                 )
                 wr.wLog(
-                    "\n\n#############################################################################################"
+                    "\n\n#############################################################################################",level="debug"
                 )
                 return jsonify(
                     {
@@ -370,12 +370,12 @@ def parse_args() -> argparse.Namespace:
     try:
         args, unknown = parser.parse_known_args()
         if unknown:
-            print(f"Warning: Unknown arguments ignored: {unknown}")
-            print(f"Using default values: port={env.port}, debug={env.debug_mode}")
+            wr.wLog(f"Warning: Unknown arguments ignored: {unknown}")
+            wr.wLog(f"Using default values: port={env.port}, debug={env.debug_mode}")
         return args
     except Exception as e:
-        print(f"Error parsing arguments: {e}")
-        print(f"Using default values: port={env.port}, debug={env.debug_mode}")
+        wr.wLog(f"Error parsing arguments: {e}")
+        wr.wLog(f"Using default values: port={env.port}, debug={env.debug_mode}")
         # Return a Namespace with default values
         return argparse.Namespace(port=env.port, debug=env.debug_mode)
 
@@ -392,19 +392,19 @@ def main():
         env.save_server_data()
         wr.server_port = env.port
 
-        print(f"\nStarting WebRotas Server on port {env.port}...")
+        wr.wLog(f"\nStarting WebRotas Server on port {env.port}...")
         app.run(debug=args.debug, port=env.port, host='0.0.0.0')
         return 0
     except Exception as e:
-        print(f"Server error: {e}")
+        wr.wLog(f"Server error: {e}")
         return 1
     finally:
         # Ensure cleanup happens exactly once
         try:
             env.clean_server_data()
-            print("\nExiting WebRotas Server\n")
+            wr.wLog("\nExiting WebRotas Server\n")
         except Exception as e:
-            print(f"Cleanup error: {e}")
+            wr.wLog(f"Cleanup error: {e}")
 
 
 if __name__ == "__main__":

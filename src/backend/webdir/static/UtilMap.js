@@ -9,7 +9,7 @@
 
 var  gpsMarker = null;
 
-var debugLevel =0; // 0 - no debug, 1 - debug
+var debugLevel = 0; // 0 - no debug, 1 - debug
 function wLog(msg) 
 {
    if(debugLevel == 1)
@@ -752,7 +752,7 @@ var positionHistory = [];
 var gpsAtivado = false; // Defina como false para desabilitar a geolocalização
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 function updateGPSPosition(position) {
-    console.trace("updateGPSPosition");
+    wLog("updateGPSPosition");
     if(gpsAtivado==false)
         return
     if (position === undefined) {

@@ -38,7 +38,7 @@ def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
 
     if municipio.empty:
         wr.wLog(
-            f"Município '{nome_municipio}' no estado '{estado_sigla}' não encontrado."
+            f"Município '{nome_municipio}' no estado '{estado_sigla}' não encontrado.",level="debug"
         )
         return None
 
@@ -50,7 +50,7 @@ def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     polyline = []
     if geometria.geom_type == "MultiPolygon":
         # Se for MultiPolygon, concatenar coordenadas de todos os polígonos
-        wr.wLog("Foi multipoligon - Cidade possui ilhas ou áreas isoladas")
+        wr.wLog("Foi multipoligon - Cidade possui ilhas ou áreas isoladas",level="debug")
 
         for polygon in geometria.geoms:
             polyline.append(list(polygon.exterior.coords))
