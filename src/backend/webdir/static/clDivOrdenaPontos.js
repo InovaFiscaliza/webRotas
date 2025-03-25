@@ -10,7 +10,11 @@ function clDivOrdenaPontos() {
     // Cria a div principal
     
     if (document.getElementById('divOrdenaPontos')) {
-        console.log('A div já está aberta.');
+        wLog('A div já está aberta.');
+        document.getElementById('divOrdenaPontos').style.top = '10px';
+        document.getElementById('divOrdenaPontos').style.left = '10px'; 
+        document.getElementById('divOrdenaPontos').style.width = '300px'; // Tamanho inicial
+        document.getElementById('divOrdenaPontos').style.height = '600px';
         return; // Sai da função se a div já existir
     }
     SetHeadingNorte_SemRodarMapa();
