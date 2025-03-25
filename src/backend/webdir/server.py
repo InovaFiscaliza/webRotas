@@ -79,7 +79,7 @@ def mapa_leaflet(filename):
 @app.route("/route", methods=["GET"])
 def get_route():
     """
-    Rota Flask que envia requisições para o servidor OSRM e retorna a resposta.\n
+    Rota Flask que envia requisições para o servidor OSRM e retorna a resposta.
        curl "http://127.0.0.1:5001/route?porta=5001&start=-46.6388,-23.5489&end=-46.6253,-23.5339"
 
 
@@ -195,7 +195,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
             #---------------------------------------------------------------------------------------------
             case "Contorno":
                 wr.wLog("#############################################################################################")
-                wr.wLog("Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)\n")
+                wr.wLog("Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)")
 
                 # mandatory arguments
                 latitude = data["latitude"]
@@ -389,7 +389,7 @@ def main():
         env.save_server_data()
         wr.server_port = env.port
 
-        wr.wLog(f"\nStarting WebRotas Server on port {env.port}...")
+        wr.wLog(f"Starting WebRotas Server on port {env.port}...")
         app.run(debug=args.debug, port=env.port, host='0.0.0.0')
         return 0
     except Exception as e:
@@ -399,7 +399,7 @@ def main():
         # Ensure cleanup happens exactly once
         try:
             env.clean_server_data()
-            wr.wLog("\nExiting WebRotas Server\n")
+            wr.wLog("Exiting WebRotas Server")
         except Exception as e:
             wr.wLog(f"Cleanup error: {e}")
 
