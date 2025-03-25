@@ -187,7 +187,8 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         user = unidecode(data.get("User", "Anatel"))
         regioes = data.get("regioes", [])
         pontoinicial = data.get("PontoInicial", [])
-
+        # Nome do usuário para o log trancorrer com o nome correto o quanto antes sem o "none"
+        wr.UserData.nome = user
         # Process the request according to the request type
         match request_type:
         
@@ -206,7 +207,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
 
                 # Present used arguments
                 wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
-                wr.wLog(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m", f"Número de Pontos: {numeropontos}",level="debug")
+                wr.wLog(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m, Número de Pontos: {numeropontos}",level="debug")
                 wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
                 
                 # Process the received data
