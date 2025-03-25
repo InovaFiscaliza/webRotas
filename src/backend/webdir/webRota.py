@@ -1174,7 +1174,7 @@ def PreparaServidorRoteamento(regioes):
         wLog("GerarIndicesExecutarOSRMServer")
         GerarIndicesExecutarOSRMServer()
     else:
-        wLog("Arquivo exclusoes nao modificado, nao e necessario executar osmisis")
+        wLog("Arquivo exclusoes nao modificado, nao e necessario executar osmosis")
         AtivaServidorOSMR()
     VerificarOsrmAtivo()
 
