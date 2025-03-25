@@ -1485,7 +1485,7 @@ def RouteCompAbrangencia(   data: dict,
         case _:
             raise ValueError(f"Escopo '{escopo}' não é válido.")
     
-    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontosvisita)
+    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita)
     PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial=pontoinicial
@@ -1862,7 +1862,7 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
 
     pontosvisita = PegaPontosVisita(pontosvisitaDados)
-    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontosvisita)
+    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita)
     PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial = pontoinicial
@@ -1889,8 +1889,8 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
 
 
 ###########################################################################################################################
-def AtualizaRegioesBoudingBoxPontosVisita(regioes, pontosvisita, distancia_km=50):
-    lat_min, lat_max, lon_min, lon_max = calcula_bounding_box_pontos(
+def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita, distancia_km=50):
+    lat_min, lat_max, lon_min, lon_max = calcula_bounding_box_pontos(pontoinicial,
         pontosvisita, margem_km=50
     )
     # 1 grau de latitude = 111 km
@@ -1922,7 +1922,7 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes, pontosvisita, distancia_km=50
 
 
 ###########################################################################################################################
-def calcula_bounding_box_pontos(pontos, margem_km=50):
+def calcula_bounding_box_pontosOLd(pontoinicial,pontos, margem_km=50):
     """
     Calcula um bounding box expandido em torno de um grupo de pontos.
 
@@ -1958,8 +1958,47 @@ def calcula_bounding_box_pontos(pontos, margem_km=50):
     lon_max += desloc_lon
 
     return lat_min, lat_max, lon_min, lon_max
+###########################################################################################################################
+def calcula_bounding_box_pontos(pontoinicial, pontos, margem_km=50):
+    """
+    Calcula um bounding box expandido em torno de um grupo de pontos, incluindo um ponto inicial.
 
+    Args:
+        pontoinicial (tuple): Coordenadas do ponto inicial (lat, lon).
+        pontos (list): Lista de coordenadas [(lat, lon), ...].
+        margem_km (float): Margem adicional em km ao redor do grupo de pontos.
 
+    Returns:
+        dict: Limites do bounding box (lat_min, lat_max, lon_min, lon_max).
+    """
+    if not pontos:
+        raise ValueError("A lista de pontos não pode estar vazia.")
+
+    # Inclui o ponto inicial na lista de pontos
+    todos_pontos = pontos + [pontoinicial]
+
+    # Determina os limites mínimos e máximos de latitude e longitude
+    lat_min = min(p[0] for p in todos_pontos)
+    lat_max = max(p[0] for p in todos_pontos)
+    lon_min = min(p[1] for p in todos_pontos)
+    lon_max = max(p[1] for p in todos_pontos)
+
+    # Latitude média para ajustar a conversão de longitude
+    lat_media = (lat_min + lat_max) / 2
+
+    # 1 grau de latitude é aproximadamente 111 km
+    desloc_lat = margem_km / 111.0
+
+    # 1 grau de longitude varia com o cosseno da latitude
+    desloc_lon = margem_km / (111.0 * math.cos(math.radians(lat_media)))
+
+    # Adiciona a margem
+    lat_min -= desloc_lat
+    lat_max += desloc_lat
+    lon_min -= desloc_lon
+    lon_max += desloc_lon
+
+    return lat_min, lat_max, lon_min, lon_max
 ###########################################################################################################################
 def RouteContorno(data,user,pontoinicial,central_point,regioes,radius_km=5, num_points=8):
     # Coordenadas do ponto central (latitude, longitude)
@@ -1984,7 +2023,7 @@ def RouteContorno(data,user,pontoinicial,central_point,regioes,radius_km=5, num_
         num_points=num_points,
     )
 
-    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontosvisita)
+    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita)
 
     PreparaServidorRoteamento(regioes)
 

@@ -1488,7 +1488,6 @@ function createMacOSDock() {
                 document.body.style.overflow = "hidden"
                 createDivScaleSvg();               
             };
-
         }
         //---------------------------------------------------------------------------
         if (index === 1) { // Dialogo de ordem pontos
