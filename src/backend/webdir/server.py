@@ -173,9 +173,6 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
     :param data: Dicionário com os dados da requisição.
     :return: Tupla com a resposta da requisição e o código HTTP.
     """
-    
-    wr.wLog("Executando em paralelo requisição ao servidor")
-
     with app.app_context():
     
         try:
@@ -196,7 +193,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         
             #---------------------------------------------------------------------------------------------
             case "Contorno":
-                wr.wLog("\n\n#############################################################################################")
+                wr.wLog("#############################################################################################")
                 wr.wLog("Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)\n")
 
                 # mandatory arguments
@@ -220,11 +217,11 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                                                                     central_point,
                                                                     regioes,radius_km=raio,
                                                                     num_points=numeropontos)
-                
+                wr.wLog("#############################################################################################")
             #---------------------------------------------------------------------------------------------
             case "PontosVisita":
-                wr.wLog("\n\n#############################################################################################")
-                wr.wLog("Recebida solicitação pontos de visita\n")
+                wr.wLog("#############################################################################################")
+                wr.wLog("Recebida solicitação pontos de visita")
 
                 # mandatory arguments
                 pontosvisita = data["pontosvisita"]
@@ -240,11 +237,11 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                                                                             pontoinicial,
                                                                             pontosvisita,
                                                                             regioes)
-
+                wr.wLog("#############################################################################################")
             # ---------------------------------------------------------------------------------------------
             case "Abrangencia":
-                wr.wLog("\n\n#############################################################################################")
-                wr.wLog("Recebida solicitação de compromisso de abrangência\n")
+                wr.wLog("#############################################################################################")
+                wr.wLog("Recebida solicitação de compromisso de abrangência")
 
                 # mandatory arguments
                 cidade = data["cidade"]
@@ -266,10 +263,11 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                                                                         escopo,
                                                                         distanciaPontos,
                                                                         regioes)
+                wr.wLog("#############################################################################################")
             # ---------------------------------------------------------------------------------------------
             case "RoteamentoOSMR":
-                wr.wLog("\n\n#############################################################################################")
-                wr.wLog("Recebida solicitação de RoteamentoOSMR\n")
+                wr.wLog("#############################################################################################")
+                wr.wLog("Recebida solicitação de RoteamentoOSMR")
                 
                 # mandatory arguments
                 porta = data["PortaOSRMServer"]
@@ -296,9 +294,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                         }
                     ),level="debug"
                 )
-                wr.wLog(
-                    "\n\n#############################################################################################",level="debug"
-                )
+                wr.wLog("#############################################################################################")
                 return jsonify(
                     {
                         "polylineRota": polylineRota,

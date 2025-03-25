@@ -899,24 +899,10 @@ def AtivaServidorOSMR():
     os.chdir("../../resources/OSMR/data")
     UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
     wLog(f"Porta tcp/ip disponivel encontrada: {UserData.OSMRport}",level="debug")
-    if log_filename == "":
-        wLog("Ativando Servidor OSMR",level="info")
-        subprocess.Popen(
-            ["StartServer.bat", str(UserData.OSMRport), UserData.nome],
-            shell=True,
-            creationflags=subprocess.CREATE_NEW_CONSOLE,
-        )
-    else:
-        wLog(f"Ativando Servidor OSMR log {log_filename}.{UserData.nome}.OSMR",level="info")
-        with open(
-            log_filename + f".{UserData.nome}.OSMR", "w+", encoding="utf-8"
-        ) as log_file:
-            subprocess.Popen(
-                ["StartServer.bat", str(UserData.OSMRport), UserData.nome],
-                stdout=log_file,
-                stderr=log_file,
-                creationflags=subprocess.CREATE_NO_WINDOW,
-            )
+    logok=f"{log_filename}.{UserData.nome}"
+    wLog(f"Ativando Servidor OSMR",level="info")
+    # Assegura que o container executa em paralelo com o python
+    subprocess.Popen(["StartServer.bat", str(UserData.OSMRport), UserData.nome, logok], shell=True)
     os.chdir(diretorio_atual)
     return
 
@@ -1336,8 +1322,6 @@ def ServerSetupJavaScript(RouteDetail):
         RouteDetail.mapcode += f"    const ServerTec = 'OSMR';\n"
         RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
     return RouteDetail
-
-
 ################################################################################
 def DesenhaComunidades(RouteDetail, regioes):
     for regiao in regioes:
@@ -1411,7 +1395,7 @@ def RouteCompAbrangencia(   data: dict,
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
-    wLog("GetBoundMunicipio e FiltrarAreasUrbanizadasPorMunicipio")
+    # wLog("GetBoundMunicipio e FiltrarAreasUrbanizadasPorMunicipio")
     
     
     polMunicipio= sf.GetBoundMunicipio(cidade, uf)
@@ -1745,7 +1729,6 @@ def AltitudePontoVisita(pontosvisitaDados, lat, lon):
             return ponto[5]  # Retorna o campo de altitude (5º elemento)
     return "Endereço não encontrado para a latitude e longitude fornecidas."
 
-
 ################################################################################
 def RoteamentoOSMR(porta, pontosvisita, pontoinicial, recalcularrota):
     UserData.OSMRport = porta
@@ -1792,8 +1775,6 @@ def RoteamentoOSMR(porta, pontosvisita, pontoinicial, recalcularrota):
     """
 
     return RouteDetail.coordinates, RouteDetail.DistanceTotal, pontosvisita
-
-
 ################################################################################
 def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     UserData.nome = user
@@ -1826,8 +1807,6 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     #
     fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "PontosVisita")
     return fileMap, fileNameStatic, fileKml
-
-
 ###########################################################################################################################
 def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita, distancia_km=50):
     lat_min, lat_max, lon_min, lon_max = calcula_bounding_box_pontos(pontoinicial,
@@ -1859,45 +1838,6 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita, dis
         regiaook = {"nome": nome, "coord": coordenadas}
         NewRegioes.append(regiaook)
     return NewRegioes
-
-
-###########################################################################################################################
-def calcula_bounding_box_pontosOLd(pontoinicial,pontos, margem_km=50):
-    """
-    Calcula um bounding box expandido em torno de um grupo de pontos.
-
-    Args:
-        pontos (list): Lista de coordenadas [(lat, lon), ...].
-        margem_km (float): Margem adicional em km ao redor do grupo de pontos.
-
-    Returns:
-        dict: Limites do bounding box (lat_min, lat_max, lon_min, lon_max).
-    """
-    if not pontos:
-        raise ValueError("A lista de pontos não pode estar vazia.")
-
-    # Determina os limites mínimos e máximos de latitude e longitude
-    lat_min = min(p[0] for p in pontos)
-    lat_max = max(p[0] for p in pontos)
-    lon_min = min(p[1] for p in pontos)
-    lon_max = max(p[1] for p in pontos)
-
-    # Latitude média para ajustar a conversão de longitude
-    lat_media = (lat_min + lat_max) / 2
-
-    # 1 grau de latitude é aproximadamente 111 km
-    desloc_lat = margem_km / 111.0
-
-    # 1 grau de longitude varia com o cosseno da latitude
-    desloc_lon = margem_km / (111.0 * math.cos(math.radians(lat_media)))
-
-    # Adiciona a margem
-    lat_min -= desloc_lat
-    lat_max += desloc_lat
-    lon_min -= desloc_lon
-    lon_max += desloc_lon
-
-    return lat_min, lat_max, lon_min, lon_max
 ###########################################################################################################################
 def calcula_bounding_box_pontos(pontoinicial, pontos, margem_km=50):
     """
