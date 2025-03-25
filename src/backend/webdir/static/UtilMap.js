@@ -1484,8 +1484,9 @@ function createMacOSDock() {
             iconDiv.appendChild(img);
             img.onclick = () => {
                 // createColorTable();
-                createDivScaleSvg();
-                
+                // Contorna bug do Chrome de exibir a barra de rolagem nos eixos x e y
+                document.body.style.overflow = "hidden"
+                createDivScaleSvg();               
             };
 
         }
