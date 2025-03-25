@@ -13,17 +13,18 @@ if "%1"=="" goto Erro
 
 
 set USER=%1
+set LOG_SAIDA=%2
 set FILTRO=TempData/filtro_%USER%
 
 echo %date% %time% : Preparing Podman machine...
-podman machine init
-podman machine start
-podman load -i osmosis_webrota.tar
+podman machine init >> %LOG_SAIDA% 2>&1
+podman machine start >> %LOG_SAIDA% 2>&1
+podman load -i osmosis_webrota.tar >> %LOG_SAIDA% 2>&1
 wsl rm -rf %FILTRO%
 wsl mkdir -p %FILTRO%
 
 echo %date% %time% : Running osmosis container...
-podman run --rm -v .:/data --name osmosis_%USER% localhost/osmosis_webrota osmosis --read-pbf file="/data/brazil/brazil-latest.osm.pbf" --bounding-polygon file="/data/TempData/exclusion_%USER%.poly" completeWays=no --write-pbf file="/data/%FILTRO%/filtro-latest.osm.pbf"
+podman run --rm -v .:/data --name osmosis_%USER% localhost/osmosis_webrota osmosis --read-pbf file="/data/brazil/brazil-latest.osm.pbf" --bounding-polygon file="/data/TempData/exclusion_%USER%.poly" completeWays=no --write-pbf file="/data/%FILTRO%/filtro-latest.osm.pbf" >> %LOG_SAIDA% 2>&1
 wsl rm -rf ../OSMR/data/%FILTRO%
 wsl mkdir -p ../OSMR/data/%FILTRO%
 wsl mv %FILTRO%/filtro-latest.osm.pbf ../OSMR/data/%FILTRO%/

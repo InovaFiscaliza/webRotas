@@ -789,7 +789,8 @@ def FiltrarRegiãoComOsmosis():
     diretorio_atual = os.getcwd()
     os.chdir("../../resources/Osmosis")
     # Inicia e configura a máquina do Podman
-    subprocess.run(["filter.bat", UserData.nome])
+    logok=f"{log_filename}.{UserData.nome}"
+    subprocess.run(["filter.bat", UserData.nome,logok])   # f"{log_filename}.{UserData.nome}"
     os.chdir(diretorio_atual)
 
 
@@ -926,7 +927,8 @@ def GerarIndicesExecutarOSRMServer():
     diretorio_atual = os.getcwd()
     os.chdir("../../resources/OSMR/data")
     DeleteOldFilesAndFolders("TempData", days=30)
-    subprocess.run(["GeraIndices.bat", UserData.nome])
+    logok=f"{log_filename}.{UserData.nome}"
+    subprocess.run(["GeraIndices.bat", UserData.nome,logok])
     os.chdir(diretorio_atual)
     AtivaServidorOSMR()
     return
