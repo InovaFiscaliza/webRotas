@@ -1,6 +1,6 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
-<a name="indexerd-md-top"></a>
+`<a name="indexerd-md-top"></a>`
 
 <!-- PROJECT SHIELDS -->
 
@@ -67,9 +67,9 @@ Vc pode verificar a versão do Windows usando o comando
 winver
 ```
 
-> | ⚠️ *IMPORTANTE* |
-> | :--- |
-> | Em princípio o *webRotas* não é compatível com o uso em máquinas virtuais pois faz uso do recurso de virtualização do windows para uso do WLS. Mais detalhes sobre o WSL são apresentados à seguir ou podem ser obtidos na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature) |
+> | ⚠️*IMPORTANTE*                                                                                                                                                                                                                                                                                                                                                                       |
+> | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Em princípio o*webRotas* não é compatível com o uso em máquinas virtuais pois faz uso do recurso de virtualização do windows para uso do WLS. Mais detalhes sobre o WSL são apresentados à seguir ou podem ser obtidos na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature) |
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -133,9 +133,9 @@ winget install Microsoft.PowerShell
 
  Para outros métodos, verifique o [procedimento de instalação do PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5)
 
-> | ⚠️ *IMPORTANTE* |
-> | :--- |
-> | Todos os comandos indicados à seguir devem ser executados no terminal do *PowerShell* |
+> | ⚠️*IMPORTANTE*                                                                      |
+> | :-------------------------------------------------------------------------------------- |
+> | Todos os comandos indicados à seguir devem ser executados no terminal do*PowerShell* |
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -159,7 +159,7 @@ Caso não esteja instalado, execute:
 wsl.exe --install
 ```
 
-Em alguns sistemas, pode ser necessário habilitar o recurso de máquina virtual. Neste site, você encontrará mais detalhes na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature)
+Em alguns sistemas, pode ser necessário habilitar o recurso de máquina virtual. Neste site, você encontrará mais detalhes na [documentação do Subsistema Linux do Windows](https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature)
 
 O procedimento pode variar dependendo do modelo da BIOS e do tipo de CPU.
 
@@ -203,14 +203,13 @@ Mais detalhes sobre a instalação e uso deste podem ser obtidos em: [https://po
 
 Após instalado, o sistema deverá ser reinicializado.
 
-
 <div align="right">
     <a href="#indexerd-md-top">
         <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
 
-## 5. Instale o **UV**
+## 4. Instale o **UV**
 
 Verifique se o `uv` está instalado utilizando o comando:
 
@@ -238,9 +237,9 @@ Devido a restrições de segurança em computadores corporativos da Anatel, a in
 
 Navegue até a pasta de instalação utilizando o comando `cd C:\ProgramData\Anatel` ou crie a pasta com o comando `mkdir C:\ProgramData\Anatel`.
 
-> | ⚠️ *IMPORTANTE* |
-> | :--- |
-> | Caso seja necessário ou desejado instalar em outra pasta, o procedimento não sofrerá alterações, bastando substituir `C:\ProgramData\Anatel` na variável `$WEBROTAS_HOME` pelos caminhos desejados, no aquivo '.\webRotas\src\ucli\webRotas.bat' e criar manualmente um novo atalho para executar esse script. |
+> | ⚠️*IMPORTANTE*                                                                                                                                                                                                                                                                                                         |
+> | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Caso seja necessário ou desejado instalar em outra pasta, o procedimento não sofrerá alterações, bastando substituir `C:\ProgramData\Anatel` na variável `$WEBROTAS_HOME` pelos caminhos desejados, no aquivo '.\webRotas\src\ucli\prompt_conf.bat e criar manualmente um novo atalho para executar esse script. |
 
 Baixe e descomprima o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases/latest) para a pasta criada com os seguintes comandos.
 
@@ -368,8 +367,8 @@ git clone https://github.com/InovaFiscaliza/webRotas.git
 
 Após esse comando ser executado, será criada uma pasta chamada `webRotas\` com todos os arquivos do projeto.
 
-> | ⚠️ *IMPORTANTE* |
-> | :--- |
+> | ⚠️*IMPORTANTE*                                                                                                                               |
+> | :----------------------------------------------------------------------------------------------------------------------------------------------- |
 > | A pasta raiz do projeto será referenciada nos passos seguintes apenas como `.\`, referindo-se à pasta `webRotas` criada no passo anterior. |
 
 <div align="right">
@@ -581,6 +580,7 @@ Estão disponíveis configurações no `launch.json` para execução do servidor
 A inicialização do servidor em modo debug demanda o uso do cliente para envio das requisições, o que pode ser realizado tanto pela execução do script `webrota_client.py` quanto pelo uso de testes adicionais disponíveis na pasta `.\tests\dev`.
 
 Para iniciar o servidor diretamente na linha de comando vc pode utilizar:
+
 ```shell
 uv run .\src\backend\webdir\Server.py
 ```
