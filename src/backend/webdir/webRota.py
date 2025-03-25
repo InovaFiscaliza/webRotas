@@ -143,103 +143,33 @@ def getElevationOpenElev(latitude, longitude):
             if "results" in data and len(data["results"]) > 0:
                 return round(data["results"][0]["elevation"])
             else:
-                wLog(
-                    "getElevationOpenElev Erro: Resposta da API não contém dados válidos."
-                )
+                wLog("getElevationOpenElev Erro: Resposta da API não contém dados válidos.",level="debug")
                 return 0
 
         except requests.exceptions.RequestException as e:
             # Captura erros relacionados à requisição (conexão, timeout, etc.)
-            print(f"getElevationOpenElev Erro na requisição: {e}")
+            wr.wLog(f"getElevationOpenElev Erro na requisição: {e}")
             raise  # Re-lança a exceção para ser capturada no bloco externo
 
         except ValueError as e:
             # Captura erros de decodificação JSON
-            print(f"getElevationOpenElev Erro ao decodificar JSON: {e}")
+            wr.wLog(f"getElevationOpenElev Erro ao decodificar JSON: {e}")
             return 0
 
         except KeyError as e:
             # Captura erros de chave ausente no JSON
-            print(f"getElevationOpenElev Erro no formato da resposta: {e}")
+            wr.wLog(f"getElevationOpenElev Erro no formato da resposta: {e}")
             return 0
 
     try:
         return fetch_elevation(url)
     except requests.exceptions.RequestException:
         # Se a requisição à URL principal falhar, tenta a URL alternativa
-        print("Tentando URL alternativa (VPN)...")
+        wr.wLog("Tentando URL alternativa (VPN)...")
         return fetch_elevation(urlVpn)
 
 
 ###########################################################################################################################
-def getElevationOpenElevBatchOLd(lat_lons, batch_size):
-    """
-    Obtém a elevação de múltiplas localizações usando a API Open-Elevation em lotes de 100.
-
-    Args:
-        lat_lons (list): Lista de tuplas contendo latitude e longitude.
-        batch_size (int): Tamanho do lote para processamento.
-
-    Returns:
-        list: Lista de elevações em metros. Retorna 0 para coordenadas com erro.
-
-        fiscalizacao.anatel.gov.br/api/v1/lookup?locations=-22.919802062945383,-43.043920503331314
-        ou
-        api.open-elevation.com/api/v1/lookup?locations=-22.919802062945383,-43.043920503331314
-    """
-    url = "https://api.open-elevation.com/api/v1/lookup"
-    urlVpn = "http://rhfisnspdex02.anatel.gov.br/api/v1/lookup"
-    elevations = []
-
-    def fetch_batch_elevations(url, batch):
-        """Função interna para buscar elevações de um lote."""
-        locations = "|".join([f"{lat},{lon}" for lat, lon in batch])
-        params = {"locations": locations}
-        zbuf = url + "?" + "&".join([f"{key}={value}" for key, value in params.items()])
-
-        wLog(f"---------------------------------------------------------")
-        wLog(
-            f"getElevationOpenElevBatch URL da requisição: {zbuf}"
-        )  # Imprime a URL para depuração
-        wLog(f"Tamanho do lote: {len(batch)}")
-        wLog(f"---------------------------------------------------------")
-
-        try:
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-
-            if "results" in data:
-                return [round(res["elevation"]) for res in data["results"]]
-            else:
-                wLog(
-                    "getElevationOpenElevBatch Erro: Resposta da API não contém dados válidos."
-                )
-                return [0] * len(batch)
-
-        except requests.exceptions.RequestException as e:
-            wLog(f"getElevationOpenElevBatch Erro na requisição: {e}")
-            raise  # Re-lança a exceção para ser capturada no bloco externo
-        except ValueError as e:
-            wLog(f"getElevationOpenElevBatch Erro ao decodificar JSON: {e}")
-            return [0] * len(batch)
-        except KeyError as e:
-            wLog(f"getElevationOpenElevBatch Erro no formato da resposta: {e}")
-            return [0] * len(batch)
-
-    for i in range(0, len(lat_lons), batch_size):
-        batch = lat_lons[i : i + batch_size]
-        try:
-            # Tenta a URL principal primeiro
-            elevations.extend(fetch_batch_elevations(url, batch))
-        except requests.exceptions.RequestException:
-            # Se a URL principal falhar, tenta a URL alternativa
-            wLog("Tentando URL alternativa (VPN)...")
-            elevations.extend(fetch_batch_elevations(urlVpn, batch))
-
-    return elevations
-
-
 def getElevationOpenElevBatch(lat_lons, batch_size):
     """
     Obtém a elevação de múltiplas localizações usando a API Open-Elevation em lotes.
@@ -384,13 +314,9 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(kml_conteudo)
 
-    print(f"Arquivo KML '{filename}' gerado com sucesso!")
-
-
+    wLog(f"Arquivo KML '{filename}' gerado com sucesso!",level="debug")
 ###########################################################################################################################
 ServerTec = "OSMR"
-
-
 ###########################################################################################################################
 def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     #
@@ -402,7 +328,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
         # URL da solicitação ao servidor OSRM
         url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{start_coords[1]},{start_coords[0]};{end_coords[1]},{end_coords[0]}?overview=full&geometries=polyline&steps=true"
 
-    wLog(url)
+    wLog(url,level="debug")
     # Fazer a solicitação
     response = requests.get(url)
     return response
@@ -433,15 +359,15 @@ def DeleteOldFilesAndFolders(directory, days=30):
             # Verifica se é um arquivo
             if os.path.isfile(item_path) and item_mtime < cutoff:
                 os.remove(item_path)
-                print(f"Arquivo removido: {item_path}")
+                wr.wLog(f"Arquivo removido: {item_path}")
 
             # Verifica se é um diretório
             elif os.path.isdir(item_path) and item_mtime < cutoff:
                 # Remove o diretório e todo o seu conteúdo
                 shutil.rmtree(item_path)  # Remove diretórios e seus conteúdos
-                print(f"Pasta removida: {item_path}")
+                wr.wLog(f"Pasta removida: {item_path}")
     except Exception as e:
-        print(f"Erro ao processar o diretório: {e}")
+        wr.wLog(f"Erro ao processar o diretório: {e}")
 
 
 ###########################################################################################################################
@@ -481,7 +407,7 @@ def GenerateRouteMapOSMR(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon)
             RouteDetailLoc.DistanceTotal + calcular_distancia_totalOSMR(data)
         )
     else:
-        wLog(f"Erro na solicitação: {data}")
+        wLog(f"Erro na solicitação: {data}",level="debug")
         return RouteDetailLoc
 
     return RouteDetailLoc
@@ -704,7 +630,7 @@ def CronometraFuncao(func, *args, **kwargs):
         tempo_execucao = fim - inicio
         return resultado, tempo_execucao
     except Exception as e:
-        print(f"Erro ao executar a função: {e}")
+        wr.wLog(f"Erro ao executar a função: {e}")
         return None, None
 
 
@@ -796,7 +722,7 @@ def GeraArquivoExclusoes(regioes, arquivo_saida="exclusion.poly"):
 
                 # Escrever o nome da região no arquivo
                 f.write(f"{nome}\n")
-                wLog(f"Região adicionada: {nome}")
+                wLog(f"Região adicionada: {nome}",level="debug")
 
                 # Escrever as coordenadas da região
                 for i, (latitude, longitude) in enumerate(coordenadas):
@@ -805,10 +731,10 @@ def GeraArquivoExclusoes(regioes, arquivo_saida="exclusion.poly"):
                 # Encerrar a definição da região
                 f.write("END\n")
             f.write("END\n")
-        wLog(f"Arquivo '{arquivo_saida}' gerado com sucesso.")
+        wLog(f"Arquivo '{arquivo_saida}' gerado com sucesso.",level="debug")
 
     except Exception as e:
-        wLog(f"Erro ao gerar o arquivo .poly: {e}")
+        wLog(f"Erro ao gerar o arquivo .poly: {e}",level="debug")
 
 
 ################################################################################
@@ -931,23 +857,35 @@ def SubstAcentos(texto):
 
 
 ################################################################################
-def wLog(log_string):
+WARNING_LEVEL="info"
+def wLog(log_string,level="info"): # Levels "info","debug", "warning", "error", "critical"
+    levels = {
+        "info": 1,
+        "debug": 2,
+        "warning": 3,
+        "error": 4,
+        "critical": 5
+    }
+    current_level = levels.get(level.lower(), 0)
+
     log_file = f"{log_filename}.{UserData.nome}"  # Nome do arquivo de log
 
     timStp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_string = SubstAcentos(log_string)
-    log_string = timStp + " : " + log_string
+    log_string = timStp + "  "+level.ljust(7)+" : "+log_string
     try:
         # Verifica se o arquivo existe
         if not os.path.exists(log_file):
             with open(log_file, "w") as file:
                 file.write(
-                    timStp + " : " + "### Inicio do Log ###\n"
+                    timStp + "  "+level.ljust(7) + " : " + "### Inicio do Log ###\n"
                 )  # Opcional: cabeçalho inicial
         # Abre o arquivo no modo append (adicionar)
         with open(log_file, "a") as file:
             file.write(log_string + "\n")  # Escreve a mensagem com uma nova linha
-        print(log_string)  # Também exibe a mensagem no console
+        if  levels.get(WARNING_LEVEL.lower(), 0) >= current_level:
+           print(log_string)  # Também exibe a mensagem no console
+        
     except Exception as e:
         print(f"Erro ao escrever no log: {e}")
 
@@ -959,16 +897,16 @@ def AtivaServidorOSMR():
     diretorio_atual = os.getcwd()
     os.chdir("../../resources/OSMR/data")
     UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
-    wLog(f"Porta tcp/ip disponivel encontrada: {UserData.OSMRport}")
+    wLog(f"Porta tcp/ip disponivel encontrada: {UserData.OSMRport}",level="debug")
     if log_filename == "":
-        wLog("Ativando Servidor OSMR")
+        wLog("Ativando Servidor OSMR",level="info")
         subprocess.Popen(
             ["StartServer.bat", str(UserData.OSMRport), UserData.nome],
             shell=True,
             creationflags=subprocess.CREATE_NEW_CONSOLE,
         )
     else:
-        wLog(f"Ativando Servidor OSMR log {log_filename}.{UserData.nome}.OSMR")
+        wLog(f"Ativando Servidor OSMR log {log_filename}.{UserData.nome}.OSMR",level="info")
         with open(
             log_filename + f".{UserData.nome}.OSMR", "w+", encoding="utf-8"
         ) as log_file:
@@ -1007,7 +945,7 @@ def get_containers():
     )
 
     if result.returncode != 0:
-        print("Erro ao listar contêineres")
+        wr.wLog("Erro ao listar contêineres")
         return []
 
     containers = []
@@ -1058,7 +996,7 @@ def StopOldContainers(days=30):
 
         # Se o contêiner for mais antigo que o limite (30 dias)
         if age_in_days > days:
-            print(f"Parando contêiner {container_id} (idade: {age_in_days} dias)")
+            wr.wLog(f"Parando contêiner {container_id} (idade: {age_in_days} dias)")
             subprocess.run(["podman", "stop", container_id])
 
 
@@ -1088,18 +1026,18 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
                 return True
             else:
                 wLog(
-                    f"Tentativa {tentativa + 1}/{tentativas}: Erro {response.status_code}. Tentando novamente..."
+                    f"Tentativa {tentativa + 1}/{tentativas}: Erro {response.status_code}. Tentando novamente...",level="debug"
                 )
 
         except requests.exceptions.RequestException as e:
             wLog(
-                f"Tentativa {tentativa + 1}/{tentativas}: Erro ao acessar o OSRM: {e}. Tentando novamente..."
+                f"Tentativa {tentativa + 1}/{tentativas}: Erro ao acessar o OSRM: {e}. Tentando novamente...",level="debug"
             )
 
         # Aguarda o intervalo antes de tentar novamente
         time.sleep(intervalo)
 
-    wLog("O servidor OSRM não ficou disponível após várias tentativas.")
+    wLog("O servidor OSRM não ficou disponível após várias tentativas.",level="debug")
     return False
 
 
@@ -1208,10 +1146,10 @@ def MataServidorWebRotas():
 def VerificaArquivosIguais(arquivo_atual, arquivo_backup):
     # Verifica se ambos os arquivos existem
     if not os.path.exists(arquivo_atual):
-        wLog(f"O arquivo atual '{arquivo_atual}' não existe.")
+        wLog(f"O arquivo atual '{arquivo_atual}' não existe.",level="warning")
         return False
     if not os.path.exists(arquivo_backup):
-        wLog(f"O arquivo backup '{arquivo_backup}' não existe.")
+        wLog(f"O arquivo backup '{arquivo_backup}' não existe.",level="warning")
         return False
 
     # Compara os arquivos
@@ -1257,7 +1195,7 @@ def DesenhaRegioes(RouteDetail, regioes):
             
         RouteDetail.mapcode += f"    regiao{nome} = [\n"
         coordenadas = regiao.get("coord", [])
-        wLog(f"  Região: {nome}")
+        wLog(f"  Região: {nome}",level="debug")
         i = 0
         for coord in coordenadas:
             latitude, longitude = coord
@@ -1812,19 +1750,19 @@ def RoteamentoOSMR(porta, pontosvisita, pontoinicial, recalcularrota):
     RouteDetail = ClRouteDetailList()
     # Calcula trecho de roto do pontoinicial ao primeiro ponto de visita
     (latfI, lonfI) = pontosvisita[0]
-    wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}")
-    wLog(f"RoteamentoOSMR - pontoinicial {pontoinicial[0]},{pontoinicial[1]}")
+    wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}",level="debug")
+    wLog(f"RoteamentoOSMR - pontoinicial {pontoinicial[0]},{pontoinicial[1]}",level="debug")
     wLog("Pontos de Visita antes ordenação:")
     for ponto in pontosvisita:
-        wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}")
+        wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
 
     if recalcularrota == 1:
-        wLog(f"Reordenando pontos de visita")
+        wLog(f"Reordenando pontos de visita",level="debug")
         pontosvisita = OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial)
 
-    wLog("Pontos de Visita apos ordenação:")
+    wLog("Pontos de Visita apos ordenação:",level="debug")
     for ponto in pontosvisita:
-        wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}")
+        wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
 
     RouteDetail = GenerateRouteMap(
         RouteDetail, pontoinicial[0], pontoinicial[1], latfI, lonfI

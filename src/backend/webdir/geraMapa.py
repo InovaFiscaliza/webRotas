@@ -66,12 +66,12 @@ def WriteToFile(file_path, content):
     try:
         with open(file_path, 'a') as file:  # Modo append
             file.write(content)
-        print(f"Conteúdo gravado com sucesso no arquivo: {file_path}")
+        wr.wLog(f"Conteúdo gravado com sucesso no arquivo: {file_path}",level="debug")
     except Exception as e:
-        print(f"Erro ao gravar no arquivo: {e}")
+        wr.wLog(f"Erro ao gravar no arquivo: {e}",level="debug")
 ###########################################################################################################################    
 def GeraStaticIcon(name):
-    wr.wLog(f"GeraStaticIcon - {name}")
+    wr.wLog(f"GeraStaticIcon - {name}",level="debug")
     nomeuser=wr.UserData.nome
     fileIcon = f'static/{name}.png'  
     base64ElevationTable = wr.FileToDataUrlBase64(fileIcon)
@@ -82,11 +82,11 @@ def apagar_arquivo(caminho_arquivo):
     try:
         if os.path.exists(caminho_arquivo):  # Verifica se o arquivo existe
             os.remove(caminho_arquivo)
-            print(f"Arquivo '{caminho_arquivo}' apagado com sucesso.")
+            wr.wLog(f"Arquivo '{caminho_arquivo}' apagado com sucesso.",level="debug")
         else:
-            print(f"Arquivo '{caminho_arquivo}' não encontrado.")
+            wr.wLog(f"Arquivo '{caminho_arquivo}' não encontrado.",level="debug")
     except Exception as e:
-        print(f"Erro ao apagar o arquivo: {e}")
+        wr.wLog(f"Erro ao apagar o arquivo: {e}",level="debug")
 ###########################################################################################################################
 def GeraMapaLeaflet(mapa,RouteDetail,static=False):
     wr.wLog(f"GeraMapaLeaflet - {mapa}")
