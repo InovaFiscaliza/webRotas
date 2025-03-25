@@ -1,6 +1,7 @@
 echo off
 REM Definição de variáveis de ambiente
-set WEBROTAS_HOME=C:\ProgramData\Anatel\webRotas
+rem set WEBROTAS_HOME=C:\ProgramData\Anatel\webRotas
+set WEBROTAS_HOME=D:\NetbeansProjects\webRotas
 
 REM Configura aparência do terminal
 REG QUERY HKCU\Console | findstr /i "VirtualTerminalLevel" >nul
