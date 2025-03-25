@@ -1486,10 +1486,8 @@ function createMacOSDock() {
                 // createColorTable();
                 // Contorna bug do Chrome de exibir a barra de rolagem nos eixos x e y
                 document.body.style.overflow = "hidden"
-                createDivScaleSvg();
-                
+                createDivScaleSvg();               
             };
-
         }
         //---------------------------------------------------------------------------
         if (index === 1) { // Dialogo de ordem pontos
