@@ -1626,7 +1626,7 @@ def PegaAltitudesPVD_Batch(
 
 ################################################################################
 def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
-    wLog("PlotaPontosVisita")
+    wLog("PlotaPontosVisita - gerando rotas entre os pontos")
     i = 0
     RouteDetail.mapcode += f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n"
     RouteDetail.mapcode += f"    var GpsProximoPonto = '{UserData.GpsProximoPonto}';\n"
