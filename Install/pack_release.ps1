@@ -114,4 +114,4 @@ foreach ($file in $files) {
 Remove-Item -Path webRotas.tgz -Recurse -Force
 tar -cvzf webRotas.tgz $destinationRoot
 Remove-Item -Path "$destinationRoot" -Recurse -Force
-
+# --------------------------------------------------------------------------
