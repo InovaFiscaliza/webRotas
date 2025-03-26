@@ -474,7 +474,7 @@ def TimeStringTmp():
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso...
 def OrdenarPontos(pontosvisita, pontoinicial):
     # BenchmarkRotas(pontosvisita,pontoinicial)
-    wLog(f"    Algoritmo: [{UserData.AlgoritmoOrdenacaoPontos}]")
+    wLog(f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}]")
     if (
         UserData.AlgoritmoOrdenacaoPontos == "DistanciaGeodesica"
     ):  # "DistanciaOSMR", "DistanciaGeodesica", "DistanciaOSMRMultiThread"
