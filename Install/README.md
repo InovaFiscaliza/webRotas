@@ -403,6 +403,14 @@ Além da aplicação, é necessário instalar os dados de referência utilizados
 
 Caso tenha acesso aos repositórios da Anatel, siga os passos indicados na seção [Dados de referência no repositório da Anatel](#dados-de-referência-no-repositório-da-anatel).
 
+Baixe o arquivo com a extensão `.zip` e descomprima o conteúdo sobre a pasta na qual o projeto do webrotas foi criado. Observe que algumas das pastas já existem e será feita a combinação (merge) do conteúdo das pastas já existentes no projeto com o novo conteúdo.
+
+Por exemplo, a pasta `webRotas\src\resources\Osmosis`, que após a instalação realizada nos passos anteriores conterá apenas o arquivo `filter.bat` e duas subpastas vazias, após o `merge` passará a conter também o arquivo `osmosis_webrota.tar` e dentro da pasta `brazil` será copiado o arquivo `brazil-latest.osm.pbf`.
+
+> | ⚠️*IMPORTANTE*                                                                                                                               |
+> | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+> | É possível que ao descomprimir os arquivos de dados, o sistema operacional ou programa utilizado para descomprimir pergunte se deseja mesclar o conteúdo das pastas, responda que *sim*. |
+
 Caso não tenha acesso ao Sharepoint corporativo da Anatel, é possível realizar o download dos dados de referência a partir de repositórios públicos, conforme descrito a seguir.
 
 <div align="right">
