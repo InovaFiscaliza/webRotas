@@ -148,24 +148,24 @@ def getElevationOpenElev(latitude, longitude):
 
         except requests.exceptions.RequestException as e:
             # Captura erros relacionados à requisição (conexão, timeout, etc.)
-            wr.wLog(f"getElevationOpenElev Erro na requisição: {e}")
+            wLog(f"getElevationOpenElev Erro na requisição: {e}")
             raise  # Re-lança a exceção para ser capturada no bloco externo
 
         except ValueError as e:
             # Captura erros de decodificação JSON
-            wr.wLog(f"getElevationOpenElev Erro ao decodificar JSON: {e}")
+            wLog(f"getElevationOpenElev Erro ao decodificar JSON: {e}")
             return 0
 
         except KeyError as e:
             # Captura erros de chave ausente no JSON
-            wr.wLog(f"getElevationOpenElev Erro no formato da resposta: {e}")
+            wLog(f"getElevationOpenElev Erro no formato da resposta: {e}")
             return 0
 
     try:
         return fetch_elevation(url)
     except requests.exceptions.RequestException:
         # Se a requisição à URL principal falhar, tenta a URL alternativa
-        wr.wLog("Tentando URL alternativa (VPN)...")
+        wLog("Tentando URL alternativa (VPN)...")
         return fetch_elevation(urlVpn)
 
 
@@ -359,15 +359,15 @@ def DeleteOldFilesAndFolders(directory, days=30):
             # Verifica se é um arquivo
             if os.path.isfile(item_path) and item_mtime < cutoff:
                 os.remove(item_path)
-                wr.wLog(f"Arquivo removido: {item_path}")
+                wLog(f"Arquivo removido: {item_path}")
 
             # Verifica se é um diretório
             elif os.path.isdir(item_path) and item_mtime < cutoff:
                 # Remove o diretório e todo o seu conteúdo
                 shutil.rmtree(item_path)  # Remove diretórios e seus conteúdos
-                wr.wLog(f"Pasta removida: {item_path}")
+                wLog(f"Pasta removida: {item_path}")
     except Exception as e:
-        wr.wLog(f"Erro ao processar o diretório: {e}")
+        wLog(f"Erro ao processar o diretório: {e}")
 
 
 ###########################################################################################################################
@@ -630,7 +630,7 @@ def CronometraFuncao(func, *args, **kwargs):
         tempo_execucao = fim - inicio
         return resultado, tempo_execucao
     except Exception as e:
-        wr.wLog(f"Erro ao executar a função: {e}")
+        wLog(f"Erro ao executar a função: {e}")
         return None, None
 
 
@@ -926,6 +926,12 @@ def get_containers():
     Obtém a lista de contêineres, incluindo o ID e a data de criação.
     Retorna uma lista de tuplas (container_id, created_at).
     """
+
+    subprocess.run(
+        ["podman", "machine", "start"],
+        capture_output=True,
+        text=True,
+    )
     result = subprocess.run(
         ["podman", "ps", "-a", "--format", "{{.ID}} {{.CreatedAt}}"],
         capture_output=True,
@@ -933,7 +939,7 @@ def get_containers():
     )
 
     if result.returncode != 0:
-        wr.wLog("Erro ao listar contêineres")
+        wLog("Erro ao listar contêineres")
         return []
 
     containers = []
@@ -984,7 +990,7 @@ def StopOldContainers(days=30):
 
         # Se o contêiner for mais antigo que o limite (30 dias)
         if age_in_days > days:
-            wr.wLog(f"Parando contêiner {container_id} (idade: {age_in_days} dias)")
+            wLog(f"Parando contêiner {container_id} (idade: {age_in_days} dias)")
             subprocess.run(["podman", "stop", container_id])
 
 
