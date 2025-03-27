@@ -64,7 +64,6 @@ $files = @(
     "src\ucli\prompt_conf.bat",
     "src\ucli\limpa.bat",
     "src\ucli\mensagens.txt",
-    "src\ucli\webrotas.lnk",
     "tests\exemplo_abrangencia_rj_campos.json",
     "tests\exemplo_abrangencia_rj_niteroi_geodesica.json",
     "tests\exemplo_abrangencia_sp_pesado.json",

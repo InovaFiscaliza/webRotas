@@ -1743,7 +1743,7 @@ def RoteamentoOSMR(porta, pontosvisita, pontoinicial, recalcularrota):
     (latfI, lonfI) = pontosvisita[0]
     wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}",level="debug")
     wLog(f"RoteamentoOSMR - pontoinicial {pontoinicial[0]},{pontoinicial[1]}",level="debug")
-    wLog("Pontos de Visita antes ordenação:")
+    wLog("Pontos de Visita antes ordenação:",level="debug")
     for ponto in pontosvisita:
         wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
 

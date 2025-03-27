@@ -135,9 +135,14 @@ function clDivOrdenaPontos() {
     selectRotas.style.fontSize = fontSize;
     iDlg.appendChild(selectRotas);
 
+
     // ListaRotas Adiciona o evento 'change' ao select
     selectRotas.addEventListener('change', function () {
-        console.log(`Valor selecionado: ${selectRotas.value}`);
+        wLog(`Valor selecionado: ${selectRotas.value}`);
+        if(selectRotas.value==0)
+            ativaElementoHtml('idBtnApagaRota', false); 
+        else
+            ativaElementoHtml('idBtnApagaRota', true); 
         LoadSelectPontos(selectRotas.value)
     });
 
@@ -163,12 +168,12 @@ function clDivOrdenaPontos() {
             else
                 adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km - Calculada`, `${item.id}`);    
             
-            console.log(`Item ${i}:`);
-            console.log(`ID: ${item.id}`);
-            console.log(`Polyline: ${item.polylineRotaDat}`);
-            console.log(`Pontos de Visita: ${item.pontosvisitaDados}`);
-            console.log(`Ponto Inicial: ${item.pontoinicial}`);
-            console.log(`Distância Total: ${item.DistanceTotal}`);
+            wLog(`Item ${i}:`);
+            wLog(`ID: ${item.id}`);
+            wLog(`Polyline: ${item.polylineRotaDat}`);
+            wLog(`Pontos de Visita: ${item.pontosvisitaDados}`);
+            wLog(`Ponto Inicial: ${item.pontoinicial}`);
+            wLog(`Distância Total: ${item.DistanceTotal}`);
         }
         selectRotas.selectedIndex = selIndex;
         AtivaControles();
@@ -356,7 +361,7 @@ function clDivOrdenaPontos() {
 
     // Adiciona um evento de clique na seta para cima
     upArrow.addEventListener('click', () => {
-        console.log('Seta acima clicada!');
+        wLog('Seta acima clicada!');
         moveOption(-1)
     });
 
@@ -369,7 +374,7 @@ function clDivOrdenaPontos() {
 
     // Adiciona um evento de clique na seta para baixo
     downArrow.addEventListener('click', () => {
-        console.log('Seta abaixo clicada!');
+        wLog('Seta abaixo clicada!');
         moveOption(1)
     });
 
@@ -427,10 +432,10 @@ function clDivOrdenaPontos() {
         selId = parseInt(value); // Converte para número, se necessário
         if(selId==NaN)
         {
-            console.log(`Valor selId selecionado: ${selId} sem carregar rotas`);
+            wLog(`Valor selId selecionado: ${selId} sem carregar rotas`);
             return;
         }
-        console.log(`Valor selId selecionado: ${selId}`);
+        wLog(`Valor selId selecionado: ${selId}`);
 
         const rotaSelecionada = ListaRotasCalculadas.find(rota => rota.id === selId);
         rotaSel = [];
@@ -438,7 +443,7 @@ function clDivOrdenaPontos() {
         
         pontosvisitaDados = rotaSel.pontosvisitaDados;
         pontosVisitaOrdenados = rotaSel.pontosVisitaOrdenados;
-        console.log(`LoadSelectPontos: rotaSel.pontoinicial ${rotaSel.pontoinicial[0]}, ${rotaSel.pontoinicial[1]}, ${rotaSel.pontoinicial[2]}`);
+        wLog(`LoadSelectPontos: rotaSel.pontoinicial ${rotaSel.pontoinicial[0]}, ${rotaSel.pontoinicial[1]}, ${rotaSel.pontoinicial[2]}`);
         select.innerHTML = '';
         rotaSel.pontosVisitaOrdenados.forEach((ponto, index) => {
             const [latitude, longitude] = ponto;
@@ -481,6 +486,7 @@ function clDivOrdenaPontos() {
     const reordenaBtn = createButton('idBtnRecalcRota','Recalcula Rota', () => reordenaOption());
     buttonsContainer.appendChild(reordenaBtn);
     iDlg.appendChild(buttonsContainer);
+    ativaElementoHtml('idBtnApagaRota', false); 
 
     if(verificarServidorOSMR()==false)
     {
@@ -495,7 +501,7 @@ function clDivOrdenaPontos() {
         // ativaElementoHtml('listaPontos', false); 
         ativaElementoHtml('idBtnApagaRota', false);      
         alert("Servidor OSMR fora do ar");
-        console.log("Este arquivo HTML foi gerado pelo webRotas para visualização offline e independente do servidor. Por isso, a criação de novas rotas não está disponível.");
+        wLog("Este arquivo HTML foi gerado pelo webRotas para visualização offline e independente do servidor. Por isso, a criação de novas rotas não está disponível.");
     }    
 
     // Adiciona um evento para limpar a lista ao clicar no botão de lixeira
@@ -513,9 +519,9 @@ function clDivOrdenaPontos() {
         // Se o item for encontrado, remove do array
         if (index !== -1) {
             ListaRotasCalculadas.splice(index, 1);
-            console.log(`Item com ID ${idSelecionado} removido.`);
+            wLog(`Item com ID ${idSelecionado} removido.`);
         } else {
-            console.log(`Item com ID ${idSelecionado} não encontrado.`);
+            wLog(`Item com ID ${idSelecionado} não encontrado.`);
         }
 
         CarregaRotasCalculadas(0)
@@ -557,14 +563,14 @@ function clDivOrdenaPontos() {
         rotaSel.pontoinicial[2] = document.getElementById('descricao').value;
 
         ListaRotasCalculadas.forEach((rota, index) => {
-            console.log(`🔹 Rota ${index}:`);
-            console.log(`   ID: ${rota.id}`);
-            console.log(`   Tempo: ${rota.time}`);
-            console.log(`   Polyline: ${rota.polylineRotaDat}`);
-            console.log(`   Pontos de Visita:`, rota.pontosvisitaDados);
-            console.log(`   Ponto Inicial: ${rota.pontoinicial}`);
-            console.log(`   Distância Total: ${rota.DistanceTotal} km`); 
-            console.log(`   rotaCalculada: ${rota.rotaCalculada} `);
+            wLog(`🔹 Rota ${index}:`);
+            wLog(`   ID: ${rota.id}`);
+            wLog(`   Tempo: ${rota.time}`);
+            wLog(`   Polyline: ${rota.polylineRotaDat}`);
+            wLog(`   Pontos de Visita:`, rota.pontosvisitaDados);
+            wLog(`   Ponto Inicial: ${rota.pontoinicial}`);
+            wLog(`   Distância Total: ${rota.DistanceTotal} km`); 
+            wLog(`   rotaCalculada: ${rota.rotaCalculada} `);
         });
 
         ReordenaPontosTela(rotaSel);
@@ -573,7 +579,7 @@ function clDivOrdenaPontos() {
         tornarElementosReadonly()
         RefazRotaNoServidor(pontosVisitaOrdenados,rotaSel).then(data =>     
         {
-            console.log("Rota refeita com sucesso!", data);
+            wLog("Rota refeita com sucesso!", data);
             /*
             ListaRotasCalculadas[0].id
             ListaRotasCalculadas[0].time
@@ -714,7 +720,7 @@ function clDivOrdenaPontos() {
             // Espera a resposta da função enviarJson
             data = await enviarJson(payload, url);
             // Manipula a resposta
-            console.log("Resposta recebida:", data);
+            wLog("Resposta recebida:", data);
             if(data==undefined)
             {
                 console.error("Erro ao processar a requisição:", data);
@@ -788,7 +794,7 @@ function clDivOrdenaPontos() {
         lat=rotaSel.pontoinicial[0];
         lon=rotaSel.pontoinicial[1];
         desc=rotaSel.pontoinicial[2];
-        console.log(`RedesenhaRota - Ponto - Inicial lat ${lat}, lon ${lon}, desc - ${desc}`);
+        wLog(`RedesenhaRota - Ponto - Inicial lat ${lat}, lon ${lon}, desc - ${desc}`);
 
         if(mrkPtInicial)
         {
@@ -809,8 +815,8 @@ function clDivOrdenaPontos() {
         // console.log(polylineRotaDat);
         // Remove o último ponto da polyline, se houver pontos suficientes
         const numeroDePontos = polylineRotaDat.length;
-        console.log(`Número de pontos na polyline: ${numeroDePontos}`);
-        console.log(`polylineRotaDat[0]: ${polylineRotaDat[0]}`);
+        wLog(`Número de pontos na polyline: ${numeroDePontos}`);
+        wLog(`polylineRotaDat[0]: ${polylineRotaDat[0]}`);
 
         // polylineRotaDat = filtrarTrechosMenoresQue5km(polylineRotaDat);
         if(polylineRotaDat[0].length==2)
