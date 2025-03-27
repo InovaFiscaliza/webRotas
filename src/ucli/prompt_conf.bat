@@ -1,6 +1,8 @@
 echo off
 REM Definição de variáveis de ambiente
-set WEBROTAS_HOME=C:\ProgramData\Anatel\webRotas
+cd ..\..
+set WEBROTAS_HOME=%CD%
+cd src\ucli
 
 REM Configura aparência do terminal
 REG QUERY HKCU\Console | findstr /i "VirtualTerminalLevel" >nul
