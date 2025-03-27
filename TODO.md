@@ -77,3 +77,14 @@
 - Criar um arquivo de **debug**.
 - Segmentar arquivos para melhor organização.
 
+
+# REQUISITOS ÚLTIMA REUNIÃO SEMANAL - 27/03/2025
+
+    podman machine start antes de verificar containers de mais de 30 dias
+    Estudar qemu como sandbox com suporte a "Nested Virtualization"
+    Não apagar primeira rota calculada (rota zero)
+    Finalizar o processo de instalação.
+    Concluir o README.
+    Criar uma rotina em Python para validar caches e minimizar erros de execução, reduzindo a necessidade do limpa.bat.
+    Ao desligar o servidor e pedir uma atualização da rota, a página entende que deu ruim e bloqueia o painel de troca, mas bloqueia inclusive o botão de "x" que fecha o painel. Esse botão, contudo, não deve ser desabilitado.
+    Possibilitar download do HTML atual (a partir do HTML dinâmico). Funcionalidade habilitável apenas no HTML dinâmico. (futuro, dificuldades de arquitetura esclarecidas - colocar nos issues)

@@ -6,3 +6,4 @@ As seguintes opções estão disponíveis:
  - "exemplos", para copiar arquivos json de exemplo para a pasta atual.
  - "ajuda", para exibir esta mensagem de ajuda.
 
+ 

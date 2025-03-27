@@ -898,7 +898,7 @@ def AtivaServidorOSMR():
     diretorio_atual = os.getcwd()
     os.chdir("../../resources/OSMR/data")
     UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
-    wLog(f"Porta tcp/ip disponivel encontrada: {UserData.OSMRport}",level="debug")
+    wLog(f"Porta tcp/ip disponivel en   contrada: {UserData.OSMRport}",level="debug")
     logok=f"{log_filename}.{UserData.nome}"
     wLog(f"Ativando Servidor OSMR",level="info")
     # Assegura que o container executa em paralelo com o python
