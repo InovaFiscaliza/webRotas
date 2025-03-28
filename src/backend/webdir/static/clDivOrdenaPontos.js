@@ -75,6 +75,7 @@ function clDivOrdenaPontos() {
     // Adicionando o botão "X" para fechar
     const closeButton = document.createElement('button');
     closeButton.textContent = 'x';
+    closeButton.id = 'iBtnFechar';
     closeButton.style.position = 'absolute';
     closeButton.style.top = '5px';
     closeButton.style.right = '5px';
@@ -642,6 +643,7 @@ function clDivOrdenaPontos() {
         } else {
             console.warn("Elemento 'divOrdenaPontos' não encontrado.");
         }
+        ativaElementoHtml('iBtnFechar', true); 
     }
     ////////////////////////////////
     function desfazerReadonly() {

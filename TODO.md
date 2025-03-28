@@ -80,9 +80,9 @@
 
 # REQUISITOS ÚLTIMA REUNIÃO SEMANAL - 27/03/2025
 
-    podman machine start antes de verificar containers de mais de 30 dias
+    podman machine start antes de verificar containers de mais de 30 dias ok
     Estudar qemu como sandbox com suporte a "Nested Virtualization"
-    Não apagar primeira rota calculada (rota zero)
+    Não apagar primeira rota calculada (rota zero) ok
     Finalizar o processo de instalação.
     Concluir o README.
     Criar uma rotina em Python para validar caches e minimizar erros de execução, reduzindo a necessidade do limpa.bat.
