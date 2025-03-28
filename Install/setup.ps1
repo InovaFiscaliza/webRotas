@@ -16,7 +16,7 @@ function Testar-Conexao {
     if ($conexao) {
         return $true  # Conexão bem-sucedida
     } else {
-        Write-Host "Erro ao tentar conectar ao host '$nomehost'" -ForegroundColor Red
+        # Write-Host "Erro ao tentar conectar ao host '$nomehost'" -ForegroundColor Red
         return $false  # Falhou a conexão
     }
 }
@@ -30,10 +30,13 @@ if (-not (Test-Path "resources.zip"))
         Write-Host "Acesso a rede Anatel verificado com sucesso!" -ForegroundColor Green
         Write-Host "Faça o download do arquivo resources.zip do link abaixo e o deixe na raiz do diretório webRotas." -ForegroundColor Green
         Write-Host $urlResources -ForegroundColor Green
+        exit 1
         
     } else {
         Write-Host "Nao foi possivel acessar a rede. Conecte-se a VPN da Anatel." -ForegroundColor Red
-        exit 0
+        Write-Host "Faça o download do arquivo resources.zip do link abaixo e o deixe na raiz do diretório webRotas." -ForegroundColor Green
+        Write-Host $urlResources -ForegroundColor Green        
+        exit 1
     }
 }
 if (Test-Path "resources.zip") {
@@ -44,7 +47,7 @@ if (Test-Path "resources.zip") {
     Write-Host "O arquivo resources.zip não foi encontrado."
     Write-Host "Faça o download do arquivo resources.zip do link abaixo e o deixe na raiz do diretório webRotas." -ForegroundColor Green
     Write-Host $urlResources -ForegroundColor Green    
-    exit 0
+    exit 1
 }
 
 
@@ -68,7 +71,7 @@ if ($majorVersion -ge 10) {
     Write-Host "Your Windows version is 10 or greater. Proceeding with the script..."      
 } else {
     Write-Host "Your Windows version is older than 10. Exiting..."
-    exit
+    exit 1
 }
 # ----------------------------------------------------------------------------------------------------------------------
 # Verifica se o winget está instalado
@@ -77,7 +80,7 @@ if ($wingetExists) {
     Write-Host "Winget is installed. Proceeding with the script..."
 } else {
     Write-Host "Winget is not installed. Exiting..." -ForegroundColor Red
-    exit
+    exit 1
 }
 # ----------------------------------------------------------------------------------------------------------------------
 # Verifica se o Git está instalado
@@ -198,4 +201,6 @@ if ($process.ExitCode -eq 0) {
     exit 1  # Encerra o script com erro
 }
 # ----------------------------------------------------------------------------------------------------------------------
+cd ..
 Write-Host "webRotas configurado com sucesso!" -ForegroundColor Green
+exit 0

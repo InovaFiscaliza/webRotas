@@ -23,7 +23,8 @@ $folders = @(
     "src\resources\OSMR\data",
     "src\resources\OSMR\data\TempData",
     "src\ucli",
-    "tests"
+    "tests",
+    "Install"
 )
 
 # Lista de arquivos a serem copiados
@@ -70,7 +71,8 @@ $files = @(
     "tests\exemplo_contorno.json",
     "tests\exemplo_visita_rj.json",
     "tests\exemplo_visita_ro.json",
-    "tests\exemplo_visita_serra_rj.json"
+    "tests\exemplo_visita_serra_rj.json",
+    "Install\setup.ps1"
 )
 
 # --------------------------------------------------------------------------

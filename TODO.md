@@ -86,5 +86,5 @@
     Finalizar o processo de instalação.
     Concluir o README.
     Criar uma rotina em Python para validar caches e minimizar erros de execução, reduzindo a necessidade do limpa.bat.
-    Ao desligar o servidor e pedir uma atualização da rota, a página entende que deu ruim e bloqueia o painel de troca, mas bloqueia inclusive o botão de "x" que fecha o painel. Esse botão, contudo, não deve ser desabilitado.
+    Ao desligar o servidor e pedir uma atualização da rota, a página entende que deu ruim e bloqueia o painel de troca, mas bloqueia inclusive o botão de "x" que fecha o painel. Esse botão, contudo, não deve ser desabilitado. Ok
     Possibilitar download do HTML atual (a partir do HTML dinâmico). Funcionalidade habilitável apenas no HTML dinâmico. (futuro, dificuldades de arquitetura esclarecidas - colocar nos issues)
