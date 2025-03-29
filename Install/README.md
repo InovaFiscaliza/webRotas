@@ -1,6 +1,6 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
-<a name="indexerd-md-top"></a>
+`<a name="indexerd-md-top"></a>`
 
 <!-- PROJECT SHIELDS -->
 
@@ -70,12 +70,66 @@ winver
 > | ⚠️*IMPORTANTE*                                                                                                                                                                                                                                                                                                                                                                       |
 > | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 > | Em princípio o*webRotas* não é compatível com o uso em máquinas virtuais pois faz uso do recurso de virtualização do windows para uso do WLS. Mais detalhes sobre o WSL são apresentados à seguir ou podem ser obtidos na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature) |
+>
+>
+
 
 <div align="right">
     <a href="#indexerd-md-top">
         <img src="../docs/images/up-arrow.svg" style="width: 2em; height: 2em;" title="Back to the top of this page">
     </a>
 </div>
+
+# Instalação rápida pelos Releases
+
+## 1. Obtenha as Ferramentas de Instalação
+
+Verifique se você possui as seguintes ferramentas instaladas:
+
+- PowerShell 7.4 ou posterior
+
+Abra o terminal PowerShell utilizando as teclas `Win + R` ou o menu iniciar (teclas windows) e digitando `powershell`, ou utilizando o seu aplicativo de terminal preferido:
+
+### 1.1 Acesse a página de Releases do WebRotas e faça o download do ultimo release
+
+Na linha do comando do powershell vá para o diretório onde deseja instalar o webRotas e o abaixe e descomprima com os comandos abaixo:
+
+```shell
+$URL = "https://github.com/InovaFiscaliza/webRotas/releases/latest/download/webrotas.tgz"
+
+Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile "webrotas.tgz"
+
+tar -xvzf webrotas.tgz
+```
+
+Vá para o diretório do webRotas já descomprimido com o seguinte comando:
+
+```shell
+cd .\webRotas\
+```
+
+### 1.2 Baixar dados de referência no repositório da Anatel
+
+Além da aplicação, é necessário instalar os dados de referência utilizados por esta para realizar o roteamento.
+
+Caso tenha acesso aos repositórios da Anatel, baixe os dados de referência para o *webRotas* utilizando um navegador para acessar o [Sharepoint](https://anatel365.sharepoint.com/:u:/r/sites/InovaFiscaliza/DataHub%20%20GET/webRotas/resources.zip?csf=1&web=1&e=PU4O04)
+
+Atenção, trata-se de arquivo compactado de grande volume (2.3GB), sendo recomendado o uso de uma conexão de alta velocidade.
+
+Faça o download do arquivo baixado na pasta `.\webRotas` .
+
+Caso não tenha acesso ao Sharepoint corporativo da Anatel, é possível realizar o download dos dados de referência a partir de repositórios públicos, conforme descrito ao final do presente guia, na seção [Baixar de Repositórios Públicos](#baixar-de-repositórios-públicos).
+
+### 1.3 Executar o script powershell que finalizará a instalação
+
+Neste momento você já estará no diretório raiz do webRotas execute os comandos abaixo e termina a instalação.
+
+```shell
+cd Install
+.\setup.ps1
+```
+
+Este script fara todas as configurações necessárias informará que tudo executou de forma correta.
 
 # Instalação para Todos os Usuários
 
@@ -244,7 +298,7 @@ Navegue até a pasta de instalação utilizando o comando `cd C:\ProgramData\Ana
 Baixe e descomprima o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases/latest) para a pasta criada com os seguintes comandos.
 
 ```shell
-$URL = "https://github.com/InovaFiscaliza/webRotas/releases/latest/download/werbrotas.tgz"
+$URL = "https://github.com/InovaFiscaliza/webRotas/releases/latest/download/webrotas.tgz"
 
 Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile "webrotas.tgz"
 
@@ -303,9 +357,9 @@ Expand-Archive -Force -LiteralPath .\resources.zip -DestinationPath .\src\
 rm .\resources.zip
 ```
 
-> | ⚠️*IMPORTANTE*                                                                                                                               |
-> | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-> | É possível que ao descomprimir os arquivos de dados, o sistema operacional ou programa utilizado para descomprimir pergunte se deseja mesclar o conteúdo das pastas, responda que *sim*. |
+> | ⚠️*IMPORTANTE*                                                                                                                                                                           |
+> | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | É possível que ao descomprimir os arquivos de dados, o sistema operacional ou programa utilizado para descomprimir pergunte se deseja mesclar o conteúdo das pastas, responda que*sim*. |
 
 Observe que a operação mescla o conteúdo das pastas existentes com o novo conteúdo baixado, por exemplo, a pasta `webRotas\src\resources\Osmosis`, que após a instalação realizada nos passos anteriores conterá apenas o arquivo `filter.bat` e duas subpastas vazias, após o `merge` passará a conter também o arquivo `osmosis_webrota.tar` e dentro da pasta `brazil` será copiado o arquivo `brazil-latest.osm.pbf`.
 
