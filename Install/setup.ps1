@@ -33,15 +33,16 @@ if (-not (Test-Path "resources.zip"))
         exit 1
         
     } else {
-        Write-Host "Nao foi possivel acessar a rede. Conecte-se a VPN da Anatel." -ForegroundColor Red
         Write-Host "Faça o download do arquivo resources.zip do link abaixo e o deixe na raiz do diretório webRotas." -ForegroundColor Green
         Write-Host $urlResources -ForegroundColor Green        
         exit 1
     }
 }
 if (Test-Path "resources.zip") {
+    Write-Host "Copiando arquivo resources.zip."
     Copy-Item -Path "resources.zip" -Destination "src\" -Force
     Set-Location -Path "src"
+    Write-Host "Expandindo arquivo resources.zip."
     Expand-Archive -LiteralPath "resources.zip" -DestinationPath ".\" -Force
 } else {
     Write-Host "O arquivo resources.zip não foi encontrado."
