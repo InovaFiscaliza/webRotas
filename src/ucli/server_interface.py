@@ -61,7 +61,7 @@ class ServerData:
         
         :return: Path to the project folder.
         """
-        return os.path.normpath(self.base_path[:self.base_path.find(PROJECT_FOLDER_NAME) + len(PROJECT_FOLDER_NAME)])
+        return os.path.normpath(self.base_path[:self.base_path.rfind(PROJECT_FOLDER_NAME) + len(PROJECT_FOLDER_NAME)])
     
     # ------------------------------------------------------------------------------------------
     def build_server_data_filename(self) -> str:
