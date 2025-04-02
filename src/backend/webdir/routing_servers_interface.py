@@ -11,7 +11,6 @@ import socket
 
 import webRota as wr
 
-server_port = 5001
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
     """
@@ -39,6 +38,15 @@ def FindFreePort(start_port=50000, max_port=65535):
         f"Nenhuma porta livre encontrada no intervalo {start_port}-{max_port}."
     )
 
+################################################################################
+def FiltrarRegiãoComOsmosisOld():
+    # Salvar o diretório atual
+    diretorio_atual = os.getcwd()
+    os.chdir("../../resources/Osmosis")
+    # Inicia e configura a máquina do Podman
+    logok=f"{wr.log_filename}.{wr.UserData.nome}"
+    subprocess.run(["filter.bat", wr.UserData.nome,logok])   # f"{log_filename}.{UserData.nome}"
+    os.chdir(diretorio_atual)
 
 ################################################################################
 def FiltrarRegiãoComOsmosis():
@@ -46,8 +54,23 @@ def FiltrarRegiãoComOsmosis():
     diretorio_atual = os.getcwd()
     os.chdir("../../resources/Osmosis")
     # Inicia e configura a máquina do Podman
-    logok=f"{wr.log_filename}.{wr.UserData.nome}"
-    subprocess.run(["filter.bat", wr.UserData.nome,logok])   # f"{log_filename}.{UserData.nome}"
+    logok = f"{wr.log_filename}.{wr.UserData.nome}"
+    subprocess.run(["podman", "machine", "init"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["podman", "machine", "start"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["podman", "load", "-i", "osmosis_webrota.tar"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    FILTRO = f"TempData/filtro_{wr.UserData.nome}"   
+    subprocess.run(["wsl", "rm", "-rf", FILTRO], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["wsl", "mkdir", "-p", FILTRO], stdout=open(logok, "a"), stderr=subprocess.STDOUT) 
+    subprocess.run(["podman", "run", "--rm","-v", ".:/data", "--name", f"osmosis_{wr.UserData.nome}", "localhost/osmosis_webrota", "osmosis", "--read-pbf", "file=/data/brazil/brazil-latest.osm.pbf", "--bounding-polygon", f"file=/data/TempData/exclusion_{wr.UserData.nome}.poly", "completeWays=no", "--write-pbf", f"file=/data/{FILTRO}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+                   #  podman  run    --rm    -v    .:/data   --name    osmosis_%USER%                 localhost/osmosis_webrota     osmosis    --read-pbf    file="/data/brazil/brazil-latest.osm.pbf"      --bounding-polygon   file="/data/TempData/exclusion_%USER%.poly"       completeWays=no    --write-pbf    file="/data/%FILTRO%/filtro-latest.osm.pbf" >> %LOG_SAIDA% 2>&1
+    subprocess.run(["wsl", "rm", "-rf", f"../OSMR/data/{FILTRO}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT) 
+                   # wsl rm -rf ../OSMR/data/%FILTRO%
+    subprocess.run(["wsl", "mkdir", "-p", f"../OSMR/data/{FILTRO}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)                
+                   # wsl mkdir -p ../OSMR/data/%FILTRO%
+    subprocess.run(["wsl", "mv", f"{FILTRO}/filtro-latest.osm.pbf", f"../OSMR/data/{FILTRO}/"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)                
+                   # wsl   mv     %FILTRO%/filtro-latest.osm.pbf     ../OSMR/data/%FILTRO%/
+    subprocess.run(["wsl", "rm", "-rf", f"{FILTRO}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT) 
+                    # wsl   rm    -rf    %FILTRO%
     os.chdir(diretorio_atual)
 
 ################################################################################
@@ -192,35 +215,6 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
 
     wr.wLog("O servidor OSRM não ficou disponível após várias tentativas.",level="debug")
     return False
-
-
-################################################################################
-def AtivaServidorWebRotas():
-    teste = wr.VerificarServidorAtivo(
-        f"http://localhost:{server_port}/ok", "ok", tentativas=3, intervalo=1
-    )
-    if not teste:
-        if wr.log_filename == "":
-            subprocess.Popen(
-                ["start", "startserver.bat"],
-                shell=True,
-                creationflags=subprocess.CREATE_NEW_CONSOLE,
-            )
-            wr.wLog("Ativando Servidor")
-            return
-        else:
-            wr.wLog(f"Ativando Servidor log {wr.log_filename}")
-            with open(wr.log_filename, "w+", encoding="utf-8") as log_file:
-                subprocess.Popen(
-                    ["startserver.bat"],
-                    stdout=log_file,
-                    stderr=log_file,
-                    creationflags=subprocess.CREATE_NO_WINDOW,
-                )
-            return
-    else:
-        wr.wLog("Servidor Ativo")
-    return
 
 
 ################################################################################
