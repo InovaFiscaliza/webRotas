@@ -49,6 +49,57 @@ def FiltrarRegiãoComOsmosisOld():
     os.chdir(diretorio_atual)
 
 ################################################################################
+import os
+import shutil
+def remover_diretorio(filtro: str) -> bool:
+    """
+    Remove um diretório e todo o seu conteúdo, se ele existir.
+
+    :param filtro: Caminho do diretório a ser removido.
+    :return: True se o diretório foi removido com sucesso, False se não existia ou houve erro.
+    """
+    try:
+        if os.path.exists(filtro):
+            shutil.rmtree(filtro)  # Remove o diretório e todo o seu conteúdo
+            wr.wLog(f"Diretório {filtro} removido com sucesso!",level="warning")
+            return True
+        else:
+            wr.wLog(f"O diretório {filtro} não existe.",level="warning")
+            return False
+    except Exception as e:
+        wr.wLog(f"Erro ao remover {filtro}: {e}")
+        return False
+################################################################################    
+def criar_diretorio(caminho: str) -> bool:
+    """
+    Cria um diretório de forma segura no Windows ou Linux.
+    
+    :param caminho: Caminho do diretório a ser criado.
+    :return: True se o diretório foi criado ou já existia, False se houve erro.
+    """
+    try:
+        os.makedirs(caminho, exist_ok=True)  # Cria o diretório e evita erro se já existir
+        return True
+    except Exception as e:
+        wr.wLog(f"Erro ao criar o diretório {caminho}: {e}")
+        return False 
+################################################################################    
+def mover_arquivo(origem: str, destino: str) -> bool:
+    """
+    Move um arquivo de uma pasta para outra.
+
+    :param origem: Caminho do arquivo de origem.
+    :param destino: Caminho do diretório de destino.
+    :return: True se o arquivo foi movido com sucesso, False caso contrário.
+    """
+    try:
+        os.makedirs(destino, exist_ok=True)  # Garante que o diretório de destino existe
+        shutil.move(origem, destino)
+        return True
+    except Exception as e:
+        wr.wLog(f"Erro ao mover {origem} para {destino}: {e}")
+        return False       
+################################################################################
 def FiltrarRegiãoComOsmosis():
     # Salvar o diretório atual
     diretorio_atual = os.getcwd()
@@ -59,18 +110,13 @@ def FiltrarRegiãoComOsmosis():
     subprocess.run(["podman", "machine", "start"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
     subprocess.run(["podman", "load", "-i", "osmosis_webrota.tar"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
     FILTRO = f"TempData/filtro_{wr.UserData.nome}"   
-    subprocess.run(["wsl", "rm", "-rf", FILTRO], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
-    subprocess.run(["wsl", "mkdir", "-p", FILTRO], stdout=open(logok, "a"), stderr=subprocess.STDOUT) 
+    remover_diretorio(FILTRO)
+    criar_diretorio(FILTRO)  
     subprocess.run(["podman", "run", "--rm","-v", ".:/data", "--name", f"osmosis_{wr.UserData.nome}", "localhost/osmosis_webrota", "osmosis", "--read-pbf", "file=/data/brazil/brazil-latest.osm.pbf", "--bounding-polygon", f"file=/data/TempData/exclusion_{wr.UserData.nome}.poly", "completeWays=no", "--write-pbf", f"file=/data/{FILTRO}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
-                   #  podman  run    --rm    -v    .:/data   --name    osmosis_%USER%                 localhost/osmosis_webrota     osmosis    --read-pbf    file="/data/brazil/brazil-latest.osm.pbf"      --bounding-polygon   file="/data/TempData/exclusion_%USER%.poly"       completeWays=no    --write-pbf    file="/data/%FILTRO%/filtro-latest.osm.pbf" >> %LOG_SAIDA% 2>&1
-    subprocess.run(["wsl", "rm", "-rf", f"../OSMR/data/{FILTRO}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT) 
-                   # wsl rm -rf ../OSMR/data/%FILTRO%
-    subprocess.run(["wsl", "mkdir", "-p", f"../OSMR/data/{FILTRO}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)                
-                   # wsl mkdir -p ../OSMR/data/%FILTRO%
-    subprocess.run(["wsl", "mv", f"{FILTRO}/filtro-latest.osm.pbf", f"../OSMR/data/{FILTRO}/"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)                
-                   # wsl   mv     %FILTRO%/filtro-latest.osm.pbf     ../OSMR/data/%FILTRO%/
-    subprocess.run(["wsl", "rm", "-rf", f"{FILTRO}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT) 
-                    # wsl   rm    -rf    %FILTRO%
+    remover_diretorio(f"../OSMR/data/{FILTRO}")              
+    criar_diretorio(f"../OSMR/data/{FILTRO}")       
+    mover_arquivo(f"{FILTRO}/filtro-latest.osm.pbf", f"../OSMR/data/{FILTRO}/")
+    remover_diretorio(FILTRO)    
     os.chdir(diretorio_atual)
 
 ################################################################################
@@ -80,11 +126,22 @@ def AtivaServidorOSMR():
     diretorio_atual = os.getcwd()
     os.chdir("../../resources/OSMR/data")
     wr.UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
-    wr.wLog(f"Porta tcp/ip disponivel en   contrada: {wr.UserData.OSMRport}",level="debug")
+    wr.wLog(f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}",level="debug")
     logok=f"{wr.log_filename}.{wr.UserData.nome}"
+    # logok_osmr=f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
+    DIRETORIO_REGIAO=f"TempData/filtro_{wr.UserData.nome}"
     wr.wLog(f"Ativando Servidor OSMR",level="info")
+    
+    subprocess.run(["podman", "machine", "init"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["podman", "machine", "start"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["podman", "stop", f"osmr_{wr.UserData.nome}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)  
+    subprocess.run(["podman", "load", "-i", "osmr_webrota.tar"], stdout=open(logok, "a"), stderr=subprocess.STDOUT) 
+    # Assegura que o container executa em paralelo com o python      
+    subprocess.Popen(["podman", "run", "--rm", "--name", f"osmr_{wr.UserData.nome}", "-m", "32g", "-t", "-i", "-p", f"{wr.UserData.OSMRport}:5000", "-v", f"./TempData/filtro_{wr.UserData.nome}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-routed", "--algorithm", "mld", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], shell=True, stdout=open(logok, "a"), stderr=subprocess.STDOUT)  
+                    #  podman    run    --rm    --name     osmr_%USER%                -m    32g    -t    -i    -p    %PORTA%:5000                   -v   ".\TempData\filtro_%USER%:/data/%DIRETORIO_REGIAO%"              localhost/osmr_webrota     osrm-routed    --algorithm    mld    /data/%DIRETORIO_REGIAO%/filtro-latest.osm.pbf >> %LOG_SAIDA% 2>&1
+    
     # Assegura que o container executa em paralelo com o python
-    subprocess.Popen(["StartServer.bat", str(wr.UserData.OSMRport), wr.UserData.nome, logok], shell=True)
+    # subprocess.Popen(["StartServer.bat", str(wr.UserData.OSMRport), wr.UserData.nome, logok], shell=True)
     os.chdir(diretorio_atual)
     return
 
@@ -96,7 +153,16 @@ def GerarIndicesExecutarOSRMServer():
     os.chdir("../../resources/OSMR/data")
     DeleteOldFilesAndFolders("TempData", days=30)
     logok=f"{wr.log_filename}.{wr.UserData.nome}"
-    subprocess.run(["GeraIndices.bat", wr.UserData.nome,logok])
+    DIRETORIO_REGIAO=f"TempData/filtro_{wr.UserData.nome}"
+    subprocess.run(["podman", "machine", "init"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["podman", "machine", "start"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["podman", "stop", f"osmr_{wr.UserData.nome}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)  
+    subprocess.run(["podman", "load", "-i", "osmr_webrota.tar"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)    
+    subprocess.run(["podman", "run", "--rm", "--name", f"temp1{wr.UserData.nome}", "-m", "32g", "-t", "-v", f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-extract", "-p", "/opt/car.lua", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)   
+    subprocess.run(["podman", "run", "--rm", "--name", f"temp2{wr.UserData.nome}", "-m", "32g", "-t", "-v", f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-partition", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)   
+    subprocess.run(["podman", "run", "--rm", "--name", f"temp3{wr.UserData.nome}", "-m", "32g", "-t", "-v", f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-customize", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)   
+    
+    # subprocess.run(["GeraIndices.bat", wr.UserData.nome,logok])
     os.chdir(diretorio_atual)
     AtivaServidorOSMR()
     return
