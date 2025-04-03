@@ -39,16 +39,6 @@ def FindFreePort(start_port=50000, max_port=65535):
     )
 
 ################################################################################
-def FiltrarRegiãoComOsmosisOld():
-    # Salvar o diretório atual
-    diretorio_atual = os.getcwd()
-    os.chdir("../../resources/Osmosis")
-    # Inicia e configura a máquina do Podman
-    logok=f"{wr.log_filename}.{wr.UserData.nome}"
-    subprocess.run(["filter.bat", wr.UserData.nome,logok])   # f"{log_filename}.{UserData.nome}"
-    os.chdir(diretorio_atual)
-
-################################################################################
 import os
 import shutil
 def remover_diretorio(filtro: str) -> bool:
