@@ -1,6 +1,5 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
-`<a name="indexerd-md-top"></a>`
 
 <!-- PROJECT SHIELDS -->
 
@@ -15,7 +14,7 @@
 <!-- TABLE OF CONTENTS -->
 
 <details>
-  <summary>Table of Contents</summary>
+  <summary>Table of Contents</summary> {#indexerd-md-top}
   <ol>
     <li><a href="#sobre-o-webrotas">Sobre o WebRotas</a></li>
     <li><a href="#requisitos-do-sistema">Requisitos do sistema</a></li>
