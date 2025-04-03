@@ -39,7 +39,7 @@ $files = @(
     "src\backend\webdir\shapeFiles.py",
     "src\backend\webdir\uf_code.py",
     "src\backend\webdir\webRota.py",
-    "src\backend\webdir\servers_interface.py",
+    "src\backend\webdir\routing_servers_interface.py",
     "src\backend\webdir\static\clDivOrdenaPontos.js",
     "src\backend\webdir\static\GpsAtivo.png",
     "src\backend\webdir\static\GpsInativo.png",

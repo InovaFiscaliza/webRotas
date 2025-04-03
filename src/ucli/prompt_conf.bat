@@ -16,7 +16,7 @@ REM Configura o alias com doskey
 doskey webrotas=uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" $*
 doskey exemplos=copy "%WEBROTAS_HOME%\tests\*.json" .
 doskey limpa="%WEBROTAS_HOME%\src\ucli\limpa.bat"
-doskey ajuda=cat "%WEBROTAS_HOME%\src\ucli\mensagens.txt"
+doskey ajuda=type "%WEBROTAS_HOME%\src\ucli\mensagens.txt"
 
 REM Configura a página de código para UTF-8
 chcp 65001 >nul

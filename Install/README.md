@@ -1,6 +1,6 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
-`<a name="indexerd-md-top"></a>`
+
 
 <!-- PROJECT SHIELDS -->
 
@@ -15,7 +15,7 @@
 <!-- TABLE OF CONTENTS -->
 
 <details>
-  <summary>Table of Contents</summary>
+  <summary>Table of Contents</summary> {#indexerd-md-top}
   <ol>
     <li><a href="#sobre-o-webrotas">Sobre o WebRotas</a></li>
     <li><a href="#requisitos-do-sistema">Requisitos do sistema</a></li>
@@ -70,9 +70,6 @@ winver
 > | ⚠️*IMPORTANTE*                                                                                                                                                                                                                                                                                                                                                                       |
 > | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 > | Em princípio o*webRotas* não é compatível com o uso em máquinas virtuais pois faz uso do recurso de virtualização do windows para uso do WLS. Mais detalhes sobre o WSL são apresentados à seguir ou podem ser obtidos na [documentação do Subsistema Linux do Windows](dhttps://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature) |
->
->
-
 
 <div align="right">
     <a href="#indexerd-md-top">
@@ -86,9 +83,13 @@ winver
 
 Verifique se você possui as seguintes ferramentas instaladas:
 
-- PowerShell 7.4 ou posterior
+- PowerShell 5.1 ou posterior
 
 Abra o terminal PowerShell utilizando as teclas `Win + R` ou o menu iniciar (teclas windows) e digitando `powershell`, ou utilizando o seu aplicativo de terminal preferido:
+
+Devido a restrições de segurança em computadores corporativos da Anatel, a instalação do *webRotas* deve ser feita na pasta `C:\Users\SeuUsuario\AppData\Roaming\ANATEL`, verifique este diretório no seu computador local com o comando `echo "$env:APPDATA\ANATEL"`, continue a instalação conforme indicado nos passos à seguir. Para outros ambientes, a instalação pode ser feita em qualquer pasta de sua escolha.
+
+Navegue até a pasta de instalação utilizando o comando `cd C:\Users\SeuUsuario\AppData\Roaming\ANATEL` ou crie a pasta com o comando `mkdir C:\Users\SeuUsuario\AppData\Roaming\ANATEL`.
 
 ### 1.1 Acesse a página de Releases do WebRotas e faça o download do ultimo release
 
@@ -129,7 +130,7 @@ cd Install
 .\setup.ps1
 ```
 
-Este script fara todas as configurações necessárias informará que tudo executou de forma correta.
+Este script fara todas as configurações necessárias e informará que tudo executou de forma correta.
 
 # Instalação para Todos os Usuários
 
@@ -137,7 +138,7 @@ Este script fara todas as configurações necessárias informará que tudo execu
 
 Verifique se você possui as seguintes ferramentas instaladas:
 
-- PowerShell 7.4 ou posterior
+- PowerShell 5.1 ou posterior
 - WinGet 1.10 ou posterior
 
 Abra o terminal PowerShell utilizando as teclas `Win + R` ou o menu iniciar (teclas windows) e digitando `powershell`, ou utilizando o seu aplicativo de terminal preferido:
@@ -287,15 +288,11 @@ winget install --id=astral-sh.uv  -e
 
 ## Instalando o *webRotas*
 
-Devido a restrições de segurança em computadores corporativos da Anatel, a instalação do *webRotas* deve ser feita da pata `C:\ProgramData\Anatel\webRotas`, conforme indicado nos passos à seguir. Para outros ambientes, a instalação pode ser feita em qualquer pasta de sua escolha.
+Devido a restrições de segurança em computadores corporativos da Anatel, a instalação do *webRotas* deve ser feita na pasta `C:\Users\SeuUsuario\AppData\Roaming\ANATEL`, verifique este diretório no seu computador local com o comando `echo "$env:APPDATA\ANATEL"`, continue a instalação conforme indicado nos passos à seguir. Para outros ambientes, a instalação pode ser feita em qualquer pasta de sua escolha.
 
-Navegue até a pasta de instalação utilizando o comando `cd C:\ProgramData\Anatel` ou crie a pasta com o comando `mkdir C:\ProgramData\Anatel`.
+Navegue até a pasta de instalação utilizando o comando `cd C:\Users\SeuUsuario\AppData\Roaming\ANATEL` ou crie a pasta com o comando `mkdir C:\Users\SeuUsuario\AppData\Roaming\ANATEL`.
 
-> | ⚠️*IMPORTANTE*                                                                                                                                                                                                                                                                                                         |
-> | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | Caso seja necessário ou desejado instalar em outra pasta, o procedimento não sofrerá alterações, bastando substituir `C:\ProgramData\Anatel` na variável `$WEBROTAS_HOME` pelos caminhos desejados, no aquivo '.\webRotas\src\ucli\prompt_conf.bat e criar manualmente um novo atalho para executar esse script. |
-
-Baixe e descomprima o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases/latest) para a pasta criada com os seguintes comandos.
+> Baixe e descomprima o [pacote de instalação](https://github.com/InovaFiscaliza/webRotas/releases/latest) para a pasta criada com os seguintes comandos.
 
 ```shell
 $URL = "https://github.com/InovaFiscaliza/webRotas/releases/latest/download/webrotas.tgz"

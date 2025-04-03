@@ -1,6 +1,6 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
-<a name="indexerd-md-top"></a>
+`<a name="indexerd-md-top"></a>`
 
 <!-- PROJECT SHIELDS -->
 
@@ -56,7 +56,7 @@ As imagens à seguir apresentam os 3 principais modos de cálculo, que são:
 # Requisitos do sistema
 
 - Windows 10 1709 (build 16299) ou posterior
-- PowerShell 7.4 ou posterior
+- PowerShell 5.1 ou posterior
 - WinGet 1.10 ou posterior
 - Recursos de virtualização habilitados (veja [documentação do Subsistema Linux do Windows](https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature))
 - 16GB of RAM
@@ -127,9 +127,9 @@ O terminal apresentará também o link para uma versão estática da página htm
 
 ![image of client console](docs/images/client-cmd.png)
 
-> | ⚠️ *IMPORTANTE* |
-> | :--- |
-> | Pode ocorrer falha no processo de criação de índices, mapa ou outros eventos.<br><br>Para limpar todos arquivos de cache ou temporários do sistema use a função `limpa` no console do *webRotas* ou o script `.\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat` junto ao código do servidor. |
+> | ⚠️*IMPORTANTE*                                                                                                                                                                                                                                                                                                      |
+> | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Pode ocorrer falha no processo de criação de índices, mapa ou outros eventos.`<br><br>`Para limpar todos arquivos de cache ou temporários do sistema use a função `limpa` no console do *webRotas* ou o script `.\Servers\backend\webdir\LimpaTodosArquivosTemporarios.bat` junto ao código do servidor. |
 
 No diretório `\webRotas\Servers\backend\webdir\logs` você encontra os logs de depuração, uma parte destes logs você vê na tela do python Server.py, mas alguns detalhes na execução dos container estão nesse log.
 
