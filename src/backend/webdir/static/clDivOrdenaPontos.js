@@ -593,9 +593,14 @@ function clDivOrdenaPontos() {
             */
 
             pntinicialBuf = [];
-            pntinicialBuf[0] = document.getElementById('latitude').value;
-            pntinicialBuf[1] = document.getElementById('longitude').value;
-            pntinicialBuf[2] = document.getElementById('descricao').value; 
+            // pntinicialBuf[0] = document.getElementById('latitude').value;
+            // pntinicialBuf[1] = document.getElementById('longitude').value;
+            // pntinicialBuf[2] = document.getElementById('descricao').value; 
+
+            pntinicialBuf[0] = rotaSel.pontoinicial[0];
+            pntinicialBuf[1] = rotaSel.pontoinicial[1];
+            pntinicialBuf[2] = rotaSel.pontoinicial[2]; 
+
 
             maiorId = ListaRotasCalculadas.reduce((max, item) => {return item.id > max ? item.id : max;}, 0);
             bufdados = {};
