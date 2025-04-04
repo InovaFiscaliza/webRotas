@@ -1,7 +1,7 @@
 {
     "User": "Usuário8",
     "TipoRequisicao": "PontosVisita",
-    "Descricao": "Teste de pontos de visita interior de São Paulo, sem regiões de exclusão e algoritmo de ordenação por distância OSMR MultiThread",
+    "Descricao": "Teste de pontos de visita interior de São Paulo, sem regiões de exclusão e sem algoritmo de ordenação por distância para seguei a ordem de pontos solicitada pelo usuário",
     "PontoInicial": [-23.587504157472903, -46.63325675570971,"Anatel São Paulo"],
     "RaioDaEstacao": 200,
     "GpsProximoPonto": "ProximoDaRota",

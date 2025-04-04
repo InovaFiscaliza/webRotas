@@ -1,4 +1,7 @@
 
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+chcp 65001
 
 # ----------------------------------------------------------------------------------------------------------------------
 # URL do recurso no SharePoint
@@ -77,12 +80,31 @@ if ($majorVersion -ge 10) {
 # ----------------------------------------------------------------------------------------------------------------------
 # Verifica se o winget está instalado
 $wingetExists = Get-Command winget -ErrorAction SilentlyContinue
+
 if ($wingetExists) {
     Write-Host "Winget is installed. Proceeding with the script..."
 } else {
-    Write-Host "Winget is not installed. Exiting..." -ForegroundColor Red
-    exit 1
+    Write-Host "Winget is not installed. Attempting to install it..." -ForegroundColor Yellow
+    
+    # Baixa o instalador mais recente do App Installer da Microsoft Store
+    $installerUrl = "https://aka.ms/getwinget"
+    $installerPath = "$env:TEMP\AppInstaller.msixbundle"
+
+    Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath
+
+    # Instala o App Installer
+    Add-AppxPackage -Path $installerPath
+
+    # Verifica se a instalação foi bem-sucedida
+    $wingetExists = Get-Command winget -ErrorAction SilentlyContinue
+    if ($wingetExists) {
+        Write-Host "Winget was successfully installed!" -ForegroundColor Green
+    } else {
+        Write-Host "Failed to install winget. Please install it manually from the Microsoft Store." -ForegroundColor Red
+        exit 1
+    }
 }
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Verifica se o Git está instalado
 $gitExists = Get-Command git -ErrorAction SilentlyContinue
