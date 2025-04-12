@@ -8,6 +8,7 @@ import datetime
 import time
 import requests
 import socket
+import glob
 
 import webRota as wr
 
@@ -130,8 +131,6 @@ def AtivaServidorOSMR():
     subprocess.Popen(["podman", "run", "--rm", "--name", f"osmr_{wr.UserData.nome}", "-m", "32g", "-t", "-i", "-p", f"{wr.UserData.OSMRport}:5000", "-v", f"./TempData/filtro_{wr.UserData.nome}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-routed", "--algorithm", "mld", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], shell=True, stdout=open(logok, "a"), stderr=subprocess.STDOUT)  
                     #  podman    run    --rm    --name     osmr_%USER%                -m    32g    -t    -i    -p    %PORTA%:5000                   -v   ".\TempData\filtro_%USER%:/data/%DIRETORIO_REGIAO%"              localhost/osmr_webrota     osrm-routed    --algorithm    mld    /data/%DIRETORIO_REGIAO%/filtro-latest.osm.pbf >> %LOG_SAIDA% 2>&1
     
-    # Assegura que o container executa em paralelo com o python
-    # subprocess.Popen(["StartServer.bat", str(wr.UserData.OSMRport), wr.UserData.nome, logok], shell=True)
     os.chdir(diretorio_atual)
     return
 
@@ -152,7 +151,6 @@ def GerarIndicesExecutarOSRMServer():
     subprocess.run(["podman", "run", "--rm", "--name", f"temp2{wr.UserData.nome}", "-m", "32g", "-t", "-v", f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-partition", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)   
     subprocess.run(["podman", "run", "--rm", "--name", f"temp3{wr.UserData.nome}", "-m", "32g", "-t", "-v", f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-customize", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)   
     
-    # subprocess.run(["GeraIndices.bat", wr.UserData.nome,logok])
     os.chdir(diretorio_atual)
     AtivaServidorOSMR()
     return
@@ -260,11 +258,16 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
                 wr.wLog(
                     f"Tentativa {tentativa + 1}/{tentativas}: Erro {response.status_code}. Tentando novamente...",level="debug"
                 )
+                if VerificarFalhaServidorOSMR():
+                    return False
+                    
 
         except requests.exceptions.RequestException as e:
             wr.wLog(
                 f"Tentativa {tentativa + 1}/{tentativas}: Erro ao acessar o OSRM: {e}. Tentando novamente...",level="debug"
             )
+            if VerificarFalhaServidorOSMR():
+                return False
 
         # Aguarda o intervalo antes de tentar novamente
         time.sleep(intervalo)
@@ -272,7 +275,38 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
     wr.wLog("O servidor OSRM não ficou disponível após várias tentativas.",level="debug")
     return False
 
+################################################################################
+def procurar_multiplas_strings_em_arquivo(caminho_arquivo, lista_strings):
+    try:
+        with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
+            for linha in arquivo:
+                for s in lista_strings:
+                    if s in linha:
+                        return True
+        return False
+    except FileNotFoundError:
+        wr.wLog(f"Arquivo não encontrado: {caminho_arquivo}")
+        return False
+    except Exception as e:
+        wr.wLog(f"Erro ao ler o arquivo: {e}")
+        return False
 
+################################################################################
+def VerificarFalhaServidorOSMR():
+    erros_procurados = [
+    "terminate called after throwing an instance of",
+    "Required files are missing, cannot continue",
+    "Error: CreateFile TempData"
+    ]
+    logfile=f"{wr.log_filename}.{wr.UserData.nome}"
+    if procurar_multiplas_strings_em_arquivo(logfile, erros_procurados):
+        wr.wLog("Erro detectado no log!")
+        return True
+    else:
+        wr.wLog("Nenhum erro encontrado no log.")
+        return False
+
+ 
 ################################################################################
 def KillProcessByCommand(target_command):
     """
@@ -357,28 +391,92 @@ def DeleteOldFilesAndFolders(directory, days=30):
                 wr.wLog(f"Pasta removida: {item_path}")
     except Exception as e:
         wr.wLog(f"Erro ao processar o diretório: {e}")
+################################################################################
+def parar_containers_osmr(nome_usuario):
+    try:
+        # Lista os containers com nome
+        podman_ps = subprocess.run(["podman", "ps", "-a", "--format", "{{.ID}} {{.Names}}"],
+                                   capture_output=True, text=True, check=True)
+        
+        linhas = podman_ps.stdout.strip().splitlines()
+        for linha in linhas:
+            container_id, container_name = linha.strip().split(maxsplit=1)
+            if container_name == f"osmr_{nome_usuario}":
+                subprocess.run(["podman", "stop", container_id],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                wr.wLog(f"Container {container_name} parado.", level="debug")
 
+    except Exception as e:
+        wr.wLog(f"Erro ao parar containers: {e}", level="debug")
+################################################################################
+def remover_arquivos_osmr():
+    wr.wLog("Removendo arquivos osmozis e osmr", level="debug")
+
+    caminhos = [
+        f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}*",
+        "../../resources/OSMR/data/TempData/filtro_{wr.UserData.nome}",   
+    ]
+
+    for caminho in caminhos:
+        for item in glob.glob(caminho, recursive=True):
+            try:
+                if os.path.isfile(item):
+                    os.remove(item)
+                    wr.wLog(f"Arquivo removido: {item}", level="debug")
+                elif os.path.isdir(item):
+                    shutil.rmtree(item)
+                    wr.wLog(f"Diretório removido: {item}", level="debug")
+            except Exception as e:
+                wr.wLog(f"Erro ao remover {item}: {e}", level="error")
+################################################################################
+def limpar_cache_files_osmr():
+    try:
+        wr.wLog("Apagando arquivo de log...",level="debug")
+        log_file = f"{wr.log_filename}.{wr.UserData.nome}"
+        try:
+            os.remove(log_file)
+            wr.wLog(f"Removido: {log_file}",level="debug")
+        except FileNotFoundError:
+            wr.wLog(f"Arquivo não encontrado: {log_file}")
+        except Exception as e:
+            wr.wLog(f"Erro ao remover {log_file}: {e}")
+            
+        wr.wLog("Erro de cache encontrado reiniciando geração dos mapas",level="debug")    
+        wr.wLog(f"Parando todos os containers osmr do usário {wr.UserData.nome}",level="debug")
+        parar_containers_osmr(wr.UserData.nome)
+
+        remover_arquivos_osmr()   
+
+        wr.wLog("Limpeza concluída com sucesso.",level="debug")
+    except Exception as e:
+        wr.wLog(f"Erro durante a limpeza dos caches : {e}")
 
 ################################################################################
 def PreparaServidorRoteamento(regioes):
     DeleteOldFilesAndFolders("logs", days=30)
     DeleteOldFilesAndFolders("../../resources/Osmosis/TempData", days=30)
-    wr.GeraArquivoExclusoes(
-        regioes,
-        arquivo_saida=f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}.poly",
-    )
-    if not VerificaArquivosIguais(
-        f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}.poly",
-        f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}.poly.old",
-    ):
-        wr.wLog("FiltrarRegiãoComOsmosis")
-        FiltrarRegiãoComOsmosis()
-        wr.wLog("GerarIndicesExecutarOSRMServer")
-        GerarIndicesExecutarOSRMServer()
-    else:
-        wr.wLog("Arquivo exclusoes nao modificado, nao e necessario executar osmosis")
-        AtivaServidorOSMR()
-    VerificarOsrmAtivo()
+    roteamento_ok=False
+    while not roteamento_ok:
+        wr.GeraArquivoExclusoes(
+            regioes,
+            arquivo_saida=f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}.poly",
+        )
+        if not VerificaArquivosIguais(
+            f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}.poly",
+            f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}.poly.old",
+        ):
+            wr.wLog("FiltrarRegiãoComOsmosis")
+            FiltrarRegiãoComOsmosis()
+            wr.wLog("GerarIndicesExecutarOSRMServer")
+            GerarIndicesExecutarOSRMServer()
+        else:
+            wr.wLog("Arquivo exclusoes nao modificado, nao e necessario executar osmosis")
+            AtivaServidorOSMR()
+        if VerificarOsrmAtivo():
+            roteamento_ok=True 
+        else:   
+            wr.wLog("Erro de cache encontrado reiniciando geração dos mapas")
+            limpar_cache_files_osmr() 
 
 
 
