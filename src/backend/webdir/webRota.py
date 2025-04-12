@@ -315,7 +315,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     end_coords = (end_lat, end_lon)
 
     if ServerTec == "OSMR":
-        # URL da solicitação ao servidor OSRM
+        # URL da solicitação ao servidor OSMR
         url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{start_coords[1]},{start_coords[0]};{end_coords[1]},{end_coords[0]}?overview=full&geometries=polyline&steps=true"
 
     wLog(url,level="debug")
@@ -427,7 +427,9 @@ def TimeStringTmp():
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso...
 def OrdenarPontos(pontosvisita, pontoinicial):
     # BenchmarkRotas(pontosvisita,pontoinicial)
-    wLog(f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}]")
+    tempoestimado = estimar_tempo_ordenacao(pontosvisita)
+    wLog(f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}] - Tempo estimado: {tempoestimado} minutos")
+    
     if (
         UserData.AlgoritmoOrdenacaoPontos == "DistanciaGeodesica"
     ):  # "DistanciaOSMR", "DistanciaGeodesica", "DistanciaOSMRMultiThread"
@@ -1447,6 +1449,19 @@ def RoteamentoOSMR(porta, pontosvisita, pontoinicial, recalcularrota):
 
     return RouteDetail.coordinates, RouteDetail.DistanceTotal, pontosvisita
 ################################################################################
+def estimar_tempo_ordenacao(pontosvisita):
+    referencia_pontos = 110
+    referencia_tempo_minutos = 35
+
+    if not pontosvisita:
+        return 0  # Nenhum ponto, nenhum tempo
+
+    num_pontos = len(pontosvisita)
+
+    tempo_estimado = (num_pontos / referencia_pontos) * referencia_tempo_minutos
+
+    return round(tempo_estimado)  # Retorna com 0 casas decimais
+################################################################################
 def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     UserData.nome = user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
@@ -1466,8 +1481,8 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView(13);\n"
 
-    # Processa Pontos de Visita
-    wLog("Ordenando e processando Pontos de Visita:")
+    # Processa Pontos de Visita 
+    wLog(f"Ordenando e processando Pontos de Visita: ")
     pontosvisita = OrdenarPontos(pontosvisita, pontoinicial)
 
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados)

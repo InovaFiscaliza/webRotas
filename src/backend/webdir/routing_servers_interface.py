@@ -119,7 +119,7 @@ def AtivaServidorOSMR():
     wr.UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
     wr.wLog(f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}",level="debug")
     logok=f"{wr.log_filename}.{wr.UserData.nome}"
-    # logok_osmr=f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
+    logok_osmr=f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
     DIRETORIO_REGIAO=f"TempData/filtro_{wr.UserData.nome}"
     wr.wLog(f"Ativando Servidor OSMR",level="info")
     
@@ -128,7 +128,7 @@ def AtivaServidorOSMR():
     subprocess.run(["podman", "stop", f"osmr_{wr.UserData.nome}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)  
     subprocess.run(["podman", "load", "-i", "osmr_webrota.tar"], stdout=open(logok, "a"), stderr=subprocess.STDOUT) 
     # Assegura que o container executa em paralelo com o python      
-    subprocess.Popen(["podman", "run", "--rm", "--name", f"osmr_{wr.UserData.nome}", "-m", "32g", "-t", "-i", "-p", f"{wr.UserData.OSMRport}:5000", "-v", f"./TempData/filtro_{wr.UserData.nome}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-routed", "--algorithm", "mld", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], shell=True, stdout=open(logok, "a"), stderr=subprocess.STDOUT)  
+    subprocess.Popen(["podman", "run", "--rm", "--name", f"osmr_{wr.UserData.nome}", "-m", "32g", "-t", "-i", "-p", f"{wr.UserData.OSMRport}:5000", "-v", f"./TempData/filtro_{wr.UserData.nome}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-routed", "--algorithm", "mld", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], shell=True, stdout=open(logok_osmr, "a"), stderr=subprocess.STDOUT)  
                     #  podman    run    --rm    --name     osmr_%USER%                -m    32g    -t    -i    -p    %PORTA%:5000                   -v   ".\TempData\filtro_%USER%:/data/%DIRETORIO_REGIAO%"              localhost/osmr_webrota     osrm-routed    --algorithm    mld    /data/%DIRETORIO_REGIAO%/filtro-latest.osm.pbf >> %LOG_SAIDA% 2>&1
     
     os.chdir(diretorio_atual)
@@ -252,7 +252,7 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
 
             # Verifica o código de status HTTP
             if response.status_code == 200:
-                wr.wLog("OSRM está funcionando corretamente.")
+                wr.wLog("OSRM está funcionando corretamente.",level="debug")
                 return True
             else:
                 wr.wLog(
@@ -298,12 +298,12 @@ def VerificarFalhaServidorOSMR():
     "Required files are missing, cannot continue",
     "Error: CreateFile TempData"
     ]
-    logfile=f"{wr.log_filename}.{wr.UserData.nome}"
+    logfile=f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
     if procurar_multiplas_strings_em_arquivo(logfile, erros_procurados):
-        wr.wLog("Erro detectado no log!")
+        wr.wLog("Erro detectado no log!",level="debug")
         return True
     else:
-        wr.wLog("Nenhum erro encontrado no log.")
+        wr.wLog("Nenhum erro encontrado no log.",level="debug")
         return False
 
  
@@ -432,7 +432,7 @@ def remover_arquivos_osmr():
 def limpar_cache_files_osmr():
     try:
         wr.wLog("Apagando arquivo de log...",level="debug")
-        log_file = f"{wr.log_filename}.{wr.UserData.nome}"
+        log_file = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
         try:
             os.remove(log_file)
             wr.wLog(f"Removido: {log_file}",level="debug")
