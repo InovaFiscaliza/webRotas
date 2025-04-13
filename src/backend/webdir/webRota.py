@@ -474,8 +474,31 @@ def OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial):
         0
     ]  # Remove o primeiro elemento, usado apenas como referência inicial da ordenação
     return ordenados
+################################################################################
+# Versão baseada no TSP (Traveling Salesman Problem)
+def OrdenarPontosTSP(pontosvisita, pontoinicial):
+    from itertools import permutations
+    if not pontosvisita:
+        return []
 
+    # Adiciona ponto inicial ao início de cada permutação e calcula o caminho total
+    melhor_caminho = None
+    menor_distancia = float('inf')
 
+    for perm in permutations(pontosvisita):
+        caminho = [pontoinicial] + list(perm)
+        distancia_total = 0
+
+        for i in range(len(caminho) - 1):
+            distancia_total += DistanciaRota(
+                caminho[i][0], caminho[i][1], caminho[i+1][0], caminho[i+1][1]
+            )
+
+        if distancia_total < menor_distancia:
+            menor_distancia = distancia_total
+            melhor_caminho = perm
+
+    return list(melhor_caminho)
 ################################################################################
 def calcular_distancia_totalOSMR(osmr_saida):
     """
