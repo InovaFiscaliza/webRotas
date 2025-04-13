@@ -423,7 +423,22 @@ def TimeStringTmp():
     return buf
 
 
-################################################################################
+###########################################################################################################################
+def estimar_tempo_ordenacao(pontosvisita):
+    
+    if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMRMultiThread":
+        referencia_pontos = 110
+        referencia_tempo_minutos = 35
+
+        if not pontosvisita:
+            return 0  # Nenhum ponto, nenhum tempo
+
+        num_pontos = len(pontosvisita)
+
+        tempo_estimado = (num_pontos / referencia_pontos) * referencia_tempo_minutos
+
+        return round(tempo_estimado)  # Retorna com 0 casas decimais
+###########################################################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso...
 def OrdenarPontos(pontosvisita, pontoinicial):
     # BenchmarkRotas(pontosvisita,pontoinicial)
@@ -438,6 +453,8 @@ def OrdenarPontos(pontosvisita, pontoinicial):
         return OrdenarPontosDistanciaOSMR(pontosvisita, pontoinicial)
     if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMRMultiThread":
         return OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial)
+    if UserData.AlgoritmoOrdenacaoPontos == "TravelingSalesman":
+        return OrdenarPontosTSP(pontosvisita, pontoinicial)
     return pontosvisita  # Nenhuma seleção, não ordena os pontos
 
 

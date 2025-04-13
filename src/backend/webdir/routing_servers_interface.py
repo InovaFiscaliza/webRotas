@@ -96,7 +96,7 @@ def FiltrarRegiãoComOsmosis():
     diretorio_atual = os.getcwd()
     os.chdir("../../resources/Osmosis")
     # Inicia e configura a máquina do Podman
-    logok = f"{wr.log_filename}.{wr.UserData.nome}"
+    logok = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
     subprocess.run(["podman", "machine", "init"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
     subprocess.run(["podman", "machine", "start"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
     subprocess.run(["podman", "load", "-i", "osmosis_webrota.tar"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
@@ -123,10 +123,10 @@ def AtivaServidorOSMR():
     DIRETORIO_REGIAO=f"TempData/filtro_{wr.UserData.nome}"
     wr.wLog(f"Ativando Servidor OSMR",level="info")
     
-    subprocess.run(["podman", "machine", "init"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
-    subprocess.run(["podman", "machine", "start"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
-    subprocess.run(["podman", "stop", f"osmr_{wr.UserData.nome}"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)  
-    subprocess.run(["podman", "load", "-i", "osmr_webrota.tar"], stdout=open(logok, "a"), stderr=subprocess.STDOUT) 
+    subprocess.run(["podman", "machine", "init"], stdout=open(logok_osmr, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["podman", "machine", "start"], stdout=open(logok_osmr, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["podman", "stop", f"osmr_{wr.UserData.nome}"], stdout=open(logok_osmr, "a"), stderr=subprocess.STDOUT)  
+    subprocess.run(["podman", "load", "-i", "osmr_webrota.tar"], stdout=open(logok_osmr, "a"), stderr=subprocess.STDOUT) 
     # Assegura que o container executa em paralelo com o python      
     subprocess.Popen(["podman", "run", "--rm", "--name", f"osmr_{wr.UserData.nome}", "-m", "32g", "-t", "-i", "-p", f"{wr.UserData.OSMRport}:5000", "-v", f"./TempData/filtro_{wr.UserData.nome}:/data/{DIRETORIO_REGIAO}", "localhost/osmr_webrota", "osrm-routed", "--algorithm", "mld", f"/data/{DIRETORIO_REGIAO}/filtro-latest.osm.pbf"], shell=True, stdout=open(logok_osmr, "a"), stderr=subprocess.STDOUT)  
                     #  podman    run    --rm    --name     osmr_%USER%                -m    32g    -t    -i    -p    %PORTA%:5000                   -v   ".\TempData\filtro_%USER%:/data/%DIRETORIO_REGIAO%"              localhost/osmr_webrota     osrm-routed    --algorithm    mld    /data/%DIRETORIO_REGIAO%/filtro-latest.osm.pbf >> %LOG_SAIDA% 2>&1
@@ -414,7 +414,7 @@ def remover_arquivos_osmr():
 
     caminhos = [
         f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}*",
-        "../../resources/OSMR/data/TempData/filtro_{wr.UserData.nome}",   
+        f"../../resources/OSMR/data/TempData/filtro_{wr.UserData.nome}",   
     ]
 
     for caminho in caminhos:

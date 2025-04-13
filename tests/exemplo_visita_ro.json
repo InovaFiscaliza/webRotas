@@ -131,7 +131,8 @@
             "Praça Cruviana – Bairro Jardin Equatorial"
         ]
     ],
-    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",
+    "Opcoes AlgoritmoOrdenacaoPontos": "Nenhuma, DistanciaGeodesica, ,DistanciaOSMRMultiThread, TravelingSalesman",
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
     "regioes": [
         {
             "nome": "!Nova Vida",
