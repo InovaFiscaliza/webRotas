@@ -501,6 +501,8 @@ def formatar_tempo_vasto(segundos):
     # print(formatar_tempo(10**8))          # 38.58 anos
     # print(formatar_tempo(10**13))         # 26.43 milhões de anos
     # print(formatar_tempo(10**17))         # 8.77 bilhões de anos
+    from decimal import Decimal, getcontext
+    getcontext().prec = 1000
 
     unidades = [
         ("minuto", 60),
@@ -539,14 +541,11 @@ def formatar_tempo_vasto(segundos):
         ("octingentilhão de anos", 1000),
         ("nongentilhão de anos", 1000),
         ("milhêsilhão de anos", 1000),
-        ("googol de anos", 10**100),
-        ("googolplex de anos", 10**(10**100)),
+        ("googol de anos", Decimal("1e100")),   # apena decorativo o valor verdadeiro faz o python falhar  ("googol de anos", 10**100)
+        ("googolplex de anos", Decimal("1e10000")), # apena decorativo o valor verdadeiro faz o python falhar ("googolplex de anos", 10**(10**100)),
     ]
-
-
     valor = segundos
     nome = "segundo"
-
     for nome_unidade, fator in unidades:
         if valor < fator:
             break
