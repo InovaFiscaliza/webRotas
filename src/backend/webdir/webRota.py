@@ -434,7 +434,6 @@ def medir_tempo_execucao(funcao, *args, **kwargs):
 
 ###########################################################################################################################
 def estimar_tempo_ordenacao(pontosvisita):
-    print(f"Algoritmo: {UserData.AlgoritmoOrdenacaoPontos}")
     if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMRMultiThread":
         tempo_uma_rota=medir_tempo_execucao(DistanciaRota,pontosvisita[0][0], pontosvisita[0][1], pontosvisita[1][0], pontosvisita[1][1])
         cpu_count = psutil.cpu_count(logical=True)  # threads lógicas, incluindo hyper-threading

@@ -13,7 +13,7 @@
     "uf": "SP",
     "Escopo":"AreasUrbanizadas",
     "Opcoes AlgoritmoOrdenacaoPontos": "Nenhuma, DistanciaGeodesica,DistanciaOSMR ,DistanciaOSMRMultiThread, TravelingSalesman",
-    "AlgoritmoOrdenacaoPontos": "TravelingSalesman",
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
     "distancia_pontos": 3000,
     "regioes": []
 }

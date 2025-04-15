@@ -8,7 +8,8 @@
     "Escopo":"AreasUrbanizadas",
     "cidade": "Campos dos Goytacazes",
     "uf": "RJ",
-    "AlgoritmoOrdenacaoPontos": "DistanciaGeodesica",
+    "Opcoes AlgoritmoOrdenacaoPontos": "Nenhuma, DistanciaGeodesica,DistanciaOSMR ,DistanciaOSMRMultiThread, TravelingSalesman",
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
     "distancia_pontos": 1600,
     "regioes": []
 }
