@@ -1,9 +1,12 @@
 ###########################################################################################################################
 import os
+import psutil
+import math
 import shutil
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import datetime
+from itertools import permutations
 import time
 import requests
 import math
@@ -421,29 +424,61 @@ def TimeStringTmp():
     # Formata a data e hora em uma string no formato AAAA-MM-DD_HH-MM-SS
     buf = agora.strftime("%Y-%m-%d_%H-%M-%S")
     return buf
-
+###########################################################################################################################
+def medir_tempo_execucao(funcao, *args, **kwargs):
+    inicio = time.perf_counter()  # alta resolução
+    resultado = funcao(*args, **kwargs)
+    fim = time.perf_counter()
+    tempo_execucao = (fim - inicio) 
+    return tempo_execucao
 
 ###########################################################################################################################
 def estimar_tempo_ordenacao(pontosvisita):
-    
+    print(f"Algoritmo: {UserData.AlgoritmoOrdenacaoPontos}")
     if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMRMultiThread":
-        referencia_pontos = 110
-        referencia_tempo_minutos = 35
-
+        tempo_uma_rota=medir_tempo_execucao(DistanciaRota,pontosvisita[0][0], pontosvisita[0][1], pontosvisita[1][0], pontosvisita[1][1])
+        cpu_count = psutil.cpu_count(logical=True)  # threads lógicas, incluindo hyper-threading
         if not pontosvisita:
-            return 0  # Nenhum ponto, nenhum tempo
-
+            return 0  # Nenhum ponto, nenhum tempo     
         num_pontos = len(pontosvisita)
-
-        tempo_estimado = (num_pontos / referencia_pontos) * referencia_tempo_minutos
-
-        return round(tempo_estimado)  # Retorna com 0 casas decimais
+        tempo_estimado = (0.5*num_pontos * num_pontos * tempo_uma_rota) / cpu_count
+        
+        # wLog(
+        #     f"Depuração: tempo_uma_rota={tempo_uma_rota:.6f}s | cpu_count={cpu_count} | "
+        #     f"num_pontos={num_pontos} | tempo_estimado={tempo_estimado:.6f}s",
+        #     level="debug"
+        # )
+        
+        return tempo_estimado
+    if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMR":
+        tempo_uma_rota=medir_tempo_execucao(DistanciaRota,pontosvisita[0][0], pontosvisita[0][1], pontosvisita[1][0], pontosvisita[1][1])
+        if not pontosvisita:
+            return 0  # Nenhum ponto, nenhum tempo     
+        num_pontos = len(pontosvisita)
+        tempo_estimado = (0.5*num_pontos * num_pontos * tempo_uma_rota) 
+        return tempo_estimado     
+    if UserData.AlgoritmoOrdenacaoPontos == "DistanciaGeodesica":
+        tempo_uma_rota=medir_tempo_execucao(Haversine,pontosvisita[0][0], pontosvisita[0][1], pontosvisita[1][0], pontosvisita[1][1])
+        if not pontosvisita:
+            return 0  # Nenhum ponto, nenhum tempo     
+        num_pontos = len(pontosvisita)
+        tempo_estimado = (0.5*num_pontos * num_pontos * tempo_uma_rota) 
+        return tempo_estimado   
+    if UserData.AlgoritmoOrdenacaoPontos == "TravelingSalesman":
+        tempo_uma_rota=medir_tempo_execucao(DistanciaRota,pontosvisita[0][0], pontosvisita[0][1], pontosvisita[1][0], pontosvisita[1][1])
+        if not pontosvisita:
+            return 0  # Nenhum ponto, nenhum tempo     
+        num_pontos = len(pontosvisita)
+        tempo_estimado = num_pontos * tempo_uma_rota * math.factorial(num_pontos)
+        return tempo_estimado    
+    return 0     
 ###########################################################################################################################
 # Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso...
 def OrdenarPontos(pontosvisita, pontoinicial):
     # BenchmarkRotas(pontosvisita,pontoinicial)
     tempoestimado = estimar_tempo_ordenacao(pontosvisita)
-    wLog(f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}] - Tempo estimado: {tempoestimado} minutos")
+    tempoestimado = formatar_tempo_vasto(tempoestimado)
+    wLog(f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}] - Tempo estimado: {tempoestimado}")
     
     if (
         UserData.AlgoritmoOrdenacaoPontos == "DistanciaGeodesica"
@@ -456,6 +491,70 @@ def OrdenarPontos(pontosvisita, pontoinicial):
     if UserData.AlgoritmoOrdenacaoPontos == "TravelingSalesman":
         return OrdenarPontosTSP(pontosvisita, pontoinicial)
     return pontosvisita  # Nenhuma seleção, não ordena os pontos
+################################################################################
+def formatar_tempo_vasto(segundos):
+    # Exemplos de uso
+    # print(formatar_tempo(45))             # 45 segundos
+    # print(formatar_tempo(120))            # 2 minutos
+    # print(formatar_tempo(4000))           # 1.11 horas
+    # print(formatar_tempo(90000))          # 1.04 dias
+    # print(formatar_tempo(10**8))          # 38.58 anos
+    # print(formatar_tempo(10**13))         # 26.43 milhões de anos
+    # print(formatar_tempo(10**17))         # 8.77 bilhões de anos
+
+    unidades = [
+        ("minuto", 60),
+        ("hora", 60),
+        ("dia", 24),
+        ("mês", 30),
+        ("ano", 12),
+        ("milênio", 1000),
+        ("milhão de anos", 1000),
+        ("bilhão de anos", 1000),
+        ("trilhão de anos", 1000),
+        ("quadrilhão de anos", 1000),
+        ("quintilhão de anos", 1000),
+        ("sextilhão de anos", 1000),
+        ("septilhão de anos", 1000),
+        ("octilhão de anos", 1000),
+        ("nonilhão de anos", 1000),
+        ("decilhão de anos", 1000),
+        ("undecilhão de anos", 1000),
+        ("duodecilhão de anos", 1000),
+        ("tredecilhão de anos", 1000),
+        ("quattuordecilhão de anos", 1000),
+        ("quindecilhão de anos", 1000),
+        ("sexdecilhão de anos", 1000),
+        ("septendecilhão de anos", 1000),
+        ("octodecilhão de anos", 1000),
+        ("novemdecilhão de anos", 1000),
+        ("vigesilhão de anos", 1000),
+        ("centilhão de anos", 1000),
+        ("ducentilhão de anos", 1000),
+        ("trecentilhão de anos", 1000),
+        ("quadringentilhão de anos", 1000),
+        ("quingentilhão de anos", 1000),
+        ("sescentilhão de anos", 1000),
+        ("septingentilhão de anos", 1000),
+        ("octingentilhão de anos", 1000),
+        ("nongentilhão de anos", 1000),
+        ("milhêsilhão de anos", 1000),
+        ("googol de anos", 10**100),
+        ("googolplex de anos", 10**(10**100)),
+    ]
+
+
+    valor = segundos
+    nome = "segundo"
+
+    for nome_unidade, fator in unidades:
+        if valor < fator:
+            break
+        valor /= fator
+        nome = nome_unidade
+
+    valor_formatado = f"{valor:.2f}".rstrip("0").rstrip(".")
+    return f"{valor_formatado} {nome}" + ("s" if float(valor_formatado) != 1 and not nome.endswith("s") else "")
 
 
 ################################################################################
@@ -494,7 +593,6 @@ def OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial):
 ################################################################################
 # Versão baseada no TSP (Traveling Salesman Problem)
 def OrdenarPontosTSP(pontosvisita, pontoinicial):
-    from itertools import permutations
     if not pontosvisita:
         return []
 
@@ -1488,19 +1586,7 @@ def RoteamentoOSMR(porta, pontosvisita, pontoinicial, recalcularrota):
     """
 
     return RouteDetail.coordinates, RouteDetail.DistanceTotal, pontosvisita
-################################################################################
-def estimar_tempo_ordenacao(pontosvisita):
-    referencia_pontos = 110
-    referencia_tempo_minutos = 35
 
-    if not pontosvisita:
-        return 0  # Nenhum ponto, nenhum tempo
-
-    num_pontos = len(pontosvisita)
-
-    tempo_estimado = (num_pontos / referencia_pontos) * referencia_tempo_minutos
-
-    return round(tempo_estimado)  # Retorna com 0 casas decimais
 ################################################################################
 def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     UserData.nome = user

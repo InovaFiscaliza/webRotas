@@ -12,7 +12,8 @@
     "cidade": "São Paulo",
     "uf": "SP",
     "Escopo":"AreasUrbanizadas",
-    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
+    "Opcoes AlgoritmoOrdenacaoPontos": "Nenhuma, DistanciaGeodesica,DistanciaOSMR ,DistanciaOSMRMultiThread, TravelingSalesman",
+    "AlgoritmoOrdenacaoPontos": "TravelingSalesman",
     "distancia_pontos": 3000,
     "regioes": []
 }

@@ -13,6 +13,7 @@
         [-22.462794, -42.653475,"Local","Cachoeiras de Macacu"],
         [-22.412933, -43.144684,"Local","Itaipaiva"]
     ],
-    "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
+    "Opcoes AlgoritmoOrdenacaoPontos": "Nenhuma, DistanciaGeodesica,DistanciaOSMR ,DistanciaOSMRMultiThread, TravelingSalesman",
+    "AlgoritmoOrdenacaoPontos": "DistanciaOSMR",
     "regioes": []
 }
