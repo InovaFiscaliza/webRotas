@@ -317,9 +317,9 @@ route_cache = rc.RouteCache()
 def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
 
     # Tenta buscar do cache
-    cached_response = route_cache.get(start_lat, start_lon, end_lat, end_lon)
+    cached_response = route_cache.get(UserData.nome, start_lat, start_lon, end_lat, end_lon)
     if cached_response is not None:
-        wLog(f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}", level="debug")
+        wLog(f"Usando rota do cache para: {UserData.nome},{start_lat},{start_lon},{end_lat},{end_lon}", level="debug")
         return cached_response
     
     # Coordenadas de início e fim
@@ -334,7 +334,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     # Fazer a solicitação
     response = requests.get(url)
     # fazer o cache da solicitação
-    route_cache.set(start_lat, start_lon, end_lat, end_lon, response)
+    route_cache.set(UserData.nome,start_lat, start_lon, end_lat, end_lon, response)
     return response
 
 ###########################################################################################################################
@@ -1140,6 +1140,7 @@ def GeneratePointsWithinCity(city_boundary: list, regioes: list, distance: int) 
 def ServerSetupJavaScript(RouteDetail):
     if ServerTec == "OSMR":
         RouteDetail.mapcode += f"    const ServerTec = 'OSMR';\n"
+        RouteDetail.mapcode += f"    const UserName = '{UserData.nome}';\n"
         RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
     return RouteDetail
 ################################################################################
@@ -1233,7 +1234,7 @@ def RouteCompAbrangencia(   data: dict,
     si.PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial=pontoinicial
-    
+    wLog("Desenhando Comunidades, Areas Urbanizadas e Município:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)   
     RouteDetail.mapcode += "    const TipoRoute = 'CompAbrangencia';\n"  
     RouteDetail = DesenhaComunidades(RouteDetail,regioes)
@@ -1550,7 +1551,8 @@ def AltitudePontoVisita(pontosvisitaDados, lat, lon):
     return "Endereço não encontrado para a latitude e longitude fornecidas."
 
 ################################################################################
-def RoteamentoOSMR(porta, pontosvisita, pontoinicial, recalcularrota):
+def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
+    UserData.nome = username
     UserData.OSMRport = porta
     RouteDetail = ClRouteDetailList()
     # Calcula trecho de roto do pontoinicial ao primeiro ponto de visita
@@ -1608,7 +1610,8 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     si.PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial = pontoinicial
-
+    
+    wLog("Desenhando Comunidades:") 
     RouteDetail = ServerSetupJavaScript(RouteDetail)
     RouteDetail.mapcode += f"    const TipoRoute = 'PontosVisita';\n"
     RouteDetail = DesenhaComunidades(RouteDetail, regioes)
@@ -1730,7 +1733,7 @@ def RouteContorno(data,user,pontoinicial,central_point,regioes,radius_km=5, num_
 
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial = pontoinicial
-
+    wLog("Desenhando Comunidades:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
     RouteDetail.mapcode += f"    const TipoRoute = 'DriveTest';\n"
     RouteDetail = DesenhaComunidades(RouteDetail, regioes)

@@ -277,9 +277,11 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 pontosvisita = data.get("pontosvisita", [])
                 pontoinicial = data.get("pontoinicial", [])
                 recalcularrota = data.get("recalcularrota",1)
+                username =  data["UserName"]
             
                 # Processa a requisição
-                polylineRota, DistanceTotal, pontosvisita = wr.RoteamentoOSMR(  porta,
+                polylineRota, DistanceTotal, pontosvisita = wr.RoteamentoOSMR(  username,
+                                                                                porta,
                                                                                 pontosvisita,
                                                                                 pontoinicial,
                                                                                 recalcularrota)

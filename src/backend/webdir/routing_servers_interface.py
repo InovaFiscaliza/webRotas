@@ -12,6 +12,7 @@ import glob
 
 import webRota as wr
 
+
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
     """
@@ -465,6 +466,8 @@ def PreparaServidorRoteamento(regioes):
             f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}.poly",
             f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}.poly.old",
         ):
+            wr.wLog(f"Limpando cache dinamico de rotas para o usuário {wr.UserData.nome}")
+            wr.route_cache.clear_user(wr.UserData.nome)
             wr.wLog("FiltrarRegiãoComOsmosis")
             FiltrarRegiãoComOsmosis()
             wr.wLog("GerarIndicesExecutarOSRMServer")

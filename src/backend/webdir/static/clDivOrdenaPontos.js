@@ -716,6 +716,7 @@ function clDivOrdenaPontos() {
         const payload = {
             TipoRequisicao: "RoteamentoOSMR",
             PortaOSRMServer: OSRMPort,
+            UserName: UserName,
             pontosvisita: pontosVisita,
             pontoinicial: rotaSel.pontoinicial,
             recalcularrota: recalcularrota
