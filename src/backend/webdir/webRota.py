@@ -20,6 +20,7 @@ import mimetypes
 import shapeFiles as sf
 import geraMapa as gm
 import routing_servers_interface as si
+import route_cache as rc
 ###########################################################################################################################
 class ClRouteDetailList:
     def __init__(self):
@@ -310,9 +311,17 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     wLog(f"Arquivo KML '{filename}' gerado com sucesso!",level="debug")
 ###########################################################################################################################
 ServerTec = "OSMR"
+# Instância global do cache de rotas já pedidas ao servidor OSMR
+route_cache = rc.RouteCache()
 ###########################################################################################################################
 def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
-    #
+
+    # Tenta buscar do cache
+    cached_response = route_cache.get(start_lat, start_lon, end_lat, end_lon)
+    if cached_response is not None:
+        wLog(f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}", level="debug")
+        return cached_response
+    
     # Coordenadas de início e fim
     start_coords = (start_lat, start_lon)
     end_coords = (end_lat, end_lon)
@@ -324,6 +333,8 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     wLog(url,level="debug")
     # Fazer a solicitação
     response = requests.get(url)
+    # fazer o cache da solicitação
+    route_cache.set(start_lat, start_lon, end_lat, end_lon, response)
     return response
 
 ###########################################################################################################################
