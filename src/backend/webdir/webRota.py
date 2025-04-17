@@ -1558,18 +1558,18 @@ def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
     # Calcula trecho de roto do pontoinicial ao primeiro ponto de visita
     (latfI, lonfI) = pontosvisita[0]
     wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}",level="debug")
-    wLog(f"RoteamentoOSMR - pontoinicial {pontoinicial[0]},{pontoinicial[1]}",level="debug")
-    wLog("Pontos de Visita antes ordenação:",level="debug")
-    for ponto in pontosvisita:
-        wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
+    # wLog(f"RoteamentoOSMR - pontoinicial {pontoinicial[0]},{pontoinicial[1]}",level="debug")
+    # wLog("Pontos de Visita antes ordenação:",level="debug")
+    # for ponto in pontosvisita:
+    #     wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
 
     if recalcularrota == 1:
         wLog(f"Reordenando pontos de visita",level="debug")
         pontosvisita = OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial)
 
-    wLog("Pontos de Visita apos ordenação:",level="debug")
-    for ponto in pontosvisita:
-        wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
+    # wLog("Pontos de Visita apos ordenação:",level="debug")
+    # for ponto in pontosvisita:
+    #     wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
 
     RouteDetail = GenerateRouteMap(
         RouteDetail, pontoinicial[0], pontoinicial[1], latfI, lonfI
@@ -1579,22 +1579,6 @@ def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
         lati, loni = pontosvisita[i]
         latf, lonf = pontosvisita[i + 1]
         RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
-
-    """
-    i = 0
-    for ponto in pontosvisita:
-        # lat, lon = ponto        
-
-        if(i==0):
-           (latfI,lonfI) = pontosvisita[i] 
-        if(i==(len(pontosvisita) -1)):
-           (latfF,lonfF) = pontosvisita[i]            
-        if(i>0):
-            (lati,loni) = pontosvisita[i-1]
-            (latf,lonf) = pontosvisita[i]       
-            RouteDetail=GenerateRouteMap(RouteDetail,lati,loni,latf,lonf)
-        i=i+1   
-    """
 
     return RouteDetail.coordinates, RouteDetail.DistanceTotal, pontosvisita
 
