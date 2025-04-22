@@ -1,0 +1,156 @@
+@charset "UTF-8";
+:root {
+  --navbar-height: 0px;
+  --toolbar-height: 44px;
+  --left-panel-width-off: 0px;
+  --left-panel-width-on: 330px;
+  --right-panel-width-off: 0px;
+  --right-panel-width-on: 0px;
+  --font-family-default: Helvetica, Arial, sans-serif;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: var(--font-family-default);
+  font-size: 11px;
+  background-color: #ffffff;
+}
+
+/* Estilos aplicados ao ID "navbar"  */
+#navbar {
+  z-index: 200;
+}
+
+/* Estilos aplicados ao ID e à classe "left-panel"  */
+#left-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: calc(100% - var(--toolbar-height));
+  flex-direction: column;
+  align-items: flex-start;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  z-index: 0;
+}
+
+.left-panel-on {
+  width: calc(var(--left-panel-width-on) - 10px);
+  visibility: visible;
+}
+
+.left-panel-off {
+  width: 0;
+  visibility: hidden;
+}
+
+.left-panel-off ~ #document {
+  left: 5px;
+  width: calc(100% - 10px);
+}
+
+/* Estilos aplicados ao ID "right-panel" */
+#right-panel {
+  z-index: 0;
+}
+
+/* Estilos aplicados ao ID "document" */
+#document {
+  position: absolute;
+  bottom: 39px;
+  left: calc(var(--left-panel-width-on) + 5px);
+  width: calc(100% - var(--left-panel-width-on) - 10px);
+  height: calc(100% - var(--toolbar-height));
+  z-index: 600;
+}
+
+/* Estilos aplicados ao ID "toolbar" */
+#toolbar {
+  z-index: 400;
+}
+
+/* Estilos complementares, aplicados a classes */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0px, 1fr) minmax(0px, 1fr);
+  grid-template-rows: minmax(0px, 1fr);
+  -moz-column-gap: 10px;
+       column-gap: 10px;
+  row-gap: 5px;
+  padding: 5px;
+  overflow: hidden;
+}
+
+.grid-border {
+  border: 1px solid #ccc;
+}
+
+.label {
+  font-size: 10px;
+  color: #333;
+  text-transform: uppercase;
+  align-self: end;
+}
+
+.sublabel {
+  font-size: 11px;
+  color: #333;
+  align-self: end;
+}
+
+.text-list {
+  list-style: none;
+  border: 1px solid #ccc;
+  overflow: auto;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.no-spinner::-webkit-inner-spin-button,
+.no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input, button, select, textarea {
+  font-family: var(--font-family-default);
+  font-size: 11px;
+  color: #000;
+  border-radius: 0px;
+  border: 1px solid #ccc;
+}
+
+input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/*-----------------------------------------------------------------------------------
+    TOOLTIP
+-----------------------------------------------------------------------------------*/
+.tooltip-panel {
+  position: absolute;
+  background: rgb(51, 51, 51);
+  color: rgb(255, 255, 255);
+  padding: 6px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1200;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}/*# sourceMappingURL=webRotas.css.map */

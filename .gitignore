@@ -3,8 +3,12 @@ WebRotas*.kml
 WebRotasServer.log*
 BR_Municipios*.*
 filtro_*
+
+resources.zip
 osmr_webrota.tar
 osmosis_webrota.tar
+
+*.pdf
 *.pbf
 exclusion_*
 qg_20*
@@ -13,5 +17,5 @@ tmpStatic*
 __pycache__
 ngrok.exe
 server.json
-src/resources/Osmosis/TempData/*.poly
-/webRotas.tgz
+*.poly
+webRotas.tgz
