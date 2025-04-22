@@ -92,7 +92,7 @@ def mover_arquivo(origem: str, destino: str) -> bool:
         wr.wLog(f"Erro ao mover {origem} para {destino}: {e}")
         return False       
 ################################################################################
-def FiltrarRegiãoComOsmosis():
+def FiltrarRegiãoComOsmosis_Old():
     # Salvar o diretório atual
     diretorio_atual = os.getcwd()
     os.chdir("../../resources/Osmosis")
@@ -110,7 +110,29 @@ def FiltrarRegiãoComOsmosis():
     mover_arquivo(f"{FILTRO}/filtro-latest.osm.pbf", f"../OSMR/data/{FILTRO}/")
     remover_diretorio(FILTRO)    
     os.chdir(diretorio_atual)
-
+    
+################################################################################
+def FiltrarRegiãoComOsmosis():
+    # Salvar o diretório atual
+    # diretorio_atual = os.getcwd()
+    # os.chdir("../../resources/Osmosis")
+    # Inicia e configura a máquina do Podman
+    logok = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
+    subprocess.run(["podman", "machine", "init"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    subprocess.run(["podman", "machine", "start"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    # podman load -i D:\NetbeansProjects\webRotas\src\resources\Osmosis\osmosis_webrota.tar
+    # D:\NetbeansProjects\webRotas\src\resources\Osmosis
+    subprocess.run(["podman", "load", "-i", f"{pf.OSMOSIS_PATH}"/"osmosis_webrota.tar"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    FILTRO = f"TempData/filtro_{wr.UserData.nome}"   
+    remover_diretorio(FILTRO)
+    criar_diretorio(FILTRO)  
+    subprocess.run(["podman", "run", "--rm","-v", ".:/data", "--name", f"osmosis_{wr.UserData.nome}", "localhost/osmosis_webrota", "osmosis", "--read-pbf", "file=/data/brazil/brazil-latest.osm.pbf", "--bounding-polygon", f"file=/data/TempData/exclusion_{wr.UserData.nome}.poly", "completeWays=no", "--write-pbf", f"file=/data/{FILTRO}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
+    remover_diretorio(f"../OSMR/data/{FILTRO}")              
+    criar_diretorio(f"../OSMR/data/{FILTRO}")       
+    mover_arquivo(f"{FILTRO}/filtro-latest.osm.pbf", f"../OSMR/data/{FILTRO}/")
+    remover_diretorio(FILTRO)    
+    # os.chdir(diretorio_atual)
+    
 ################################################################################
 def AtivaServidorOSMR():
     # startserver filtro 8001 osmr_server8001
@@ -454,7 +476,7 @@ def limpar_cache_files_osmr():
         wr.wLog(f"Erro durante a limpeza dos caches : {e}")
 
 ################################################################################
-def PreparaServidorRoteamento(regioes):
+def PreparaServidorRoteamento_Old(regioes):
     DeleteOldFilesAndFolders("logs", days=30)
     DeleteOldFilesAndFolders("../../resources/Osmosis/TempData", days=30)
     roteamento_ok=False
@@ -482,6 +504,33 @@ def PreparaServidorRoteamento(regioes):
             wr.wLog("Erro de cache encontrado reiniciando geração dos mapas")
             limpar_cache_files_osmr() 
 
-
+################################################################################
+def PreparaServidorRoteamento(regioes):
+    DeleteOldFilesAndFolders("logs", days=30)
+    DeleteOldFilesAndFolders(pf.OSMOSIS_TEMPDATA_PATH, days=30)
+    roteamento_ok=False
+    while not roteamento_ok:
+        wr.GeraArquivoExclusoes(
+            regioes,
+            arquivo_saida=f"{pf.OSMOSIS_TEMPDATA_PATH}/exclusion_{wr.UserData.nome}.poly",
+        )
+        if not VerificaArquivosIguais(
+            f"{pf.OSMOSIS_TEMPDATA_PATH}/exclusion_{wr.UserData.nome}.poly",
+            f"{pf.OSMOSIS_TEMPDATA_PATH}exclusion_{wr.UserData.nome}.poly.old",
+        ):
+            wr.wLog(f"Limpando cache dinamico de rotas para o usuário {wr.UserData.nome}")
+            wr.route_cache.clear_user(wr.UserData.nome)
+            wr.wLog("FiltrarRegiãoComOsmosis")
+            FiltrarRegiãoComOsmosis()
+            wr.wLog("GerarIndicesExecutarOSRMServer")
+            GerarIndicesExecutarOSRMServer()
+        else:
+            wr.wLog("Arquivo exclusoes nao modificado, nao e necessario executar osmosis")
+            AtivaServidorOSMR()
+        if VerificarOsrmAtivo():
+            roteamento_ok=True 
+        else:   
+            wr.wLog("Erro de cache encontrado reiniciando geração dos mapas")
+            limpar_cache_files_osmr() 
 
 ################################################################################
