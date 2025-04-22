@@ -11,7 +11,7 @@ import socket
 import glob
 
 import webRota as wr
-
+import project_folders as pf
 
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
@@ -432,6 +432,7 @@ def remover_arquivos_osmr():
 ################################################################################
 def limpar_cache_files_osmr():
     try:
+
         wr.wLog("Apagando arquivo de log...",level="debug")
         log_file = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
         try:
