@@ -123,7 +123,7 @@ def FiltrarRegiãoComOsmosis():
     # podman load -i D:\NetbeansProjects\webRotas\src\resources\Osmosis\osmosis_webrota.tar
     # D:\NetbeansProjects\webRotas\src\resources\Osmosis
     subprocess.run(["podman", "load", "-i", f"{pf.OSMOSIS_PATH}"/"osmosis_webrota.tar"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)
-    FILTRO = f"TempData/filtro_{wr.UserData.nome}"   
+    FILTRO = f"TempData"/"filtro_{wr.UserData.nome}"   
     remover_diretorio(FILTRO)
     criar_diretorio(FILTRO)  
     subprocess.run(["podman", "run", "--rm","-v", ".:/data", "--name", f"osmosis_{wr.UserData.nome}", "localhost/osmosis_webrota", "osmosis", "--read-pbf", "file=/data/brazil/brazil-latest.osm.pbf", "--bounding-polygon", f"file=/data/TempData/exclusion_{wr.UserData.nome}.poly", "completeWays=no", "--write-pbf", f"file=/data/{FILTRO}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)

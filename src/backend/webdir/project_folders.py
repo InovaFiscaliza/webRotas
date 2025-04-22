@@ -49,7 +49,7 @@ OSMOSIS_PATH = PROJECT_PATH / "src" / "resources" / "Osmosis"
 
  
 # Cria os diretórios se não existirem
-for path in [WINDOWS_CACHE_PATH, OSMOSIS_TEMPDATA]:
+for path in [WINDOWS_CACHE_PATH, OSMOSIS_TEMPDATA_CACHE_PATH]:
     if not path.exists():
         path.mkdir(parents=True, exist_ok=True)
 
