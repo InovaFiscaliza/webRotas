@@ -27,6 +27,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import webRota as wr
 import server_env as se
+import routing_servers_interface as rsi
 
 ################################################################################
 """ Variáveis globais """
@@ -392,6 +393,7 @@ def main():
         wr.server_port = env.port
 
         wr.wLog(f"Starting WebRotas Server on port {env.port}...")
+        rsi.init_and_load_podman_images()
         app.run(debug=args.debug, port=env.port, host='0.0.0.0')
         return 0
     except Exception as e:
