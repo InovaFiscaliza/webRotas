@@ -143,6 +143,13 @@ window.app = {
                 color: 'rgba(255,0,0,0.5)',
                 interactive: false
             }
+        },
+        tooltip: {
+            mouseDownTarget: { 
+                handle: null,
+                coords: null,
+                orientation: null                
+            }
         }
     },
 
@@ -202,9 +209,11 @@ async function appStartup() {
 
             window.app.module.Plot.controller('initialPlot', 0)
 
-            if (window.app.server.url !== null) {
+            if (!!window.app.server.url) {
                 window.app.server.updateIntervalId = setInterval(() => window.app.module.Communication.isServerOnline(), window.app.server.updateIntervalMs);
             }
+
+            window.app.module.Callback.addEventListener(window, 'window:keydown-space-or-enter');
         });
 
         console.log('webRotas');

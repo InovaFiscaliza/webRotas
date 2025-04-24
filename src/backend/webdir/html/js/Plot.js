@@ -72,63 +72,91 @@
                 geoData = [geoData];
             }
 
-            let plotHandle, plotType, plotOptions, coords;
+            let handle, type, options, coords;
             
-            plotType    = window.app.plot[plotTag].type;
-            plotOptions = window.app.plot[plotTag].options;
+            type    = window.app.plot[plotTag].type;
+            options = window.app.plot[plotTag].options;
 
-            switch (plotType) {
+            switch (type) {
                 case 'marker':
-                    plotHandle = [];
+                    handle = [];
 
-                    geoData.forEach((element, index) => {
+                    geoData.forEach(element => {
+                        let marker;
                         let id, description, lat, lng, elevation;
-                        let icon, iconColor, iconTooltip;                        
+                        let icon, color;
 
                         ( { id, description, lat, lng, elevation } = element);
                         coords = [lat, lng];
 
-                        switch (plotOptions.iconType) {
+                        switch (options.iconType) {
                             case 'file':
                                 icon = window.L.icon({
-                                    iconUrl: plotOptions.iconUrl,
-                                    iconSize: plotOptions.iconSize,
-                                    iconAnchor: plotOptions.iconAnchor
+                                    iconUrl: options.iconUrl,
+                                    iconSize: options.iconSize,
+                                    iconAnchor: options.iconAnchor
                                 });
                                 
-                                plotHandle.push(window.L.marker(coords, { icon: icon }).addTo(window.app.map));
+                                marker = window.L.marker(coords, { icon: icon }).addTo(window.app.map);
                                 break;
 
                             case 'customPinIcon':
-                                iconColor = window.app.module.Util.Image.pinColor(elevation, window.app.mapView.colormap);
-                                icon = window.app.module.Util.Image.customPinIcon(id, iconColor);
-                                plotHandle.push(window.L.marker(coords, { icon: icon }).addTo(window.app.map));
+                                color  = window.app.module.Util.Image.pinColor(elevation, window.app.mapView.colormap);
+                                icon   = window.app.module.Util.Image.customPinIcon(id, color);
+                                marker = window.L.marker(coords, { icon: icon }).addTo(window.app.map);
                                 break;
 
                             default:
-                                plotHandle.push(window.L.marker(coords).addTo(window.app.map));
+                                marker = window.L.marker(coords).addTo(window.app.map);
                                 break;
                         }
 
-                        if (plotOptions.iconTooltip) {
-                            try {
-                                iconTooltip = `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)`;
-                                window.app.module.Util.Tooltip.add(plotHandle[index]._icon, iconTooltip);                                
-                            } catch (ME) {
-                                console.error(ME);
-                            }
-                        }    
+                        if (options.iconTooltip) {
+                            /* 
+                                Cria um campo para armazenar o handle do sticky tooltip, além da
+                                informação do modo ativo ('hover' ou 'sticky').
+                            */
+                            marker._CustomTooltip = { 
+                                mode: 'hover',
+                                handle: null,
+                                text: `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)`,
+                                coords: coords,
+                                direction: 'bottom'
+                            };
+
+                            window.app.module.Util.Tooltip.createLeafletTooltip('hover', marker, marker._CustomTooltip.direction, marker._CustomTooltip.text);
+
+                            marker.on('mouseup', () => {
+                                if (!marker._CustomTooltip.handle) {
+                                    marker._CustomTooltip.handle = window.app.module.Util.Tooltip.createLeafletTooltip('sticky', marker, marker._CustomTooltip.direction, marker._CustomTooltip.text, marker._CustomTooltip.coords);
+
+                                } else {
+                                    marker._CustomTooltip.handle.remove();
+                                    marker._CustomTooltip.handle = null;
+                                }
+
+                                marker._CustomTooltip.mode = (!marker._CustomTooltip.handle) ? 'hover' : 'sticky';
+                            })
+
+                            marker.on('mouseover', () => {
+                                if (!!marker._CustomTooltip.handle) {
+                                    marker.closeTooltip();
+                                }
+                            });
+                        } 
+                        
+                        handle.push(marker);
                     })
                     break;
 
                 case 'polyline':
                     coords = geoData;
-                    plotHandle = window.L.polyline(coords, plotOptions).addTo(window.app.map);
+                    handle = window.L.polyline(coords, options).addTo(window.app.map);
                     break;
 
                 case 'polygon':
                     coords = geoData;
-                    plotHandle = window.L.polygon(coords,  plotOptions).addTo(window.app.map);
+                    handle = window.L.polygon(coords,  options).addTo(window.app.map);
                     break;
 
                 default:
@@ -136,7 +164,7 @@
                     return;
             }
 
-            window.app.plot[plotTag].handle = plotHandle;
+            window.app.plot[plotTag].handle = handle;
         }
         
         
@@ -181,29 +209,6 @@
             plotHandle.forEach(element => element.remove());
         }
 
-
-        /*---------------------------------------------------------------------------------*/
-        static setView(operationType, geoData) {
-            switch (operationType) {
-                case 'zoom':
-                    if (!Array.isArray(geoData)) {
-                        geoData = [geoData];
-                    }
-
-                    let coords = [];
-                    geoData.forEach(element => coords.push([element.lat, element.lng]));
-
-                    window.app.map.fitBounds(coords);
-                    window.app.mapView.center = window.app.map.getCenter();
-                    window.app.mapView.zoom   = window.app.map.getZoom();
-                    break;
-
-                case 'center':
-                    window.app.map.setView(geoData);
-                    break;
-            }
-        }
-
         
         /*---------------------------------------------------------------------------------*/
         static changeVisibility(plotTag) {
@@ -245,6 +250,37 @@
                 return 'polygon';
             } else {
                 return 'unknown';
+            }
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static checkDragging() {
+            if (!window.app.map.dragging.enabled()) {
+                window.app.map.dragging.enable();
+            }
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static setView(operationType, geoData) {
+            switch (operationType) {
+                case 'zoom':
+                    if (!Array.isArray(geoData)) {
+                        geoData = [geoData];
+                    }
+
+                    let coords = [];
+                    geoData.forEach(element => coords.push([element.lat, element.lng]));
+
+                    window.app.map.fitBounds(coords);
+                    window.app.mapView.center = window.app.map.getCenter();
+                    window.app.mapView.zoom   = window.app.map.getZoom();
+                    break;
+
+                case 'center':
+                    window.app.map.setView(geoData);
+                    break;
             }
         }
     }

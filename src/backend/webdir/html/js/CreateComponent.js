@@ -225,9 +225,34 @@
                 })
             };
 
-            let map = window.L.map('document', { 
+            const map = window.L.map('document', { 
                 zoomControl: false 
             }).setView(window.app.mapView.center, window.app.mapView.zoom);
+
+            map.on('mousedown', (event) => {
+                if (!!window.app.plot.tooltip.mouseDownTarget.handle) {
+                    window.app.plot.tooltip.mouseDownTarget.handle = null;
+                }                
+            });
+
+            map.on('mouseup', (event) => {
+                window.app.module.Plot.checkDragging();
+
+                if (!!window.app.plot.tooltip.mouseDownTarget.handle) {
+                    const { screenX, screenY } = event.originalEvent;
+
+                    const tooltip = window.app.plot.tooltip.mouseDownTarget.handle;
+                    const direction = tooltip.options.direction;                    
+                    const mouseDirection = window.app.module.Util.Tooltip.detectMouseDirection(window.app.plot.tooltip.mouseDownTarget.position, [screenX, screenY]);                    
+                    const newDirection   = window.app.module.Util.Tooltip.suggestNewTooltipDirection(direction, mouseDirection);
+
+                    if (!!newDirection && direction !== newDirection) {
+                        window.app.module.Util.Tooltip.recreateLeafletTooltip(tooltip, newDirection);
+                    }
+
+                    window.app.plot.tooltip.mouseDownTarget.handle = null;
+                }                
+            });
 
             window.L.dataSet.basemaps[window.app.mapView.basemap].addTo(map);
             window.L.control.scale().addTo(map);
@@ -259,7 +284,7 @@
             img1.style.width = '17px';
             img1.style.height = '17px';
             img1.style.cursor = 'pointer';
-            window.app.module.Util.Tooltip.add(img1, 'Visibilidade do painel de controle');
+            window.app.module.Util.Tooltip.controller(img1, 'add-hover-listener', 'Visibilidade do painel de controle', 'tooltip-button');
             img1.onclick = window.app.module.Callback.toolbar_routeButtonClick;
 
             const img3 = document.createElement('img');
@@ -267,14 +292,14 @@
             img3.style.gridArea = '1 / 2 / 2 / 3';
             img3.src = 'images/Connect_18.png';
             img3.style.cursor = 'pointer';
-            window.app.module.Util.Tooltip.add(img3, 'Conexão servidor');
+            window.app.module.Util.Tooltip.controller(img3, 'add-hover-listener', 'Conexão servidor', 'tooltip-button');
 
             const img2 = document.createElement('img');
             img2.id = 'footer: logo';
             img2.style.gridArea = '1 / 3 / 2 / 4';
             img2.src = 'images/export.png';
             img2.style.cursor = 'pointer';
-            window.app.module.Util.Tooltip.add(img2, 'Exporta a rota em KML');
+            window.app.module.Util.Tooltip.controller(img2, 'add-hover-listener', 'Exporta a rota em KML', 'tooltip-button');
 
             const img3a = document.createElement('img');
             img3a.style.gridArea = '1 / 5 / 2 / 6';
@@ -282,7 +307,7 @@
             img3a.style.width = '18px';
             img3a.style.height = '18px';
             img3a.style.cursor = 'pointer';
-            window.app.module.Util.Tooltip.add(img3a, 'Compartilhar localização');
+            window.app.module.Util.Tooltip.controller(img3a, 'add-hover-listener', 'Compartilhar localização', 'tooltip-button');
             img3a.onclick = () => { 
                 window.app.location.status = !window.app.location.status; 
                 new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'warning', []); 
@@ -294,7 +319,7 @@
             img3b.style.width = '18px';
             img3b.style.height = '18px';
             img3b.style.cursor = 'pointer';
-            window.app.module.Util.Tooltip.add(img3b, 'Orientação do mapa');
+            window.app.module.Util.Tooltip.controller(img3b, 'add-hover-listener', 'Orientação do mapa', 'tooltip-button');
             img3b.onclick = () => { 
                 window.app.orientation.status = !window.app.orientation.status; 
                 new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'error', [], 800); 
@@ -307,7 +332,7 @@
             img4.style.width = '18px';
             img4.style.height = '18px';
             img4.style.cursor = 'pointer';
-            window.app.module.Util.Tooltip.add(img4, 'Barra de cores');
+            window.app.module.Util.Tooltip.controller(img4, 'add-hover-listener', 'Barra de cores', 'tooltip-button');
             img4.onclick = () => { 
                 new DialogBox('Uma informação qualquer... Uma informação qualquer... <b>Uma informação qualquer...</b> <br><br> Uma informação qualquer... Uma informação qualquer... <p>Uma informação qualquer...</p> Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...  Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...', '', [{ text: 'OK', callback: () => console.log('OK'), focus: true }, { text: 'Cancel', callback: () => console.error('Cancel'), focus: false }]) 
             };
@@ -319,7 +344,7 @@
             img5.style.width = '18px';
             img5.style.height = '18px';
             img5.style.cursor = 'pointer';
-            window.app.module.Util.Tooltip.add(img5, 'Basemap');
+            window.app.module.Util.Tooltip.controller(img5, 'add-hover-listener', 'Basemap', 'tooltip-button');
             img5.onclick = () => { 
                 window.app.map.setView(window.app.mapView.center, window.app.mapView.zoom);
                 // this.createBasemapSelector() 
@@ -410,6 +435,73 @@
             
             // Insere o novo SVG
             svgContainer.appendChild(generateScaleSVG(globalMinElevation, globalMaxElevation));
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static tooltip(targetElement, tooltipId, tooltipText, tooltipRole) {
+            let tooltip, tooltipArrow;
+
+            tooltip = window.document.createElement('div');
+            tooltip.id = tooltipId;
+            tooltip.className = 'tooltip-panel';
+            tooltip.role = tooltipRole;
+            tooltip.innerHTML = tooltipText;
+
+            tooltipArrow = window.document.createElement('div');
+            tooltipArrow.className = 'tooltip-arrow';
+
+            tooltip.appendChild(tooltipArrow);
+            window.document.body.appendChild(tooltip);
+
+            const rect = targetElement.getBoundingClientRect();
+            const scrollX  = window.scrollX;
+            const scrollY  = window.scrollY;
+            const centerX  = rect.left + scrollX + rect.width / 2;
+            const maxRight = scrollX + window.innerWidth - 4;
+
+            const tooltipWidth  = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;    
+            
+            let left = centerX - tooltipWidth / 2;
+            if (left < 4) { left = 4; }
+            if (left + tooltipWidth > maxRight) { left = maxRight - tooltipWidth; }
+
+            let top = rect.top + scrollY - tooltipHeight - 8;
+            let showAbove = true;
+            if (top < scrollY + 4) {
+                top = rect.bottom + scrollY + 8;
+                showAbove = false;
+            }
+
+            const arrowOffset = centerX - left - 6;
+
+            Object.assign(tooltip.style, {
+                left: `${left}px`,
+                top: `${top}px`
+            });
+
+            Object.assign(tooltipArrow.style, {
+                left: `${arrowOffset}px`,
+                top: showAbove ? 'unset' : '-6px',
+                bottom: showAbove ? '-6px' : 'unset',
+                borderTop: showAbove ? '6px solid #333' : 'none',
+                borderBottom: showAbove ? 'none' : '6px solid #333'
+            });
+
+            return tooltip;
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static uuid() {
+            return (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') 
+                ? crypto.randomUUID()
+                : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
         }
     }
 

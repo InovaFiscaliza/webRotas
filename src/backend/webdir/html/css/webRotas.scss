@@ -17,8 +17,8 @@ $z-indices: (
     toolbar: 400,
     document: 600,
     context-menu: 800,
-    tooltip: 800
-    modal: 1000    
+    tooltip: 800,
+    modal: 1000
 );
 
 @mixin z-index($level) {
@@ -155,9 +155,34 @@ input:focus {
 /*-----------------------------------------------------------------------------------
     TOOLTIP
 -----------------------------------------------------------------------------------*/
+/*
+.leaflet-tooltip {
+    border: none;
+    box-shadow: none;
+}
+*/
+.leaflet-tooltip-left:before {
+    border-left-color: #333;
+}
+
+.leaflet-tooltip-right:before {
+    border-right-color: #333;
+}
+
+.leaflet-tooltip-top:before {
+    border-top-color: #333;
+}
+
+.leaflet-tooltip-bottom:before {
+    border-bottom-color: #333;
+}
+
 .tooltip-panel {
     position: absolute;
     background: rgb(51,51,51);
+    opacity: 0.9;
+    border: none;
+    box-shadow: none;
     color: rgb(255,255,255);
     padding: 6px 10px;
     border-radius: 3px;
@@ -187,4 +212,3 @@ input:focus {
 .custom-map-polygon {
     cursor: default;
 }
-

@@ -31,11 +31,11 @@ window.app.routeList = [
     {
         "id": 0,
         "time": "15/04/2025 13:58:49",
-        "routeOrigin": { id: '🏠', description: 'Ponto inicial: Anatel Roraima',             lat: 2.802119, lng: -60.688691, elevation: 85 },
+        "routeOrigin": { id: '🏠', description: 'Ponto inicial: Anatel Roraima', lat: 2.802119, lng: -60.688691, elevation: 37 },
         "waypoints": [
             { id: '0', description: 'Parque do Rio Branco',                 lat: 2.812482, lng: -60.670263, elevation: 61, status: true },
-            { id: '1', description: 'Aeroporto Internacional de Boa Vista', lat: 2.840826, lng: -60.692496, elevation: 85, status: true },
-            { id: '22', description: 'Roraima Garden Shopping',              lat: 2.854428, lng: -60.644444, elevation: 82, status: true }
+            { id: '1', description: 'Aeroporto Internacional de Boa Vista', lat: 2.840826, lng: -60.692496, elevation: 29, status: true },
+            { id: '22', description: 'Roraima Garden Shopping',             lat: 2.854428, lng: -60.644444, elevation: 82, status: true }
         ],
         "routePath": [ 
             [

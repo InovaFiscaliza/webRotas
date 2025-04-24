@@ -7,7 +7,7 @@ class DialogBox {
 
     /*---------------------------------------------------------------------------------*/
     constructor(dialogContent, dialogType, dialogButtonList, dialogZIndex = 1000) {
-        this.uuid   = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : DialogBox.uuidFallback();
+        this.uuid   = DialogBox.uuid();
         this.handle = window.top.document.createElement("div");
         this.handle.className = "dialog-box-overlay";        
         this.handle.id = this.uuid;
@@ -167,11 +167,13 @@ class DialogBox {
 
 
     /*---------------------------------------------------------------------------------*/
-    static uuidFallback() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-          const r = Math.random() * 16 | 0;
-          const v = c === 'x' ? r : (r & 0x3 | 0x8);
-          return v.toString(16);
-        });
+    static uuid() {
+        return (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') 
+            ? crypto.randomUUID()
+            : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
     }
-}  
+}

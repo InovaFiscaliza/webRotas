@@ -214,63 +214,178 @@
             Customizações de estilo em "css/webRotas.scss"
             Classes: "tooltip-panel" e "tooltip-arrow"
         -----------------------------------------------------------------------------------*/
-        static add(targetElement, tooltipText) {
-            let tooltip, tooltipArrow;
-    
-            targetElement.addEventListener('mouseenter', () => {
-                tooltip = window.document.createElement('div');
-                tooltip.className = 'tooltip-panel';
-                tooltip.innerHTML = tooltipText;
-    
-                tooltipArrow = window.document.createElement('div');
-                tooltipArrow.className = 'tooltip-arrow';
-    
-                tooltip.appendChild(tooltipArrow);
-                window.document.body.appendChild(tooltip);
-    
-                const rect = targetElement.getBoundingClientRect();
-                const scrollX  = window.scrollX;
-                const scrollY  = window.scrollY;
-                const centerX  = rect.left + scrollX + rect.width / 2;
-                const maxRight = scrollX + window.innerWidth - 4;
-    
-                const tooltipWidth  = tooltip.offsetWidth;
-                const tooltipHeight = tooltip.offsetHeight;    
-                
-                let left = centerX - tooltipWidth / 2;
-                if (left < 4) { left = 4; }
-                if (left + tooltipWidth > maxRight) { left = maxRight - tooltipWidth; }
-    
-                let top = rect.top + scrollY - tooltipHeight - 8;
-                let showAbove = true;
-                if (top < scrollY + 4) {
-                    top = rect.bottom + scrollY + 8;
-                    showAbove = false;
-                }
-    
-                const arrowOffset = centerX - left - 6;
-    
-                Object.assign(tooltip.style, {
-                    left: `${left}px`,
-                    top: `${top}px`
-                });
-    
-                Object.assign(tooltipArrow.style, {
-                    left: `${arrowOffset}px`,
-                    top: showAbove ? 'unset' : '-6px',
-                    bottom: showAbove ? '-6px' : 'unset',
-                    borderTop: showAbove ? '6px solid #333' : 'none',
-                    borderBottom: showAbove ? 'none' : '6px solid #333'
-                });
-            });    
-    
-            targetElement.addEventListener('mouseleave', () => {
-                if (tooltip) {
-                    tooltip.remove();
-                    tooltip = null;
-                }
-            });
+        static controller(targetElement, operationtype, tooltipText, tooltipRole) {
+            let tooltip, tooltipId;
+
+            if (!targetElement.dataset.tooltipId) {
+                targetElement.dataset.tooltipId    = `${window.app.module.CreateComponent.uuid()}`;
+                targetElement.dataset.tooltipState = 'hidden';
+            }
+
+            tooltipId = targetElement.dataset.tooltipId;
+
+            switch (operationtype) {
+                case 'add-hover-listener':
+                    targetElement.addEventListener('mouseenter', () => tooltip = this.mouseEnterCallback(tooltip, targetElement, tooltipId, tooltipText, tooltipRole));
+                    targetElement.addEventListener('mouseleave', () => this.mouseLeaveCallback(tooltip, targetElement));
+                    break;
+
+                case 'add-leaflet-tooltip':
+                    tooltip = window.document.getElementById(tooltipId);
+
+                    if (!tooltip) {
+                        tooltip = window.app.module.CreateComponent.tooltip(targetElement, tooltipId, tooltipText, tooltipRole);
+                        targetElement.dataset.tooltipState = 'click';
+
+                    } else {
+                        switch (targetElement.dataset.tooltipState) {
+                            case 'click':
+                                tooltip.remove();
+                                tooltip = null;
+
+                                targetElement.dataset.tooltipState = 'hidden';
+                                break;
+
+                            default:
+                                targetElement.dataset.tooltipState = 'click';
+                        }
+                    }
+                break;
+            }
         }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static mouseEnterCallback(tooltip, targetElement, tooltipId, tooltipText, tooltipRole) {
+            if (!tooltip || targetElement.dataset.tooltipState === 'hidden') {
+                tooltip = window.app.module.CreateComponent.tooltip(targetElement, tooltipId, tooltipText, tooltipRole);
+                targetElement.dataset.tooltipState = 'hover';
+            }
+
+            return tooltip;
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static mouseLeaveCallback(tooltip, targetElement) {
+            if (tooltip && targetElement.dataset.tooltipState === 'hover') {
+                tooltip.remove();
+                tooltip = null;
+
+                targetElement.dataset.tooltipState = 'hidden';
+            }
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static createLeafletTooltip(type, target, direction, text, ...args) {
+            const offset = (direction === 'top') ? [0, -41] : [0, 0];
+
+            switch (type) {
+                case 'hover':
+                    target.bindTooltip(text, { 
+                        className: 'tooltip-panel', 
+                        direction: direction,
+                        offset: offset
+                    });
+
+                    return;
+
+                case 'sticky':
+                    const coords  = args[0];
+                    const tooltip = window.L.tooltip({
+                        className: 'tooltip-panel',
+                        direction: direction,
+                        offset: offset,
+                        permanent: true,
+                        interactive: true
+                    })
+                    .setContent(text)
+                    .setLatLng(coords)
+                    .addTo(window.app.map);
+
+                    tooltip._CustomTooltip = { 
+                        target: target,
+                        direction: direction,
+                        text: text,
+                        coords: coords
+                    };
+        
+                    tooltip.on('mousedown', (event) => {
+                        window.app.map.dragging.disable();
+    
+                        if (window.app.plot.tooltip.mouseDownTarget.handle !== event.sourceTarget) {
+                            const { screenX, screenY } = event.originalEvent;
+
+                            window.app.plot.tooltip.mouseDownTarget.handle = event.sourceTarget;
+                            window.app.plot.tooltip.mouseDownTarget.position = [screenX, screenY];
+                        }                        
+                    })
+    
+                    tooltip.on('mouseup', () => {
+                        window.app.module.Plot.checkDragging();
+                    });
+
+                    window.L.DomEvent.on(tooltip, 'mousedown', window.L.DomEvent.stopPropagation);
+                    window.L.DomEvent.on(tooltip, 'mouseup',   window.L.DomEvent.stopPropagation);
+
+                    return tooltip;
+            }            
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static recreateLeafletTooltip(tooltip, newDirection) {
+            const { target, text, coords } = tooltip._CustomTooltip;    
+            
+            target._tooltip.remove();
+            window.app.module.Util.Tooltip.createLeafletTooltip('hover', target, newDirection, text);
+            
+            tooltip.remove();            
+            target._CustomTooltip.handle    = this.createLeafletTooltip('sticky', target, newDirection, text, coords)
+            target._CustomTooltip.mode      = 'sticky';
+            target._CustomTooltip.direction = newDirection
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static detectMouseDirection(initPosition, finalPosition) {          
+            const hor  = finalPosition[0] > initPosition[0] ? "E" : "W";
+            const vert = finalPosition[1] > initPosition[1] ? "S" : "N";
+          
+            return vert + hor;
+        }                  
+
+
+        /*---------------------------------------------------------------------------------*/
+        static suggestNewTooltipDirection(tooltipDirection, mouseDirection) {
+            switch (tooltipDirection) {
+              case "bottom":
+                if (mouseDirection === "NE") return "right";
+                if (mouseDirection === "NW") return "left";
+                if (mouseDirection === "N")  return "top";
+                break;
+          
+              case "left":
+                if (mouseDirection === "E")  return "right";
+                if (mouseDirection === "NE") return "top";
+                if (mouseDirection === "SE") return "bottom";
+                break;
+          
+              case "right":
+                if (mouseDirection === "W")  return "left";
+                if (mouseDirection === "NW") return "top";
+                if (mouseDirection === "SW") return "bottom";
+                break;
+          
+              case "top":
+                if (mouseDirection === "SE") return "right";
+                if (mouseDirection === "SW") return "left";
+                if (mouseDirection === "S")  return "bottom";
+                break;
+            }
+            return null;
+        }                       
     }
 
 
