@@ -3,7 +3,7 @@ from shapely.ops import unary_union
 import hashlib
 import json
 
-WINDOWS_PATH_MAP_CACHE = "%PROGRAMDATA%\ANATEL\webRotasCache"
+
 
 class CacheBoundingBox:
     def __init__(self):

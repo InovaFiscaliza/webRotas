@@ -1,7 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
  
 ################################################################################
-# Classe de cache com coordenadas normalizadas
+# Classe de cache de rotas ponto a ponto com coordenadas normalizadas
 class RouteCache:
     def __init__(self, precision=6): # Rotas com precisão de 11 cm
         self.cache = {}  # Agora será um dict de dicts: {user_id: {rota: valor}}
