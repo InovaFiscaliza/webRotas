@@ -183,46 +183,17 @@ def AtivaServidorOSMR():
     wr.wLog(f"Ativando Servidor OSMR",level="info")
     subprocess.run(["podman", "stop", f"osmr_{wr.UserData.nome}"], stdout=open(logok_osmr, "a"), stderr=subprocess.STDOUT)  
     # Assegura que o container executa em paralelo com o python   
-    comando=   ["podman", 
-                      "run", 
-                      "--rm", 
-                      "--name", 
-                      f"osmr_{wr.UserData.nome}", 
-                      "-m", 
-                      "32g", 
-                      "-t", 
-                      "-i", 
-                      "-p", 
-                      f"{wr.UserData.OSMRport}:5000", 
-                      "-v", 
-                      Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{wr.UserData.nome}:/data/filtro_{wr.UserData.nome}", 
-                      "localhost/osmr_webrota", "osrm-routed", 
-                      "--algorithm", 
-                      "mld", 
-                      f"/data/filtro_{wr.UserData.nome}/filtro-latest.osm.pbf"]
-    print("###################################")
-    print(comando.join())
-    print("###################################")
-    subprocess.Popen(["podman", 
-                      "run", 
-                      "--rm", 
-                      "--name", 
-                      f"osmr_{wr.UserData.nome}", 
-                      "-m", 
-                      "32g", 
-                      "-t", 
-                      "-i", 
-                      "-p", 
-                      f"{wr.UserData.OSMRport}:5000", 
-                      "-v", 
-                      Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{wr.UserData.nome}:/data/filtro_{wr.UserData.nome}", 
-                      "localhost/osmr_webrota", "osrm-routed", 
-                      "--algorithm", 
-                      "mld", 
-                      f"/data/filtro_{wr.UserData.nome}/filtro-latest.osm.pbf"], 
-                     shell=True, 
-                     stdout=open(logok_osmr, "a"), 
-                     stderr=subprocess.STDOUT)     
+    volume_host = str(Path(pf.OSMR_PATH_CACHE_DATA) / f"filtro_{wr.UserData.nome}")
+    volume_container = f"/data/filtro_{wr.UserData.nome}"
+    port_map = f"{wr.UserData.OSMRport}:5000"
+    log_file = open(logok_osmr, "a")
+
+    comando = f"""podman run --rm --name osmr_{wr.UserData.nome} -m 32g -t -i \
+    -p {port_map} \
+    -v "{volume_host}:{volume_container}" \
+    localhost/osmr_webrota osrm-routed --algorithm mld {volume_container}/filtro-latest.osm.pbf"""
+
+    subprocess.Popen(comando, shell=True, stdout=log_file, stderr=subprocess.STDOUT)
     return
 
 
