@@ -124,8 +124,8 @@ def init_and_load_podman_images():
 ################################################################################
 def FiltrarRegiaoComOsmosis():
     logok = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
-    remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_CACHE_PATH}")/f"filtro_{wr.UserData.nome}")
-    criar_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_CACHE_PATH}")/f"filtro_{wr.UserData.nome}")  
+    remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{wr.UserData.nome}")
+    criar_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{wr.UserData.nome}")  
     subprocess.run(["podman", 
                     "run", 
                     "--rm",
@@ -144,9 +144,10 @@ def FiltrarRegiaoComOsmosis():
                     f"file=/data/TempData/filtro_{wr.UserData.nome}/filtro-latest.osm.pbf"], 
                    stdout=open(logok, "a"), stderr=subprocess.STDOUT)
     remover_diretorio(Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{wr.UserData.nome}")              
-    criar_diretorio(Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{wr.UserData.nome}")       
-    mover_arquivo(Path(f"{pf.OSMOSIS_TEMPDATA_CACHE_PATH}")/"filtro-latest.osm.pbf", Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{wr.UserData.nome}")
-    remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_CACHE_PATH}"))    
+    criar_diretorio(Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{wr.UserData.nome}")     
+    
+    mover_arquivo(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{wr.UserData.nome}"/"filtro-latest.osm.pbf", Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{wr.UserData.nome}")
+    remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{wr.UserData.nome}")    
     
 ################################################################################
 def AtivaServidorOSMR_Old():
@@ -181,7 +182,27 @@ def AtivaServidorOSMR():
     logok_osmr=f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
     wr.wLog(f"Ativando Servidor OSMR",level="info")
     subprocess.run(["podman", "stop", f"osmr_{wr.UserData.nome}"], stdout=open(logok_osmr, "a"), stderr=subprocess.STDOUT)  
-    # Assegura que o container executa em paralelo com o python      
+    # Assegura que o container executa em paralelo com o python   
+    comando=   ["podman", 
+                      "run", 
+                      "--rm", 
+                      "--name", 
+                      f"osmr_{wr.UserData.nome}", 
+                      "-m", 
+                      "32g", 
+                      "-t", 
+                      "-i", 
+                      "-p", 
+                      f"{wr.UserData.OSMRport}:5000", 
+                      "-v", 
+                      Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{wr.UserData.nome}:/data/filtro_{wr.UserData.nome}", 
+                      "localhost/osmr_webrota", "osrm-routed", 
+                      "--algorithm", 
+                      "mld", 
+                      f"/data/filtro_{wr.UserData.nome}/filtro-latest.osm.pbf"]
+    print("###################################")
+    print(comando.join())
+    print("###################################")
     subprocess.Popen(["podman", 
                       "run", 
                       "--rm", 
@@ -229,7 +250,7 @@ def GerarIndicesExecutarOSRMServer_Old():
 def GerarIndicesExecutarOSRMServer():
 
     # os.chdir("../../resources/OSMR/data")
-    DeleteOldFilesAndFolders(f"{pf.OSMR_PATH_CACHE_DATA}", days=365)
+    
     logok=f"{wr.log_filename}.{wr.UserData.nome}"
     DIRETORIO_REGIAO=Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{wr.UserData.nome}"
     DIRETORIO_REGIAO_CONTAINER=f"filtro_{wr.UserData.nome}"
@@ -240,6 +261,11 @@ def GerarIndicesExecutarOSRMServer():
     
     AtivaServidorOSMR()
     return
+################################################################################
+def manutencao_arquivos_antigos():
+    DeleteOldFilesAndFolders(f"{pf.OSMR_PATH_CACHE_DATA}", days=365)
+    DeleteOldFilesAndFolders("logs", days=30)
+    DeleteOldFilesAndFolders(pf.OSMOSIS_TEMPDATA_PATH, days=365)
 ################################################################################
 def get_containers():
     """
@@ -567,18 +593,16 @@ def PreparaServidorRoteamento_Old(regioes):
 
 ################################################################################
 def PreparaServidorRoteamento(regioes):
-    DeleteOldFilesAndFolders("logs", days=30)
-    DeleteOldFilesAndFolders(pf.OSMOSIS_TEMPDATA_CACHE_PATH, days=365)
-    init_and_load_podman_images()
+
     roteamento_ok=False
     while not roteamento_ok:
         wr.GeraArquivoExclusoes(
             regioes,
-            arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_CACHE_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
+            arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
         )
         if not VerificaArquivosIguais(
-            Path(f"{pf.OSMOSIS_TEMPDATA_CACHE_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
-            Path(f"{pf.OSMOSIS_TEMPDATA_CACHE_PATH}")/f"exclusion_{wr.UserData.nome}.poly.old",
+            Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
+            Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly.old",
         ):
             wr.wLog(f"Limpando cache dinamico de rotas para o usuário {wr.UserData.nome}")
             wr.route_cache.clear_user(wr.UserData.nome)

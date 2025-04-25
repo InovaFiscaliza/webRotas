@@ -43,15 +43,15 @@ else:
 
 # Define os caminhos finais
 WINDOWS_CACHE_PATH = base_cache_path / f"{PROJECT_FOLDER_NAME}Cache"
-OSMOSIS_TEMPDATA_CACHE_PATH = WINDOWS_CACHE_PATH / "Osmosis" / "TempData"
+OSMOSIS_TEMPDATA_PATH = PROJECT_PATH / "src" / "resources" / "Osmosis" / "TempData"
 OSMOSIS_PATH = PROJECT_PATH / "src" / "resources" / "Osmosis"
-OSMOSIS_PATH_CACHE = WINDOWS_CACHE_PATH / "Osmosis" 
+
 OSMR_PATH = PROJECT_PATH / "src" / "resources" / "OSMR"
 OSMR_PATH_CACHE = WINDOWS_CACHE_PATH / "OSMR" 
 OSMR_PATH_CACHE_DATA = WINDOWS_CACHE_PATH / "OSMR" / "data" 
  
 # Cria os diretórios se não existirem
-for path in [WINDOWS_CACHE_PATH, OSMOSIS_TEMPDATA_CACHE_PATH, OSMOSIS_PATH, OSMR_PATH_CACHE,OSMOSIS_PATH_CACHE,OSMR_PATH_CACHE_DATA]:
+for path in [WINDOWS_CACHE_PATH, OSMOSIS_PATH, OSMOSIS_TEMPDATA_PATH, OSMR_PATH_CACHE,OSMR_PATH_CACHE_DATA]:
     if not path.exists():
         path.mkdir(parents=True, exist_ok=True)
 

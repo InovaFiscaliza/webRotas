@@ -394,6 +394,7 @@ def main():
 
         wr.wLog(f"Starting WebRotas Server on port {env.port}...")
         rsi.init_and_load_podman_images()
+        rsi.manutencao_arquivos_antigos()
         app.run(debug=args.debug, port=env.port, host='0.0.0.0')
         return 0
     except Exception as e:
