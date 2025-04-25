@@ -12,7 +12,7 @@
 
 
         /* ## HTML LISTENERS ## */
-        static addEventListener(component, eventName) {
+        static addEventListener(component, eventName, ...args) {
             switch (eventName) {
                 case 'input:numeric:range-validation':
                     component.addEventListener('input', (event) => {                                

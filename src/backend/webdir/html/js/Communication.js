@@ -12,6 +12,7 @@
         static isServerOnline() {
             const { url, osrmPort, status } = window.app.server;
             const serverRoute   = `${url}/health?porta=${osrmPort}`;
+            //const serverRoute   = `${url}/health?sessionId=${sessionId}`;
             const initialStatus = status;
 
             return fetch(serverRoute)

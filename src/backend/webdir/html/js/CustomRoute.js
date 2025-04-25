@@ -2,6 +2,7 @@ localStorage.clear()
 
 window.app.server.url = 'http://127.0.0.1:5000';
 window.app.server.osrmPort = 50000;
+window.app.server.sessionId = 'de14d942-cc49-4166-b84e-8874e37caa94';
 
 window.app.boundingBox = [
     [3.3048784504504503,-61.14349580895816],
@@ -31,11 +32,12 @@ window.app.routeList = [
     {
         "id": 0,
         "time": "15/04/2025 13:58:49",
-        "routeOrigin": { id: '🏠', description: 'Ponto inicial: Anatel Roraima', lat: 2.802119, lng: -60.688691, elevation: 37 },
+        "routeOrigin": { id: '🏠', lat: 2.802119, lng: -60.688691, elevation: 37, description: 'Anatel Roraima' },
+        "routeMidpoint": { lat: 2.83, lng: -60.67 },
         "waypoints": [
-            { id: '0', description: 'Parque do Rio Branco',                 lat: 2.812482, lng: -60.670263, elevation: 61, status: true },
-            { id: '1', description: 'Aeroporto Internacional de Boa Vista', lat: 2.840826, lng: -60.692496, elevation: 29, status: true },
-            { id: '22', description: 'Roraima Garden Shopping',             lat: 2.854428, lng: -60.644444, elevation: 82, status: true }
+            { id: '0', lat: 2.812482, lng: -60.670263, elevation: 61, status: true, description: 'Parque do Rio Branco' },
+            { id: '1', lat: 2.840826, lng: -60.692496, elevation: 29, status: true, description: 'Aeroporto Internacional de Boa Vista' },
+            { id: '2', lat: 2.854428, lng: -60.644444, elevation: 82, status: true, description: 'Roraima Garden Shopping' }
         ],
         "routePath": [ 
             [

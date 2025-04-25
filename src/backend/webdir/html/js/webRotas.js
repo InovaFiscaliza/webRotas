@@ -29,7 +29,8 @@ window.app = {
     server: { 
         status: 'offline', 
         url: null, // 'http://127.0.0.1:5000'
-        osrmPort: null,
+        osrmPort: null, // eliminar esse campo depois de implementado o sessionId (passar como argumento das requisições)
+        sessionId: '',
         updateIntervalId: null, 
         updateIntervalMs: 10000,
         failureCount: 0,
@@ -96,7 +97,11 @@ window.app = {
             type: 'marker',
             options: {
                 iconType: 'customPinIcon',
-                iconTooltip: true
+                iconTooltip: {
+                    status: true,
+                    textResolver: ({ lat, lng, elevation, description }) => { return `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
+                    offsetResolver: 'default'
+                }
             }
         },
         routeMidpoint: { // apenas na rota do tipo "DriveTest"
@@ -104,7 +109,12 @@ window.app = {
             type: 'marker',
             options: {
                 iconType: 'defaultIcon',
-                iconTooltip: true
+                iconTooltip: {
+                    status: true,
+                    textResolver: ({ lat, lng }) => { return `Ponto central<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º)` },
+                    offsetResolver: () => { return [0, 0] }
+                },
+                iconSize: [25, 41]
             }
         },
         routeOrigin: {
@@ -112,7 +122,11 @@ window.app = {
             type: 'marker',
             options: {
                 iconType: 'customPinIcon',
-                iconTooltip: true
+                iconTooltip: {
+                    status: true,
+                    textResolver: ({ lat, lng, elevation, description }) => { return `Ponto inicial: ${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
+                    offsetResolver: 'default'
+                }
             }
         },
         routePath: {
@@ -129,7 +143,10 @@ window.app = {
             type: 'marker',
             options: {
                 iconType: 'file',
-                iconTooltip: false,
+                iconTooltip: {
+                    status: false,
+                    offsetResolver: 'default'
+                },
                 iconUrl: 'images/car.png',
                 iconSize: [48, 48],
                 iconAnchor: [12, 12]
@@ -144,13 +161,7 @@ window.app = {
                 interactive: false
             }
         },
-        tooltip: {
-            mouseDownTarget: { 
-                handle: null,
-                coords: null,
-                orientation: null                
-            }
-        }
+        tooltip: new Tooltip
     },
 
     /*
@@ -166,7 +177,24 @@ window.app = {
         Util: null,        
     },
 
-    mapView:     { center: { lat: -10.3, lng: -53.2 }, zoom: 4, basemap: 'street-light', colormap: 'parula' },
+    mapView:     { 
+        center: { 
+            lat: -10.3, 
+            lng: -53.2 
+        }, 
+        zoom: 4, 
+        basemap: 'street-light', 
+        colormap: 'parula',
+        tooltip: {
+            direction: 'bottom',
+            textResolver: ({ lat, lng }) => {
+                return `Latitude: ${lat.toFixed(6)}º<br>Longitude: ${lng.toFixed(6)}º`
+            },
+            offsetResolver: (direction) => { 
+                return (direction === "top") ? [0, -41] : [0, 0] 
+            }
+        }
+     },
     geolocation: { status: false, icon: { on: 'images/gps-on.png', off: 'images/gps-off.png'     }, navWatch: null, lastPosition: null },
     orientation: { status: true,  icon: { on: 'images/north.png',  off: 'images/car-heading.png' }, lastHeading: 0 },
     colorbar:    { status: false, cLim: { min: 0, max: 100 } },
@@ -177,7 +205,7 @@ async function appStartup() {
         await loadScript('js/CustomRoute.js');
 
         const savedConfig = window.localStorage.getItem('webRotas');
-        if (savedConfig !== null) {
+        if (savedConfig) {
             const parsedConfig    = JSON.parse(savedConfig);
             window.app.server.url = parsedConfig.serverUrl;
             window.app.routeList  = parsedConfig.routeList;

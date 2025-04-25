@@ -2,8 +2,7 @@ class DialogBox {
     /*---------------------------------------------------------------------------------*/
     uuid   = null;
     handle = null;    
-    icon   = { info: 'images/info.svg', warning: 'images/warning.svg', error: 'images/error.svg' };
-
+    static icon   = { info: 'images/info.svg', warning: 'images/warning.svg', error: 'images/error.svg' };
 
     /*---------------------------------------------------------------------------------*/
     constructor(dialogContent, dialogType, dialogButtonList, dialogZIndex = 1000) {
@@ -46,7 +45,7 @@ class DialogBox {
 
         this.handle.querySelector(".dialog-box-popup-close-btn").onclick = () => this.close();
         this.handle.querySelector(".dialog-box-popup-text").innerHTML = dialogContent;
-        this.handle.querySelector(".dialog-box-popup-icon").src = Object.keys(this.icon).includes(dialogType) ? this.icon[dialogType] : this.icon.info;
+        this.handle.querySelector(".dialog-box-popup-icon").src = Object.keys(DialogBox.icon).includes(dialogType) ? DialogBox.icon[dialogType] : DialogBox.icon.info;
         this.makeDraggable()
 
         let focusBtn = null;
@@ -72,19 +71,16 @@ class DialogBox {
         }
     }
 
-
     /*---------------------------------------------------------------------------------*/
     close() {
         this.handle.remove();
     }
-
 
     /*---------------------------------------------------------------------------------*/
     executeCallback(callbackFunction) {
         callbackFunction();
         this.close();
     }
-
 
     /*---------------------------------------------------------------------------------*/
     makeDraggable() {
@@ -135,7 +131,6 @@ class DialogBox {
         });
     }
 
-
     /*---------------------------------------------------------------------------------*/
     trapFocus() {
         const focusElements = Array.from(this.handle.querySelectorAll('button, input, select, [contenteditable]'))
@@ -164,7 +159,6 @@ class DialogBox {
     
         this.handle.addEventListener('keydown', handleKeyDown);
     }
-
 
     /*---------------------------------------------------------------------------------*/
     static uuid() {

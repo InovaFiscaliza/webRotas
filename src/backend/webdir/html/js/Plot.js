@@ -29,7 +29,7 @@
                     this.create('locationUrbanAreas', window.app.location.urbanAreas);
                     this.create('locationUrbanCommunities', window.app.location.urbanCommunities);
                     this.create('routePath',     routeInfo.routePath);
-                    this.create('routeMidpoint', routeInfo.routeMidPoint);
+                    this.create('routeMidpoint', routeInfo.routeMidpoint);
                     this.create('routeOrigin',   routeInfo.routeOrigin);
                     this.create('waypoints',     routeInfo.waypoints);
                     this.setView('zoom',         routeInfo.waypoints)
@@ -83,10 +83,10 @@
 
                     geoData.forEach(element => {
                         let marker;
-                        let id, description, lat, lng, elevation;
+                        let id, lat, lng, elevation;
                         let icon, color;
 
-                        ( { id, description, lat, lng, elevation } = element);
+                        ( { id, lat, lng, elevation } = element);
                         coords = [lat, lng];
 
                         switch (options.iconType) {
@@ -97,52 +97,40 @@
                                     iconAnchor: options.iconAnchor
                                 });
                                 
-                                marker = window.L.marker(coords, { icon: icon }).addTo(window.app.map);
+                                marker = window.L.marker(coords, { icon }).addTo(window.app.map);
                                 break;
 
                             case 'customPinIcon':
                                 color  = window.app.module.Util.Image.pinColor(elevation, window.app.mapView.colormap);
                                 icon   = window.app.module.Util.Image.customPinIcon(id, color);
-                                marker = window.L.marker(coords, { icon: icon }).addTo(window.app.map);
+                                marker = window.L.marker(coords, { icon }).addTo(window.app.map);
                                 break;
 
                             default:
-                                marker = window.L.marker(coords).addTo(window.app.map);
+                                icon = new L.Icon.Default({
+                                    iconSize: options.iconSize,
+                                    tooltipAnchor: [0, 0]
+                                });
+
+                                marker = window.L.marker(coords, { icon }).addTo(window.app.map);
                                 break;
                         }
 
-                        if (options.iconTooltip) {
-                            /* 
-                                Cria um campo para armazenar o handle do sticky tooltip, além da
-                                informação do modo ativo ('hover' ou 'sticky').
-                            */
-                            marker._CustomTooltip = { 
-                                mode: 'hover',
-                                handle: null,
-                                text: `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)`,
-                                coords: coords,
-                                direction: 'bottom'
-                            };
+                        if (options.iconTooltip.status) {
+                            let textResolver = options.iconTooltip.textResolver;
+                            if (textResolver === 'default' || typeof textResolver !== 'function') {
+                                textResolver = window.app.mapView.tooltip.textResolver;
+                            }
+                            const text = textResolver(element);
+                            
+                            let offsetResolver = options.iconTooltip.offsetResolver;
+                            if (offsetResolver === 'default' || typeof offsetResolver !== 'function') {
+                              offsetResolver = window.app.mapView.tooltip.offsetResolver;
+                            }
 
-                            window.app.module.Util.Tooltip.createLeafletTooltip('hover', marker, marker._CustomTooltip.direction, marker._CustomTooltip.text);
-
-                            marker.on('mouseup', () => {
-                                if (!marker._CustomTooltip.handle) {
-                                    marker._CustomTooltip.handle = window.app.module.Util.Tooltip.createLeafletTooltip('sticky', marker, marker._CustomTooltip.direction, marker._CustomTooltip.text, marker._CustomTooltip.coords);
-
-                                } else {
-                                    marker._CustomTooltip.handle.remove();
-                                    marker._CustomTooltip.handle = null;
-                                }
-
-                                marker._CustomTooltip.mode = (!marker._CustomTooltip.handle) ? 'hover' : 'sticky';
-                            })
-
-                            marker.on('mouseover', () => {
-                                if (!!marker._CustomTooltip.handle) {
-                                    marker.closeTooltip();
-                                }
-                            });
+                            const direction = window.app.mapView.tooltip.direction;
+                            
+                            window.app.plot.tooltip.bindLeafletTooltip(window.app.map, marker, coords, text, direction, offsetResolver);
                         } 
                         
                         handle.push(marker);
@@ -250,14 +238,6 @@
                 return 'polygon';
             } else {
                 return 'unknown';
-            }
-        }
-
-
-        /*---------------------------------------------------------------------------------*/
-        static checkDragging() {
-            if (!window.app.map.dragging.enabled()) {
-                window.app.map.dragging.enable();
             }
         }
 
