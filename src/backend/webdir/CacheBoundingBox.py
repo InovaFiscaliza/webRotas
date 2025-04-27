@@ -1,5 +1,4 @@
-from shapely.geometry import box, Polygon
-from shapely.ops import unary_union
+
 import hashlib
 import json
 
@@ -8,41 +7,35 @@ import json
 class CacheBoundingBox:
     def __init__(self):
         self.cache = {}
-
-    def _hash_bbox(self, bbox, exclusions):
-        """Gera uma hash única para o bbox e exclusões"""
-        key = {
-            'bbox': bbox,
-            'exclusions': [list(polygon.exterior.coords) for polygon in exclusions]
-        }
-        key_json = json.dumps(key, sort_keys=True)
-        return hashlib.sha256(key_json.encode()).hexdigest()
-
-    def _apply_exclusions(self, bbox_polygon, exclusions):
-        """Remove áreas de exclusão da bounding box"""
-        if not exclusions:
-            return bbox_polygon
-        return bbox_polygon.difference(unary_union(exclusions))
-
-    def get_map_segment(self, bbox, exclusions=[]):
+    
+    def new(self, regioes, diretorio):
+        """Armazena as regiões e o diretório no cache utilizando um hash da chave."""
+        chave = self._hash_bbox(regioes)  # Gerar a chave de hash
+        self.cache[chave] = diretorio  # Armazenar no cache com a chave e o valor (diretório)
+        
+    def _hash_bbox(self,regioes, tamanho=12):
         """
-        Retorna o mapa recortado da bounding box excluindo áreas.
-
-        bbox: (minx, miny, maxx, maxy)
-        exclusions: lista de shapely.Polygon com áreas a excluir
+        Gera um hash SHA256 a partir da lista de regiões e retorna apenas os primeiros caracteres.
+        
+        Args:
+            regioes (list): Lista de regiões.
+            tamanho (int): Quantidade de caracteres do hash retornado (padrão 12).
+        
+        Returns:
+            str: Hash reduzido para usar como chave de cache.
         """
-        cache_key = self._hash_bbox(bbox, exclusions)
+        regioes_json = json.dumps(regioes, sort_keys=True)
+        hash_obj = hashlib.sha256(regioes_json.encode('utf-8'))
+        hash_completo = hash_obj.hexdigest()
+        return hash_completo[:tamanho]
 
-        if cache_key in self.cache:
-            print("Cache HIT")
-            return self.cache[cache_key]
-        else:
-            print("Cache MISS - recortando área")
-            bbox_polygon = box(*bbox)
-            result_polygon = self._apply_exclusions(bbox_polygon, exclusions)
-            self.cache[cache_key] = result_polygon
-            return result_polygon
-
+    def get_cache(self, regioes):
+        """Busca o diretório associado a um conjunto de regiões no cache."""
+        chave = self._hash_bbox(regioes)
+        return self.cache.get(chave, None)  # Retorna o diretório ou None se não encontrado
+    
     def clear_cache(self):
         """Limpa o cache"""
         self.cache.clear()
+
+cCacheBoundingBox = CacheBoundingBox()

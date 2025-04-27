@@ -475,7 +475,7 @@ def limpar_cache_files_osmr():
 
 
 ################################################################################
-def PreparaServidorRoteamento(regioes):
+def PreparaServidorRoteamento_Old(regioes):
 
     roteamento_ok=False
     while not roteamento_ok:
@@ -496,6 +496,35 @@ def PreparaServidorRoteamento(regioes):
         else:
             wr.wLog("Arquivo exclusoes nao modificado, nao e necessario executar osmosis")
             AtivaServidorOSMR()
+        if VerificarOsrmAtivo():
+            roteamento_ok=True 
+        else:   
+            wr.wLog("Erro de cache encontrado reiniciando geração dos mapas")
+            limpar_cache_files_osmr() 
+
+
+################################################################################
+def PreparaServidorRoteamento(regioes):
+
+    roteamento_ok=False
+    while not roteamento_ok:
+        wr.GeraArquivoExclusoes(
+            regioes,
+            arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
+        )
+        if not VerificaArquivosIguais(
+            Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
+            Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly.old",
+        ):
+            wr.wLog(f"Limpando cache dinamico de rotas para o usuário {wr.UserData.nome}")
+            wr.route_cache.clear_user(wr.UserData.nome)
+            wr.wLog("FiltrarRegiãoComOsmosis")
+            FiltrarRegiaoComOsmosis(regioes)
+            wr.wLog("GerarIndicesExecutarOSRMServer")
+            GerarIndicesExecutarOSRMServer(regioes)
+        else:
+            wr.wLog("Arquivo exclusoes nao modificado, nao e necessario executar osmosis")
+            AtivaServidorOSMR(regioes)
         if VerificarOsrmAtivo():
             roteamento_ok=True 
         else:   
