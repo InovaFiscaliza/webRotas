@@ -13,6 +13,7 @@ from pathlib import Path
 
 import webRota as wr
 import project_folders as pf
+import CacheBoundingBox as cb
 
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
@@ -133,7 +134,7 @@ def FiltrarRegiaoComOsmosis():
     
     
 ################################################################################
-def AtivaServidorOSMR():
+def AtivaServidorOSMR(regioes):
     # startserver filtro 8001 osmr_server8001
 
     wr.UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
@@ -505,17 +506,13 @@ def PreparaServidorRoteamento_Old(regioes):
 
 ################################################################################
 def PreparaServidorRoteamento(regioes):
-
     roteamento_ok=False
     while not roteamento_ok:
-        wr.GeraArquivoExclusoes(
-            regioes,
-            arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
-        )
-        if not VerificaArquivosIguais(
-            Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
-            Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly.old",
-        ):
+        if (cb.cCacheBoundingBox.get_cache(regioes)==None):
+            wr.GeraArquivoExclusoes(
+                regioes,
+                arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
+            )
             wr.wLog(f"Limpando cache dinamico de rotas para o usuário {wr.UserData.nome}")
             wr.route_cache.clear_user(wr.UserData.nome)
             wr.wLog("FiltrarRegiãoComOsmosis")
