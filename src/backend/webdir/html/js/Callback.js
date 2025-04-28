@@ -31,6 +31,26 @@
             }
         }
 
+        /* ## PANEL ## */
+        static onRouteListChange(event) {
+            switch (event.sourceTarget.id) {
+                case 'routeListEditionMode':
+                    console.log(event.sourceTarget.id);
+                    break;
+
+                case 'routeListEditionConfirm':
+                    console.log(event.sourceTarget.id);
+                    break;
+
+                case 'routeListEditionCancel':
+                    console.log(event.sourceTarget.id);
+                    break;
+
+                default:
+                    throw Error('Unexpected element Id')
+            }
+        }
+
         /* ## TOOLBAR ## */
         static toolbar_routeButtonClick() {
             let panelContainer = document.getElementById('left-panel');
@@ -53,14 +73,14 @@
         }
 
         static toolbar_orientationButtonClick() {
-            window.app.orientation.status = !window.app.orientation.status;
+            window.app.mapContext.settings.orientation.status = !window.app.mapContext.settings.orientation.status;
 
             let btn = document.getElementById('orientation');
-            let src = window.app.orientation.status ? window.app.orientation.icon.on : window.app.orientation.icon.off;
+            let src = window.app.mapContext.settings.orientation.status ? window.app.mapContext.settings.orientation.icon.on : window.app.mapContext.settings.orientation.icon.off;
             btn.style.backgroundImage = `url("${src}")`;
 
             try {
-                if (window.app.orientation.status) {
+                if (window.app.mapContext.settings.orientation.status) {
                     RodaMapaPorCss(0);
                     window.app.plotHandle.geolocation.setRotationAngle(heading);
                 } else {
@@ -73,11 +93,19 @@
         }
 
         static toolbar_locationButtonClick() {
-            window.app.location.status = !window.app.location.status;
+            let currentStatus, iconSrc;
+            currentStatus = window.app.mapContext.settings.geolocation.status;
 
-            let btn = document.getElementById('location');
-            let src = window.app.location.status ? window.app.location.icon.on : window.app.location.icon.off;
-            btn.style.backgroundImage = `url("${src}")`;
+            if (currentStatus == 'on') {
+                window.app.mapContext.settings.geolocation.status = 'off'
+                iconSrc = window.app.mapContext.settings.geolocation.icon.off;
+            } else {
+                window.app.mapContext.settings.geolocation.status = 'on'
+                iconSrc = window.app.mapContext.settings.geolocation.icon.on;
+            }
+
+            window.document.getElementById('location').style.backgroundImage = `url("${src}")`;
+
             try {
                 AtualizaGpsTimer(gpsAtivado);
             } catch (ME) {
@@ -130,7 +158,7 @@
                 return;
             }
 
-            window.app.geolocation.lastPosition = position;
+            window.app.mapContext.settings.geolocation.lastPosition = position;
             const { latitude, longitude, heading } = position.coords;
             
             if (window.app.plotHandle.geolocation === null) {
@@ -139,13 +167,13 @@
                 window.app.plotHandle.geolocation.setLatLng([latitude, longitude]);
             }
 
-            window.app.plotHandle.map.setView([latitude, longitude]);
+            window.app.modules.Plot.setView('center', [latitude, longitude]);
 
             if (heading !== null) {
-                window.app.orientation.lastHeading = heading;
+                window.app.mapContext.settings.orientation.lastHeading = heading;
 
-                if (window.app.orientation.status) {
-                    window.app.plotHandle.geolocation.setRotationAngle(heading);
+                if (window.app.mapContext.settings.orientation.status) {
+                    window.app.mapContext.settings.geolocation.setRotationAngle(heading);
                 } else {
                     let mapContainer = document.getElementById('document');
                     mapContainer.style.transform = `rotate(${heading}deg) scale(1.0) `;
@@ -158,5 +186,5 @@
         }
     }
 
-    window.app.module.Callback = Callback;
+    window.app.modules.Callback = Callback;
 })()

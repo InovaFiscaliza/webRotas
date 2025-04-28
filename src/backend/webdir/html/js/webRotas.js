@@ -1,264 +1,289 @@
-/*  
-    No contexto global do "window", o webRotas cria três objetos:
-    - app: organiza as informações do webRotas no front-end, como o endereço do servidor, 
-      a requisição do usuário, os detalhes das rotas, referências  para todos os objetos 
-      plotados no mapa Leaflet etc.
-    - Função assíncrona appStartup(): inicializa o app, importando todos os arquivos .JS
-      necessários para sua execução.
-    - Função assíncrona loadScript(filename): permite a importação de arquivos .JS.
+/*-----------------------------------------------------------------------------------
+    ## webRotas ##
+    No contexto global do "window", o webRotas cria os seguintes objetos:
+    - app
+    - Funções assíncronas appStartup() e loadScript(filename)
+    - Classes DialogBox e Tooltip.
+    - L (Leaflet)
 
-    Algumas dessas informações são atualizadas quando o script "js/CustomRoute.js" é 
-    executado, o qual é gerado pelo servidor com detalhes sobre a rota requisitada. 
-    Outras rotas, eventualmente requisitadas pelo usuário em decorrência de edições no 
-    front-end, são armazenadas no "localStorage" dentro do contexto do "window", e recuperadas 
-    quando o arquivo .HTML é reiniciado.
-
-    Atualmente, o projeto JavaScript não está organizado como módulos, pois isso exigiria uma 
-    conexão com o servidor, o que impede a abertura do arquivo .HTML em ambiente offline. Esse 
-    bloqueio ocorre devido à política de CORS (Cross-Origin Resource Sharing).
-*/
+    window.app organiza informações geradas pelo servidor ("routeList", por exemplo), 
+    referências para classes declaradas em arquivos auxiliares ("js/Communication.js", 
+    "js/CreateComponents.js" etc) e estados de elementos do front-end.
+    
+    window.localStorage é usado para sincronizar informações essenciais do app, como
+    a url do servidor e os detalhes das rotas ("routeList").
+-----------------------------------------------------------------------------------*/
 window.app = {
-    /*
-        Propriedades relacionadas ao servidor, à requisição do usuário e à rota gerada automaticamente
-        pelo servidor. Todos os objetos inicialmente definidos como null serão preenchidos durante a 
-        execução do script "js/CustomRoute.js".
-
-        Além disso, as propriedades window.app.server.url e window.app.routeList serão sincronizadas 
-        com os valores armazenados no "localStorage", caso existam.
-    */
-    server: { 
-        status: 'offline', 
-        url: null, // 'http://127.0.0.1:5000'
-        osrmPort: null, // eliminar esse campo depois de implementado o sessionId (passar como argumento das requisições)
-        sessionId: '',
-        updateIntervalId: null, 
-        updateIntervalMs: 10000,
-        failureCount: 0,
-        failureThreshold: 3
-    },
-    
-    userRequest: null,
-    boundingBox: null,
-    location: {
-        limits: null,
-        urbanAreas: null,
-        urbanCommunities: null
-    },
-    routeList: [],
-    
-    /*
-        Propriedades relacionadas ao plot (eixo geográfico, além de referências para os objetos
-        plotados neste eixo).
-    */
-    map: null,
-    plot: {
-        boundingBox: {
-            handle: null,
-            type: 'polygon',
-            options: {
-                weight: 1,
-                color: 'rgba(0,255,0,0.5)',
-                fillColor: 'rgba(0,255,0,0)',
-                interactive: false
-            }
-        },
-        locationLimits: {
-            handle: null,
-            type: 'polygon',
-            options: {
-                weight: 1,
-                color: 'rgba(255,0,0,0.5)',
-                fillColor: 'rgba(255,0,0,0)',
-                interactive: false
-            }
-        },
-        locationUrbanAreas: {
-            handle: null,
-            type: 'polygon',
-            options: {
-                weight: 1,
-                color: 'rgba(0,0,255,0.5)',
-                fillColor: 'rgba(0,0,255,0)',
-                interactive: false
-            }
-        },
-        locationUrbanCommunities: {
-            handle: null,
-            type: 'polygon',
-            options: {
-                weight: 1,
-                color: 'rgba(102,0,204,0.85)',
-                fillColor: 'rgba(102,0,204, 0.5)',
-                interactive: false
-            }
-        },
-        waypoints: {
-            handle: null,
-            type: 'marker',
-            options: {
-                iconType: 'customPinIcon',
-                iconTooltip: {
-                    status: true,
-                    textResolver: ({ lat, lng, elevation, description }) => { return `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
-                    offsetResolver: 'default'
-                }
-            }
-        },
-        routeMidpoint: { // apenas na rota do tipo "DriveTest"
-            handle: null,
-            type: 'marker',
-            options: {
-                iconType: 'defaultIcon',
-                iconTooltip: {
-                    status: true,
-                    textResolver: ({ lat, lng }) => { return `Ponto central<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º)` },
-                    offsetResolver: () => { return [0, 0] }
-                },
-                iconSize: [25, 41]
-            }
-        },
-        routeOrigin: {
-            handle: null,
-            type: 'marker',
-            options: {
-                iconType: 'customPinIcon',
-                iconTooltip: {
-                    status: true,
-                    textResolver: ({ lat, lng, elevation, description }) => { return `Ponto inicial: ${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
-                    offsetResolver: 'default'
-                }
-            }
-        },
-        routePath: {
-            handle: null,
-            type: 'polyline',
-            options: {
-                weight: 3,
-                color: 'rgba(0,0,255,0.75)',
-                interactive: false
-            }
-        },
-        currentPosition: {
-            handle: null,
-            type: 'marker',
-            options: {
-                iconType: 'file',
-                iconTooltip: {
-                    status: false,
-                    offsetResolver: 'default'
-                },
-                iconUrl: 'images/car.png',
-                iconSize: [48, 48],
-                iconAnchor: [12, 12]
-            }
-        },
-        currentLeg: {
-            handle: null,
-            type: 'polyline',
-            options: {
-                weight: 3,
-                color: 'rgba(255,0,0,0.5)',
-                interactive: false
-            }
-        },
-        tooltip: new Tooltip
-    },
-
-    /*
-        Outras propriedades, incluindo referências  para as classes declaradas nos scripts 
-        "js/Callback.js", "js/Communication.js", "js/CreateComponents.js", "js/Plot.js" e 
-        "js/Util.js", além de controles de estados de elementos do front-end.
-    */
-    module: {
+    modules: {
         Callback: null,
         Communication: null,
         CreateComponent: null,            
         Plot: null,
-        Util: null,        
+        Tooltip: new Tooltip,
+        Util: null
     },
 
-    mapView:     { 
-        center: { 
-            lat: -10.3, 
-            lng: -53.2 
-        }, 
-        zoom: 4, 
-        basemap: 'street-light', 
-        colormap: 'parula',
-        tooltip: {
-            direction: 'bottom',
-            textResolver: ({ lat, lng }) => {
-                return `Latitude: ${lat.toFixed(6)}º<br>Longitude: ${lng.toFixed(6)}º`
+    server: { 
+        url: null, // 'http://127.0.0.1:5000'
+        osrmPort: null, // eliminar campo após implementar sessionId
+        sessionId: '',
+        status: 'offline', 
+        statusMonitor: {
+            intervalId: null, 
+            intervalMs: 10000,
+            failureCount: 0,
+            failureThreshold: 3
+        }
+    },
+
+    analysisContext: {
+        userRequest: null,
+        boundingBox: null,
+        location: {
+            limits: null,
+            urbanAreas: null,
+            urbanCommunities: null
+        },
+        routeList: []
+    },
+
+    map: null, // window.L.map
+    mapContext: {        
+        layers: {
+            basemap: {
+                "street-light": window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+                    subdomains: 'abcd'
+                }),
+                "street-dark": window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+                    subdomains: 'abcd'
+                }),
+                "open-street": window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }),
+                "satellite": window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                })
             },
-            offsetResolver: (direction) => { 
-                return (direction === "top") ? [0, -41] : [0, 0] 
+            boundingBox: {
+                handle: null,
+                type: 'polygon',
+                options: {
+                    weight: 1,
+                    color: 'rgba(0,255,0,0.5)',
+                    fillColor: 'rgba(0,255,0,0)',
+                    interactive: false
+                }
+            },
+            locationLimits: {
+                handle: null,
+                type: 'polygon',
+                options: {
+                    weight: 1,
+                    color: 'rgba(255,0,0,0.5)',
+                    fillColor: 'rgba(255,0,0,0)',
+                    interactive: false
+                }
+            },
+            locationUrbanAreas: {
+                handle: null,
+                type: 'polygon',
+                options: {
+                    weight: 1,
+                    color: 'rgba(0,0,255,0.5)',
+                    fillColor: 'rgba(0,0,255,0)',
+                    interactive: false
+                }
+            },
+            locationUrbanCommunities: {
+                handle: null,
+                type: 'polygon',
+                options: {
+                    weight: 1,
+                    color: 'rgba(102,0,204,0.85)',
+                    fillColor: 'rgba(102,0,204, 0.5)',
+                    interactive: false
+                }
+            },
+            waypoints: {
+                handle: null,
+                type: 'marker',
+                options: {
+                    iconType: 'customPinIcon',
+                    iconTooltip: {
+                        status: true,
+                        textResolver: ({ lat, lng, elevation, description }) => { return `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
+                        offsetResolver: 'default'
+                    }
+                }
+            },
+            routeMidpoint: {
+                handle: null,
+                type: 'marker',
+                options: {
+                    iconType: 'defaultIcon',
+                    iconTooltip: {
+                        status: true,
+                        textResolver: ({ lat, lng }) => { return `Ponto central<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º)` },
+                        offsetResolver: () => { return [0, 0] }
+                    },
+                    iconSize: [25, 41]
+                }
+            },
+            routeOrigin: {
+                handle: null,
+                type: 'marker',
+                options: {
+                    iconType: 'customPinIcon',
+                    iconTooltip: {
+                        status: true,
+                        textResolver: ({ lat, lng, elevation, description }) => { return `Ponto inicial: ${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
+                        offsetResolver: 'default'
+                    }
+                }
+            },
+            routePath: {
+                handle: null,
+                type: 'polyline',
+                options: {
+                    weight: 3,
+                    color: 'rgba(0,0,255,0.75)',
+                    interactive: false
+                }
+            },
+            currentPosition: {
+                handle: null,
+                type: 'marker',
+                options: {
+                    iconType: 'file',
+                    iconTooltip: {
+                        status: false,
+                        offsetResolver: 'default'
+                    },
+                    iconUrl: 'images/car.png',
+                    iconSize: [48, 48],
+                    iconAnchor: [12, 12]
+                }
+            },
+            currentLeg: {
+                handle: null,
+                type: 'polyline',
+                options: {
+                    weight: 3,
+                    color: 'rgba(255,0,0,0.5)',
+                    interactive: false
+                }
+            }
+        },
+
+        settings: { 
+            basemap: 'street-light', // 'street-light' | 'street-dark' | 'open-street' | 'satellite'
+            colorbar: 'hidden', // 'hidden' | 'visible'
+            colormap: {
+                scale: 'parula', // 'parula'
+                range: {
+                    min: 0, 
+                    max: 100
+                }
+            },
+            geolocation: { 
+                status: 'off', // 'on' | 'off'
+                icon: { on: 'images/gps-on.png', off: 'images/gps-off.png' }, 
+                navWatch: null, 
+                lastPosition: null 
+            },
+            orientation: { 
+                status: 'north', // 'north' | 'car-heading'  
+                icon: { on: 'images/north.png',  off: 'images/car-heading.png' }, 
+                lastHeading: 0 
+            },
+            position: {
+                center: { 
+                    lat: -10.3, 
+                    lng: -53.2 
+                },
+                zoom: 4
+            },
+            tooltip: {
+                direction: 'bottom',
+                textResolver: ({ lat, lng }) => {
+                    return `Latitude: ${lat.toFixed(6)}º<br>Longitude: ${lng.toFixed(6)}º`
+                },
+                offsetResolver: (direction) => { 
+                    return (direction === "top") ? [0, -41] : [0, 0] 
+                }
             }
         }
-     },
-    geolocation: { status: false, icon: { on: 'images/gps-on.png', off: 'images/gps-off.png'     }, navWatch: null, lastPosition: null },
-    orientation: { status: true,  icon: { on: 'images/north.png',  off: 'images/car-heading.png' }, lastHeading: 0 },
-    colorbar:    { status: false, cLim: { min: 0, max: 100 } },
+    }
 }
 
+/*---------------------------------------------------------------------------------*/
 async function appStartup() {
     try {
         await loadScript('js/CustomRoute.js');
 
         const savedConfig = window.localStorage.getItem('webRotas');
         if (savedConfig) {
-            const parsedConfig    = JSON.parse(savedConfig);
+            const parsedConfig = JSON.parse(savedConfig);
             window.app.server.url = parsedConfig.serverUrl;
-            window.app.routeList  = parsedConfig.routeList;
+            window.app.analysisContext.routeList = parsedConfig.routeList;
         } else {
-            const configToSave    = JSON.stringify({
+            const configToSave = JSON.stringify({
                 serverUrl: window.app.server.url,
-                routeList: window.app.routeList
+                routeList: window.app.analysisContext.routeList
             })
             window.localStorage.setItem('webRotas', configToSave)
         }
 
         /* 
             Após a importação de cada um dos módulos, uma referência do módulo será
-            armazenada em window.app.module. A referência para as classes definidas em 
-            cada módulo não existe em contexto global.
+            armazenada em window.app.modules.
         */
         await loadScript('js/Callback.js');
         await loadScript('js/Communication.js');
         await loadScript('js/CreateComponent.js');
+        //await loadScript('js/Layout.js');
         await loadScript('js/Plot.js');
         await loadScript('js/Util.js');
 
         window.addEventListener("load", function () {
-         // window.app.module.CreateComponent.navbar();
-            window.app.module.CreateComponent.leftPanel();
-         // window.app.module.CreateComponent.rightPanel();
-            window.app.module.CreateComponent.document();
-            window.app.module.CreateComponent.toolbar();
+            console.log(`webRotas session started at ${window.app.modules.Util.getTimeStamp()}`);
 
-            window.app.module.Plot.controller('initialPlot', 0)
+            window.app.modules.CreateComponent.leftPanel();
+            window.app.modules.CreateComponent.document();
+            window.app.modules.CreateComponent.toolbar();
+
+            //window.app.modules.Layout.controller('startup');
+            window.app.modules.Plot.controller('startup')
 
             if (!!window.app.server.url) {
-                window.app.server.updateIntervalId = setInterval(() => window.app.module.Communication.isServerOnline(), window.app.server.updateIntervalMs);
+                window.app.server.statusMonitor.intervalId = setInterval(() => {
+                    window.app.modules.Communication.isServerOnline();
+                }, window.app.server.statusMonitor.intervalMs);
             }
-
-            window.app.module.Callback.addEventListener(window, 'window:keydown-space-or-enter');
         });
-
-        console.log('webRotas');
 
     } catch (ME) {
         console.error(ME);
     }
 }
 
+/*---------------------------------------------------------------------------------*/
 async function loadScript(filename) {
     return new Promise((resolve, reject) => {
         const script = window.document.createElement('script');
         script.src = filename;
         script.onload = resolve;
         script.onerror = () => reject(new Error(`Failed to load script: ${filename}`));
+
         window.document.head.appendChild(script);
     });
 }
 
+/*---------------------------------------------------------------------------------*/
 appStartup();

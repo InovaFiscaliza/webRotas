@@ -1,12 +1,34 @@
 (function () {
+    /*---------------------------------------------------------------------------------*/
+    const getTimeStamp = (format = 'dd/mm/yyyy HH:MM:SS') => {
+        const pad = (num) => String(num).padStart(2, '0');
+        const now = new Date();
+    
+        const year  = now.getFullYear();
+        const month = pad(now.getMonth() + 1);
+        const day   = pad(now.getDate());
+        const hour  = pad(now.getHours());
+        const min   = pad(now.getMinutes());
+        const sec   = pad(now.getSeconds());
+    
+        switch (format) {
+            case 'dd/mm/yyyy HH:MM:SS':
+                return `${day}/${month}/${year} ${hour}:${min}:${sec}`;
+            case 'yyyy.mm.dd_THH.MM.SS':
+                return `${year}.${month}.${day}_T${hour}.${min}.${sec}`;
+            default:
+                throw new Error('Unexpected date format');
+        }
+    }
+
     class GeoLocation {
         /*---------------------------------------------------------------------------------*/
         static startLocationTracking(updateFcn) {
-            if (!window.app.geolocation.status || window.app.geolocation.navWatch !== null) {
+            if (!window.app.mapContext.geolocation.status || window.app.mapContext.geolocation.navWatch !== null) {
                 return;
             }
         
-            window.app.geolocation.navWatch = navigator.geolocation.watchPosition(
+            window.app.mapContext.geolocation.navWatch = navigator.geolocation.watchPosition(
                 position => updateFcn(position),
                 ME => console.error(ME),
                 {
@@ -17,19 +39,56 @@
             );
         }
 
-
         /*---------------------------------------------------------------------------------*/
         static stopLocationTracking() {
             try {
-                if (window.app.geolocation.navWatch != null) {
-                    navigator.geolocation.clearWatch(window.app.geolocation.navWatch);
+                if (window.app.mapContext.geolocation.navWatch != null) {
+                    navigator.geolocation.clearWatch(window.app.mapContext.geolocation.navWatch);
                 }                
             } catch (ME) {
                 console.error(ME);
             }
         }
+
+        /*---------------------------------------------------------------------------------*/
+        static routeMidPoint(routeIndex) {
+            const routeList   = window.app.analysisContext.routeList[routeIndex];
+            const accumulator = routeList.waypoints.reduce((acc, curr) => {
+                acc.lat += curr.lat;
+                acc.lng += curr.lng;
+
+                return acc;
+            }, { lat: 0, lng: 0 });
+
+            const midPoint = {
+                lat: accumulator.lat / routeList.waypoints.length,
+                lng: accumulator.lng / routeList.waypoints.length,
+            }
+            
+            return midPoint;
+        }
     }
 
+
+    class Elevation {
+        /*---------------------------------------------------------------------------------*/
+        static range(routeInfo) {
+            const elevationLimits = [routeInfo.origin, ...routeInfo.waypoints].reduce((acc, curr) => {
+                if (curr.elevation < acc.min) {
+                  acc.min = curr.elevation;
+                }
+
+                if (curr.elevation > acc.max) {
+                  acc.max = curr.elevation;
+                }
+
+                return acc;
+              }, { min: Infinity, max: -Infinity });
+
+              return elevationLimits;
+        }
+    }
+    
 
     class Image {
         static parulaColormap = [[ 53,  42, 135], [ 45,  53, 140], [ 38,  63, 146], [ 30,  73, 151], [ 23,  84, 157], [ 16,  94, 162],
@@ -62,8 +121,8 @@
         static colorbar() {
             let minValue, maxValue, step;
 
-            minValue = window.app.colorbar.cLim.min;
-            maxValue = window.app.colorbar.cLim.max;
+            minValue = window.app.mapContext.colormap.range.min;
+            maxValue = window.app.mapContext.colormap.range.max;
             if (maxValue === minValue) {
                 maxValue++;
             }
@@ -171,8 +230,8 @@
                     throw new Error('Unexpected colomap');
             }
 
-            minElevation = window.app.colorbar.cLim.min;
-            maxElevation = window.app.colorbar.cLim.max;
+            minElevation = window.app.mapContext.settings.colormap.range.min;
+            maxElevation = window.app.mapContext.settings.colormap.range.max;
             if (maxElevation === minElevation) {
                 maxElevation++;
             }
@@ -210,9 +269,11 @@
 
 
     const Util = {
-        "GeoLocation": GeoLocation,
-        "Image": Image
+        getTimeStamp,
+        GeoLocation,
+        Elevation,
+        Image
     }
 
-    window.app.module.Util = Util;
+    window.app.modules.Util = Util;
 })()

@@ -10,9 +10,9 @@
     class Communication {
         /*---------------------------------------------------------------------------------*/
         static isServerOnline() {
-            const { url, osrmPort, status } = window.app.server;
+            const { url, osrmPort, sessionId, status } = window.app.server;
             const serverRoute   = `${url}/health?porta=${osrmPort}`;
-            //const serverRoute   = `${url}/health?sessionId=${sessionId}`;
+            //const serverRoute = `${url}/health?sessionId=${sessionId}`;
             const initialStatus = status;
 
             return fetch(serverRoute)
@@ -22,7 +22,7 @@
                     }
 
                     window.app.server.status = 'online';
-                    window.app.server.failureCount = 0;
+                    window.app.server.statusMonitor.failureCount = 0;
                     this.checkIfUpdateLayoutNeeded(initialStatus)
                 })
                 .catch(() => {
@@ -34,13 +34,13 @@
         /*---------------------------------------------------------------------------------*/
         static handleFailure(initialStatus) {
             window.app.server.status = 'offline';
-            window.app.server.failureCount++;
+            window.app.server.statusMonitor.failureCount++;
             this.checkIfUpdateLayoutNeeded(initialStatus)
         
-            if (window.app.server.failureCount >= window.app.server.failureThreshold) {
-              clearInterval(window.app.server.updateIntervalId);
-              window.app.server.updateIntervalId = null;
-              console.warn(`Server unreachable after ${window.app.server.failureThreshold} retries. Stopping checks.`);
+            if (window.app.server.statusMonitor.failureCount >= window.app.server.statusMonitor.failureThreshold) {
+              clearInterval(window.app.server.statusMonitor.intervalId);
+              window.app.server.statusMonitor.intervalId = null;
+              console.warn(`Server unreachable after ${window.app.server.statusMonitor.failureThreshold} retries. Stopping checks.`);
             }            
         }
 
@@ -48,7 +48,7 @@
         /*---------------------------------------------------------------------------------*/
         static checkIfUpdateLayoutNeeded(initialStatus) {
             if (initialStatus !== window.app.server.status) {
-                window.app.module.Callback.updateLayout('server-status-changed');
+                window.app.modules.Callback.updateLayout('server-status-changed');
             }
         }
 
@@ -59,7 +59,7 @@
                 return;
             }
 
-            const { url, osrmPort } = window.app.server;
+            const { url, osrmPort, sessionId } = window.app.server;
             const serverRoute = `${url}/route?porta${osrmPort}`      +
                 `&start=${currentPosition[1]},${currentPosition[0]}` + 
                 `&end=${nextWaypointPosition[1]},${nextWaypointPosition[0]}`;
@@ -73,7 +73,7 @@
                     return response.json();
                 })
                 .then(returnedData => {
-                    window.app.module.Plot.controller('updateCurrentLeg', returnedData);
+                    window.app.modules.Plot.controller('updateCurrentLeg', returnedData);
                 })
                 .catch(ME => {
                     console.error(ME);
@@ -81,5 +81,5 @@
         }
     }
 
-    window.app.module.Communication = Communication;
+    window.app.modules.Communication = Communication;
 })()

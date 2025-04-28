@@ -9,7 +9,7 @@
 
 class Tooltip {
     static basicTooltipClasses   = ['tooltip-container', 'tooltip-arrow']
-    static leafletTooltipClasses = ['leaflet-tooltip-bottom', 'leaflet-container', 'tooltip-container']
+    static leafletTooltipClasses = ['leaflet-tooltip-bottom', 'leaflet-container', 'tooltip-container', 'tooltip-on-grabbing']
 
     /*-----------------------------------------------------------------------------------
         ## TOOLTIP BÁSICO ##
@@ -21,7 +21,7 @@ class Tooltip {
         - basicTooltipHide(tooltip, target)
         - basicTooltipRender(target, id, text)
     -----------------------------------------------------------------------------------*/
-    static bindBasicTooltip(target, text) {
+    static bindBasicTooltip(target, text, defaultPosition = "top") {
         let tooltip;
 
         if (!target.dataset.tooltipId) {
@@ -31,13 +31,13 @@ class Tooltip {
 
         const id = target.dataset.tooltipId;
 
-        target.addEventListener('mouseenter', () => tooltip = basicTooltipShow(tooltip, target, id, text));
+        target.addEventListener('mouseenter', () => tooltip = basicTooltipShow(tooltip, target, id, text, defaultPosition));
         target.addEventListener('mouseleave', () => basicTooltipHide(tooltip, target));
 
         /*-----------------------------------------------------------------------------*/
-        function basicTooltipShow(tooltip, target, id, text) {
+        function basicTooltipShow(tooltip, target, id, text, defaultPosition) {
             if (!tooltip || target.dataset.tooltipState === 'hidden') {
-                tooltip = basicTooltipRender(target, id, text);
+                tooltip = basicTooltipRender(target, id, text, defaultPosition);
                 target.dataset.tooltipState = 'hover';
             }
 
@@ -55,7 +55,7 @@ class Tooltip {
         }
 
         /*-----------------------------------------------------------------------------*/
-        function basicTooltipRender(target, id, text) {
+        function basicTooltipRender(target, id, text, defaultPosition) {
             let tooltip, tooltipArrow;
     
             tooltip = window.document.createElement('div');
@@ -82,11 +82,24 @@ class Tooltip {
             if (left < 4) { left = 4; }
             if (left + tooltipWidth > maxRight) { left = maxRight - tooltipWidth; }
     
-            let top = rect.top + scrollY - tooltipHeight - 8;
-            let showAbove = true;
-            if (top < scrollY + 4) {
+            let top, showAbove;
+            
+            if (defaultPosition === 'bottom') {
                 top = rect.bottom + scrollY + 8;
                 showAbove = false;
+
+                if (top + tooltipHeight > scrollY + window.innerHeight - 4) {
+                    top = rect.top + scrollY - tooltipHeight - 8;
+                    showAbove = true;
+                }
+            } else {
+                top = rect.top + scrollY - tooltipHeight - 8
+                showAbove = true;
+
+                if (top < scrollY + 4) {
+                    top = rect.bottom + scrollY + 8;
+                    showAbove = false;
+                }
             }
     
             const arrowOffset = centerX - left - 6;
@@ -347,8 +360,8 @@ class Tooltip {
         Object.assign(dragPreviewTooltip.style, {
             left: `${left}px`,
             top: `${top}px`,
-            width: `${width-20}px`,
-            height: `${height-12}px`,
+            width: `${width}px`,
+            height: `${height}px`,
             margin: '10px',
             opacity: '0.25'
         });

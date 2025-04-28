@@ -1,240 +1,233 @@
 (function() {
-    /*
-        Inventário dos métodos estáticos da classe "CreateComponent":
-        - navBar()
-        - leftPanel()
-        - rightPanel()
-        - document()
-        - toolbar()
-    */
     class CreateComponent {
-        static navBar() {
-        }
-
-
-        static leftPanel() {
-            const panel = document.getElementById('left-panel');
-            ['left-panel-on', 'grid'].forEach(className => {
-                panel.classList.add(className);
-            });
-            panel.style.gridTemplateRows = '26px 22px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 1fr) 1px 22px';
-            panel.style.gridTemplateColumns = '110px 1fr 74px 18px 18px';
-            panel.style.columnGap = '0px';
-
-            // título
-            const topdivContainer = document.createElement('div');
-            topdivContainer.style.gridArea = '1 / 1 / 2 / 6';
-            topdivContainer.style.backgroundColor = 'rgb(191, 191, 191)';
-            topdivContainer.style.height = '26px';
-            topdivContainer.style.display = 'flex';
-            topdivContainer.style.flexDirection = 'column';
-            topdivContainer.style.padding = '0';
-            topdivContainer.style.margin = '0';
-
-            // linha com ícone e texto
-            const contentRow = document.createElement('div');
-            contentRow.style.height = '23px';
-            contentRow.style.display = 'flex';
-            contentRow.style.alignItems = 'center';
-            contentRow.style.gap = '6px';
-            contentRow.style.paddingLeft = '4px';
-
-            const img = document.createElement('img');
-            img.src = 'images/route.svg';
-            img.width = 18;
-            img.height = 18;
-            img.alt = 'Ícone';
-
-            const span = document.createElement('span');
-            span.textContent = 'webRotas';
-
-            // faixa preta inferior
-            const bottomDiv = document.createElement('div');
-            bottomDiv.style.backgroundColor = 'black';
-            bottomDiv.style.height = '3px';
-            bottomDiv.style.width = '100%';
-
-            // montar estrutura
-            contentRow.appendChild(img);
-            contentRow.appendChild(span);
-            topdivContainer.appendChild(contentRow);
-            topdivContainer.appendChild(bottomDiv);
-            panel.appendChild(topdivContainer);
-
-            // item 1
-            const label1 = document.createElement('label');
-            label1.classList.add('label');
-            label1.id = 'panel: routeListLabel';
-            label1.style.gridArea = '2 / 1 / 3 / 6';
-            label1.textContent = 'Rotas:';
-            panel.appendChild(label1);
-
-            const treeView1 = document.createElement('ul');
-            treeView1.classList.add('text-list');
-            treeView1.id = 'panel: routeList';
-            treeView1.style.gridArea = '3 / 1 / 4 / 6';
-            panel.appendChild(treeView1);
-
-            const label2 = document.createElement('label');
-            label2.classList.add('label');
-            label2.id = 'panel: initialPointLabel';
-            label2.style.gridArea = '4 / 1 / 5 / 5';
-            label2.textContent = 'Ponto inicial:';
-            panel.appendChild(label2);
-
-            const btn1 = document.createElement('img');
-            btn1.id = 'panel: initialPointButton';
-            btn1.src = 'images/pin_18.png';
-            btn1.style.gridArea = '4 / 5 / 5 / 6';
-            btn1.style.textAlign = 'right';
-            btn1.style.alignSelf = 'end';
-            btn1.style.transform = 'translateY(3px)'
-            btn1.style.cursor = 'pointer';
-            panel.appendChild(btn1);
-
-            const grid1 = document.createElement('div');
-            grid1.id = 'panel: initialPointGrid';
-            grid1.style.gridArea = '5 / 1 / 6 / 6';
-            ['grid', 'grid-border'].forEach(className => {
-                grid1.classList.add(className);
-            });
-            grid1.style.gridTemplateRows = '17px 22px 17px 22px';
-            panel.appendChild(grid1);
-
-            const label3 = document.createElement('label');
-            label3.classList.add('sublabel');
-            label3.id = 'panel: latitudeLabel';
-            label3.htmlFor = 'panel: latitude';
-            label3.style.gridArea = '1 / 1 / 2 / 2';
-            label3.textContent = 'Latitude:';
-            grid1.appendChild(label3);
-
-            const input1 = document.createElement('input');
-            input1.classList.add('no-spinner');
-            input1.id = 'panel: latitude';
-            input1.type = 'number';
-            input1.min = '-90';
-            input1.max = '90';
-            input1.style.gridArea = '2 / 1 / 3 / 2';
-            window.app.module.Callback.addEventListener(input1, 'input:numeric:range-validation');
-            grid1.appendChild(input1);
-
-            const label4 = document.createElement('label');
-            label4.classList.add('sublabel');
-            label4.id = 'panel: longitudeLabel';
-            label4.htmlFor = 'panel: longitude';
-            label4.style.gridArea = '1 / 2 / 2 / 3';
-            label4.textContent = 'Longitude:';
-            grid1.appendChild(label4);
-
-            const input2 = document.createElement('input');
-            input2.classList.add('no-spinner');
-            input2.id = 'panel: longitude';
-            input2.type = 'number';
-            input2.min = '-180';
-            input2.max = '180';
-            window.app.module.Callback.addEventListener(input2, 'input:numeric:range-validation');
-            input2.style.gridArea = '2 / 2 / 3 / 3';
-            grid1.appendChild(input2);
-
-            const label5 = document.createElement('label');
-            label5.classList.add('sublabel');
-            label5.id = 'panel: descriptionLabel';
-            label5.htmlFor = 'panel: description';
-            label5.style.gridArea = '3 / 1 / 4 / 2';
-            label5.textContent = 'Descrição:';
-            grid1.appendChild(label5);
-
-            const input3 = document.createElement('input');
-            input3.id = 'panel: description';
-            input3.type = 'text';
-            input3.style.gridArea = '4 / 1 / 5 / 3';
-            grid1.appendChild(input3);
-
-            const label6 = document.createElement('label');
-            label6.classList.add('label');
-            label6.id = 'panel: pointsToVisitLabel';
-            label6.style.gridArea = '6 / 1 / 7 / 6';
-            label6.textContent = 'Pontos a visitar:';
-            panel.appendChild(label6);
-
-            const upArrow = document.createElement('button');
-            upArrow.id = 'panel: upArrow';
-            upArrow.textContent = '▲';
-            upArrow.style.gridArea = '6 / 4 / 7 / 5';
-            upArrow.style.background = 'none';
-            upArrow.style.border = 'none';
-            upArrow.style.fontSize = '12px';
-            upArrow.style.cursor = 'pointer';
-            upArrow.style.alignSelf = 'end';
-            upArrow.style.textAlign = 'right';
-            upArrow.style.transform = 'translateY(3px)';
-            panel.appendChild(upArrow);
-
-            const downArrow = document.createElement('button');
-            downArrow.id = 'panel: downArrow';
-            downArrow.textContent = '▼';
-            downArrow.style.gridArea = '6 / 5 / 7 / 6';
-            downArrow.style.background = 'none';
-            downArrow.style.border = 'none';
-            downArrow.style.fontSize = '12px';
-            downArrow.style.cursor = 'pointer';
-            downArrow.style.alignSelf = 'end';
-            downArrow.style.textAlign = 'right';
-            downArrow.style.transform = 'translateY(3px)'
-            panel.appendChild(downArrow);
-
-            const treeView2 = document.createElement('ul');
-            treeView2.classList.add('text-list');
-            treeView2.id = 'panel: pointsToVisitList';
-            treeView2.style.gridArea = '7 / 1 / 10 / 6';
-            panel.appendChild(treeView2);
-        }
-
-
-        static rightPanel() {
-        }
-
-
+        /*-----------------------------------------------------------------------------------
+            ## MAPA ##
+        -----------------------------------------------------------------------------------*/
         static document() {
-            /*
-                O documento é composto unicamente pelo mapa provido pela lib Leaflet.
-            */
-            if (!window.L.dataSet) {
-                window.L.dataSet = {};
-            }
-
-            window.L.dataSet.basemaps = {
-                "street-light": window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-                    subdomains: 'abcd'
-                }),
-                "street-dark": window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-                    subdomains: 'abcd'
-                }),
-                "open-street": window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                }),
-                "satellite": window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 19,
-                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                })
-            };
+            const { center, zoom } = window.app.mapContext.settings.position;
+            const basemapList      = window.app.mapContext.layers.basemap;
+            const basemapSelection = window.app.mapContext.settings.basemap;
 
             const map = window.L.map('document', { 
                 zoomControl: false 
-            }).setView(window.app.mapView.center, window.app.mapView.zoom);
+            }).setView(center, zoom);
 
-            window.L.dataSet.basemaps[window.app.mapView.basemap].addTo(map);
+            basemapList[basemapSelection].addTo(map);
             window.L.control.scale().addTo(map);
 
             window.app.map = map;
         }
 
+        /*-----------------------------------------------------------------------------------
+            ## PAINEL À ESQUERDA DO MAPA ##
+
+            A organização do estilo dos componentes é agrupado nas categorias:
+            - Layout pai    : gridArea
+            - Layout interno: display, flexDirection, alignItems, justifyContent, gridTemplateRows, gridTemplateColumns, overflow etc;
+            - Dimensão      : width, height, minWidth, minHeight etc;
+            - Espaçamento   : margin, padding, gap etc; e
+            - Visual        : backgroundColor, border, boxShadow, color, fontSize etc.
+        -----------------------------------------------------------------------------------*/
+        static leftPanel() {
+            // <GRID PRINCIPAL>
+            const panel = window.document.getElementById('left-panel');
+            ['left-panel-on', 'grid'].forEach(className => {
+                panel.classList.add(className);
+            });
+            Object.assign(panel.style, { gridTemplateRows: '26px 22px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 1fr)', gridTemplateColumns: 'minmax(0px, 1fr)'
+            });
+
+            // TÍTULO
+            this.createTitle('icon+text+line', {
+                gridArea: '1 / 1 / 2 / 2',
+                iconPath: 'images/route.svg', 
+                textContent: 'webRotas'                
+            }, panel)
+
+            // ROTAS - LABEL E CONTROLES
+            const routeListTitleGrid = this.createElement('div', {
+                classList: ['grid'],
+                style: { gridArea: '2 / 1 / 3 / 2', gridTemplateRows: '22px', gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px 18px', padding: '0px', columnGap: '5px', overflow: 'visible' }
+            }, panel);
+
+                // <SUB-GRID>
+                this.createElement('label', {
+                    classList: ['title-label'],
+                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    textContent: 'Rotas:'
+                }, routeListTitleGrid);
+
+                this.createElement('img', {
+                    classList: ['title-button'],
+                    id: 'routeListEditModeBtn',
+                    src: 'images/Edit_32.png',
+                    style: { gridArea: '1 / 2 / 2 / 3', width: '18px', height: '18px' },
+                    eventListeners: {
+                        click: (event) => onRouteListChange(event)
+                    },
+                    disabled: true,
+                    dataset: { value: 'off', tooltip: 'Habilita modo de edição' }
+                }, routeListTitleGrid);
+
+                this.createElement('img', {
+                    classList: ['title-button', 'disabled'],
+                    id: 'routeListConfirmBtn',
+                    src: 'images/Ok_32Green.png',
+                    style: { gridArea: '1 / 3 / 2 / 4', width: '18px', height: '18px' },
+                    eventListeners: {
+                        click: (event) => onRouteListChange(event)
+                    },
+                    dataset: { tooltip: 'Habilita modo de edição' }
+                }, routeListTitleGrid);
+
+                this.createElement('img', {
+                    classList: ['title-button', 'disabled'],
+                    id: 'routeListCancelBtn',
+                    src: 'images/Delete_32Red.png',
+                    style: { gridArea: '1 / 4 / 2 / 5', width: '18px', height: '18px' },
+                    eventListeners: {
+                        click: (event) => onRouteListChange(event)
+                    },
+                    dataset: { tooltip: 'Habilita modo de edição' }
+                }, routeListTitleGrid);
+                // </SUB-GRID>
+        
+            // ROTAS - ÁRVORE
+            this.createElement('ul', {
+                classList: ['text-list'],
+                id: 'routeList',
+                style: { gridArea: '3 / 1 / 4 / 2' }
+            }, panel);
+        
+            // PONTO INICIAL - LABEL E CONTROLES
+            const initialPointTitleGrid = this.createElement('div', {
+                classList: ['grid'],
+                style: { gridArea: '4 / 1 / 5 / 2', gridTemplateRows: '22px', gridTemplateColumns: 'minmax(0px, 1fr) 18px', padding: '0px', overflow: 'visible' }
+            }, panel);
+
+                // <SUB-GRID>
+                this.createElement('label', {
+                    classList: ['title-label'],
+                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    textContent: 'Ponto inicial:'
+                }, initialPointTitleGrid);
+            
+                this.createElement('img', {
+                    classList: ['title-button', 'disabled'],
+                    id: 'initialPointButton',
+                    src: 'images/pin_18.png',
+                    style: { gridArea: '1 / 2 / 2 / 3' }
+                }, initialPointTitleGrid);
+                // </SUB-GRID>
+        
+            // PONTO INICIAL - LATITUDE, LONGITUDE E DESCRIÇÃO
+            const initialPointGrid = this.createElement('div', {
+                classList: ['grid', 'grid-border'],
+                style: { gridArea: '5 / 1 / 6 / 2', gridTemplateRows: '17px 22px 17px 22px', gridTemplateColumns: 'minmax(0px, 1fr) minmax(0px, 1fr)', padding: '10px' }
+            });
+            panel.appendChild(initialPointGrid);
+
+                // <SUB-GRID>
+                this.createElement('label', {
+                    classList: ['sublabel'],
+                    htmlFor: 'initialPointLatitude',
+                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    textContent: 'Latitude:'
+                }, initialPointGrid);
+            
+                const initialPointLatitude = this.createElement('input', {
+                    classList: ['no-spinner'],
+                    id: 'initialPointLatitude',
+                    type: 'number',
+                    min: '-90',
+                    max: '90',
+                    style: { gridArea: '2 / 1 / 3 / 2' },
+                    eventListeners: {
+                        input: () => window.app.modules.Callback.addEventListener(initialPointLatitude, 'input:numeric:range-validation')
+                    },
+                    disabled: true
+                }, initialPointGrid);
+            
+                this.createElement('label', {
+                    classList: ['sublabel'],
+                    htmlFor: 'initialPointLongitude',
+                    style: { gridArea: '1 / 2 / 2 / 3' },
+                    textContent: 'Longitude:'
+                }, initialPointGrid);
+            
+                const initialPointLongitude = this.createElement('input', {
+                    classList: ['no-spinner'],
+                    id: 'initialPointLongitude',
+                    type: 'number',
+                    min: '-180',
+                    max: '180',
+                    style: { gridArea: '2 / 2 / 3 / 3' },
+                    eventListeners: {
+                        input: () => window.app.modules.Callback.addEventListener(initialPointLongitude, 'input:numeric:range-validation')
+                    },
+                    disabled: true
+                }, initialPointGrid);
+            
+                this.createElement('label', {
+                    classList: ['sublabel'],
+                    htmlFor: 'initialPointDescription',
+                    style: { gridArea: '3 / 1 / 4 / 2' },
+                    textContent: 'Descrição:'
+                }, initialPointGrid);
+            
+                this.createElement('input', {
+                    id: 'initialPointDescription',
+                    type: 'text',
+                    style: { gridArea: '4 / 1 / 5 / 3' },
+                    disabled: true
+                }, initialPointGrid);
+                // </SUB-GRID>
+
+            // PONTO A VISITAR - LABEL E CONTROLES
+            const pointsToVisitTitleGrid = this.createElement('div', {
+                classList: ['grid'],
+                style: { gridArea: '6 / 1 / 7 / 2', display: 'grid', gridTemplateRows: '22px', gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px', padding: '0px', columnGap: '5px', overflow: 'visible' }
+            }, panel);
+
+                // <SUB-GRID>        
+                this.createElement('label', {
+                    classList: ['title-label'],
+                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    textContent: 'Pontos a visitar:'
+                }, pointsToVisitTitleGrid);
+            
+                this.createElement('button', {
+                    classList: ['title-button', 'disabled'],
+                    id: 'routeListMoveUpBtn',
+                    textContent: '▲',
+                    style: { gridArea: '1 / 2 / 2 / 3' },
+                    eventListeners: {
+                        click: (event) => onRouteListChange(event)
+                    }
+                }, pointsToVisitTitleGrid);
+            
+                this.createElement('button', {
+                    classList: ['title-button', 'disabled'],
+                    id: 'routeListMoveDownBtn',
+                    textContent: '▼',
+                    style: { gridArea: '1 / 3 / 2 / 4' },
+                    eventListeners: {
+                        click: (event) => onRouteListChange(event)
+                    }
+                }, pointsToVisitTitleGrid);
+                // </SUB-GRID>
+        
+            this.createElement('ul', {
+                classList: ['text-list'],
+                id: 'pointsToVisit',
+                style: { gridArea: '7 / 1 / 8 / 2' }
+            }, panel);
+            // </GRID PRINCIPAL>
+        }        
+
+        /*-----------------------------------------------------------------------------------
+            ## TOOLBAR ##
+        -----------------------------------------------------------------------------------*/
         static toolbar() {
             let footerContainer = document.getElementById('toolbar');
             footerContainer.style.position = 'absolute';
@@ -246,7 +239,7 @@
             footerContainer.style.height = '34px';
             footerContainer.style.backgroundColor = 'rgb(240, 240, 240)';
             footerContainer.style.display = 'grid';
-            footerContainer.style.width = 'calc(100% - 10px)';
+            footerContainer.style.width = '100%';
             footerContainer.style.gridTemplateColumns = '22px 22px 22px minmax(0, 1fr) 22px 22px 22px 22px';
             footerContainer.style.gridTemplateRows = '1fr';
             footerContainer.style.columnGap = '5px';
@@ -260,7 +253,7 @@
             img1.style.height = '17px';
             img1.style.cursor = 'pointer';
             Tooltip.bindBasicTooltip(img1, 'Visibilidade do painel de controle');
-            img1.onclick = window.app.module.Callback.toolbar_routeButtonClick;
+            img1.onclick = window.app.modules.Callback.toolbar_routeButtonClick;
 
             const img3 = document.createElement('img');
             img3.id = 'footer: logo';
@@ -284,7 +277,15 @@
             img3a.style.cursor = 'pointer';
             Tooltip.bindBasicTooltip(img3a, 'Compartilhar localização');
             img3a.onclick = () => { 
-                window.app.location.status = !window.app.location.status; 
+                const currentStatus = window.app.mapContext.settings.geolocation.status;
+                if (currentStatus === 'on') {
+                    window.app.mapContext.settings.geolocation.status = 'off';
+                    img3a.src = window.app.mapContext.settings.geolocation.icon.off;
+                } else {
+                    window.app.mapContext.settings.geolocation.status = 'on';
+                    img3a.src = window.app.mapContext.settings.geolocation.icon.on;
+                }
+
                 new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'warning', []); 
             };
 
@@ -296,7 +297,15 @@
             img3b.style.cursor = 'pointer';
             Tooltip.bindBasicTooltip(img3b, 'Orientação do mapa');
             img3b.onclick = () => { 
-                window.app.orientation.status = !window.app.orientation.status; 
+                const currentStatus = window.app.mapContext.settings.orientation.status;
+                if (currentStatus === 'north') {
+                    window.app.mapContext.settings.orientation.status = 'car-heading';
+                    img3b.src = window.app.mapContext.settings.orientation.icon.off;
+                } else {
+                    window.app.mapContext.settings.orientation.status = 'north';
+                    img3b.src = window.app.mapContext.settings.orientation.icon.on;
+                }
+
                 new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'error', [], 800); 
             };
 
@@ -321,7 +330,7 @@
             img5.style.cursor = 'pointer';
             Tooltip.bindBasicTooltip(img5, 'Basemap');
             img5.onclick = () => { 
-                window.app.map.setView(window.app.mapView.center, window.app.mapView.zoom);
+                window.app.map.setView(window.app.mapContext.settings.position.center, window.app.mapContext.settings.position.zoom);
                 // this.createBasemapSelector() 
             };
 
@@ -336,6 +345,104 @@
             footerContainer.appendChild(img5);
         }
 
+        /*-----------------------------------------------------------------------------------
+            ## OUTROS ELEMENTOS CRIADOS SOB DEMANDA ##
+        -----------------------------------------------------------------------------------*/
+        static createElement(tag, options = {}, parentElement = null) {
+            const el = document.createElement(tag);
+          
+            Object.keys(options).forEach(key => {
+              switch (key) {
+                case 'classList':
+                    options.classList.forEach(cls => el.classList.add(cls));
+                    break;
+
+                case 'style':
+                    Object.assign(el.style, options.style);
+                    break;
+
+                case 'dataset':
+                    Object.keys(options.dataset).forEach(dataKey => {
+                        switch (dataKey) {
+                            case 'tooltip':
+                                Tooltip.bindBasicTooltip(el, options.dataset.tooltip);
+                                break;
+
+                            default:
+                                el.dataset[dataKey] = options.dataset[dataKey];
+                        }                        
+                    });
+                    break;
+
+                case 'eventListeners':
+                    Object.keys(options.eventListeners).forEach(eventType => {
+                        el.addEventListener(eventType, options.eventListeners[eventType]);
+                    });
+                    break;
+
+                default:
+                    el[key] = options[key];
+              }
+            });
+
+            if (parentElement) {
+                parentElement.appendChild(el);
+            }
+          
+            return el;
+        }
+
+        /*---------------------------------------------------------------------------------*/
+        static createTitle(style, options, parentElement = null) {
+            switch (style) {
+                case 'icon+text+line':
+                    const { gridArea, iconPath, textContent } = options;
+                    
+                    const title = this.createElement('div',  { 
+                        classList: ['topdiv-container'], 
+                        style: { gridArea: gridArea, display: 'flex', flexDirection: 'column', height: '26px', margin: '0', padding: '0', backgroundColor: 'rgb(191, 191, 191)' } 
+                    }, parentElement);
+
+                    const content = this.createElement('div',  { 
+                        style: { display: 'flex', alignItems: 'center', height: '23px', paddingLeft: '4px', gap: '6px' } 
+                    }, title);
+
+                    const img = this.createElement('img',  { 
+                        width: 18, 
+                        height: 18, 
+                        src: iconPath
+                    }, content);
+
+                    const txt = this.createElement('span', { 
+                        textContent: textContent 
+                    }, content);
+
+                    const line = this.createElement('div',  { 
+                        style: { height: '3px', width: '100%', backgroundColor: 'rgb(0,0,0)' } 
+                    }, title);
+
+                    return title;
+
+                default:
+                    // IMPLEMENTAR OUTROS ESTILOS À MEDIDA QUE FOR NECESSÁRIO
+                    throw Error('Unexpected title style')
+            }
+        }
+
+        /*---------------------------------------------------------------------------------*/
+        static createTextList(textList, textResolver, eventListeners, parentElement) {
+            parentElement.childNodes.forEach(element => element.remove())
+
+            textList.forEach((element, index) => {
+                this.createElement('li', {
+                    textContent: textResolver(element, index),
+                    style: { height: '22px' },
+                    eventListeners: eventListeners
+                }, parentElement);
+            })
+        }
+
+        /*---------------------------------------------------------------------------------*/
         static createBasemapSelector() {
             let tooltip = document.querySelector('.tooltip');
             if (tooltip) {
@@ -400,7 +507,7 @@
             }
         }
 
-
+        /*---------------------------------------------------------------------------------*/
         static colorbar() {
             const svgContainer = window.document.getElementById("colorbar");
             if (!svgContainer) return;
@@ -411,7 +518,6 @@
             // Insere o novo SVG
             svgContainer.appendChild(generateScaleSVG(globalMinElevation, globalMaxElevation));
         }
-
 
         /*---------------------------------------------------------------------------------*/
         static uuid() {
@@ -425,5 +531,5 @@
         }
     }
 
-    window.app.module.CreateComponent = CreateComponent;
+    window.app.modules.CreateComponent = CreateComponent;
 })()

@@ -20,49 +20,52 @@
             let routeInfo, routeIndex, returnedData;
 
             switch (operationType) {
-                case 'initialPlot':
-                    routeIndex = args[0];
-                    routeInfo  = window.app.routeList[routeIndex];
+                case 'startup':
+                    routeInfo  = window.app.analysisContext.routeList[0];                    
+            
+                    window.app.mapContext.settings.colormap.range = window.app.modules.Util.Elevation.range(routeInfo);
+                    //window.app.modules.Util.GeoLocation.routeMidPoint(routeIndex);
 
-                    this.create('boundingBox', window.app.boundingBox);
-                    this.create('locationLimits', window.app.location.limits);
-                    this.create('locationUrbanAreas', window.app.location.urbanAreas);
-                    this.create('locationUrbanCommunities', window.app.location.urbanCommunities);
-                    this.create('routePath',     routeInfo.routePath);
-                    this.create('routeMidpoint', routeInfo.routeMidpoint);
-                    this.create('routeOrigin',   routeInfo.routeOrigin);
-                    this.create('waypoints',     routeInfo.waypoints);
-                    this.setView('zoom',         routeInfo.waypoints)
+                    this.create('boundingBox', window.app.analysisContext.boundingBox);
+                    this.create('locationLimits', window.app.analysisContext.location.limits);
+                    this.create('locationUrbanAreas', window.app.analysisContext.location.urbanAreas);
+                    this.create('locationUrbanCommunities', window.app.analysisContext.location.urbanCommunities);
+                    this.create('routePath', routeInfo.paths);
+                    this.create('routeMidpoint', routeInfo.midpoint);
+                    this.create('routeOrigin', routeInfo.origin);
+                    this.create('waypoints', routeInfo.waypoints);
+                    this.setView('zoom', routeInfo.waypoints)
                     break;
 
                 case 'customRoutePlot':
                     routeIndex = args[0];
-                    routeInfo  = window.app.routeList[routeIndex];
+                    routeInfo  = window.app.analysisContext.routeList[routeIndex];
 
                     this.remove('routeMidpoint');
                     this.remove('routeOrigin');
                     this.remove('waypoints');
 
-                    this.update('routePath',     routeInfo.routePath);
-                    this.create('routeMidpoint', routeInfo.routeMidPoint);
-                    this.create('routeOrigin',   routeInfo.routeOrigin);
-                    this.create('waypoints',     routeInfo.waypoints);
-                    this.setView('zoom',         routeInfo.waypoints)
+                    this.update('routePath', routeInfo.paths);
+                    this.create('routeMidpoint', routeInfo.midPoint);
+                    this.create('routeOrigin', routeInfo.origin);
+                    this.create('waypoints', routeInfo.waypoints);
+                    this.setView('zoom', routeInfo.waypoints)
                     break;
 
                 case 'updateCurrentLeg':
                     returnedData = args[0];
 
-                    this.update('currentLeg',      returnedData);
+                    this.update('currentLeg', returnedData);
                     this.update('currentPosition', returnedData);
-                    this.setView('center',         returnedData)
+                    this.setView('center', returnedData)
                     break;
             }
         }
 
-
         /*---------------------------------------------------------------------------------*/
         static create(plotTag, geoData) {
+            const map = window.app.map;
+
             if (!geoData) {
                 console.warn(`Unknown data encountered while creating layer: ${plotTag}`);
                 return;
@@ -74,8 +77,8 @@
 
             let handle, type, options, coords;
             
-            type    = window.app.plot[plotTag].type;
-            options = window.app.plot[plotTag].options;
+            type    = window.app.mapContext.layers[plotTag].type;
+            options = window.app.mapContext.layers[plotTag].options;
 
             switch (type) {
                 case 'marker':
@@ -97,13 +100,13 @@
                                     iconAnchor: options.iconAnchor
                                 });
                                 
-                                marker = window.L.marker(coords, { icon }).addTo(window.app.map);
+                                marker = window.L.marker(coords, { icon }).addTo(map);
                                 break;
 
                             case 'customPinIcon':
-                                color  = window.app.module.Util.Image.pinColor(elevation, window.app.mapView.colormap);
-                                icon   = window.app.module.Util.Image.customPinIcon(id, color);
-                                marker = window.L.marker(coords, { icon }).addTo(window.app.map);
+                                color  = window.app.modules.Util.Image.pinColor(elevation, window.app.mapContext.settings.colormap.scale);
+                                icon   = window.app.modules.Util.Image.customPinIcon(id, color);
+                                marker = window.L.marker(coords, { icon }).addTo(map);
                                 break;
 
                             default:
@@ -112,25 +115,25 @@
                                     tooltipAnchor: [0, 0]
                                 });
 
-                                marker = window.L.marker(coords, { icon }).addTo(window.app.map);
+                                marker = window.L.marker(coords, { icon }).addTo(map);
                                 break;
                         }
 
                         if (options.iconTooltip.status) {
                             let textResolver = options.iconTooltip.textResolver;
                             if (textResolver === 'default' || typeof textResolver !== 'function') {
-                                textResolver = window.app.mapView.tooltip.textResolver;
+                                textResolver = window.app.mapContext.settings.tooltip.textResolver;
                             }
                             const text = textResolver(element);
                             
                             let offsetResolver = options.iconTooltip.offsetResolver;
                             if (offsetResolver === 'default' || typeof offsetResolver !== 'function') {
-                              offsetResolver = window.app.mapView.tooltip.offsetResolver;
+                              offsetResolver = window.app.mapContext.settings.tooltip.offsetResolver;
                             }
 
-                            const direction = window.app.mapView.tooltip.direction;
+                            const direction = window.app.mapContext.settings.tooltip.direction;
                             
-                            window.app.plot.tooltip.bindLeafletTooltip(window.app.map, marker, coords, text, direction, offsetResolver);
+                            window.app.modules.Tooltip.bindLeafletTooltip(map, marker, coords, text, direction, offsetResolver);
                         } 
                         
                         handle.push(marker);
@@ -139,12 +142,12 @@
 
                 case 'polyline':
                     coords = geoData;
-                    handle = window.L.polyline(coords, options).addTo(window.app.map);
+                    handle = window.L.polyline(coords, options).addTo(map);
                     break;
 
                 case 'polygon':
                     coords = geoData;
-                    handle = window.L.polygon(coords,  options).addTo(window.app.map);
+                    handle = window.L.polygon(coords,  options).addTo(map);
                     break;
 
                 default:
@@ -152,15 +155,14 @@
                     return;
             }
 
-            window.app.plot[plotTag].handle = handle;
-        }
-        
+            window.app.mapContext.layers[plotTag].handle = handle;
+        }        
         
         /*---------------------------------------------------------------------------------*/
         static update(plotTag, coords) {
             let plotHandle, plotType;
             
-            plotHandle = window.app.plot[plotTag].handle;
+            plotHandle = window.app.mapContext.layers[plotTag].handle;
             if (!plotHandle){ 
                 this.create(plotTag, coords)
                 return;
@@ -183,12 +185,11 @@
             }
         }
 
-
         /*---------------------------------------------------------------------------------*/
         static remove(plotTag) {
             let plotHandle;
             
-            plotHandle = window.app.plot[plotTag].handle;
+            plotHandle = window.app.mapContext.layers[plotTag].handle;
             if (!plotHandle){ 
                 console.warn(`Unexpected Leaflet layer ${plotTag}`);
                 return;
@@ -196,13 +197,12 @@
 
             plotHandle.forEach(element => element.remove());
         }
-
         
         /*---------------------------------------------------------------------------------*/
         static changeVisibility(plotTag) {
             let plotHandle, plotType, isVisible;            
             
-            plotHandle = window.app.plot[plotTag].handle;
+            plotHandle = window.app.mapContext.layers[plotTag].handle;
             if (!plotHandle){ 
                 console.warn(`Unexpected Leaflet layer ${plotTag}`);
                 return;
@@ -227,7 +227,6 @@
             }
         }
 
-
         /*---------------------------------------------------------------------------------*/
         static checkPlotType(plotHandle) {
             if (plotHandle instanceof window.L.Marker) {
@@ -241,9 +240,10 @@
             }
         }
 
-
         /*---------------------------------------------------------------------------------*/
         static setView(operationType, geoData) {
+            const map = window.app.map;
+
             switch (operationType) {
                 case 'zoom':
                     if (!Array.isArray(geoData)) {
@@ -253,17 +253,17 @@
                     let coords = [];
                     geoData.forEach(element => coords.push([element.lat, element.lng]));
 
-                    window.app.map.fitBounds(coords);
-                    window.app.mapView.center = window.app.map.getCenter();
-                    window.app.mapView.zoom   = window.app.map.getZoom();
+                    map.fitBounds(coords);
+                    window.app.mapContext.settings.position.center = map.getCenter();
+                    window.app.mapContext.settings.position.zoom   = map.getZoom();
                     break;
 
                 case 'center':
-                    window.app.map.setView(geoData);
+                    map.setView(geoData);
                     break;
             }
         }
     }
 
-    window.app.module.Plot = Plot;
+    window.app.modules.Plot = Plot;
 })()
