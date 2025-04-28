@@ -134,7 +134,7 @@ def FiltrarRegiaoComOsmosis():
     
     
 ################################################################################
-def AtivaServidorOSMR(regioes):
+def AtivaServidorOSMR():
     # startserver filtro 8001 osmr_server8001
 
     wr.UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
@@ -169,7 +169,6 @@ def GerarIndicesExecutarOSRMServer():
     subprocess.run(["podman", "run", "--rm", "--name", f"temp1{wr.UserData.nome}", "-m", "32g", "-t", "-v", f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO_CONTAINER}", "localhost/osmr_webrota", "osrm-extract", "-p", "/opt/car.lua", f"/data/{DIRETORIO_REGIAO_CONTAINER}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)   
     subprocess.run(["podman", "run", "--rm", "--name", f"temp2{wr.UserData.nome}", "-m", "32g", "-t", "-v", f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO_CONTAINER}", "localhost/osmr_webrota", "osrm-partition", f"/data/{DIRETORIO_REGIAO_CONTAINER}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)   
     subprocess.run(["podman", "run", "--rm", "--name", f"temp3{wr.UserData.nome}", "-m", "32g", "-t", "-v", f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO_CONTAINER}", "localhost/osmr_webrota", "osrm-customize", f"/data/{DIRETORIO_REGIAO_CONTAINER}/filtro-latest.osm.pbf"], stdout=open(logok, "a"), stderr=subprocess.STDOUT)   
-    
     AtivaServidorOSMR()
     return
 ################################################################################
@@ -435,8 +434,7 @@ def remover_arquivos_osmr():
     wr.wLog("Removendo arquivos osmozis e osmr", level="debug")
 
     caminhos = [
-        f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}*",
-        f"../../resources/OSMR/data/TempData/filtro_{wr.UserData.nome}",   
+        f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}*" 
     ]
 
     for caminho in caminhos:
@@ -451,9 +449,9 @@ def remover_arquivos_osmr():
             except Exception as e:
                 wr.wLog(f"Erro ao remover {item}: {e}", level="error")
 ################################################################################
-def limpar_cache_files_osmr():
+def limpar_cache_files_osmr(regioes):
     try:
-
+        cb.cCacheBoundingBox.delete(regioes) 
         wr.wLog("Apagando arquivo de log...",level="debug")
         log_file = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
         try:
@@ -513,19 +511,22 @@ def PreparaServidorRoteamento(regioes):
                 regioes,
                 arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{wr.UserData.nome}.poly",
             )
+            # -------------- parei aqui -----------------------------
             wr.wLog(f"Limpando cache dinamico de rotas para o usuário {wr.UserData.nome}")
             wr.route_cache.clear_user(wr.UserData.nome)
             wr.wLog("FiltrarRegiãoComOsmosis")
-            FiltrarRegiaoComOsmosis(regioes)
+            FiltrarRegiaoComOsmosis()
             wr.wLog("GerarIndicesExecutarOSRMServer")
-            GerarIndicesExecutarOSRMServer(regioes)
+            GerarIndicesExecutarOSRMServer()
+            cb.cCacheBoundingBox.new(regioes,f"filtro_{wr.UserData.nome}") 
         else:
             wr.wLog("Arquivo exclusoes nao modificado, nao e necessario executar osmosis")
-            AtivaServidorOSMR(regioes)
+            AtivaServidorOSMR()
         if VerificarOsrmAtivo():
-            roteamento_ok=True 
+            roteamento_ok=True
+            
         else:   
             wr.wLog("Erro de cache encontrado reiniciando geração dos mapas")
-            limpar_cache_files_osmr() 
+            limpar_cache_files_osmr(regioes) 
 
 ################################################################################
