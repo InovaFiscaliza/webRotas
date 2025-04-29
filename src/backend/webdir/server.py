@@ -28,6 +28,7 @@ from concurrent.futures import ThreadPoolExecutor
 import webRota as wr
 import server_env as se
 import routing_servers_interface as rsi
+import CacheBoundingBox as cb
 
 ################################################################################
 """ Variáveis globais """
@@ -286,7 +287,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                                                                                 pontosvisita,
                                                                                 pontoinicial,
                                                                                 recalcularrota)
-                
+                cb.cCacheBoundingBox._schedule_save()
                 # Retorna uma resposta de confirmação
                 wr.wLog(
                     json.dumps(
@@ -311,7 +312,8 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
             # ---------------------------------------------------------------------------------------------
             case _:
                 return jsonify({"error": f"Tipo de requisição parcialmente definido. Favor atualizar webrota para processamento da requisição `{request_type}`"}), 400
-
+        
+        cb.cCacheBoundingBox._schedule_save()
         # Retorna uma resposta de confirmação
         return jsonify(
             {

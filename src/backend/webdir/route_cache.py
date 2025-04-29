@@ -1,3 +1,6 @@
+
+import hashlib
+import json
 from decimal import Decimal, ROUND_HALF_UP
  
 ################################################################################
@@ -7,6 +10,12 @@ class RouteCache:
         self.cache = {}  # Agora será um dict de dicts: {user_id: {rota: valor}}
         self.precision = precision
 
+    def _hash_bbox(self, regioes, tamanho=12):
+        regioes_json = json.dumps(regioes, sort_keys=True)
+        hash_obj = hashlib.sha256(regioes_json.encode('utf-8'))
+        hash_completo = hash_obj.hexdigest()
+        return hash_completo[:tamanho]
+    
     def _normalize(self, lat, lon):
         q = Decimal('1.' + '0' * self.precision)
         lat = float(Decimal(str(lat)).quantize(q, rounding=ROUND_HALF_UP))
@@ -16,20 +25,23 @@ class RouteCache:
     def _make_key(self, start_lat, start_lon, end_lat, end_lon):
         return (self._normalize(start_lat, start_lon), self._normalize(end_lat, end_lon))
 
-    def get(self, user_id, start_lat, start_lon, end_lat, end_lon):
+    def get(self, regioes, start_lat, start_lon, end_lat, end_lon):
+        chave = self._hash_bbox(regioes)
         key = self._make_key(start_lat, start_lon, end_lat, end_lon)
-        return self.cache.get(user_id, {}).get(key)
+        return self.cache.get(chave, {}).get(key)
 
-    def set(self, user_id, start_lat, start_lon, end_lat, end_lon, value):
+    def set(self, regioes, start_lat, start_lon, end_lat, end_lon, value):
+        chave = self._hash_bbox(regioes)
         key = self._make_key(start_lat, start_lon, end_lat, end_lon)
-        if user_id not in self.cache:
-            self.cache[user_id] = {}
-        self.cache[user_id][key] = value
+        if chave not in self.cache:
+            self.cache[chave] = {}
+        self.cache[chave][key] = value
 
-    def clear_user(self, user_id):
+    def clear_regioes(self, regioes):
         """Limpa o cache de um usuário específico"""
-        if user_id in self.cache:
-            del self.cache[user_id]
+        chave = self._hash_bbox(regioes)
+        if chave in self.cache:
+            del self.cache[chave]
 
     def clear_all(self):
         """Limpa todo o cache"""
