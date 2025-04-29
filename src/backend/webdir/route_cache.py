@@ -38,10 +38,15 @@ class RouteCache:
         self.cache[chave][key] = value
 
     def clear_regioes(self, regioes):
-        """Limpa o cache de um usuário específico"""
+        """Limpa o cache de uma regiao específica"""
         chave = self._hash_bbox(regioes)
         if chave in self.cache:
             del self.cache[chave]
+    
+    def clear_regioes_pela_chave(self, chave):
+        """Limpa o cache de uma regiao específica"""
+        if chave in self.cache:
+            del self.cache[chave]        
 
     def clear_all(self):
         """Limpa todo o cache"""
