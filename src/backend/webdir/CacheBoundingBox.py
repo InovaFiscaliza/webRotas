@@ -156,7 +156,7 @@ class CacheBoundingBox:
                 if lastreq < limite:
                     chaves_para_remover.append((chave, lastreq))
             except Exception as e:
-                wr.wLog(f"Erro ao analisar data de {chave}: {e}")
+                print(f"Erro ao analisar data de {chave}: {e}")
 
         # Ordena por lastrequest mais antigo primeiro
         chaves_para_remover.sort(key=lambda x: x[1])
