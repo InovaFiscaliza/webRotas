@@ -3,11 +3,14 @@ import json
 import os
 import shutil
 import gzip
-import pickle
+import ast
 import threading
 from pathlib import Path
 import project_folders as pf
+import pickle
 import route_cache as rc
+import webRota as wr
+
 
 class CacheBoundingBox:
     def __init__(self):
@@ -15,7 +18,7 @@ class CacheBoundingBox:
         self.route_cache = rc.RouteCache()  
         self.cache = {}
         self.ultimaregiao = None
-        self.cache_file = Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.json.gz"
+        self.cache_file = Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.bin.gz"
         self._save_timer = None
         self._debounce_delay = 10  # segundos
         self._lock = threading.Lock()
@@ -92,23 +95,25 @@ class CacheBoundingBox:
             self._save_timer.daemon = True
             self._save_timer.start()
 
+
     def _save_to_disk_sync(self):
         data = {
-            'route_cache': self.route_cache.cache,
+            'route_cache': self.route_cache,
             'cache': self.cache
         }
-        with gzip.open(self.cache_file, 'wt', encoding='utf-8') as f:
-             json.dump(data, f, ensure_ascii=False, indent=4)
+        with gzip.open(self.cache_file, 'wb') as f:
+             pickle.dump(data, f)
+             # f.flush()  # força gravação
         
     def _load_from_disk_sync(self):
         if not self.cache_file.exists():
             self.route_cache.cache = {}
             self.cache = {}
             return
-        with gzip.open(self.cache_file, 'rt', encoding='utf-8') as f:
-            data = json.load(f)
-            self.route_cache.cache = data.get('route_cache', {})
-            self.cache = data.get('cache', {})
+        with gzip.open(self.cache_file, 'rb') as f:
+            data = pickle.load(f)
+        self.route_cache = data.get('route_cache', {})
+        self.cache = data.get('cache', {})
 
 # Instância global
 cCacheBoundingBox = CacheBoundingBox()
