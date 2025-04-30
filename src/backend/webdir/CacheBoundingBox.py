@@ -188,16 +188,18 @@ class CacheBoundingBox:
         xlsx_path = caminho_zip.with_suffix('.xlsx')
         wb = Workbook()
         ws = wb.active
-        ws.title = "Cache"
-
+        ws.title = "Cache Bounding Box"
+        
         # Cabeçalhos
-        ws.append(['Chave', 'Diretório', 'Criado em', 'Último Acesso'])
+        ws.append(['Chave', 'Diretório','Num Rotas Cached', 'Criado em', 'Último Acesso'])
 
         # Conteúdo do cache
         for chave, dados in self.cache.items():
+            numrotascached = len(self.route_cache.cache.get(chave, {}))
             ws.append([
                 chave,
                 dados.get('diretorio', ''),
+                numrotascached,
                 dados.get('created', ''),
                 dados.get('lastrequest', '')
             ])
