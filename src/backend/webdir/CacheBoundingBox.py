@@ -191,7 +191,7 @@ class CacheBoundingBox:
         ws.title = "Cache Bounding Box"
         
         # Cabeçalhos
-        ws.append(['Chave', 'Diretório','Num Rotas Cached', 'Criado em', 'Último Acesso'])
+        ws.append(['Chave', 'Diretório','Num Rotas Cache', 'Criado em', 'Último Acesso'])
 
         # Conteúdo do cache
         for chave, dados in self.cache.items():
