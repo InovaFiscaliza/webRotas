@@ -1,4 +1,4 @@
-localStorage.clear()
+// localStorage.clear()
 
 window.app.server.url = 'http://127.0.0.1:5000';
 window.app.server.osrmPort = 50000;

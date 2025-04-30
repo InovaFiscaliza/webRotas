@@ -17,7 +17,8 @@ window.app = {
     modules: {
         Callback: null,
         Communication: null,
-        CreateComponent: null,            
+        CreateComponent: null,
+        Layout: null,
         Plot: null,
         Tooltip: new Tooltip,
         Util: null
@@ -247,7 +248,7 @@ async function appStartup() {
         await loadScript('js/Callback.js');
         await loadScript('js/Communication.js');
         await loadScript('js/CreateComponent.js');
-        //await loadScript('js/Layout.js');
+        await loadScript('js/Layout.js');
         await loadScript('js/Plot.js');
         await loadScript('js/Util.js');
 
@@ -258,7 +259,7 @@ async function appStartup() {
             window.app.modules.CreateComponent.document();
             window.app.modules.CreateComponent.toolbar();
 
-            //window.app.modules.Layout.controller('startup');
+            window.app.modules.Layout.controller('startup');
             window.app.modules.Plot.controller('startup')
 
             if (!!window.app.server.url) {

@@ -27,17 +27,16 @@ class Tooltip {
         if (!target.dataset.tooltipId) {
             target.dataset.tooltipId    = Tooltip.uuid();
             target.dataset.tooltipState = 'hidden';
+            target.dataset.tooltipText  = text;
         }
 
-        const id = target.dataset.tooltipId;
-
-        target.addEventListener('mouseenter', () => tooltip = basicTooltipShow(tooltip, target, id, text, defaultPosition));
+        target.addEventListener('mouseenter', () => tooltip = basicTooltipShow(tooltip, target, defaultPosition));
         target.addEventListener('mouseleave', () => basicTooltipHide(tooltip, target));
 
         /*-----------------------------------------------------------------------------*/
-        function basicTooltipShow(tooltip, target, id, text, defaultPosition) {
+        function basicTooltipShow(tooltip, target, defaultPosition) {
             if (!tooltip || target.dataset.tooltipState === 'hidden') {
-                tooltip = basicTooltipRender(target, id, text, defaultPosition);
+                tooltip = basicTooltipRender(target, defaultPosition);
                 target.dataset.tooltipState = 'hover';
             }
 
@@ -55,13 +54,13 @@ class Tooltip {
         }
 
         /*-----------------------------------------------------------------------------*/
-        function basicTooltipRender(target, id, text, defaultPosition) {
+        function basicTooltipRender(target, defaultPosition) {
             let tooltip, tooltipArrow;
     
             tooltip = window.document.createElement('div');
-            tooltip.id = id;
+            tooltip.id = target.dataset.tooltipId;
             tooltip.className = Tooltip.basicTooltipClasses[0];
-            tooltip.innerHTML = text;
+            tooltip.innerHTML = target.dataset.tooltipText;;
     
             tooltipArrow = window.document.createElement('div');
             tooltipArrow.className = Tooltip.basicTooltipClasses[1];

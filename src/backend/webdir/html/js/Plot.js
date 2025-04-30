@@ -37,16 +37,15 @@
                     this.setView('zoom', routeInfo.waypoints)
                     break;
 
-                case 'customRoutePlot':
-                    routeIndex = args[0];
-                    routeInfo  = window.app.analysisContext.routeList[routeIndex];
+                case 'update':
+                    routeInfo = args[0];
 
                     this.remove('routeMidpoint');
                     this.remove('routeOrigin');
                     this.remove('waypoints');
 
                     this.update('routePath', routeInfo.paths);
-                    this.create('routeMidpoint', routeInfo.midPoint);
+                    this.create('routeMidpoint', routeInfo.midpoint);
                     this.create('routeOrigin', routeInfo.origin);
                     this.create('waypoints', routeInfo.waypoints);
                     this.setView('zoom', routeInfo.waypoints)

@@ -10,45 +10,48 @@
             }
         }
 
-
-        /* ## HTML LISTENERS ## */
-        static addEventListener(component, eventName, ...args) {
-            switch (eventName) {
-                case 'input:numeric:range-validation':
-                    component.addEventListener('input', (event) => {                                
-                        const value = component.valueAsNumber;
-                        const min   = parseFloat(component.min);
-                        const max   = parseFloat(component.max);
-        
-                        if (value < min) component.value = min;
-                        if (value > max) component.value = max;
-                    });
-                    break;
-
-                default:
-                    // PENDENTE
-                    break;
-            }
-        }
-
         /* ## PANEL ## */
         static onRouteListChange(event) {
-            switch (event.sourceTarget.id) {
-                case 'routeListEditionMode':
-                    console.log(event.sourceTarget.id);
+            switch (event.target.id) {
+                case 'routeListEditModeBtn':
+                    event.target.dataset.value = (event.target.dataset.value == 'on') ? 'off' : 'on';
+                    window.app.modules.Layout.controller('editionMode', (event.target.dataset.value == 'on') ? true : false);
                     break;
 
-                case 'routeListEditionConfirm':
-                    console.log(event.sourceTarget.id);
+                case 'routeListCancelBtn':
+                    window.document.getElementById('routeListEditModeBtn').dataset.value = 'off';
+                    window.app.modules.Layout.controller('editionMode', false);
                     break;
 
-                case 'routeListEditionCancel':
-                    console.log(event.sourceTarget.id);
+                case 'routeListAddBtn':
+
+
+                case 'routeListDelBtn':
+                case 'routeListConfirmBtn':
+                case 'initialPointBtn':
+                case 'routeListMoveUpBtn':
+                case 'routeListMoveDownBtn':
+                    console.log(event.target.id);
                     break;
 
                 default:
                     throw Error('Unexpected element Id')
             }
+        }
+
+        static onNumericFieldValidation(event, range) {
+            let value = parseFloat(event.target.value);
+
+            if (Number.isNaN(value)) {
+                event.target.value = event.target.dataset.value; // previousValue
+                return;
+            }
+
+            if (value < range.min) value = range.min;
+            if (value > range.max) value = range.max;
+
+            event.target.value = value;
+            event.target.dataset.value = value;
         }
 
         /* ## TOOLBAR ## */

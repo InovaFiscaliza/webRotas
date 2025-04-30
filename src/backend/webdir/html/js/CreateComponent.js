@@ -57,38 +57,55 @@
                     textContent: 'Rotas:'
                 }, routeListTitleGrid);
 
-                this.createElement('img', {
+                this.createElement('button', {
                     classList: ['title-button'],
-                    id: 'routeListEditModeBtn',
-                    src: 'images/Edit_32.png',
-                    style: { gridArea: '1 / 2 / 2 / 3', width: '18px', height: '18px' },
+                    id: 'routeListAddBtn',
+                    style: { gridArea: '1 / 2 / 2 / 3', width: '18px', height: '18px', backgroundImage: 'url(images/addFiles_32.png)' },
                     eventListeners: {
-                        click: (event) => onRouteListChange(event)
+                        click: (event) => window.app.modules.Callback.onRouteListChange(event)
+                    },
+                    dataset: { tooltip: 'Duplica rota' }
+                }, routeListTitleGrid);
+
+                this.createElement('button', {
+                    classList: ['title-button', 'disabled'],
+                    id: 'routeListDelBtn',
+                    style: { gridArea: '1 / 3 / 2 / 4', width: '18px', height: '18px', backgroundImage: 'url(images/Trash_32.png)' },
+                    eventListeners: {
+                        click: (event) => window.app.modules.Callback.onRouteListChange(event)
                     },
                     disabled: true,
-                    dataset: { value: 'off', tooltip: 'Habilita modo de edição' }
+                    dataset: { tooltip: 'Exclui rota' }
                 }, routeListTitleGrid);
 
-                this.createElement('img', {
-                    classList: ['title-button', 'disabled'],
+                this.createElement('button', {
+                    classList: ['title-button'],
+                    id: 'routeListEditModeBtn',
+                    style: { gridArea: '1 / 4 / 2 / 5', width: '18px', height: '18px', backgroundImage: 'url(images/Edit_32.png)' },
+                    eventListeners: {
+                        click: (event) => window.app.modules.Callback.onRouteListChange(event)
+                    },
+                    dataset: { tooltip: 'Habilita modo de edição da rota', value: 'off' }
+                }, routeListTitleGrid);
+
+                this.createElement('button', {
+                    classList: ['title-button'],
                     id: 'routeListConfirmBtn',
-                    src: 'images/Ok_32Green.png',
-                    style: { gridArea: '1 / 3 / 2 / 4', width: '18px', height: '18px' },
+                    style: { gridArea: '1 / 5 / 2 / 6', display: 'none', width: '18px', height: '18px', backgroundImage: 'url(images/Ok_32Green.png)' },
                     eventListeners: {
-                        click: (event) => onRouteListChange(event)
+                        click: (event) => window.app.modules.Callback.onRouteListChange(event)
                     },
-                    dataset: { tooltip: 'Habilita modo de edição' }
+                    dataset: { tooltip: 'Confirma edição' }
                 }, routeListTitleGrid);
 
-                this.createElement('img', {
-                    classList: ['title-button', 'disabled'],
+                this.createElement('button', {
+                    classList: ['title-button'],
                     id: 'routeListCancelBtn',
-                    src: 'images/Delete_32Red.png',
-                    style: { gridArea: '1 / 4 / 2 / 5', width: '18px', height: '18px' },
+                    style: { gridArea: '1 / 6 / 2 / 7', display: 'none', width: '18px', height: '18px', backgroundImage: 'url(images/Delete_32Red.png)' },
                     eventListeners: {
-                        click: (event) => onRouteListChange(event)
+                        click: (event) => window.app.modules.Callback.onRouteListChange(event)
                     },
-                    dataset: { tooltip: 'Habilita modo de edição' }
+                    dataset: { tooltip: 'Cancela edição' }
                 }, routeListTitleGrid);
                 // </SUB-GRID>
         
@@ -112,17 +129,22 @@
                     textContent: 'Ponto inicial:'
                 }, initialPointTitleGrid);
             
-                this.createElement('img', {
+                this.createElement('button', {
                     classList: ['title-button', 'disabled'],
-                    id: 'initialPointButton',
-                    src: 'images/pin_18.png',
-                    style: { gridArea: '1 / 2 / 2 / 3' }
+                    id: 'initialPointBtn',
+                    style: { gridArea: '1 / 2 / 2 / 3', width: '18px', height: '18px', backgroundImage: 'url(images/pin_18.png)' },
+                    eventListeners: {
+                        click: (event) => window.app.modules.Callback.onRouteListChange(event)
+                    },
+                    disabled: true,
+                    dataset: { tooltip: 'Captura posição do mouse' }
                 }, initialPointTitleGrid);
                 // </SUB-GRID>
         
             // PONTO INICIAL - LATITUDE, LONGITUDE E DESCRIÇÃO
             const initialPointGrid = this.createElement('div', {
                 classList: ['grid', 'grid-border'],
+                id: 'initialPointGrid',
                 style: { gridArea: '5 / 1 / 6 / 2', gridTemplateRows: '17px 22px 17px 22px', gridTemplateColumns: 'minmax(0px, 1fr) minmax(0px, 1fr)', padding: '10px' }
             });
             panel.appendChild(initialPointGrid);
@@ -135,15 +157,14 @@
                     textContent: 'Latitude:'
                 }, initialPointGrid);
             
-                const initialPointLatitude = this.createElement('input', {
+                this.createElement('input', {
                     classList: ['no-spinner'],
                     id: 'initialPointLatitude',
                     type: 'number',
-                    min: '-90',
-                    max: '90',
+                    step: 'any',
                     style: { gridArea: '2 / 1 / 3 / 2' },
                     eventListeners: {
-                        input: () => window.app.modules.Callback.addEventListener(initialPointLatitude, 'input:numeric:range-validation')
+                        change: (event) => window.app.modules.Callback.onNumericFieldValidation(event, { min: -90, max: 90 })
                     },
                     disabled: true
                 }, initialPointGrid);
@@ -155,15 +176,14 @@
                     textContent: 'Longitude:'
                 }, initialPointGrid);
             
-                const initialPointLongitude = this.createElement('input', {
+                this.createElement('input', {
                     classList: ['no-spinner'],
                     id: 'initialPointLongitude',
                     type: 'number',
-                    min: '-180',
-                    max: '180',
+                    step: 'any',
                     style: { gridArea: '2 / 2 / 3 / 3' },
                     eventListeners: {
-                        input: () => window.app.modules.Callback.addEventListener(initialPointLongitude, 'input:numeric:range-validation')
+                        change: (event) => window.app.modules.Callback.onNumericFieldValidation(event, { min: -180, max: 180 })
                     },
                     disabled: true
                 }, initialPointGrid);
@@ -202,8 +222,10 @@
                     textContent: '▲',
                     style: { gridArea: '1 / 2 / 2 / 3' },
                     eventListeners: {
-                        click: (event) => onRouteListChange(event)
-                    }
+                        click: (event) => window.app.modules.Callback.onRouteListChange(event)
+                    },
+                    disabled: true,
+                    dataset: { tooltip: 'Altera ordem do ponto selecionado' }
                 }, pointsToVisitTitleGrid);
             
                 this.createElement('button', {
@@ -212,8 +234,10 @@
                     textContent: '▼',
                     style: { gridArea: '1 / 3 / 2 / 4' },
                     eventListeners: {
-                        click: (event) => onRouteListChange(event)
-                    }
+                        click: (event) => window.app.modules.Callback.onRouteListChange(event)
+                    },
+                    disabled: true,
+                    dataset: { tooltip: 'Altera ordem do ponto selecionado' }
                 }, pointsToVisitTitleGrid);
                 // </SUB-GRID>
         
@@ -229,120 +253,109 @@
             ## TOOLBAR ##
         -----------------------------------------------------------------------------------*/
         static toolbar() {
-            let footerContainer = document.getElementById('toolbar');
-            footerContainer.style.position = 'absolute';
-            footerContainer.style.bottom = '0';
-            footerContainer.style.left = '0px';
-            footerContainer.style.paddingLeft = '5px';
-            footerContainer.style.paddingRight = '5px';
-            footerContainer.style.alignItems = 'center';
-            footerContainer.style.height = '34px';
-            footerContainer.style.backgroundColor = 'rgb(240, 240, 240)';
-            footerContainer.style.display = 'grid';
-            footerContainer.style.width = '100%';
-            footerContainer.style.gridTemplateColumns = '22px 22px 22px minmax(0, 1fr) 22px 22px 22px 22px';
-            footerContainer.style.gridTemplateRows = '1fr';
-            footerContainer.style.columnGap = '5px';
+            let container = window.document.getElementById('toolbar');
+            ['toolbar-grid'].forEach(className => {
+                container.classList.add(className);
+            });
+            Object.assign(container.style, { gridTemplateRows: '1fr', gridTemplateColumns: '22px 22px 22px minmax(0, 1fr) 22px 22px 22px 22px', columnGap: '5px' });
 
-            // Lado esquerdo
-            const img1 = document.createElement('img');
-            img1.id = 'footer: logo';
-            img1.style.gridArea = '1 / 1 / 2 / 2';
-            img1.src = 'images/ArrowLeft_32.png';
-            img1.style.width = '17px';
-            img1.style.height = '17px';
-            img1.style.cursor = 'pointer';
-            Tooltip.bindBasicTooltip(img1, 'Visibilidade do painel de controle');
-            img1.onclick = window.app.modules.Callback.toolbar_routeButtonClick;
+            this.createElement('button', {
+                classList: ['toolbar-button'],
+                id: 'toolbarPanelVisibilityBtn',
+                style: { gridArea: '1 / 1 / 2 / 2', width: '18px', height: '18px', backgroundImage: 'url(images/ArrowLeft_32.png)' },
+                eventListeners: {
+                    click: () => window.app.modules.Callback.toolbar_routeButtonClick()
+                },
+                dataset: { tooltip: 'Visibilidade do painel de controle' }
+            }, container);
 
-            const img3 = document.createElement('img');
-            img3.id = 'footer: logo';
-            img3.style.gridArea = '1 / 2 / 2 / 3';
-            img3.src = 'images/Connect_18.png';
-            img3.style.cursor = 'pointer';
-            Tooltip.bindBasicTooltip(img3, 'Conexão servidor');
+            this.createElement('button', {
+                classList: ['toolbar-button'],
+                id: 'toolbarServerStatusBtn',
+                style: { gridArea: '1 / 2 / 2 / 3', width: '18px', height: '18px', backgroundImage: 'url(images/Connect_18.png)' },
+                eventListeners: {
+                    click: () => window.app.modules.Callback.toolbar_routeButtonClick()
+                },
+                dataset: { tooltip: 'Conectividade servidor' }
+            }, container);
 
-            const img2 = document.createElement('img');
-            img2.id = 'footer: logo';
-            img2.style.gridArea = '1 / 3 / 2 / 4';
-            img2.src = 'images/export.png';
-            img2.style.cursor = 'pointer';
-            Tooltip.bindBasicTooltip(img2, 'Exporta a rota em KML');
+            this.createElement('button', {
+                classList: ['toolbar-button'],
+                id: 'toolbarExportKmlBtn',
+                style: { gridArea: '1 / 3 / 2 / 4', width: '18px', height: '18px', backgroundImage: 'url(images/export.png)' },
+                eventListeners: {
+                    click: () => window.app.modules.Callback.toolbar_routeButtonClick()
+                },
+                dataset: { tooltip: 'Exporta a rota em KML' }
+            }, container);
 
-            const img3a = document.createElement('img');
-            img3a.style.gridArea = '1 / 5 / 2 / 6';
-            img3a.src = 'images/gps-off.png';
-            img3a.style.width = '18px';
-            img3a.style.height = '18px';
-            img3a.style.cursor = 'pointer';
-            Tooltip.bindBasicTooltip(img3a, 'Compartilhar localização');
-            img3a.onclick = () => { 
-                const currentStatus = window.app.mapContext.settings.geolocation.status;
-                if (currentStatus === 'on') {
-                    window.app.mapContext.settings.geolocation.status = 'off';
-                    img3a.src = window.app.mapContext.settings.geolocation.icon.off;
-                } else {
-                    window.app.mapContext.settings.geolocation.status = 'on';
-                    img3a.src = window.app.mapContext.settings.geolocation.icon.on;
-                }
+            this.createElement('button', {
+                classList: ['toolbar-button'],
+                id: 'toolbarExportKmlBtn',
+                style: { gridArea: '1 / 5 / 2 / 6', width: '18px', height: '18px', backgroundImage: 'url(images/gps-off.png)' },
+                eventListeners: {
+                    click: (event) => { 
+                        const currentStatus = window.app.mapContext.settings.geolocation.status;
 
-                new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'warning', []); 
-            };
+                        if (currentStatus === 'on') {
+                            window.app.mapContext.settings.geolocation.status = 'off';
+                            event.target.src = window.app.mapContext.settings.geolocation.icon.off;
+                        } else {
+                            window.app.mapContext.settings.geolocation.status = 'on';
+                            event.target.src = window.app.mapContext.settings.geolocation.icon.on;
+                        }
+        
+                        new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'warning', []); 
+                    }
+                },
+                dataset: { tooltip: 'Compartilhar localização' }
+            }, container);
 
-            const img3b = document.createElement('img');
-            img3b.style.gridArea = '1 / 6 / 2 / 7';
-            img3b.src = 'images/north.png';
-            img3b.style.width = '18px';
-            img3b.style.height = '18px';
-            img3b.style.cursor = 'pointer';
-            Tooltip.bindBasicTooltip(img3b, 'Orientação do mapa');
-            img3b.onclick = () => { 
-                const currentStatus = window.app.mapContext.settings.orientation.status;
-                if (currentStatus === 'north') {
-                    window.app.mapContext.settings.orientation.status = 'car-heading';
-                    img3b.src = window.app.mapContext.settings.orientation.icon.off;
-                } else {
-                    window.app.mapContext.settings.orientation.status = 'north';
-                    img3b.src = window.app.mapContext.settings.orientation.icon.on;
-                }
+            this.createElement('button', {
+                classList: ['toolbar-button'],
+                id: 'toolbarOrientationBtn',
+                style: { gridArea: '1 / 6 / 2 / 7', width: '18px', height: '18px', backgroundImage: 'url(images/north.png)' },
+                eventListeners: {
+                    click: (event) => { 
+                        const currentStatus = window.app.mapContext.settings.orientation.status;
 
-                new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'error', [], 800); 
-            };
+                        if (currentStatus === 'north') {
+                            window.app.mapContext.settings.orientation.status = 'car-heading';
+                            event.target.src = window.app.mapContext.settings.orientation.icon.off;
+                        } else {
+                            window.app.mapContext.settings.orientation.status = 'north';
+                            event.target.src = window.app.mapContext.settings.orientation.icon.on;
+                        }
+        
+                        new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'error', [], 800); 
+                    }
+                },
+                dataset: { tooltip: 'Orientação do mapa' }
+            }, container);
 
-            const img4 = document.createElement('img');
-            img4.id = 'footer: logo';
-            img4.style.gridArea = '1 / 7 / 2 / 8';
-            img4.src = 'images/colorbar.svg';
-            img4.style.width = '18px';
-            img4.style.height = '18px';
-            img4.style.cursor = 'pointer';
-            Tooltip.bindBasicTooltip(img4, 'Barra de cores');
-            img4.onclick = () => { 
-                new DialogBox('Uma informação qualquer... Uma informação qualquer... <b>Uma informação qualquer...</b> <br><br> Uma informação qualquer... Uma informação qualquer... <p>Uma informação qualquer...</p> Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...  Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...', '', [{ text: 'OK', callback: () => console.log('OK'), focus: true }, { text: 'Cancel', callback: () => console.error('Cancel'), focus: false }]) 
-            };
+            this.createElement('button', {
+                classList: ['toolbar-button'],
+                id: 'toolbarColorbarBtn',
+                style: { gridArea: '1 / 7 / 2 / 8', width: '18px', height: '18px', backgroundImage: 'url(images/colorbar.svg)' },
+                eventListeners: {
+                    click: (event) => { 
+                        new DialogBox('Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...  Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...', '', [{ text: 'OK', callback: () => console.log('OK'), focus: true }, { text: 'Cancel', callback: () => console.error('Cancel'), focus: false }]) 
+                    }
+                },
+                dataset: { tooltip: 'Barra de cores' }
+            }, container);
 
-            const img5 = document.createElement('img');
-            img5.id = 'footer: logo';
-            img5.style.gridArea = '1 / 8 / 2 / 9';
-            img5.src = 'images/layers.png';
-            img5.style.width = '18px';
-            img5.style.height = '18px';
-            img5.style.cursor = 'pointer';
-            Tooltip.bindBasicTooltip(img5, 'Basemap');
-            img5.onclick = () => { 
-                window.app.map.setView(window.app.mapContext.settings.position.center, window.app.mapContext.settings.position.zoom);
-                // this.createBasemapSelector() 
-            };
-
-
-            // Monta o footer
-            footerContainer.appendChild(img1);
-            footerContainer.appendChild(img2);
-            footerContainer.appendChild(img3);
-            footerContainer.appendChild(img3a);
-            footerContainer.appendChild(img3b);
-            footerContainer.appendChild(img4);
-            footerContainer.appendChild(img5);
+            this.createElement('button', {
+                classList: ['toolbar-button'],
+                id: 'toolbarBasemapsBtn',
+                style: { gridArea: '1 / 8 / 2 / 9', width: '18px', height: '18px', backgroundImage: 'url(images/layers.png)' },
+                eventListeners: {
+                    click: () => { 
+                        window.app.map.setView(window.app.mapContext.settings.position.center, window.app.mapContext.settings.position.zoom);
+                    }
+                },
+                dataset: { tooltip: 'Basemap' }
+            }, container);
         }
 
         /*-----------------------------------------------------------------------------------
@@ -430,15 +443,19 @@
         }
 
         /*---------------------------------------------------------------------------------*/
-        static createTextList(textList, textResolver, eventListeners, parentElement) {
-            parentElement.childNodes.forEach(element => element.remove())
+        static createTextList(textList, textResolver, eventListeners, parentElement, selectedIndex) {
+            parentElement.innerHTML = '';
 
             textList.forEach((element, index) => {
-                this.createElement('li', {
+                const el = CreateComponent.createElement('li', {
                     textContent: textResolver(element, index),
                     style: { height: '22px' },
                     eventListeners: eventListeners
                 }, parentElement);
+
+                if (index === selectedIndex) {
+                    el.classList.add('selected');
+                }
             })
         }
 
