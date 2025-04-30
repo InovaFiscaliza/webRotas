@@ -9,6 +9,9 @@ from pathlib import Path
 import project_folders as pf
 import pickle
 from datetime import datetime, timedelta
+from openpyxl import Workbook
+import zipfile
+import os
 import route_cache as rc
 
 import hashlib
@@ -131,6 +134,7 @@ class CacheBoundingBox:
         with gzip.open(self.cache_file, 'wb') as f:
              pickle.dump(data, f)
              # f.flush()  # força gravação
+        self.exportar_cache_para_xlsx_zip(Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.xlsx.zip")     
         
     def _load_from_disk_sync(self):
         if not self.cache_file.exists():
@@ -177,7 +181,35 @@ class CacheBoundingBox:
         else:
             # wLog("Nenhuma região antiga removida.",level="debug")
             pass
-            
+
+
+
+    def exportar_cache_para_xlsx_zip(self, caminho_zip):
+        xlsx_path = caminho_zip.replace('.zip', '.xlsx')
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Cache"
+
+        # Cabeçalhos
+        ws.append(['Chave', 'Diretório', 'Criado em', 'Último Acesso'])
+
+        # Conteúdo do cache
+        for chave, dados in self.cache.items():
+            ws.append([
+                chave,
+                dados.get('diretorio', ''),
+                dados.get('created', ''),
+                dados.get('lastrequest', '')
+            ])
+
+        wb.save(xlsx_path)
+
+        # Comprimir para ZIP
+        with zipfile.ZipFile(caminho_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
+
+        os.remove(xlsx_path)
+        
 
 # ---------------------------------------------------------------------------------------------------------------    
 
