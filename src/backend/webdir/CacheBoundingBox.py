@@ -18,7 +18,6 @@ import hashlib
 class CacheBoundingBox:
     def __init__(self):
         # Instância global do cache de rotas já pedidas ao servidor OSMR
-        import webRota as wr
         # wLog(f"Cache de regioes carregado")
         self.route_cache = rc.RouteCache()  
         self.cache = {}
