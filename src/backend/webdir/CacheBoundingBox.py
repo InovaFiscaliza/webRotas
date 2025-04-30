@@ -134,7 +134,7 @@ class CacheBoundingBox:
         with gzip.open(self.cache_file, 'wb') as f:
              pickle.dump(data, f)
              # f.flush()  # força gravação
-        self.exportar_cache_para_xlsx_zip(Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.xlsx.zip")     
+        self.exportar_cache_para_xlsx_zip(Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.zip")     
         
     def _load_from_disk_sync(self):
         if not self.cache_file.exists():
