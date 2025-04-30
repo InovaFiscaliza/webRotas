@@ -185,7 +185,7 @@ class CacheBoundingBox:
 
 
     def exportar_cache_para_xlsx_zip(self, caminho_zip):
-        xlsx_path = caminho_zip.replace('.zip', '.xlsx')
+        xlsx_path = caminho_zip.with_suffix('.xlsx')
         wb = Workbook()
         ws = wb.active
         ws.title = "Cache"
