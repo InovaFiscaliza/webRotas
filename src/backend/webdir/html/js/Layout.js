@@ -17,14 +17,7 @@
                         },
                         {
                             click: (event) => {
-                                const list = Array.from(el.routeList.children);
-                                
-                                const previousSelection = list.findIndex(item => item.classList.contains('selected'));
-                                const currentSelection = list.indexOf(event.target);
-
-                                if (previousSelection !== currentSelection) {
-                                    this.routeListSelectionChanged(event, list, routeList[currentSelection])
-                                }
+                                this.routeListSelectionChanged(event);
                             },
                             mouseover:  (event) => this.highlightTextListItem(event),
                             mouseleave: (event) => this.highlightTextListItem(event)
@@ -61,9 +54,8 @@
                                     event.target.classList.toggle('selected');
                                 } else {
                                     const list = Array.from(el.pointsToVisit.children);
-                                    const currentSelection = list.indexOf(event.target);
-                                
-                                    let previousSelection = list.findIndex(item => item.classList.contains('selected'));
+                                    const currentSelection = list.indexOf(event.target);                                
+                                    let previousSelection  = list.findIndex(item => item.classList.contains('selected'));
                                 
                                     if (previousSelection === -1) {
                                         previousSelection = currentSelection;
@@ -138,27 +130,30 @@
 
         /*---------------------------------------------------------------------------------*/
         static getRouteInfo() {
-            const el    = this.getDOMElements(['routeList']);
-            const list  = Array.from(el.routeList.children);                                
-            const index = list.findIndex(item => item.classList.contains('selected'));
+            const el   = this.getDOMElements(['routeList']);
+            const list = Array.from(el.routeList.children);                                
+            const idx  = list.findIndex(item => item.classList.contains('selected'));
 
-            return window.app.analysisContext.routeList[index];
+            return window.app.analysisContext.routeList[idx];
         }
 
 
         /*---------------------------------------------------------------------------------*/
-        static routeListSelectionChanged(event, list, routeInfo) {
-            list.forEach(item => {
-                if (item === event.target) {
-                    item.classList.add('selected');
-                } else {
-                    item.classList.remove('selected');
-                }
-            })
-            window.document.getElementById('routeListDelBtn').classList.toggle('disabled', routeInfo.automaticRoute);
-            
-            this.controller('update', routeInfo);
-            window.app.modules.Plot.controller('update', routeInfo);
+        static routeListSelectionChanged(event) {
+            const el = this.getDOMElements(['routeList', 'routeListDelBtn']);
+            const list = Array.from(el.routeList.children);
+            const currentSelection  = list.indexOf(event.target);                                
+            const previousSelection = list.findIndex(item => item.classList.contains('selected'));                                
+
+            if (previousSelection !== currentSelection) {
+                const routeInfo = window.app.analysisContext.routeList[currentSelection];
+                
+                list.forEach(item => item.classList.toggle('selected', item === event.target));    
+                this.toggleEnabled([el.routeListDelBtn], !this.getRouteInfo().automaticRoute);
+                
+                this.controller('update', routeInfo);
+                window.app.modules.Plot.controller('update', routeInfo);   
+            }
         }
 
         /*---------------------------------------------------------------------------------*/
