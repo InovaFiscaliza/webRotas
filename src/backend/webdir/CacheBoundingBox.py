@@ -10,6 +10,7 @@ import project_folders as pf
 import pickle
 from datetime import datetime, timedelta
 from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 import zipfile
 import os
 import route_cache as rc
@@ -41,10 +42,19 @@ class CacheBoundingBox:
         chave = self._hash_bbox(regioes)
         self.ultimaregiao = regioes
         now = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+
+        # Gera uma string legível e truncada da região
+        regiao_legivel = json.dumps(regioes)
+        regiao_legivel = regiao_legivel.replace('\n', '').replace('\r', '')
+        if len(regiao_legivel) > 400:
+            regiao_legivel = regiao_legivel[:397] + '...'
+
         self.cache[chave] = {
-            'diretorio': diretorio,
+            'regiao': regiao_legivel,
+            'diretorio': diretorio,          
             'created': now,
             'lastrequest': now
+
         }
         self._save_to_disk_sync()
 
@@ -191,19 +201,32 @@ class CacheBoundingBox:
         ws.title = "Cache Bounding Box"
         
         # Cabeçalhos
-        ws.append(['Chave', 'Diretório','Num Rotas Cache', 'Criado em', 'Último Acesso'])
+        headers = ['Chave', 'Regiao', 'Diretório', 'Num Rotas Cache', 'Criado em', 'Último Acesso']
+        ws.append(headers)
 
+        # Inicializa lista de larguras com o comprimento dos cabeçalhos
+        col_widths = [len(h) for h in headers]
+        
         # Conteúdo do cache
         for chave, dados in self.cache.items():
             numrotascached = len(self.route_cache.cache.get(chave, {}))
-            ws.append([
+            row = [
                 chave,
+                dados.get('regiao', ''),
                 dados.get('diretorio', ''),
-                numrotascached,
+                str(numrotascached),
                 dados.get('created', ''),
                 dados.get('lastrequest', '')
-            ])
+            ]
+            ws.append(row)
+            # Atualiza larguras máximas
+            for i, cell_value in enumerate(row):
+                col_widths[i] = max(col_widths[i], len(str(cell_value)))
 
+        # Aplica larguras ajustadas (com margem extra de +2 caracteres)
+        for i, width in enumerate(col_widths, 1):
+            ws.column_dimensions[get_column_letter(i)].width = width + 2
+        
         wb.save(xlsx_path)
 
         # Comprimir para ZIP
