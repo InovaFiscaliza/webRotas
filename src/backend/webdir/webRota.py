@@ -812,9 +812,6 @@ def GeraArquivoExclusoes(regioes, arquivo_saida="exclusion.poly"):
     """
     wLog("GeraArquivoExclusoes")
     try:
-        if os.path.exists(arquivo_saida):
-            arquivo_backup = f"{arquivo_saida}.old"
-            shutil.move(arquivo_saida, arquivo_backup)
         with open(arquivo_saida, "w") as f:
             f.write(f"AreasRoteamento\n")
             for regiao in regioes:
