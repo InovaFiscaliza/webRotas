@@ -28,7 +28,7 @@ class CacheBoundingBox:
         self.ultimaregiao = None
         self.cache_file = Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.bin.gz"
         self._save_timer = None
-        self._debounce_delay = 25  # segundos
+        self._debounce_delay = 15  # segundos
         self._lock = threading.Lock()
         self._load_from_disk_sync()
 
@@ -46,8 +46,8 @@ class CacheBoundingBox:
         # Gera uma string legível e truncada da região
         regiao_legivel = json.dumps(regioes)
         regiao_legivel = regiao_legivel.replace('\n', '').replace('\r', '')
-        if len(regiao_legivel) > 400:
-            regiao_legivel = regiao_legivel[:397] + '...'
+        if len(regiao_legivel) > 2400:
+            regiao_legivel = regiao_legivel[:2397] + '...'
 
         self.cache[chave] = {
             'regiao': regiao_legivel,
@@ -226,8 +226,8 @@ class CacheBoundingBox:
         # Aplica larguras ajustadas (com margem extra de +2 caracteres, limitando a 200 se necessário)
         for i, width in enumerate(col_widths, 1):
             adjusted_width = width + 2  # Adiciona a margem de 2 caracteres
-            if adjusted_width > 200:
-                adjusted_width = 200  # Limita a largura a 200 se ultrapassar esse valor
+            if adjusted_width > 50:
+                adjusted_width = 50  # Limita a largura a 200 se ultrapassar esse valor
             ws.column_dimensions[get_column_letter(i)].width = adjusted_width
         
         wb.save(xlsx_path)
