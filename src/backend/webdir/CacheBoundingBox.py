@@ -223,9 +223,12 @@ class CacheBoundingBox:
             for i, cell_value in enumerate(row):
                 col_widths[i] = max(col_widths[i], len(str(cell_value)))
 
-        # Aplica larguras ajustadas (com margem extra de +2 caracteres)
+        # Aplica larguras ajustadas (com margem extra de +2 caracteres, limitando a 200 se necessário)
         for i, width in enumerate(col_widths, 1):
-            ws.column_dimensions[get_column_letter(i)].width = width + 2
+            adjusted_width = width + 2  # Adiciona a margem de 2 caracteres
+            if adjusted_width > 200:
+                adjusted_width = 200  # Limita a largura a 200 se ultrapassar esse valor
+            ws.column_dimensions[get_column_letter(i)].width = adjusted_width
         
         wb.save(xlsx_path)
 
