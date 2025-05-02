@@ -225,7 +225,7 @@ class CacheBoundingBox:
         # Conteúdo do cache
         for chave, dados in self.cache.items():
             numrotascached = len(self.route_cache.cache.get(chave, {}))
-            numcomunidadescached = len(self.comunidades_cache.cache.get(chave, {}))
+            numcomunidadescached = len(self.comunidades_cache.cache.get(chave, []))
             row = [
                 chave,
                 dados.get('regiao', ''),
