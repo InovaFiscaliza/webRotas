@@ -25,7 +25,7 @@ class CacheBoundingBox:
         # Instância global do cache de rotas já pedidas ao servidor OSMR
         # wLog(f"Cache de regioes carregado")
         self.route_cache = rc.RouteCache()  
-        self.comunidades_cache = pl.PolylineCache
+        self.comunidades_cache = pl.PolylineCache()
         self.cache = {}
         self.ultimaregiao = None
         self.cache_file = Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.bin.gz"
