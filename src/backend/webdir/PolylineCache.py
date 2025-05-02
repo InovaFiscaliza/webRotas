@@ -48,7 +48,7 @@ class PolylineCache:
     def get_polylines(self, regioes):
         """Retorna todas as polylines da região"""
         chave = self._hash_bbox(regioes)
-        return self.cache.get(chave, [])
+        return self.cache[chave]
 
     def clear_regiao(self, regioes):
         """Remove todas as polylines de uma região"""
@@ -66,4 +66,4 @@ class PolylineCache:
     def count_polylines(self, regioes):
         """Conta quantas polylines há na região"""
         chave = self._hash_bbox(regioes)
-        return len(self.cache.get(chave, []))
+        return len(self.cache[chave] )
