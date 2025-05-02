@@ -1,3 +1,47 @@
+#!/usr/bin/env python3
+"""
+    Gerencia o cache de regiões geográficas (bounding boxes) com rotas e comunidades associadas.
+
+    Esta classe fornece funcionalidades para armazenar, recuperar, atualizar e remover entradas de cache
+    relacionadas a regiões geográficas consultadas junto ao servidor OSMR. Cada entrada de cache pode conter
+    rotas e polilinhas de comunidades associadas, armazenadas em cache secundário específico.
+
+    Funcionalidades principais:
+    - Geração de chave hash para identificar regiões geográficas.
+    - Armazenamento persistente do cache em disco com compactação (gzip + pickle).
+    - Cache auxiliar para rotas (`RouteCache`) e comunidades (`PolylineCache`).
+    - Mecanismo debounce para gravações automáticas em segundo plano.
+    - Exportação do cache para planilha Excel compactada em .zip.
+    - Limpeza automática de entradas antigas com critérios configuráveis.
+
+    Atributos:
+        route_cache (RouteCache): Cache de rotas por região.
+        comunidades_cache (PolylineCache): Cache de polilinhas de comunidades por região.
+        cache (dict): Dicionário contendo os metadados do cache principal.
+        ultimaregiao (any): Última região consultada.
+        cache_file (Path): Caminho do arquivo de cache persistente no disco.
+        _save_timer (threading.Timer): Temporizador de debounce para salvar o cache.
+        _debounce_delay (int): Tempo em segundos antes do salvamento automático.
+        _lock (threading.Lock): Lock de proteção para acessos concorrentes.
+
+    Métodos principais:
+        new(regioes, diretorio): Cria nova entrada de cache.
+        get_cache(regioes): Retorna o diretório do cache para a região.
+        delete(regioes): Remove uma entrada de cache do disco e da memória.
+        clear_cache(): Remove todas as entradas de cache.
+        route_cache_get(...) / set(...): Interface para cache de rotas.
+        get_comunidades(...) / set_comunidades(...): Interface para cache de comunidades.
+        exportar_cache_para_xlsx_zip(path): Exporta conteúdo do cache para planilha compactada.
+        clean_old_cache_entries(meses, minimo_regioes): Remove entradas antigas com base em tempo e quantidade mínima.
+
+    Exemplos de uso:
+        c = CacheBoundingBox()
+        c.new({'norte': -22.1, 'sul': -22.2, 'leste': -43.1, 'oeste': -43.2}, 'regiao-abc')
+        dir = c.get_cache({'norte': -22.1, 'sul': -22.2, 'leste': -43.1, 'oeste': -43.2'})
+        c.exportar_cache_para_xlsx_zip(Path("/tmp/cache.zip"))
+"""
+
+
 import hashlib
 import json
 import os
