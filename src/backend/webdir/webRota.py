@@ -1151,7 +1151,12 @@ def DesenhaComunidades(RouteDetail, regioes):
             lat_max = coords[0][0]
             break
     bounding_box = (lon_min, lat_min, lon_max, lat_max)
-    polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
+    
+    polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
+    if(not polylinesComunidades):
+       polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
+       cb.cCacheBoundingBox.comunidades_cache.add_polyline(regioes, polylinesComunidades)
+       
 
     RouteDetail.mapcode += f"listComunidades = [\n"
     indPol = 0

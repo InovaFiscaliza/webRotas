@@ -54,6 +54,9 @@ class PolylineCache:
         """Remove todas as polylines de uma região"""
         chave = self._hash_bbox(regioes)
         self.cache.pop(chave, None)
+        
+    def clear_regioes_pela_chave(self, chave): 
+        self.cache.pop(chave, None)   
 
     def clear_all(self):
         """Remove todo o cache"""

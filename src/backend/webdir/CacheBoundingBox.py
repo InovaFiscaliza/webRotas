@@ -14,6 +14,7 @@ from openpyxl.utils import get_column_letter
 import zipfile
 import os
 import route_cache as rc
+import PolylineCache as pl
 
 import hashlib
 
@@ -24,6 +25,7 @@ class CacheBoundingBox:
         # Instância global do cache de rotas já pedidas ao servidor OSMR
         # wLog(f"Cache de regioes carregado")
         self.route_cache = rc.RouteCache()  
+        self.comunidades_cache = pl.PolylineCache
         self.cache = {}
         self.ultimaregiao = None
         self.cache_file = Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.bin.gz"
@@ -31,6 +33,15 @@ class CacheBoundingBox:
         self._debounce_delay = 15  # segundos
         self._lock = threading.Lock()
         self._load_from_disk_sync()
+
+
+    def get_comunidades(self, regioes):
+        self.lastrequestupdate(self.ultimaregiao)
+        return self.comunidades_cache.get_polylines(regioes)
+       
+    def set_comunidades(self, regioes, polylinesComunidades): 
+        self.lastrequestupdate(self.ultimaregiao)  
+        self.comunidades_cache.add_polyline(regioes, polylinesComunidades)
 
     def remover_item_disco(self, caminho):
         if os.path.isdir(caminho):
@@ -138,8 +149,9 @@ class CacheBoundingBox:
 
     def _save_to_disk_sync(self):
         data = {
+            'cache': self.cache,
             'route_cache': self.route_cache,
-            'cache': self.cache
+            'comunidades_cache': self.comunidades_cache
         }
         with gzip.open(self.cache_file, 'wb') as f:
              pickle.dump(data, f)
@@ -147,14 +159,16 @@ class CacheBoundingBox:
         self.exportar_cache_para_xlsx_zip(Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.zip")     
         
     def _load_from_disk_sync(self):
-        if not self.cache_file.exists():
-            self.route_cache.cache = {}
+        if not self.cache_file.exists():            
             self.cache = {}
+            self.route_cache.cache = {}
+            self.comunidades_cache.cache = {}
             return
         with gzip.open(self.cache_file, 'rb') as f:
-            data = pickle.load(f)
-        self.route_cache = data.get('route_cache', {})
+            data = pickle.load(f)      
         self.cache = data.get('cache', {})
+        self.route_cache = data.get('route_cache', {})
+        self.comunidades_cache.cache = data.get('comunidades_cache', {})
         
 
     def clean_old_cache_entries(self, meses=12, minimo_regioes=30):
@@ -184,7 +198,8 @@ class CacheBoundingBox:
             self.remover_item_disco(Path(pf.OSMR_PATH_CACHE_DATA) / diretorio)
             del self.cache[chave] 
             self.route_cache.clear_regioes_pela_chave(chave)
-        import webRota as wr
+            self.comunidades_cache.clear_regioes_pela_chave(chave)
+
         if chaves_para_remover:
             self._save_to_disk_sync()
             # wLog(f"{len(chaves_para_remover)} regiões antigas removidas do cache.",level="debug")
@@ -201,7 +216,7 @@ class CacheBoundingBox:
         ws.title = "Cache Bounding Box"
         
         # Cabeçalhos
-        headers = ['Chave', 'Regiao', 'Diretório', 'Num Rotas Cache', 'Criado em', 'Último Acesso']
+        headers = ['Chave', 'Regiao', 'Diretório', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
         ws.append(headers)
 
         # Inicializa lista de larguras com o comprimento dos cabeçalhos
@@ -210,11 +225,13 @@ class CacheBoundingBox:
         # Conteúdo do cache
         for chave, dados in self.cache.items():
             numrotascached = len(self.route_cache.cache.get(chave, {}))
+            numcomunidadescached = len(self.comunidades_cache.cache.get(chave, {}))
             row = [
                 chave,
                 dados.get('regiao', ''),
                 dados.get('diretorio', ''),
                 str(numrotascached),
+                str(numcomunidadescached),
                 dados.get('created', ''),
                 dados.get('lastrequest', '')
             ]
