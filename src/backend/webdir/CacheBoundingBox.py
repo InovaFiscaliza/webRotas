@@ -70,6 +70,7 @@ class CacheBoundingBox:
         # wLog(f"Cache de regioes carregado")
         self.route_cache = rc.RouteCache()  
         self.comunidades_cache = pl.PolylineCache()
+        self.areas_urbanas = pl.PolylineCache()
         self.cache = {}
         self.ultimaregiao = None
         self.cache_file = Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.bin.gz"
@@ -87,6 +88,7 @@ class CacheBoundingBox:
         self.lastrequestupdate(self.ultimaregiao)  
         self.comunidades_cache.add_polyline(regioes, polylinesComunidades)
 
+        
     def remover_item_disco(self, caminho):
         if os.path.isdir(caminho):
             shutil.rmtree(caminho)
@@ -196,7 +198,8 @@ class CacheBoundingBox:
         data = {
             'cache': self.cache,
             'route_cache': self.route_cache,
-            'comunidades_cache': self.comunidades_cache
+            'comunidades_cache': self.comunidades_cache,
+            'areas_urbanas': self.areas_urbanas    
         }
         with gzip.open(self.cache_file, 'wb') as f:
              pickle.dump(data, f)
@@ -208,12 +211,14 @@ class CacheBoundingBox:
             self.cache = {}
             self.route_cache.cache = {}
             self.comunidades_cache.clear_all() 
+            self.areas_urbanas.clear_all() 
             return
         with gzip.open(self.cache_file, 'rb') as f:
             data = pickle.load(f)      
         self.cache = data.get('cache', {})
         self.route_cache = data.get('route_cache', {})
         self.comunidades_cache = data.get('comunidades_cache', {})
+        self.areas_urbanas = data.get('areas_urbanas', {})
         
 
     def clean_old_cache_entries(self, meses=12, minimo_regioes=30):

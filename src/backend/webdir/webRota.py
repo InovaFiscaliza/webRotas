@@ -21,7 +21,6 @@ import shapeFiles as sf
 import geraMapa as gm
 import routing_servers_interface as si
 import CacheBoundingBox as cb
-import project_folders as pf
 ###########################################################################################################################
 class ClRouteDetailList:
     def __init__(self):
@@ -1184,8 +1183,24 @@ def DesenhaComunidades(RouteDetail, regioes):
         RouteDetail.mapcode += f"polyTmp = L.polygon(listComunidades[{i}], {{ color: 'rgb(102,0,204)',fillColor: 'rgb(102,0,204)',fillOpacity: 0.3, weight: 1}}).addTo(map);\n"
         RouteDetail.mapcode += f"polyComunidades.push(polyTmp);\n"
         i = i + 1
-    return RouteDetail
+    return RouteDetail    
 
+################################################################################
+def get_areas_urbanas_cache(cidade, uf):
+    cidade_cache = f"{cidade}-{uf}"
+    cache_polylines = cb.cCacheBoundingBox.areas_urbanas.get_polylines(cidade_cache)
+
+    if not cache_polylines:
+        polMunicipio = sf.GetBoundMunicipio(cidade, uf)
+        polMunicipioAreasUrbanizadas = sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
+        cache_polylines = [cidade_cache, polMunicipio, polMunicipioAreasUrbanizadas]
+        cb.cCacheBoundingBox.areas_urbanas.add_polyline(cidade, cache_polylines)
+    else:
+        wLog(f"Áreas urbanizadas e municipio recuperados do cache - {cidade} - {uf}")
+        polMunicipio = cache_polylines[1]
+        polMunicipioAreasUrbanizadas = cache_polylines[2]
+
+    return polMunicipio, polMunicipioAreasUrbanizadas
 
 ################################################################################
 def RouteCompAbrangencia(   data: dict,
@@ -1218,10 +1233,8 @@ def RouteCompAbrangencia(   data: dict,
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
     # wLog("GetBoundMunicipio e FiltrarAreasUrbanizadasPorMunicipio")
-    
-    
-    polMunicipio= sf.GetBoundMunicipio(cidade, uf)
-    polMunicipioAreasUrbanizadas= sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
+
+    polMunicipio, polMunicipioAreasUrbanizadas = get_areas_urbanas_cache(cidade, uf)
     
     match escopo:
         case "AreasUrbanizadas":
