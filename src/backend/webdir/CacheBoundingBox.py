@@ -59,7 +59,7 @@ import zipfile
 import os
 import route_cache as rc
 import PolylineCache as pl
-
+import atexit
 import hashlib
 
 
@@ -75,7 +75,7 @@ class CacheBoundingBox:
         self.ultimaregiao = None
         self.cache_file = Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.bin.gz"
         self._save_timer = None
-        self._debounce_delay = 15  # segundos
+        self._debounce_delay = 4  # segundos
         self._lock = threading.Lock()
         self._load_from_disk_sync()
 
@@ -298,12 +298,16 @@ class CacheBoundingBox:
             ws.column_dimensions[get_column_letter(i)].width = adjusted_width
         
         wb.save(xlsx_path)
-
         # Comprimir para ZIP
         with zipfile.ZipFile(caminho_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
             zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
-
         os.remove(xlsx_path)
+ 
+    def shutdown(self):
+        with self._lock:
+            if self._save_timer and self._save_timer.is_alive():
+                self._save_timer.cancel()
+            self._save_to_disk_sync()
         
 
 # ---------------------------------------------------------------------------------------------------------------    
@@ -311,3 +315,4 @@ class CacheBoundingBox:
 # Instância global
 cCacheBoundingBox = CacheBoundingBox()
 cCacheBoundingBox.clean_old_cache_entries()
+atexit.register(cCacheBoundingBox.shutdown) # evita que o programe termine antes de terminar de salvar o cache
