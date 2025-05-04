@@ -1187,19 +1187,17 @@ def DesenhaComunidades(RouteDetail, regioes):
 
 ################################################################################
 def get_areas_urbanas_cache(cidade, uf):
-    cidade_cache = f"{cidade}-{uf}"
-    cache_polylines = cb.cCacheBoundingBox.areas_urbanas.get_polylines(cidade_cache)
-
+    chave_regiao = {"cidade": cidade, "uf": uf}  # dicionário, compatível com _hash_bbox
+    cache_polylines = cb.cCacheBoundingBox.areas_urbanas.get_polylines(chave_regiao)
     if not cache_polylines:
         polMunicipio = sf.GetBoundMunicipio(cidade, uf)
         polMunicipioAreasUrbanizadas = sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
-        cache_polylines = [cidade_cache, polMunicipio, polMunicipioAreasUrbanizadas]
-        cb.cCacheBoundingBox.areas_urbanas.add_polyline(cidade, cache_polylines)
+        cache_polylines = [f"{cidade}-{uf}", polMunicipio, polMunicipioAreasUrbanizadas]
+        cb.cCacheBoundingBox.areas_urbanas.add_polyline(chave_regiao, cache_polylines)
     else:
-        wLog(f"Áreas urbanizadas e municipio recuperados do cache - {cidade} - {uf}")
+        wLog(f"Áreas urbanizadas e município recuperados do cache - {cidade} - {uf}")
         polMunicipio = cache_polylines[1]
         polMunicipioAreasUrbanizadas = cache_polylines[2]
-
     return polMunicipio, polMunicipioAreasUrbanizadas
 
 ################################################################################
