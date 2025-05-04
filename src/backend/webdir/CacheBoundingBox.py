@@ -213,7 +213,7 @@ class CacheBoundingBox:
             data = pickle.load(f)      
         self.cache = data.get('cache', {})
         self.route_cache = data.get('route_cache', {})
-        self.comunidades_cache = pl.PolylineCache.from_dict(data.get('comunidades_cache', {}))
+        self.comunidades_cache = data.get('comunidades_cache', {})
         
 
     def clean_old_cache_entries(self, meses=12, minimo_regioes=30):
