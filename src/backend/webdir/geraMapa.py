@@ -71,7 +71,7 @@ def WriteToFile(file_path, content):
         wr.wLog(f"Erro ao gravar no arquivo: {e}",level="debug")
 ###########################################################################################################################    
 def GeraStaticIcon(name):
-    wr.wLog(f"GeraStaticIcon - {name}",level="debug")
+    # wr.wLog(f"GeraStaticIcon - {name}",level="debug")
     nomeuser=wr.UserData.nome
     fileIcon = f'static/{name}.png'  
     base64ElevationTable = wr.FileToDataUrlBase64(fileIcon)
