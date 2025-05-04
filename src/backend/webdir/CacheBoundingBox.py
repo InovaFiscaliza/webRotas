@@ -158,7 +158,7 @@ class CacheBoundingBox:
     def delete(self, regioes):
         self.ultimaregiao = regioes
         self.route_cache_clear_regioes()
-        # self.comunidades_cache.clear_regiao(regioes)
+        self.comunidades_cache.clear_regiao(regioes)
         chave = self._hash_bbox(regioes)
         dir = self.cache.get(chave, None)['diretorio']
         if dir:
