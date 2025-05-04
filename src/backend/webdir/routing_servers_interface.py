@@ -319,6 +319,7 @@ def VerificarFalhaServidorOSMR():
     erros_procurados = [
     "terminate called after throwing an instance of",
     "Required files are missing, cannot continue",
+    "Error: no container with name or ID",
     "Error: CreateFile TempData"
     ]
     logfile=f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
@@ -452,7 +453,11 @@ def remover_arquivos_osmr():
                 wr.wLog(f"Erro ao remover {item}: {e}", level="error")
 ################################################################################
 def limpar_cache_files_osmr(regioes):
-    try:
+    try: 
+        wr.wLog("Erro de cache encontrado reiniciando geração dos mapas",level="debug")    
+        wr.wLog(f"Parando todos os containers osmr do usário {wr.UserData.nome}",level="debug")
+        parar_containers_osmr(wr.UserData.nome)
+        
         cb.cCacheBoundingBox.delete(regioes) 
         wr.wLog("Apagando arquivo de log...",level="debug")
         log_file = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
@@ -463,18 +468,11 @@ def limpar_cache_files_osmr(regioes):
             wr.wLog(f"Arquivo não encontrado: {log_file}")
         except Exception as e:
             wr.wLog(f"Erro ao remover {log_file}: {e}")
-            
-        wr.wLog("Erro de cache encontrado reiniciando geração dos mapas",level="debug")    
-        wr.wLog(f"Parando todos os containers osmr do usário {wr.UserData.nome}",level="debug")
-        parar_containers_osmr(wr.UserData.nome)
-
         remover_arquivos_osmr()   
 
         wr.wLog("Limpeza concluída com sucesso.",level="debug")
     except Exception as e:
         wr.wLog(f"Erro durante a limpeza dos caches : {e}")
-
-
 
 
 ################################################################################
@@ -495,7 +493,7 @@ def PreparaServidorRoteamento(regioes):
             
             cb.cCacheBoundingBox.new(regioes,f"filtro_{cb.cCacheBoundingBox.chave(regioes)}") 
         else:
-            wr.wLog("Arquivo exclusoes nao modificado, nao e necessario executar osmosis")
+            wr.wLog("Dados de roteamento encontrados no cache, nao e necessario executar osmosis")
             AtivaServidorOSMR(regioes)
         if VerificarOsrmAtivo():
             roteamento_ok=True

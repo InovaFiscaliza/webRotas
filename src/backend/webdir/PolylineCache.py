@@ -33,10 +33,14 @@ class PolylineCache:
     def __init__(self):
         self.cache = {}  # {hash_da_regiao: [lista de polylines]}
 
+    def __contains__(self, chave):
+        return chave in self.cache
+
     def _hash_bbox(self, regioes, tamanho=12):
         regioes_json = json.dumps(regioes, sort_keys=True)
         hash_obj = hashlib.sha256(regioes_json.encode('utf-8'))
-        return hash_obj.hexdigest()[:tamanho]
+        hash_completo = hash_obj.hexdigest()
+        return hash_completo[:tamanho]
 
     def add_polyline(self, regioes, polyline):
         """Adiciona uma polyline ao cache de uma região"""
@@ -53,9 +57,14 @@ class PolylineCache:
     def clear_regiao(self, regioes):
         """Remove todas as polylines de uma região"""
         chave = self._hash_bbox(regioes)
-        self.cache[chave] = []
+        if chave in self.cache:
+           self.cache[chave] = []
 
-        
+    def get_by_key(self, chave):
+        """Retorna a lista de polylines associadas à chave, ou lista vazia"""
+        return self.cache.get(chave, [])
+
+            
     def clear_regioes_pela_chave(self, chave): 
         self.cache[chave] = []  
 

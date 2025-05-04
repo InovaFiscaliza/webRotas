@@ -158,8 +158,9 @@ class CacheBoundingBox:
     def delete(self, regioes):
         self.ultimaregiao = regioes
         self.route_cache_clear_regioes()
+        # self.comunidades_cache.clear_regiao(regioes)
         chave = self._hash_bbox(regioes)
-        dir = self.cache.get(chave, None)
+        dir = self.cache.get(chave, None)['diretorio']
         if dir:
             self.remover_item_disco(Path(pf.OSMR_PATH_CACHE_DATA) / dir)
         if chave in self.cache:
@@ -269,7 +270,7 @@ class CacheBoundingBox:
         # Conteúdo do cache
         for chave, dados in self.cache.items():
             numrotascached = len(self.route_cache.cache.get(chave, {}))
-            numcomunidadescached = len(self.comunidades_cache.cache.get(chave, []))
+            numcomunidadescached = len(self.comunidades_cache.get_by_key(chave))
             row = [
                 chave,
                 dados.get('regiao', ''),
