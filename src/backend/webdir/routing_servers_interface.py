@@ -319,7 +319,6 @@ def VerificarFalhaServidorOSMR():
     erros_procurados = [
     "terminate called after throwing an instance of",
     "Required files are missing, cannot continue",
-    "Error: no container with name or ID",
     "Error: CreateFile TempData"
     ]
     logfile=f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
@@ -454,7 +453,6 @@ def remover_arquivos_osmr():
 ################################################################################
 def limpar_cache_files_osmr(regioes):
     try: 
-        wr.wLog("Erro de cache encontrado reiniciando geração dos mapas",level="debug")    
         wr.wLog(f"Parando todos os containers osmr do usário {wr.UserData.nome}",level="debug")
         parar_containers_osmr(wr.UserData.nome)
         
@@ -496,8 +494,7 @@ def PreparaServidorRoteamento(regioes):
             wr.wLog("Dados de roteamento encontrados no cache, nao e necessario executar osmosis")
             AtivaServidorOSMR(regioes)
         if VerificarOsrmAtivo():
-            roteamento_ok=True
-            
+            roteamento_ok=True    
         else:   
             wr.wLog("Erro de cache encontrado reiniciando geração dos mapas")
             limpar_cache_files_osmr(regioes) 
