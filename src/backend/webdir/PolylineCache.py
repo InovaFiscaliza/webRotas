@@ -19,6 +19,13 @@ class PolylineCache:
     def __contains__(self, chave):
         return chave in self.cache
 
+    @staticmethod
+    def from_dict(data):
+        obj = PolylineCache()
+        if isinstance(data, dict):
+            obj.cache = data
+        return obj
+
     def _hash_bbox(self, regioes, tamanho=12):
         """Gera hash determinístico da lista de regiões"""
         regioes_json = json.dumps(regioes, sort_keys=True)
