@@ -303,11 +303,6 @@ class CacheBoundingBox:
             zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
         os.remove(xlsx_path)
  
-    def shutdown(self):
-        with self._lock:
-            if self._save_timer and self._save_timer.is_alive():
-                self._save_timer.cancel()
-            self._save_to_disk_sync()
         
 
 # ---------------------------------------------------------------------------------------------------------------    
@@ -315,4 +310,47 @@ class CacheBoundingBox:
 # Instância global
 cCacheBoundingBox = CacheBoundingBox()
 cCacheBoundingBox.clean_old_cache_entries()
-atexit.register(cCacheBoundingBox.shutdown) # evita que o programe termine antes de terminar de salvar o cache
+
+
+import atexit
+import signal
+import platform
+import threading
+
+def shutdown():
+    print("Salvando cache antes de sair...")
+    cCacheBoundingBox._save_to_disk_sync()
+    print("Cache salvo com sucesso.")
+
+# Registro para finalização normal (Linux e Windows)
+atexit.register(shutdown)
+
+# Registro para interrupções (Ctrl+C, SIGTERM)
+def signal_handler(sig, frame):
+    shutdown()
+    exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
+# Suporte especial para o botão "X" da janela no Windows
+if platform.system() == "Windows":
+    try:
+        import win32api
+        import win32con
+
+        def windows_ctrl_handler(ctrl_type):
+            if ctrl_type in (win32con.CTRL_CLOSE_EVENT,
+                             win32con.CTRL_LOGOFF_EVENT,
+                             win32con.CTRL_SHUTDOWN_EVENT):
+                print("Fechamento da janela CMD detectado.")
+                shutdown()
+                # Pequena pausa para garantir que a escrita ocorra antes do encerramento
+                threading.Event().wait(2)
+                return True
+            return False
+
+        win32api.SetConsoleCtrlHandler(windows_ctrl_handler, True)
+
+    except ImportError:
+        print("pywin32 não está instalado. Fechamento via botão 'X' pode não salvar o cache.")
