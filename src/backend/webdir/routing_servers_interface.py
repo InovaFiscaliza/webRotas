@@ -113,7 +113,7 @@ def FiltrarRegiaoComOsmosis(regioes):
     # Se o diretório de destino já existe, não faz nada, pode ser um cache já feito corrompido, vale tentar poupar o tempo.
     if destino.exists():
         wr.wLog(f"Diretório '{destino}' já existe. Ignorando processamento.")
-        return    
+        return 0 # Não criou diretório pode ignorar criação dos indices OSMR
     
     remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{chave}")
     criar_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{chave}")  
@@ -140,7 +140,7 @@ def FiltrarRegiaoComOsmosis(regioes):
     mover_arquivo(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{chave}"/"filtro-latest.osm.pbf", 
                   Path(f"{pf.OSMR_PATH_CACHE_DATA}")/f"filtro_{chave}")
     remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{chave}")    
-    
+    return 1 # Criou diretório roda ciração dos indices OSMR
     
 ################################################################################
 def AtivaServidorOSMR(regioes):
@@ -492,10 +492,9 @@ def PreparaServidorRoteamento(regioes):
             wr.wLog(f"Limpando cache dinamico de rotas para a região")
             cb.cCacheBoundingBox.route_cache_clear_regioes()
             wr.wLog("FiltrarRegiãoComOsmosis")
-            FiltrarRegiaoComOsmosis(regioes)
-            wr.wLog("GerarIndicesExecutarOSRMServer")
-            GerarIndicesExecutarOSRMServer(regioes)
-            
+            if(FiltrarRegiaoComOsmosis(regioes)==1):
+               wr.wLog("GerarIndicesExecutarOSRMServer")
+               GerarIndicesExecutarOSRMServer(regioes)
             cb.cCacheBoundingBox.new(regioes,f"filtro_{cb.cCacheBoundingBox.chave(regioes)}") 
         else:
             wr.wLog("Dados de roteamento encontrados no cache, nao e necessario executar osmosis")

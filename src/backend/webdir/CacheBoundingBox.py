@@ -223,14 +223,14 @@ class CacheBoundingBox:
                 backup_file.unlink()
 
         except Exception as e:
-            print(f"[ERRO] Falha ao salvar cache: {e}")
+            # print(f"[ERRO] Falha ao salvar cache: {e}")
 
             # Se falhou e o backup existe, tenta restaurar
             if backup_file.exists():
                 if self.cache_file.exists():
                     self.cache_file.unlink()
                 backup_file.rename(self.cache_file)
-                print("[INFO] Cache restaurado a partir do backup.")
+                # print("[INFO] Cache restaurado a partir do backup.")
 
         
     def _load_from_disk_sync(self):
