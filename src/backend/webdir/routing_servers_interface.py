@@ -108,6 +108,13 @@ def init_and_load_podman_images():
 def FiltrarRegiaoComOsmosis(regioes):
     chave = cb.cCacheBoundingBox.chave(regioes)
     logok = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
+    
+    destino = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
+    # Se o diretório de destino já existe, não faz nada, pode ser um cache já feito corrompido, vale tentar poupar o tempo.
+    if destino.exists():
+        wr.wLog(f"Diretório '{destino}' já existe. Ignorando processamento.")
+        return    
+    
     remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{chave}")
     criar_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{chave}")  
     subprocess.run(["podman", 
