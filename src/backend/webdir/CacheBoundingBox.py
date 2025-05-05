@@ -201,24 +201,82 @@ class CacheBoundingBox:
             'comunidades_cache': self.comunidades_cache,
             'areas_urbanas': self.areas_urbanas    
         }
-        with gzip.open(self.cache_file, 'wb') as f:
-             pickle.dump(data, f)
-             # f.flush()  # força gravação
-        self.exportar_cache_para_xlsx_zip(Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.zip")     
+
+        backup_file = self.cache_file.with_suffix('.bin.gz.bkp')
+        
+        try:
+            # Renomeia o arquivo existente como backup, se existir
+            if self.cache_file.exists():
+                if backup_file.exists():
+                    backup_file.unlink()  # Remove backup antigo, se houver
+                self.cache_file.rename(backup_file)
+
+            # Tenta salvar o novo arquivo
+            with gzip.open(self.cache_file, 'wb') as f:
+                pickle.dump(data, f)
+
+            # Exporta a planilha ZIP
+            self.exportar_cache_para_xlsx_zip(Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.zip")
+
+            # Se tudo deu certo, remove o backup
+            if backup_file.exists():
+                backup_file.unlink()
+
+        except Exception as e:
+            print(f"[ERRO] Falha ao salvar cache: {e}")
+
+            # Se falhou e o backup existe, tenta restaurar
+            if backup_file.exists():
+                if self.cache_file.exists():
+                    self.cache_file.unlink()
+                backup_file.rename(self.cache_file)
+                print("[INFO] Cache restaurado a partir do backup.")
+
         
     def _load_from_disk_sync(self):
-        if not self.cache_file.exists():            
+        def limpar_todos():
             self.cache = {}
             self.route_cache.cache = {}
-            self.comunidades_cache.clear_all() 
-            self.areas_urbanas.clear_all() 
+            self.comunidades_cache.clear_all()
+            self.areas_urbanas.clear_all()
+
+        if not self.cache_file.exists():
+            limpar_todos()
             return
-        with gzip.open(self.cache_file, 'rb') as f:
-            data = pickle.load(f)      
+
+        try:
+            with gzip.open(self.cache_file, 'rb') as f:
+                data = pickle.load(f)
+        except Exception as e:
+            print(f"[ERRO] Falha ao carregar cache principal: {e}")
+            # Tenta o backup
+            backup_file = self.cache_file.with_suffix('.bin.gz.bkp')
+            if backup_file.exists():
+                try:
+                    with gzip.open(backup_file, 'rb') as f:
+                        data = pickle.load(f)
+                    print("[INFO] Cache restaurado a partir do backup.")
+                    # Substitui o principal com o backup
+                    if self.cache_file.exists():
+                        self.cache_file.unlink()
+                    backup_file.rename(self.cache_file)
+                except Exception as e2:
+                    print(f"[ERRO] Falha ao carregar cache do backup: {e2}")
+                    limpar_todos()
+                    return
+                finally:
+                    if backup_file.exists():
+                        backup_file.unlink()
+            else:
+                print("[WARN] Backup de cache não encontrado.")
+                limpar_todos()
+                return
+
         self.cache = data.get('cache', {})
         self.route_cache = data.get('route_cache', {})
         self.comunidades_cache = data.get('comunidades_cache', {})
         self.areas_urbanas = data.get('areas_urbanas', {})
+
         
 
     def clean_old_cache_entries(self, meses=12, minimo_regioes=30):
