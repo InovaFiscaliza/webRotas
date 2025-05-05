@@ -50,13 +50,12 @@ OSMOSIS_TEMPDATA_PATH = PROJECT_PATH / "src" / "resources" / "Osmosis" / "TempDa
 OSMOSIS_BRAZIL_PATH = PROJECT_PATH / "src" / "resources" / "Osmosis" / "brazil"
 
 OSMR_PATH = PROJECT_PATH / "src" / "resources" / "OSMR"
-OSMR_PATH_DATA_TEMPDATA = PROJECT_PATH / "src" / "resources" / "OSMR"  / "data"  / "TempData"
+# OSMR_PATH_DATA_TEMPDATA = PROJECT_PATH / "src" / "resources" / "OSMR"  / "data"  / "TempData"
 OSMR_PATH_CACHE = WINDOWS_CACHE_PATH / "OSMR" 
-# OSMR_PATH_CACHE_DATA = WINDOWS_CACHE_PATH / "OSMR" / "data" 
 OSMR_PATH_CACHE_DATA = WINDOWS_CACHE_PATH / "OSMR" 
   
 # Cria os diretórios se não existirem
-for path in [LOGS_PATH, WINDOWS_CACHE_PATH, OSMOSIS_PATH, OSMOSIS_TEMPDATA_PATH, OSMOSIS_BRAZIL_PATH, OSMR_PATH, OSMR_PATH_DATA_TEMPDATA, OSMR_PATH_CACHE,OSMR_PATH_CACHE_DATA]:
+for path in [LOGS_PATH, WINDOWS_CACHE_PATH, OSMOSIS_PATH, OSMOSIS_TEMPDATA_PATH, OSMOSIS_BRAZIL_PATH, OSMR_PATH,OSMR_PATH_CACHE,OSMR_PATH_CACHE_DATA]:
     if not path.exists():
         path.mkdir(parents=True, exist_ok=True)
 
