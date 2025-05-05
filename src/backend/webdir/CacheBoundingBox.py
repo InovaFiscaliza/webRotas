@@ -248,7 +248,7 @@ class CacheBoundingBox:
             with gzip.open(self.cache_file, 'rb') as f:
                 data = pickle.load(f)
         except Exception as e:
-            print(f"[ERRO] Falha ao carregar cache principal: {e}")
+            # print(f"[ERRO] Falha ao carregar cache principal: {e}")
             # Tenta o backup
             backup_file = self.cache_file.with_suffix('.bin.gz.bkp')
             if backup_file.exists():
@@ -261,7 +261,7 @@ class CacheBoundingBox:
                         self.cache_file.unlink()
                     backup_file.rename(self.cache_file)
                 except Exception as e2:
-                    print(f"[ERRO] Falha ao carregar cache do backup: {e2}")
+                    # print(f"[ERRO] Falha ao carregar cache do backup: {e2}")
                     limpar_todos()
                     return
                 finally:
@@ -405,7 +405,7 @@ if platform.system() == "Windows":
                 shutdown()
                 # Pequena pausa para garantir que a escrita ocorra antes do encerramento
                 win32api.MessageBox(0, "Cache salvo com sucesso.", "Aviso", win32con.MB_OK | win32con.MB_ICONINFORMATION)
-                threading.Event().wait(2)  
+                threading.Event().wait(60)  
                 return True
             return False
 
