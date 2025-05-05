@@ -346,7 +346,8 @@ if platform.system() == "Windows":
                 print("Fechamento da janela CMD detectado.")
                 shutdown()
                 # Pequena pausa para garantir que a escrita ocorra antes do encerramento
-                threading.Event().wait(2)
+                win32api.MessageBox(0, "Cache salvo com sucesso.", "Aviso", win32con.MB_OK | win32con.MB_ICONINFORMATION)
+                threading.Event().wait(2)  
                 return True
             return False
 
