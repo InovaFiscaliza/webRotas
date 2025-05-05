@@ -391,6 +391,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
+"""
 # Suporte especial para o botão "X" da janela no Windows
 if platform.system() == "Windows":
     try:
@@ -413,3 +414,4 @@ if platform.system() == "Windows":
 
     except ImportError:
         print("pywin32 não está instalado. Fechamento via botão 'X' pode não salvar o cache.")
+"""

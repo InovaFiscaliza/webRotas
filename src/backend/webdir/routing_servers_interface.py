@@ -326,7 +326,8 @@ def VerificarFalhaServidorOSMR():
     erros_procurados = [
     "terminate called after throwing an instance of",
     "Required files are missing, cannot continue",
-    "Error: CreateFile TempData"
+    "Error: CreateFile TempData",
+    "Error: statfs"
     ]
     logfile=f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
     if procurar_multiplas_strings_em_arquivo(logfile, erros_procurados):
