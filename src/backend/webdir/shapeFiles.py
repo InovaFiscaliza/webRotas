@@ -1,3 +1,38 @@
+#!/usr/bin/env python3
+"""
+Este módulo fornece funções para extração e filtragem de informações geográficas de municípios brasileiros,
+com base em shapefiles do IBGE e outras fontes georreferenciadas. Utiliza a biblioteca GeoPandas para
+processamento espacial, e lida com áreas urbanizadas, comunidades e limites municipais.
+
+Funcionalidades principais:
+
+- `GetBoundMunicipio(nome_municipio, estado_sigla)`: Obtém a geometria do limite de um município e retorna
+  suas coordenadas em formato de polylines.
+
+- `FiltrarComunidadesBoundingBox(bounding_box)`: Filtra e retorna os contornos de comunidades (favelas)
+  presentes dentro de um bounding box geográfico.
+
+- `FiltrarAreasUrbanizadasPorMunicipio(municipio_nome, estado_sigla)`: Retorna as áreas urbanizadas de um
+  município específico, filtrando por densidade e respeitando os limites municipais.
+
+- `ObterMunicipiosNoBoundingBox(bounding_box)`: Lista os municípios inteiramente contidos em um bounding box.
+
+- `ObterMunicipiosNoBoundingBoxOrdenados(bounding_box)`: Lista os municípios dentro de um bounding box,
+  ordenados pela distância do centroide municipal ao centro do box.
+
+Constantes:
+- `SHAPEFILE_MUNICIPIO_PATH`: Caminho para o shapefile de municípios do Brasil (IBGE 2023).
+- `SHAPEFILE_FAVELA_PATH`: Caminho para o shapefile com dados de comunidades/favelas.
+- `SHAPEFILE_AREA_URBANIZADA_PATH`: Caminho para o shapefile com áreas urbanizadas do Brasil.
+
+Dependências:
+- geopandas, shapely, pyproj, e módulos locais `webRota` e `uf_code`.
+
+Uso típico:
+    from este_modulo import GetBoundMunicipio, FiltrarAreasUrbanizadasPorMunicipio, ...
+    polylines = GetBoundMunicipio("Rio de Janeiro", "RJ")
+"""
+
 ###########################################################################################################################
 import webRota as wr
 import uf_code as uf

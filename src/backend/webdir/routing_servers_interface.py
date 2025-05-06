@@ -1,3 +1,41 @@
+#!/usr/bin/env python3
+"""
+Módulo de suporte à execução e manutenção do servidor OSRM (Open Source Routing Machine)
+utilizando containers Podman, com manipulação de arquivos OSM, cache geográfico e controle
+de recursos.
+
+Este módulo oferece funções para:
+- Inicializar e carregar imagens Podman necessárias para execução do OSRM.
+- Processar regiões geográficas com Osmosis e preparar dados para roteamento.
+- Criar e manter cache de dados OSM baseado em limites geográficos (bounding boxes).
+- Gerar índices de roteamento (via `osrm-extract`, `osrm-partition`, `osrm-customize`).
+- Iniciar e verificar a operação do servidor OSRM.
+- Manter diretórios e contêineres limpos e atualizados.
+- Encerrar processos ou contêineres antigos automaticamente.
+- Manipular arquivos e diretórios de forma segura no sistema de arquivos.
+
+Principais dependências externas:
+- `podman` (containers)
+- `osmosis` (filtro de dados OSM)
+- `osrm-backend` (servidor de roteamento)
+- `webRota` (módulo auxiliar com logging e dados do usuário)
+- `project_folders` (definições de caminhos no sistema de arquivos)
+- `CacheBoundingBox` (gerenciador de chaves para cache geográfico)
+
+Exemplos de uso:
+    Gerar e ativar servidor OSRM para determinada região:
+        GerarIndicesExecutarOSRMServer(lista_de_regioes)
+
+    Verificar se servidor está ativo:
+        VerificarOsrmAtivo()
+
+    Limpeza periódica:
+        manutencao_arquivos_antigos()
+
+Autor: [Seu Nome ou Equipe]
+Data: [Opcional]
+"""
+
 ###########################################################################################################################
 import os
 import shutil
