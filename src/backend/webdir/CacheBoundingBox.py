@@ -315,9 +315,68 @@ class CacheBoundingBox:
             # wLog("Nenhuma região antiga removida.",level="debug")
             pass
 
-
-
     def exportar_cache_para_xlsx_zip(self, caminho_zip):
+        xlsx_path = caminho_zip.with_suffix('.xlsx')
+        wb = Workbook()
+        ws1 = wb.active
+        ws1.title = "Cache Bounding Box"
+
+        # Aba 1: Cache Bounding Box
+        headers1 = ['Chave', 'Regiao', 'Diretório', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
+        ws1.append(headers1)
+        col_widths1 = [len(h) for h in headers1]
+
+        for chave, dados in self.cache.items():
+            numrotascached = len(self.route_cache.cache.get(chave, {}))
+            numcomunidadescached = len(self.comunidades_cache.get_by_key(chave))
+            row = [
+                chave,
+                dados.get('regiao', ''),
+                dados.get('diretorio', ''),
+                str(numrotascached),
+                str(numcomunidadescached),
+                dados.get('created', ''),
+                dados.get('lastrequest', '')
+            ]
+            ws1.append(row)
+            for i, cell_value in enumerate(row):
+                col_widths1[i] = max(col_widths1[i], len(str(cell_value)))
+        for i, width in enumerate(col_widths1, 1):
+            adjusted_width = min(width + 2, 50)
+            ws1.column_dimensions[get_column_letter(i)].width = adjusted_width
+
+        # Aba 2: Cache Municipios e Áreas Urbanizadas
+        ws2 = wb.create_sheet(title="Cache Municipios")
+        headers2 = ['Cidade-UF', 'Qtde Polígonos Município', 'Qtde Polígonos Áreas Urbanizadas']
+        ws2.append(headers2)
+        col_widths2 = [len(h) for h in headers2]        
+        for chave_regiao, valor in self.areas_urbanas.cache.items():
+            try:
+                cache_polylines = valor.get("polyline", [])
+                cidade_uf = cache_polylines[0]
+                pol_municipio = cache_polylines[1]
+                pol_urbanizadas = cache_polylines[2]
+                q_pol_municipio = len(pol_municipio) if hasattr(pol_municipio, '__len__') else 1
+                q_pol_urbanizadas = len(pol_urbanizadas) if hasattr(pol_urbanizadas, '__len__') else 1
+                row = [cidade_uf, str(q_pol_municipio), str(q_pol_urbanizadas)]
+                ws2.append(row)
+                for i, cell_value in enumerate(row):
+                    col_widths2[i] = max(col_widths2[i], len(str(cell_value)))
+            except Exception as e:
+                ws2.append([f"Erro em {chave_regiao}", str(e), ""])
+
+
+        for i, width in enumerate(col_widths2, 1):
+            adjusted_width = min(width + 2, 50)
+            ws2.column_dimensions[get_column_letter(i)].width = adjusted_width
+
+        # Salva e compacta
+        wb.save(xlsx_path)
+        with zipfile.ZipFile(caminho_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
+        os.remove(xlsx_path)
+
+    def exportar_cache_para_xlsx_zip_old(self, caminho_zip):
         xlsx_path = caminho_zip.with_suffix('.xlsx')
         wb = Workbook()
         ws = wb.active

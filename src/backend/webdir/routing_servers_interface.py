@@ -496,6 +496,9 @@ def PreparaServidorRoteamento(regioes):
             if(FiltrarRegiaoComOsmosis(regioes)==1):
                wr.wLog("GerarIndicesExecutarOSRMServer")
                GerarIndicesExecutarOSRMServer(regioes)
+            else:
+                wr.wLog("Dados de roteamento encontrados no diretorio filtro OSMR cache, ativando o servidor OSMR")
+                AtivaServidorOSMR(regioes)   
             cb.cCacheBoundingBox.new(regioes,f"filtro_{cb.cCacheBoundingBox.chave(regioes)}") 
         else:
             wr.wLog("Dados de roteamento encontrados no cache, nao e necessario executar osmosis")
