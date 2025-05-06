@@ -490,7 +490,6 @@ def PreparaServidorRoteamento(regioes):
                 regioes,
                 arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{cb.cCacheBoundingBox.chave(regioes)}.poly",
             )
-            wr.wLog(f"Limpando cache dinamico de rotas para a região")
             cb.cCacheBoundingBox.route_cache_clear_regioes()
             wr.wLog("FiltrarRegiãoComOsmosis")
             if(FiltrarRegiaoComOsmosis(regioes)==1):
