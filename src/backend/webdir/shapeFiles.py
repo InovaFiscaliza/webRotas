@@ -176,7 +176,7 @@ def FiltrarAreasUrbanizadasPorMunicipio(municipio_nome: str, estado_sigla: str) 
 ##############################################################################################################
 def ObterMunicipiosNoBoundingBox(bounding_box: tuple) -> list:
     """
-    Retorna uma lista com os nomes dos municípios cujo centroide está dentro do bounding box fornecido.
+    Retorna uma lista com os nomes dos municípios cuja geometria está inteiramente dentro do bounding box fornecido.
 
     :param bounding_box: Tupla (minx, miny, maxx, maxy)
     :return: Lista de strings no formato "Cidade-UF"
@@ -192,11 +192,8 @@ def ObterMunicipiosNoBoundingBox(bounding_box: tuple) -> list:
     minx, miny, maxx, maxy = bounding_box
     bbox_polygon = box(minx, miny, maxx, maxy)
 
-    # Calcula centroide dos municípios
-    gdf['centroide'] = gdf.geometry.centroid
-
-    # Filtra os municípios cujos centroides estão dentro do bounding box
-    municipios_filtrados = gdf[gdf['centroide'].within(bbox_polygon)]
+    # Filtra os municípios cuja geometria está inteiramente dentro do bounding box
+    municipios_filtrados = gdf[gdf.geometry.within(bbox_polygon)]
 
     # Monta lista com chave "Cidade-UF"
     resultado = []
@@ -214,4 +211,5 @@ def ObterMunicipiosNoBoundingBox(bounding_box: tuple) -> list:
             resultado.append(chave)
 
     return resultado
+
 ##############################################################################################################

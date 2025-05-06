@@ -257,7 +257,7 @@ class CacheBoundingBox:
                 try:
                     with gzip.open(backup_file, 'rb') as f:
                         data = pickle.load(f)
-                    print("[INFO] Cache restaurado a partir do backup.")
+                    # print("[INFO] Cache restaurado a partir do backup.")
                     # Substitui o principal com o backup
                     if self.cache_file.exists():
                         self.cache_file.unlink()
@@ -270,7 +270,7 @@ class CacheBoundingBox:
                     if backup_file.exists():
                         backup_file.unlink()
             else:
-                print("[WARN] Backup de cache não encontrado.")
+                # print("[WARN] Backup de cache não encontrado.")
                 limpar_todos()
                 return
 
@@ -336,7 +336,7 @@ class CacheBoundingBox:
             row = [
                 chave,
                 dados.get('regiao', ''),
-                dados.get('inforegiao', ''),
+                dados.get('inforegiao', '').encode('utf-8').decode('unicode_escape'),
                 dados.get('diretorio', ''),
                 str(numrotascached),
                 str(numcomunidadescached),
@@ -379,53 +379,7 @@ class CacheBoundingBox:
         wb.save(xlsx_path)
         with zipfile.ZipFile(caminho_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
             zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
-        os.remove(xlsx_path)
-
-    def exportar_cache_para_xlsx_zip_old(self, caminho_zip):
-        xlsx_path = caminho_zip.with_suffix('.xlsx')
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Cache Bounding Box"
-        
-        # Cabeçalhos
-        headers = ['Chave', 'Regiao', 'Diretório', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
-        ws.append(headers)
-
-        # Inicializa lista de larguras com o comprimento dos cabeçalhos
-        col_widths = [len(h) for h in headers]
-        
-        # Conteúdo do cache
-        for chave, dados in self.cache.items():
-            numrotascached = len(self.route_cache.cache.get(chave, {}))
-            numcomunidadescached = len(self.comunidades_cache.get_by_key(chave))
-            row = [
-                chave,
-                dados.get('regiao', ''),
-                dados.get('diretorio', ''),
-                str(numrotascached),
-                str(numcomunidadescached),
-                dados.get('created', ''),
-                dados.get('lastrequest', '')
-            ]
-            ws.append(row)
-            # Atualiza larguras máximas
-            for i, cell_value in enumerate(row):
-                col_widths[i] = max(col_widths[i], len(str(cell_value)))
-
-        # Aplica larguras ajustadas (com margem extra de +2 caracteres, limitando a 200 se necessário)
-        for i, width in enumerate(col_widths, 1):
-            adjusted_width = width + 2  # Adiciona a margem de 2 caracteres
-            if adjusted_width > 50:
-                adjusted_width = 50  # Limita a largura a 200 se ultrapassar esse valor
-            ws.column_dimensions[get_column_letter(i)].width = adjusted_width
-        
-        wb.save(xlsx_path)
-        # Comprimir para ZIP
-        with zipfile.ZipFile(caminho_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
-        os.remove(xlsx_path)
- 
-        
+        os.remove(xlsx_path)     
 
 # ---------------------------------------------------------------------------------------------------------------    
 
