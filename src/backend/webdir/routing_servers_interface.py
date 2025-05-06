@@ -482,6 +482,7 @@ def limpar_cache_files_osmr(regioes):
 
 
 ################################################################################
+import shapeFiles as sf
 def PreparaServidorRoteamento(regioes):
     roteamento_ok=False
     while not roteamento_ok:
@@ -498,7 +499,8 @@ def PreparaServidorRoteamento(regioes):
             else:
                 wr.wLog("Dados de roteamento encontrados no diretorio filtro OSMR cache, ativando o servidor OSMR")
                 AtivaServidorOSMR(regioes)   
-            cb.cCacheBoundingBox.new(regioes,f"filtro_{cb.cCacheBoundingBox.chave(regioes)}") 
+            info_regiao = sf.ObterMunicipiosNoBoundingBox(wr.extrair_bounding_box_de_regioes(regioes))   
+            cb.cCacheBoundingBox.new(regioes,f"filtro_{cb.cCacheBoundingBox.chave(regioes)}",info_regiao) 
         else:
             wr.wLog("Dados de roteamento encontrados no cache, nao e necessario executar osmosis")
             AtivaServidorOSMR(regioes)

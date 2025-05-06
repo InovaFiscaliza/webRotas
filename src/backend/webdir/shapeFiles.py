@@ -174,3 +174,44 @@ def FiltrarAreasUrbanizadasPorMunicipio(municipio_nome: str, estado_sigla: str) 
 
 
 ##############################################################################################################
+def ObterMunicipiosNoBoundingBox(bounding_box: tuple) -> list:
+    """
+    Retorna uma lista com os nomes dos municípios cujo centroide está dentro do bounding box fornecido.
+
+    :param bounding_box: Tupla (minx, miny, maxx, maxy)
+    :return: Lista de strings no formato "Cidade-UF"
+    """
+    import geopandas as gpd
+    from shapely.geometry import box
+    import uf_code as uf  # Certifique-se de que esse módulo está acessível
+
+    # Carrega o shapefile de municípios
+    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+
+    # Cria polígono do bounding box
+    minx, miny, maxx, maxy = bounding_box
+    bbox_polygon = box(minx, miny, maxx, maxy)
+
+    # Calcula centroide dos municípios
+    gdf['centroide'] = gdf.geometry.centroid
+
+    # Filtra os municípios cujos centroides estão dentro do bounding box
+    municipios_filtrados = gdf[gdf['centroide'].within(bbox_polygon)]
+
+    # Monta lista com chave "Cidade-UF"
+    resultado = []
+    for _, row in municipios_filtrados.iterrows():
+        nome = row['NM_MUN']
+        codigo_uf = row['CD_UF']
+        sigla_uf = None
+        for uf_sigla, dados in uf.SIGLAS_UF.items():
+            if dados["CD_UF"] == codigo_uf:
+                sigla_uf = uf_sigla
+                break
+
+        if sigla_uf:
+            chave = f"{nome}-{sigla_uf}"
+            resultado.append(chave)
+
+    return resultado
+##############################################################################################################

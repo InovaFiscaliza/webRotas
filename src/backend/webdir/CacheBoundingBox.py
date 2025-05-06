@@ -95,7 +95,7 @@ class CacheBoundingBox:
         elif os.path.isfile(caminho):
             os.remove(caminho)
 
-    def new(self, regioes, diretorio):
+    def new(self, regioes, diretorio, inforegiao=""):
         chave = self._hash_bbox(regioes)
         self.ultimaregiao = regioes
         now = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -105,10 +105,12 @@ class CacheBoundingBox:
         regiao_legivel = regiao_legivel.replace('\n', '').replace('\r', '')
         if len(regiao_legivel) > 2400:
             regiao_legivel = regiao_legivel[:2397] + '...'
-
+        
+        inforegiao = json.dumps(inforegiao).replace('\n', '').replace('\r', '')
         self.cache[chave] = {
             'regiao': regiao_legivel,
-            'diretorio': diretorio,          
+            'diretorio': diretorio,
+            'inforegiao': inforegiao,          
             'created': now,
             'lastrequest': now
 
@@ -322,9 +324,11 @@ class CacheBoundingBox:
         ws1.title = "Cache Bounding Box"
 
         # Aba 1: Cache Bounding Box
-        headers1 = ['Chave', 'Regiao', 'Diretório', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
+        headers1 = ['Chave', 'Regiao', 'Municipios Cobertos', 'Diretório', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
         ws1.append(headers1)
         col_widths1 = [len(h) for h in headers1]
+
+
 
         for chave, dados in self.cache.items():
             numrotascached = len(self.route_cache.cache.get(chave, {}))
@@ -332,6 +336,7 @@ class CacheBoundingBox:
             row = [
                 chave,
                 dados.get('regiao', ''),
+                dados.get('inforegiao', ''),
                 dados.get('diretorio', ''),
                 str(numrotascached),
                 str(numcomunidadescached),

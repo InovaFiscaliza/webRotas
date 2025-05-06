@@ -1139,17 +1139,27 @@ def ServerSetupJavaScript(RouteDetail):
         RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
     return RouteDetail
 ################################################################################
-def DesenhaComunidades(RouteDetail, regioes):
+def extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "regiaoBoundingbox") -> tuple:
+    """
+    Extrai o bounding box de uma região nomeada dentro de uma lista de regiões.
+
+    :param regioes: Lista de dicionários contendo as regiões, onde cada item tem chave 'nome' e 'coord'.
+    :param nome_alvo: Nome da região alvo para extração do bounding box.
+    :return: Tupla no formato (lon_min, lat_min, lon_max, lat_max), ou None se não encontrada.
+    """
     for regiao in regioes:
-        nome = regiao.get("nome", "")
-        if nome == "regiaoBoundingbox":
+        if regiao.get("nome", "") == nome_alvo:
             coords = regiao.get("coord", [])
-            lon_min = coords[0][1]
-            lat_min = coords[2][0]
-            lon_max = coords[1][1]
-            lat_max = coords[0][0]
-            break
-    bounding_box = (lon_min, lat_min, lon_max, lat_max)
+            if len(coords) >= 3:
+                lon_min = coords[0][1]
+                lat_min = coords[2][0]
+                lon_max = coords[1][1]
+                lat_max = coords[0][0]
+                return (lon_min, lat_min, lon_max, lat_max)
+    return None
+################################################################################
+def DesenhaComunidades(RouteDetail, regioes):
+    bounding_box = extrair_bounding_box_de_regioes(regioes)
     
     polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
     if(not polylinesComunidades):
