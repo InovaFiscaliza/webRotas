@@ -213,3 +213,64 @@ def ObterMunicipiosNoBoundingBox(bounding_box: tuple) -> list:
     return resultado
 
 ##############################################################################################################
+import geopandas as gpd
+from shapely.geometry import box
+from shapely.ops import transform
+import uf_code as uf
+from functools import partial
+import pyproj
+
+def ObterMunicipiosNoBoundingBoxOrdenados(bounding_box: tuple) -> list:
+    """
+    Retorna uma lista com os nomes dos municípios cuja geometria está inteiramente dentro do bounding box fornecido,
+    ordenados pela proximidade do centroide ao centro do bounding box.
+
+    :param bounding_box: Tupla (minx, miny, maxx, maxy)
+    :return: Lista de strings no formato "Cidade-UF"
+    """
+    # Carrega o shapefile de municípios
+    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+
+    # Cria polígono do bounding box
+    minx, miny, maxx, maxy = bounding_box
+    bbox_polygon = box(minx, miny, maxx, maxy)
+
+    # Filtra os municípios cuja geometria está inteiramente dentro do bounding box
+    municipios_filtrados = gdf[gdf.geometry.within(bbox_polygon)]
+
+    # Calcula o centro do bounding box
+    centro_bbx = [(minx + maxx) / 2, (miny + maxy) / 2]
+    
+    # Função para calcular a distância entre dois pontos (em coordenadas geográficas)
+    def calcular_distancia(ponto1, ponto2):
+        return pyproj.Geod(ellps="WGS84").inv(ponto1[0], ponto1[1], ponto2[0], ponto2[1])[2]
+
+    # Lista para armazenar os resultados
+    resultado = []
+
+    for _, row in municipios_filtrados.iterrows():
+        nome = row['NM_MUN']
+        codigo_uf = row['CD_UF']
+        sigla_uf = None
+        for uf_sigla, dados in uf.SIGLAS_UF.items():
+            if dados["CD_UF"] == codigo_uf:
+                sigla_uf = uf_sigla
+                break
+
+        if sigla_uf:
+            # Obtém o centroide do município
+            municipio_centroid = row['geometry'].centroid
+            centroid_coords = [municipio_centroid.x, municipio_centroid.y]
+            
+            # Calcula a distância do centroide ao centro do bounding box
+            distancia = calcular_distancia(centro_bbx, centroid_coords)
+            
+            # Armazena a distância e o nome da cidade
+            resultado.append((distancia, f"{nome}-{sigla_uf}"))
+
+    # Ordena a lista pela distância (distância mais próxima primeiro)
+    resultado.sort(key=lambda x: x[0])
+
+    # Retorna a lista ordenada com os nomes das cidades
+    return [cidade for _, cidade in resultado]
+##############################################################################################################
