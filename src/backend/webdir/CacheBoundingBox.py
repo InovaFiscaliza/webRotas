@@ -60,8 +60,8 @@ import os
 import route_cache as rc
 import PolylineCache as pl
 import atexit
-import hashlib
-
+import signal
+import threading
 
 # ---------------------------------------------------------------------------------------------------------------
 class CacheBoundingBox:
@@ -388,10 +388,7 @@ cCacheBoundingBox = CacheBoundingBox()
 cCacheBoundingBox.clean_old_cache_entries()
 
 
-import atexit
-import signal
-import platform
-import threading
+
 
 def shutdown():
     print("Salvando cache antes de sair...")
