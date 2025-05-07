@@ -10,4 +10,5 @@ uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" 
 uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_visita_portoalegre-belem.json
 uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_abrangencia_riodejaneiro_distosmr.json
 uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_abrangencia_sp_pesado.json
+uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_abrangencia_brasilia_distosmr.json
 
