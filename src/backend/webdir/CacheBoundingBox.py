@@ -405,28 +405,3 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
-
-"""
-# Suporte especial para o botão "X" da janela no Windows
-if platform.system() == "Windows":
-    try:
-        import win32api
-        import win32con
-
-        def windows_ctrl_handler(ctrl_type):
-            if ctrl_type in (win32con.CTRL_CLOSE_EVENT,
-                             win32con.CTRL_LOGOFF_EVENT,
-                             win32con.CTRL_SHUTDOWN_EVENT):
-                print("Fechamento da janela CMD detectado.")
-                shutdown()
-                # Pequena pausa para garantir que a escrita ocorra antes do encerramento
-                win32api.MessageBox(0, "Cache salvo com sucesso.", "Aviso", win32con.MB_OK | win32con.MB_ICONINFORMATION)
-                threading.Event().wait(60)  
-                return True
-            return False
-
-        win32api.SetConsoleCtrlHandler(windows_ctrl_handler, True)
-
-    except ImportError:
-        print("pywin32 não está instalado. Fechamento via botão 'X' pode não salvar o cache.")
-"""
