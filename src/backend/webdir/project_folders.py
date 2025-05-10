@@ -50,7 +50,6 @@ OSMOSIS_TEMPDATA_PATH = PROJECT_PATH / "src" / "resources" / "Osmosis" / "TempDa
 OSMOSIS_BRAZIL_PATH = PROJECT_PATH / "src" / "resources" / "Osmosis" / "brazil"
 
 OSMR_PATH = PROJECT_PATH / "src" / "resources" / "OSMR"
-# OSMR_PATH_DATA_TEMPDATA = PROJECT_PATH / "src" / "resources" / "OSMR"  / "data"  / "TempData"
 OSMR_PATH_CACHE = WINDOWS_CACHE_PATH 
 OSMR_PATH_CACHE_DATA = WINDOWS_CACHE_PATH 
   

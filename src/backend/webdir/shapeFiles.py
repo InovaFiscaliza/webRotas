@@ -274,10 +274,9 @@ def ObterMunicipiosNoBoundingBoxOrdenados(bounding_box: tuple) -> list:
     # Função para calcular a distância entre dois pontos (em coordenadas geográficas)
     def calcular_distancia(ponto1, ponto2):
         return pyproj.Geod(ellps="WGS84").inv(ponto1[0], ponto1[1], ponto2[0], ponto2[1])[2]
-
+    
     resultado = []
-
-    for _, row in gdf.iterrows():
+    for _, row in gdf[gdf.geometry.intersects(bbox_polygon)].iterrows():
         nome = row['NM_MUN']
         codigo_uf = row['CD_UF']
         sigla_uf = None
