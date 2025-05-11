@@ -210,7 +210,7 @@ class CacheBoundingBox:
             return
 
         caminho_arquivo = diretorio / "route_cache.bin.gz"
-        caminho_old = diretorio / "route_cache.old.gz"
+        caminho_old = diretorio / "route_cache.bkp.gz"
 
         try:
             if caminho_arquivo.exists():
@@ -255,7 +255,7 @@ class CacheBoundingBox:
                 continue
 
             caminho_arquivo = diretorio / "route_cache.bin.gz"
-            caminho_old =  diretorio / "route_cache.old.gz"
+            caminho_old =  diretorio / "route_cache.bkp.gz"
 
             if not caminho_arquivo.exists() and not caminho_old.exists():
                 # print(f"[AVISO] Nenhum arquivo encontrado para chave '{chave}'")
