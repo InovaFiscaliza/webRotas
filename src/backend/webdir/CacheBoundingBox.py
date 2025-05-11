@@ -198,7 +198,7 @@ class CacheBoundingBox:
     def salvar_route_cache_item(self,chave,dados):
         diretorio_rel = dados.get('diretorio')
         if not diretorio_rel:
-            print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
+            # print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
             return
 
         diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / diretorio_rel
@@ -206,7 +206,7 @@ class CacheBoundingBox:
 
         route_data = self.route_cache.cache.get(chave)
         if route_data is None:
-            print(f"[AVISO] Chave '{chave}' não possui dados em route_cache. Pulando...")
+            # print(f"[AVISO] Chave '{chave}' não possui dados em route_cache. Pulando...")
             return
 
         caminho_arquivo = diretorio / "route_cache.bin.gz"
@@ -220,7 +220,7 @@ class CacheBoundingBox:
             with gzip.open(caminho_arquivo, "wb") as f:
                 pickle.dump(route_data, f)
             caminho_old.unlink(missing_ok=True)     
-            print(f"[OK] Route cache salvo para '{chave}' em '{caminho_arquivo}'")
+            # print(f"[OK] Route cache salvo para '{chave}' em '{caminho_arquivo}'")
         except Exception as e:
             print(f"[ERRO] Falha ao salvar route_cache para '{chave}': {e}")
     
@@ -246,26 +246,26 @@ class CacheBoundingBox:
         restaurando os dados em self.route_cache.cache[chave].
         Em caso de erro ao carregar o arquivo principal, tenta carregar o arquivo de backup (.old.gz).
         """
-        print(f"Cache contém {len(self.cache)} entradas")
+        # print(f"Cache contém {len(self.cache)} entradas")
         for chave, dados in self.cache.items():
             diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / dados.get('diretorio')
 
             if not diretorio:
-                print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
+                # print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
                 continue
 
             caminho_arquivo = diretorio / "route_cache.bin.gz"
             caminho_old =  diretorio / "route_cache.old.gz"
 
             if not caminho_arquivo.exists() and not caminho_old.exists():
-                print(f"[AVISO] Nenhum arquivo encontrado para chave '{chave}'")
+                # print(f"[AVISO] Nenhum arquivo encontrado para chave '{chave}'")
                 continue
 
             try:
                 with gzip.open(caminho_arquivo, "rb") as f:
                     route_data = pickle.load(f)
                     self.route_cache.cache[chave] = route_data
-                print(f"[OK] Route cache carregado para '{chave}' de '{caminho_arquivo}'")
+                # print(f"[OK] Route cache carregado para '{chave}' de '{caminho_arquivo}'")
             except Exception as e:
                 print(f"[ERRO] Falha ao carregar '{caminho_arquivo}': {e}")
                 if caminho_old.exists():
