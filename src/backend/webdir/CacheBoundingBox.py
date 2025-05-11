@@ -238,6 +238,7 @@ class CacheBoundingBox:
         restaurando os dados em self.route_cache.cache[chave].
         Em caso de erro ao carregar o arquivo principal, tenta carregar o arquivo de backup (.old.gz).
         """
+        print(f"Cache contém {len(self.cache)} entradas")
         for chave, dados in self.cache.items():
             diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / dados.get('diretorio')
 
@@ -245,8 +246,8 @@ class CacheBoundingBox:
                 print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
                 continue
 
-            caminho_arquivo =  os.path.join(diretorio, "route_cache.bin.gz")
-            caminho_old = os.path.join(diretorio, "route_cache.old.gz")
+            caminho_arquivo = diretorio / "route_cache.bin.gz"
+            caminho_old =  diretorio / "route_cache.old.gz"
 
             if not caminho_arquivo.exists() and not caminho_old.exists():
                 print(f"[AVISO] Nenhum arquivo encontrado para chave '{chave}'")
@@ -322,10 +323,9 @@ class CacheBoundingBox:
             limpar_todos()
             return
 
-        try:
-            self.carregar_route_cache_individual()
+        try:       
             with gzip.open(self.cache_file, 'rb') as f:
-                data = pickle.load(f)
+                data = pickle.load(f)  
         except Exception as e:
             # print(f"[ERRO] Falha ao carregar cache principal: {e}")
             # Tenta o backup
@@ -355,7 +355,7 @@ class CacheBoundingBox:
         # self.route_cache = data.get('route_cache', {})
         self.comunidades_cache = data.get('comunidades_cache', {})
         self.areas_urbanas = data.get('areas_urbanas', {})
-
+        self.carregar_route_cache_individual()  
         
 
     def clean_old_cache_entries(self, meses=12, minimo_regioes=30):
@@ -461,6 +461,7 @@ class CacheBoundingBox:
 # ---------------------------------------------------------------------------------------------------------------    
 
 # Instância global
+print("Instanciando CacheBoundingBox...")
 cCacheBoundingBox = CacheBoundingBox()
 cCacheBoundingBox.clean_old_cache_entries()
 
