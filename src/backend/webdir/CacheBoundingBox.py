@@ -196,16 +196,92 @@ class CacheBoundingBox:
             self._save_timer.start()
 
 
+    def salvar_route_cache_individual(self):
+        """
+        Salva cada entrada do self.route_cache em um arquivo .bin.gz (Gzip + Pickle)
+        dentro do diretório correspondente definido em self.cache.
+        Antes de salvar, renomeia o arquivo antigo para route_cache.old.gz, se existir.
+        """
+        for chave, dados in self.cache.items():
+            diretorio_rel = dados.get('diretorio')
+            if not diretorio_rel:
+                print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
+                continue
+
+            diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / diretorio_rel
+            diretorio.mkdir(parents=True, exist_ok=True)
+
+            route_data = self.route_cache.cache.get(chave)
+            if route_data is None:
+                print(f"[AVISO] Chave '{chave}' não possui dados em route_cache. Pulando...")
+                continue
+
+            caminho_arquivo = diretorio / "route_cache.bin.gz"
+            caminho_old = diretorio / "route_cache.old.gz"
+
+            try:
+                if caminho_arquivo.exists():
+                    caminho_old.unlink(missing_ok=True)  # Remove .old se já existir
+                    caminho_arquivo.rename(caminho_old)  # Renomeia para .old
+
+                with gzip.open(caminho_arquivo, "wb") as f:
+                    pickle.dump(route_data, f)
+                caminho_old.unlink(missing_ok=True)     
+                print(f"[OK] Route cache salvo para '{chave}' em '{caminho_arquivo}'")
+            except Exception as e:
+                print(f"[ERRO] Falha ao salvar route_cache para '{chave}': {e}")
+                
+                
+    def carregar_route_cache_individual(self):
+        """
+        Carrega os arquivos .bin.gz (Gzip + Pickle) de cada diretório indicado em self.cache,
+        restaurando os dados em self.route_cache.cache[chave].
+        Em caso de erro ao carregar o arquivo principal, tenta carregar o arquivo de backup (.old.gz).
+        """
+        for chave, dados in self.cache.items():
+            diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / dados.get('diretorio')
+
+            if not diretorio:
+                print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
+                continue
+
+            caminho_arquivo =  os.path.join(diretorio, "route_cache.bin.gz")
+            caminho_old = os.path.join(diretorio, "route_cache.old.gz")
+
+            if not caminho_arquivo.exists() and not caminho_old.exists():
+                print(f"[AVISO] Nenhum arquivo encontrado para chave '{chave}'")
+                continue
+
+            try:
+                with gzip.open(caminho_arquivo, "rb") as f:
+                    route_data = pickle.load(f)
+                    self.route_cache.cache[chave] = route_data
+                print(f"[OK] Route cache carregado para '{chave}' de '{caminho_arquivo}'")
+            except Exception as e:
+                print(f"[ERRO] Falha ao carregar '{caminho_arquivo}': {e}")
+                if caminho_old.exists():
+                    try:
+                        with gzip.open(caminho_old, "rb") as f:
+                            route_data = pickle.load(f)
+                            self.route_cache.cache[chave] = route_data
+                        caminho_old.unlink(missing_ok=True)    
+                        print(f"[RECUPERADO] Route cache carregado de backup '{caminho_old}' para '{chave}'")
+                    except Exception as e2:
+                        print(f"[ERRO] Também falhou ao carregar backup '{caminho_old}': {e2}")
+                else:
+                    print(f"[AVISO] Arquivo de backup '{caminho_old}' não existe.")
+
+
     def _save_to_disk_sync(self):
         data = {
             'cache': self.cache,
-            'route_cache': self.route_cache,
+            # 'route_cache': self.route_cache,
             'comunidades_cache': self.comunidades_cache,
             'areas_urbanas': self.areas_urbanas    
         }
 
-        backup_file = self.cache_file.with_suffix('.bin.gz.bkp')
-        
+        self.salvar_route_cache_individual()
+        backup_file = self.cache_file.with_suffix('.bin.gz.bkp')       
         try:
             # Renomeia o arquivo existente como backup, se existir
             if self.cache_file.exists():
@@ -247,6 +323,7 @@ class CacheBoundingBox:
             return
 
         try:
+            self.carregar_route_cache_individual()
             with gzip.open(self.cache_file, 'rb') as f:
                 data = pickle.load(f)
         except Exception as e:
@@ -275,7 +352,7 @@ class CacheBoundingBox:
                 return
 
         self.cache = data.get('cache', {})
-        self.route_cache = data.get('route_cache', {})
+        # self.route_cache = data.get('route_cache', {})
         self.comunidades_cache = data.get('comunidades_cache', {})
         self.areas_urbanas = data.get('areas_urbanas', {})
 
