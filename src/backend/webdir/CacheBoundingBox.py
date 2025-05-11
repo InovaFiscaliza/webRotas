@@ -195,41 +195,49 @@ class CacheBoundingBox:
             self._save_timer.daemon = True
             self._save_timer.start()
 
+    def salvar_route_cache_item(self,chave,dados):
+        diretorio_rel = dados.get('diretorio')
+        if not diretorio_rel:
+            print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
+            return
 
+        diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / diretorio_rel
+        diretorio.mkdir(parents=True, exist_ok=True)
+
+        route_data = self.route_cache.cache.get(chave)
+        if route_data is None:
+            print(f"[AVISO] Chave '{chave}' não possui dados em route_cache. Pulando...")
+            return
+
+        caminho_arquivo = diretorio / "route_cache.bin.gz"
+        caminho_old = diretorio / "route_cache.old.gz"
+
+        try:
+            if caminho_arquivo.exists():
+                caminho_old.unlink(missing_ok=True)  # Remove .old se já existir
+                caminho_arquivo.rename(caminho_old)  # Renomeia para .old
+
+            with gzip.open(caminho_arquivo, "wb") as f:
+                pickle.dump(route_data, f)
+            caminho_old.unlink(missing_ok=True)     
+            print(f"[OK] Route cache salvo para '{chave}' em '{caminho_arquivo}'")
+        except Exception as e:
+            print(f"[ERRO] Falha ao salvar route_cache para '{chave}': {e}")
+    
+        
     def salvar_route_cache_individual(self):
         """
         Salva cada entrada do self.route_cache em um arquivo .bin.gz (Gzip + Pickle)
         dentro do diretório correspondente definido em self.cache.
         Antes de salvar, renomeia o arquivo antigo para route_cache.old.gz, se existir.
         """
+        if(self.ultimaregiao != None):
+            chave = self._hash_bbox(self.ultimaregiao)
+            dados = self.cache[chave]
+            self.salvar_route_cache_item(chave,dados)
+            return
         for chave, dados in self.cache.items():
-            diretorio_rel = dados.get('diretorio')
-            if not diretorio_rel:
-                print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
-                continue
-
-            diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / diretorio_rel
-            diretorio.mkdir(parents=True, exist_ok=True)
-
-            route_data = self.route_cache.cache.get(chave)
-            if route_data is None:
-                print(f"[AVISO] Chave '{chave}' não possui dados em route_cache. Pulando...")
-                continue
-
-            caminho_arquivo = diretorio / "route_cache.bin.gz"
-            caminho_old = diretorio / "route_cache.old.gz"
-
-            try:
-                if caminho_arquivo.exists():
-                    caminho_old.unlink(missing_ok=True)  # Remove .old se já existir
-                    caminho_arquivo.rename(caminho_old)  # Renomeia para .old
-
-                with gzip.open(caminho_arquivo, "wb") as f:
-                    pickle.dump(route_data, f)
-                caminho_old.unlink(missing_ok=True)     
-                print(f"[OK] Route cache salvo para '{chave}' em '{caminho_arquivo}'")
-            except Exception as e:
-                print(f"[ERRO] Falha ao salvar route_cache para '{chave}': {e}")
+            self.salvar_route_cache_item(chave,dados)
                 
                 
     def carregar_route_cache_individual(self):
