@@ -812,9 +812,9 @@ def GeraArquivoExclusoes(regioes, arquivo_saida="exclusion.poly"):
     wLog("GeraArquivoExclusoes")
     try:
         with open(arquivo_saida, "w") as f:
-            f.write(f"AreasRoteamento\n")
+            f.write(f"routingAreas\n")
             for regiao in regioes:
-                nome = regiao.get("nome", "SemNome").replace(" ", "_")
+                nome = regiao.get("name", "none").replace(" ", "_")
                 coordenadas = regiao.get("coord", [])
 
                 # Escrever o nome da região no arquivo
@@ -1139,7 +1139,7 @@ def ServerSetupJavaScript(RouteDetail):
         RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
     return RouteDetail
 ################################################################################
-def extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "regiaoBoundingbox") -> tuple:
+def extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "boundingBoxRegion") -> tuple:
     """
     Extrai o bounding box de uma região nomeada dentro de uma lista de regiões.
 
@@ -1148,7 +1148,7 @@ def extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "regiaoBound
     :return: Tupla no formato (lon_min, lat_min, lon_max, lat_max), ou None se não encontrada.
     """
     for regiao in regioes:
-        if regiao.get("nome", "") == nome_alvo:
+        if regiao.get("name", "") == nome_alvo:
             coords = regiao.get("coord", [])
             if len(coords) >= 3:
                 lon_min = coords[0][1]
@@ -1652,7 +1652,7 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita, dis
     NewRegioes = []
 
     regioesglobal = {
-        "nome": "regiaoBoundingbox",
+        "name": "boundingBoxRegion",
         "coord": [
             [lat_max, lon_min],
             [lat_max, lon_max],
@@ -1665,7 +1665,7 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita, dis
     for regiao in regioes:
         nome = regiao.get("nome", "SemNome").replace(" ", "_")
         coordenadas = regiao.get("coord", [])
-        regiaook = {"nome": nome, "coord": coordenadas}
+        regiaook = {"name": nome, "coord": coordenadas}
         NewRegioes.append(regiaook)
     return NewRegioes
 ###########################################################################################################################
