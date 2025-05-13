@@ -95,7 +95,7 @@ class CacheBoundingBox:
         elif os.path.isfile(caminho):
             os.remove(caminho)
 
-    def new(self, regioes, diretorio, inforegiao=""):
+    def new(self, regioes, diretorio, inforegiao="",km2_região=0):
         chave = self._hash_bbox(regioes)
         self.ultimaregiao = regioes
         now = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -110,7 +110,8 @@ class CacheBoundingBox:
         self.cache[chave] = {
             'regiao': regiao_legivel,
             'diretorio': diretorio,
-            'inforegiao': inforegiao,          
+            'inforegiao': inforegiao,
+            'km2_região': km2_região,            
             'created': now,
             'lastrequest': now
 
@@ -409,10 +410,9 @@ class CacheBoundingBox:
         ws1.title = "Cache Bounding Box"
 
         # Aba 1: Cache Bounding Box
-        headers1 = ['Chave', 'Regiao', 'Municipios Cobertos', 'Diretório', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
+        headers1 = ['Chave', 'Regiao', 'Municipios Cobertos', 'Diretório', 'Km2 Região', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
         ws1.append(headers1)
         col_widths1 = [len(h) for h in headers1]
-
 
 
         for chave, dados in self.cache.items():
@@ -423,6 +423,7 @@ class CacheBoundingBox:
                 dados.get('regiao', ''),
                 dados.get('inforegiao', '').encode('utf-8').decode('unicode_escape'),
                 dados.get('diretorio', ''),
+                dados.get('km2_região', ''),
                 str(numrotascached),
                 str(numcomunidadescached),
                 dados.get('created', ''),
@@ -469,7 +470,6 @@ class CacheBoundingBox:
 # ---------------------------------------------------------------------------------------------------------------    
 
 # Instância global
-print("Instanciando CacheBoundingBox...")
 cCacheBoundingBox = CacheBoundingBox()
 cCacheBoundingBox.clean_old_cache_entries()
 
