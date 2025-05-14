@@ -1188,6 +1188,32 @@ def calc_km2_regiao(regioes: list, nome_alvo: str = "boundingBoxRegion") -> floa
 
     return round(area_km2, 2)
 ################################################################################
+def is_region_inside_another(inner_region: list, outer_region: list) -> bool:
+    """
+    Checks whether the 'boundingBoxRegion' in `inner_region` is completely inside the
+    'boundingBoxRegion' in `outer_region`.
+
+    :param inner_region: List containing a region dict with key 'name' == 'boundingBoxRegion'.
+    :param outer_region: List containing a region dict with key 'name' == 'boundingBoxRegion'.
+    :return: True if inner_region is fully inside outer_region, False otherwise.
+    """
+    inner_bbox = extrair_bounding_box_de_regioes(inner_region)
+    outer_bbox = extrair_bounding_box_de_regioes(outer_region)
+
+    if not inner_bbox or not outer_bbox:
+        return False
+
+    lon_min_i, lat_min_i, lon_max_i, lat_max_i = inner_bbox
+    lon_min_o, lat_min_o, lon_max_o, lat_max_o = outer_bbox
+
+    return (
+        lon_min_o <= lon_min_i and
+        lat_min_o <= lat_min_i and
+        lon_max_i <= lon_max_o and
+        lat_max_i <= lat_max_o
+    )
+
+################################################################################
 def DesenhaComunidades(RouteDetail, regioes):
     bounding_box = extrair_bounding_box_de_regioes(regioes)
     
@@ -1668,17 +1694,9 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "PontosVisita")
     return fileMap, fileNameStatic, fileKml
 ###########################################################################################################################
-def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita, distancia_km=50):
-    lat_min, lat_max, lon_min, lon_max = calcula_bounding_box_pontos(pontoinicial,
-        pontosvisita, margem_km=50
-    )
-    # 1 grau de latitude = 111 km
-    # graus_lat = distancia_km / 111.0
-    # lat_min = lat_min- graus_lat;
-    # lat_max = lat_max+ graus_lat;
-    # lon_min = lon_min- graus_lat;
-    # lon_max = lon_max+ graus_lat;
-
+def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita):
+    
+    lat_min, lat_max, lon_min, lon_max = calcula_bounding_box_pontos(pontoinicial,pontosvisita, margem_km=50)
     NewRegioes = []
 
     regioesglobal = {
@@ -1697,6 +1715,10 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita, dis
         coordenadas = regiao.get("coord", [])
         regiaook = {"name": nome, "coord": coordenadas}
         NewRegioes.append(regiaook)
+    
+    if (cb.cCacheBoundingBox.get_cache(NewRegioes)!=None):
+        NewRegioes = cb.cCacheBoundingBox.get_cache(NewRegioes)
+       
     return NewRegioes
 ###########################################################################################################################
 def calcula_bounding_box_pontos(pontoinicial, pontos, margem_km=50):

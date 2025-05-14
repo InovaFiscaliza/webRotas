@@ -63,6 +63,9 @@ import atexit
 import signal
 import threading
 
+from webRota import is_region_inside_another
+
+
 # ---------------------------------------------------------------------------------------------------------------
 class CacheBoundingBox:
     def __init__(self):
@@ -109,6 +112,7 @@ class CacheBoundingBox:
         inforegiao = json.dumps(inforegiao).replace('\n', '').replace('\r', '')
         self.cache[chave] = {
             'regiao': regiao_legivel,
+            'regiaodados': regioes,
             'diretorio': diretorio,
             'inforegiao': inforegiao,
             'km2_região': km2_região,            
@@ -128,6 +132,31 @@ class CacheBoundingBox:
         hash_completo = hash_obj.hexdigest()
         return hash_completo[:tamanho]
 
+    def find_smallest_containing_region(self, regiao_alvo: list) -> list | None:
+        """
+        Finds the smallest (by area in km²) cached region that fully contains the given target region.
+
+        Args:
+            regiao_alvo (list): The target region to check containment for.
+
+        Returns:
+            list | None: The smallest region that contains the target, or None if none found.
+        """
+        smallest_region = None
+        smallest_area = float('inf')
+
+        for data in self.cache.values():
+            candidate_region = data.get('regiaodados')
+            km2 = data.get('km2_região', float('inf'))
+
+            if candidate_region and is_region_inside_another(regiao_alvo, candidate_region):
+                if km2 < smallest_area:
+                    smallest_area = km2
+                    smallest_region = candidate_region
+
+        return smallest_region
+
+
     
     def get_cache(self, regioes):
             chave = self._hash_bbox(regioes)
@@ -137,7 +166,12 @@ class CacheBoundingBox:
                 # Atualiza o timestamp de último acesso
                 entry['lastrequest'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
                 self._schedule_save()
-                return entry['diretorio']
+                return entry['regiaodados']
+            
+            # extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "boundingBoxRegion")
+            # find_smallest_containing_region(self, regiao_alvo: list) -> list | None:
+            # melhorar verificando as áreas de exclusão
+            
             return None
 
     def lastrequestupdate(self, regioes):
