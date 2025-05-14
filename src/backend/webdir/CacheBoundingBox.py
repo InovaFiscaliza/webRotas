@@ -63,8 +63,7 @@ import atexit
 import signal
 import threading
 
-from webRota import is_region_inside_another
-
+import regions as rg
 
 # ---------------------------------------------------------------------------------------------------------------
 class CacheBoundingBox:
@@ -132,6 +131,8 @@ class CacheBoundingBox:
         hash_completo = hash_obj.hexdigest()
         return hash_completo[:tamanho]
 
+
+
     def find_smallest_containing_region(self, regiao_alvo: list) -> list | None:
         """
         Finds the smallest (by area in km²) cached region that fully contains the given target region.
@@ -156,7 +157,6 @@ class CacheBoundingBox:
 
         return smallest_region
 
-
     
     def get_cache(self, regioes):
             chave = self._hash_bbox(regioes)
@@ -169,7 +169,7 @@ class CacheBoundingBox:
                 return entry['regiaodados']
             
             # extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "boundingBoxRegion")
-            # find_smallest_containing_region(self, regiao_alvo: list) -> list | None:
+            # rg.find_smallest_containing_region(self, regiao_alvo: list) -> list | None:
             # melhorar verificando as áreas de exclusão
             
             return None
