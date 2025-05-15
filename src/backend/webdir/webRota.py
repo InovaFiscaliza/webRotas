@@ -22,6 +22,7 @@ import shapeFiles as sf
 import geraMapa as gm
 import routing_servers_interface as si
 import CacheBoundingBox as cb
+import regions as rg
 ###########################################################################################################################
 class ClRouteDetailList:
     def __init__(self):
@@ -1151,7 +1152,7 @@ def calc_km2_regiao(regioes: list, nome_alvo: str = "boundingBoxRegion") -> floa
     :param nome_alvo: Nome da região alvo para extração do bounding box.
     :return: Área da região em quilômetros quadrados (km²), ou None se a região não for encontrada.
     """
-    bbox = extrair_bounding_box_de_regioes(regioes, nome_alvo)
+    bbox = rg.extrair_bounding_box_de_regioes(regioes, nome_alvo)
     if not bbox:
         return None
 
@@ -1173,7 +1174,7 @@ def calc_km2_regiao(regioes: list, nome_alvo: str = "boundingBoxRegion") -> floa
 ################################################################################
 
 def DesenhaComunidades(RouteDetail, regioes):
-    bounding_box = extrair_bounding_box_de_regioes(regioes)
+    bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
     
     polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
     if(not polylinesComunidades):
