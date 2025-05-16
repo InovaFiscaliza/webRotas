@@ -143,19 +143,25 @@ class CacheBoundingBox:
         Returns:
             list | None: The smallest region that contains the target, or None if none found.
         """
-        smallest_region = None
-        smallest_area = float('inf')
+        smallest_region = None  # Initialize the variable to hold the best match (smallest containing region)
+        smallest_area = float('inf')  # Initialize with infinity to ensure any real area is smaller
 
-        for data in self.cache.values():
-            candidate_region = data.get('regiaodados')
-            km2 = data.get('km2_região', float('inf'))
+        for data in self.cache.values():  # Iterate through all cached regions
+            candidate_region = data.get('regiaodados')  # Extract the candidate region data
+            km2 = data.get('km2_região', float('inf'))  # Get the area in km², or infinity if not available
 
-            if candidate_region and is_region_inside_another(regiao_alvo, candidate_region):
+            # Check if the target region is fully inside the candidate region
+            if candidate_region and rg.is_region_inside_another(regiao_alvo, candidate_region):
+                # Update if this candidate has a smaller area than the current smallest
                 if km2 < smallest_area:
                     smallest_area = km2
                     smallest_region = candidate_region
 
-        return smallest_region
+        # If the found region has the same exlusion regions return smallest_region
+        # if smallest_region != None and rg.compare_regions_without_bounding_box(regiao_alvo, smallest_region):
+        #     return smallest_region
+
+        return smallest_region   
 
     
     def get_cache(self, regioes):
@@ -167,11 +173,12 @@ class CacheBoundingBox:
                 entry['lastrequest'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
                 self._schedule_save()
                 return entry['regiaodados']
-            
-            # extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "boundingBoxRegion")
-            # rg.find_smallest_containing_region(self, regiao_alvo: list) -> list | None:
             # melhorar verificando as áreas de exclusão
-            
+            regtemp = rg.find_smallest_containing_region(self, regioes)
+            if regtemp!=None:
+                self.ultimaregiao = regtemp 
+                return regtemp
+     
             return None
 
     def lastrequestupdate(self, regioes):

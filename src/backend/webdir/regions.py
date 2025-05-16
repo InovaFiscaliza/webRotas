@@ -62,3 +62,16 @@ def extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "boundingBox
                 lat_max = coords[0][0]
                 return (lon_min, lat_min, lon_max, lat_max)
     return None        
+
+def compare_regions_without_bounding_box(regions1, regions2):
+    def clean_and_sort(regions):
+        # Remove the "boundingBoxRegion"
+        filtered = [r for r in regions if r.get("name") != "boundingBoxRegion"]
+        # Sort by name for consistent comparison
+        return sorted(filtered, key=lambda x: x.get("name", ""))
+    
+    r1 = clean_and_sort(regions1)
+    r2 = clean_and_sort(regions2)
+    
+    return r1 == r2
+
