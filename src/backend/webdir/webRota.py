@@ -20,7 +20,7 @@ import mimetypes
 import shapeFiles as sf
 import geraMapa as gm
 import routing_servers_interface as si
-import route_cache as rc
+import CacheBoundingBox as cb
 ###########################################################################################################################
 class ClRouteDetailList:
     def __init__(self):
@@ -311,15 +311,13 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
     wLog(f"Arquivo KML '{filename}' gerado com sucesso!",level="debug")
 ###########################################################################################################################
 ServerTec = "OSMR"
-# Instância global do cache de rotas já pedidas ao servidor OSMR
-route_cache = rc.RouteCache()
 ###########################################################################################################################
 def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
 
     # Tenta buscar do cache
-    cached_response = route_cache.get(UserData.nome, start_lat, start_lon, end_lat, end_lon)
+    cached_response = cb.cCacheBoundingBox.route_cache_get(start_lat, start_lon, end_lat, end_lon)
     if cached_response is not None:
-        wLog(f"Usando rota do cache para: {UserData.nome},{start_lat},{start_lon},{end_lat},{end_lon}", level="debug")
+        wLog(f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}", level="debug")
         return cached_response
     
     # Coordenadas de início e fim
@@ -334,7 +332,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     # Fazer a solicitação
     response = requests.get(url)
     # fazer o cache da solicitação
-    route_cache.set(UserData.nome,start_lat, start_lon, end_lat, end_lon, response)
+    cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)
     return response
 
 ###########################################################################################################################
@@ -813,9 +811,6 @@ def GeraArquivoExclusoes(regioes, arquivo_saida="exclusion.poly"):
     """
     wLog("GeraArquivoExclusoes")
     try:
-        if os.path.exists(arquivo_saida):
-            arquivo_backup = f"{arquivo_saida}.old"
-            shutil.move(arquivo_saida, arquivo_backup)
         with open(arquivo_saida, "w") as f:
             f.write(f"AreasRoteamento\n")
             for regiao in regioes:
@@ -1144,18 +1139,33 @@ def ServerSetupJavaScript(RouteDetail):
         RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
     return RouteDetail
 ################################################################################
-def DesenhaComunidades(RouteDetail, regioes):
+def extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "regiaoBoundingbox") -> tuple:
+    """
+    Extrai o bounding box de uma região nomeada dentro de uma lista de regiões.
+
+    :param regioes: Lista de dicionários contendo as regiões, onde cada item tem chave 'nome' e 'coord'.
+    :param nome_alvo: Nome da região alvo para extração do bounding box.
+    :return: Tupla no formato (lon_min, lat_min, lon_max, lat_max), ou None se não encontrada.
+    """
     for regiao in regioes:
-        nome = regiao.get("nome", "")
-        if nome == "regiaoBoundingbox":
+        if regiao.get("nome", "") == nome_alvo:
             coords = regiao.get("coord", [])
-            lon_min = coords[0][1]
-            lat_min = coords[2][0]
-            lon_max = coords[1][1]
-            lat_max = coords[0][0]
-            break
-    bounding_box = (lon_min, lat_min, lon_max, lat_max)
-    polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
+            if len(coords) >= 3:
+                lon_min = coords[0][1]
+                lat_min = coords[2][0]
+                lon_max = coords[1][1]
+                lat_max = coords[0][0]
+                return (lon_min, lat_min, lon_max, lat_max)
+    return None
+################################################################################
+def DesenhaComunidades(RouteDetail, regioes):
+    bounding_box = extrair_bounding_box_de_regioes(regioes)
+    
+    polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
+    if(not polylinesComunidades):
+       polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
+       cb.cCacheBoundingBox.comunidades_cache.add_polyline(regioes, polylinesComunidades)
+       
 
     RouteDetail.mapcode += f"listComunidades = [\n"
     indPol = 0
@@ -1183,8 +1193,22 @@ def DesenhaComunidades(RouteDetail, regioes):
         RouteDetail.mapcode += f"polyTmp = L.polygon(listComunidades[{i}], {{ color: 'rgb(102,0,204)',fillColor: 'rgb(102,0,204)',fillOpacity: 0.3, weight: 1}}).addTo(map);\n"
         RouteDetail.mapcode += f"polyComunidades.push(polyTmp);\n"
         i = i + 1
-    return RouteDetail
+    return RouteDetail    
 
+################################################################################
+def get_areas_urbanas_cache(cidade, uf):
+    chave_regiao = {"cidade": cidade, "uf": uf}  # dicionário, compatível com _hash_bbox
+    cache_polylines = cb.cCacheBoundingBox.areas_urbanas.get_polylines(chave_regiao)
+    if not cache_polylines:
+        polMunicipio = sf.GetBoundMunicipio(cidade, uf)
+        polMunicipioAreasUrbanizadas = sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
+        cache_polylines = [f"{cidade}-{uf}", polMunicipio, polMunicipioAreasUrbanizadas]
+        cb.cCacheBoundingBox.areas_urbanas.add_polyline(chave_regiao, cache_polylines)
+    else:
+        wLog(f"Áreas urbanizadas e município recuperados do cache - {cidade} - {uf}")
+        polMunicipio = cache_polylines[1]
+        polMunicipioAreasUrbanizadas = cache_polylines[2]
+    return polMunicipio, polMunicipioAreasUrbanizadas
 
 ################################################################################
 def RouteCompAbrangencia(   data: dict,
@@ -1217,10 +1241,8 @@ def RouteCompAbrangencia(   data: dict,
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
     
     # wLog("GetBoundMunicipio e FiltrarAreasUrbanizadasPorMunicipio")
-    
-    
-    polMunicipio= sf.GetBoundMunicipio(cidade, uf)
-    polMunicipioAreasUrbanizadas= sf.FiltrarAreasUrbanizadasPorMunicipio(cidade, uf)
+
+    polMunicipio, polMunicipioAreasUrbanizadas = get_areas_urbanas_cache(cidade, uf)
     
     match escopo:
         case "AreasUrbanizadas":

@@ -22,12 +22,11 @@
             "args": ["-h"]
         },
         {
-            "name": "server --port 6000 --debug True",
+            "name": "server",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/backend/webdir/server.py",
-            "console": "integratedTerminal",
-            "args": ["--port","6000","--debug","True"]
+            "console": "integratedTerminal"
         },
         {
             "name": "server argument_error",

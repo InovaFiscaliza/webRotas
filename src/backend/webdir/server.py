@@ -15,31 +15,32 @@ from unidecode import unidecode
 
 from flask import (
     Flask,
+    Response,
     render_template,
     jsonify,
     send_file,
+    send_from_directory,
     request,
+    redirect
 ) 
 from flask_compress import Compress
 from flask_cors import CORS
-
 from concurrent.futures import ThreadPoolExecutor
 
 import webRota as wr
 import server_env as se
+import routing_servers_interface as rsi
+import CacheBoundingBox as cb
 
 ################################################################################
 """ Variáveis globais """
 
-REQUIRED_KEYS = {   "Contorno":
-                        {"latitude", "longitude", "raio"},
-                    "PontosVisita":
-                        {"pontosvisita"},
-                    "Abrangencia":
-                        {"cidade", "uf", "Escopo", "distancia_pontos"},
-                    "RoteamentoOSMR":
-                        {"PortaOSRMServer"}
-                    }
+REQUIRED_KEYS = {
+    "Contorno":       { "latitude", "longitude", "raio" },
+    "PontosVisita":   { "pontosvisita" },
+    "Abrangencia":    { "cidade", "uf", "Escopo", "distancia_pontos" },
+    "RoteamentoOSMR": { "PortaOSRMServer"}
+}
 
 env = se.ServerEnv()
 
@@ -49,20 +50,64 @@ env = se.ServerEnv()
 wr.log_filename = env.log_file
 wr.wLog(f"Arquivo de log: {env.log_file}")
 
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__, static_folder="static", static_url_path="/webRotas")
 CORS(app)  # Habilita CORS para todas as rotas
 Compress(app)
 # Configuração para forçar a recarga de arquivos estáticos
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 app.config["TEMPLATES_AUTO_RELOAD"] = True  # Ativa o auto-reload dos templates
 
-################################################################################
+#-----------------------------------------------------------------------------------#
+# INICIALIZAÇÃO
+#-----------------------------------------------------------------------------------#
+@app.route("/", methods=["GET"])
+def _root():
+    return redirect("/webRotas/index.html")
+
+@app.route("/<path:filepath>", methods=["GET"])
+def _static_files(filepath):
+    return send_from_directory("static", filepath)
+
+#-----------------------------------------------------------------------------------#
+# PROCESSA REQUISIÇÃO, RETORNANDO ROTA AUTOMÁTICA
+#-----------------------------------------------------------------------------------#
+@app.route('/process', methods=['POST'])
+def _process():
+    session_id = request.args.get("sessionId")
+    if not session_id:
+        return jsonify({"error": "Invalid or missing sessionId"}), 400
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+    
+    with open("../../../tests/routing3.json", "r") as f:
+        json_string = f.read()
+    return Response(json_string, mimetype='application/json')
+
+#-----------------------------------------------------------------------------------#
+# REPROCESSA REQUISIÇÃO, RETORNANDO ROTA CUSTOMIZADA
+#-----------------------------------------------------------------------------------#
+@app.route('/reprocess', methods=['POST'])
+def _reprocess():
+    session_id = request.args.get("sessionId")
+    if not session_id:
+        return jsonify({"error": "Invalid or missing sessionId"}), 400
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+    
+    return jsonify({ "error": "Mensagem erro de teste" }), 500
+
+#-----------------------------------------------------------------------------------#
+# OUTRAS ROTAS
+#-----------------------------------------------------------------------------------#
 @app.route("/ok", methods=["GET"])
-def ok():
+def _ok():
     return "ok"
 
-
-################################################################################
+#-----------------------------------------------------------------------------------#
 @app.route("/map/<filename>")
 def mapa_leaflet(filename):
     template_file = filename
@@ -74,15 +119,13 @@ def mapa_leaflet(filename):
         return f"Erro: {e}", 404
 
 
-################################################################################
+#-----------------------------------------------------------------------------------#
 # URL do servidor OSRM
 @app.route("/route", methods=["GET"])
 def get_route():
     """
     Rota Flask que envia requisições para o servidor OSRM e retorna a resposta.
        curl "http://127.0.0.1:5001/route?porta=5001&start=-46.6388,-23.5489&end=-46.6253,-23.5339"
-
-
     """
     # Parâmetros da requisição (origem e destino)
     start = request.args.get("start")  # Formato esperado: "lon,lat"
@@ -110,7 +153,7 @@ def get_route():
         ), 500
 
 
-################################################################################
+#-----------------------------------------------------------------------------------#
 @app.route("/health", methods=["GET"])
 def get_health():
     # Parâmetros da requisição (origem e destino)
@@ -134,6 +177,22 @@ def get_health():
             {"error": f"Falha na comunicação com o servidor OSRM: {str(e)}"}
         ), 500
 
+#-----------------------------------------------------------------------------------#
+@app.route("/download/<filename>")
+def download_file(filename):
+    # Caminho absoluto ou relativo para o arquivo
+    caminho_arquivo = f"templates/{filename}"
+    try:
+        return send_file(caminho_arquivo, as_attachment=True)
+    except Exception as e:
+        return f"Erro ao enviar o arquivo: {e}"
+
+#-----------------------------------------------------------------------------------#
+@app.route("/webrotas", methods=["POST"])
+def process_location():
+    # Obtém o JSON da requisição
+    data = request.get_json()
+    return ProcessaRequisicoesAoServidor(data)
 
 ################################################################################
 def SalvaDataArq(data):
@@ -174,7 +233,6 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
     :return: Tupla com a resposta da requisição e o código HTTP.
     """
     with app.app_context():
-    
         try:
             request_type = data["TipoRequisicao"]
         except KeyError as e:
@@ -191,8 +249,6 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         wr.UserData.nome = user
         # Process the request according to the request type
         match request_type:
-        
-            #---------------------------------------------------------------------------------------------
             case "Contorno":
                 wr.wLog("#############################################################################################")
                 wr.wLog("Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)")
@@ -219,7 +275,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                                                                     regioes,radius_km=raio,
                                                                     num_points=numeropontos)
                 wr.wLog("#############################################################################################")
-            #---------------------------------------------------------------------------------------------
+
             case "PontosVisita":
                 wr.wLog("#############################################################################################")
                 wr.wLog("Recebida solicitação pontos de visita")
@@ -239,7 +295,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                                                                             pontosvisita,
                                                                             regioes)
                 wr.wLog("#############################################################################################")
-            # ---------------------------------------------------------------------------------------------
+            
             case "Abrangencia":
                 wr.wLog("#############################################################################################")
                 wr.wLog("Recebida solicitação de compromisso de abrangência")
@@ -265,7 +321,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                                                                         distanciaPontos,
                                                                         regioes)
                 wr.wLog("#############################################################################################")
-            # ---------------------------------------------------------------------------------------------
+
             case "RoteamentoOSMR":
                 wr.wLog("#############################################################################################")
                 wr.wLog("Recebida solicitação de RoteamentoOSMR")
@@ -285,7 +341,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                                                                                 pontosvisita,
                                                                                 pontoinicial,
                                                                                 recalcularrota)
-                
+                cb.cCacheBoundingBox._schedule_save()
                 # Retorna uma resposta de confirmação
                 wr.wLog(
                     json.dumps(
@@ -307,10 +363,10 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                     }
                 ), 200
 
-            # ---------------------------------------------------------------------------------------------
             case _:
                 return jsonify({"error": f"Tipo de requisição parcialmente definido. Favor atualizar webrota para processamento da requisição `{request_type}`"}), 400
-
+        
+        cb.cCacheBoundingBox._schedule_save()
         # Retorna uma resposta de confirmação
         return jsonify(
             {
@@ -324,26 +380,6 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
 ################################################################################
 executor = ThreadPoolExecutor(max_workers=40)
 ListaTarefas = []
-
-
-################################################################################
-@app.route("/download/<filename>")
-def download_file(filename):
-    # Caminho absoluto ou relativo para o arquivo
-    caminho_arquivo = f"templates/{filename}"
-    try:
-        return send_file(caminho_arquivo, as_attachment=True)
-    except Exception as e:
-        return f"Erro ao enviar o arquivo: {e}"
-
-
-################################################################################
-@app.route("/webrotas", methods=["POST"])
-def process_location():
-    # Obtém o JSON da requisição
-    data = request.get_json()
-    return ProcessaRequisicoesAoServidor(data)
-
 
 ################################################################################
 def parse_args() -> argparse.Namespace:
@@ -392,6 +428,8 @@ def main():
         wr.server_port = env.port
 
         wr.wLog(f"Starting WebRotas Server on port {env.port}...")
+        rsi.init_and_load_podman_images()
+        rsi.manutencao_arquivos_antigos()
         app.run(debug=args.debug, port=env.port, host='0.0.0.0')
         return 0
     except Exception as e:

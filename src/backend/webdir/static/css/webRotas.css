@@ -1,0 +1,259 @@
+@charset "UTF-8";
+:root {
+  --navbar-height: 0px;
+  --toolbar-height: 34px;
+  --panel-width-off: 0px;
+  --panel-width-on: 330px;
+  --font-family-default: Helvetica, Arial, sans-serif;
+  --font-size-default: 11px;
+  --backgroundColor-selected: rgba(180, 222, 255, 0.45);
+  --backgroundColor-selectedFocus: rgba(50, 102, 208, 1);
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-family-default);
+}
+
+body {
+  height: 100%;
+  width: 100%;
+  font-size: var(--font-size-default);
+}
+
+/*-----------------------------------------------------------------------------------
+    ## GRID ##
+-----------------------------------------------------------------------------------*/
+.grid {
+  display: grid;
+  height: 100%;
+  width: 100%;
+  -moz-column-gap: 10px;
+       column-gap: 10px;
+  row-gap: 5px;
+  padding: 5px;
+  overflow: hidden;
+}
+
+.grid-border {
+  border: 1px solid #ccc;
+}
+
+.grid-toolbar {
+  display: grid;
+  height: 34px;
+  width: 100%;
+  -moz-column-gap: 5px;
+       column-gap: 5px;
+  padding: 5px;
+  overflow: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  align-items: center;
+  background-color: rgb(240, 240, 240);
+  z-index: 400;
+}
+
+/*-----------------------------------------------------------------------------------
+    ## ELEMENTOS NATIVOS HTML: INPUT, BUTTON, TEXTAREA etc ##
+-----------------------------------------------------------------------------------*/
+input, button, select, textarea {
+  font-family: var(--font-family-default);
+  font-size: 11px;
+  color: #000;
+  border-radius: 0px;
+  border: 1px solid #ccc;
+}
+
+input {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+input.spinner-disabled::-webkit-inner-spin-button,
+input.spinner-disabled::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+button,
+label.btn-input {
+  align-self: center;
+  text-align: center;
+  background: none;
+  background-size: contain;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+button.btn-top-right {
+  align-self: end;
+  text-align: right;
+  transform: translateY(3px);
+}
+
+button.disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+button#toolbarPanelVisibilityBtn.btn-panel-on {
+  background-image: url(../images/ArrowLeft_32.png);
+}
+
+button#toolbarPanelVisibilityBtn.btn-panel-off {
+  background-image: url(../images/ArrowRight_32.png);
+}
+
+label.label-panel,
+label.label-text-list {
+  font-size: 10px;
+  align-self: end;
+  text-transform: uppercase;
+}
+
+label.label-form-field {
+  font-size: 11px;
+  align-self: end;
+}
+
+/*-----------------------------------------------------------------------------------
+    ## LISTA DE TEXTOS ##
+-----------------------------------------------------------------------------------*/
+.text-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  list-style: none;
+  border: 1px solid #ccc;
+}
+
+.text-list.disabled {
+  cursor: default;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.text-list li {
+  display: flex;
+  align-items: center;
+  line-height: 16px;
+  min-height: 22px;
+  text-indent: -20px;
+  padding-left: 25px;
+  padding-right: 5px;
+  border: 1px solid rgb(255, 255, 255);
+  border-bottom: 0;
+}
+
+.text-list li.selected {
+  background-color: var(--backgroundColor-selected);
+}
+
+.text-list li.hover {
+  background-color: var(--backgroundColor-selectedFocus);
+  color: #fff;
+}
+
+/*-----------------------------------------------------------------------------------
+    ## MENU DE CONTEXTO ##
+-----------------------------------------------------------------------------------*/
+.context-menu {
+  position: absolute;
+  display: flex;
+  width: 250px;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.75);
+  border-radius: 0px;
+  border-top-left-radius: 10px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  z-index: 800;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.context-menu::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(15, 15, 15, 0.85);
+  background: rgba(0, 0, 0, 0);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgb(255, 255, 255);
+  padding-left: 5px;
+  padding-right: 5px;
+  cursor: pointer;
+}
+
+.context-menu-item:hover {
+  background-color: var(--backgroundColor-selectedFocus);
+  color: #fff;
+}
+
+/*-----------------------------------------------------------------------------------
+    ## OUTRAS COISAS AINDA NÃO REVISADAS ##
+-----------------------------------------------------------------------------------*/
+#panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: calc(100% - var(--toolbar-height));
+  width: calc(var(--panel-width-on) - 10px);
+  flex-direction: column;
+  align-items: flex-start;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  z-index: 0;
+}
+
+.panel-on {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.panel-off {
+  opacity: 0;
+  transform: translateX(calc(-1 * var(--panel-width-on)));
+  pointer-events: none;
+}
+
+.panel-off ~ #document {
+  left: 6px;
+  width: calc(100% - 10px);
+}
+
+#document {
+  position: absolute;
+  top: 6px;
+  left: var(--panel-width-on);
+  width: calc(100% - var(--panel-width-on) - 5px);
+  height: calc(100% - var(--toolbar-height) - 11px);
+  z-index: 600;
+}/*# sourceMappingURL=webRotas.css.map */
