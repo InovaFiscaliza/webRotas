@@ -174,7 +174,7 @@ class CacheBoundingBox:
                 self._schedule_save()
                 return entry['regiaodados']
             # melhorar verificando as áreas de exclusão
-            regtemp = rg.find_smallest_containing_region(self, regioes)
+            regtemp = find_smallest_containing_region(self, regioes)
             if regtemp!=None:
                 self.ultimaregiao = regtemp 
                 return regtemp
