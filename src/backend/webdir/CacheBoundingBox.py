@@ -63,6 +63,8 @@ import atexit
 import signal
 import threading
 
+import regions as rg
+
 # ---------------------------------------------------------------------------------------------------------------
 class CacheBoundingBox:
     def __init__(self):
@@ -95,7 +97,7 @@ class CacheBoundingBox:
         elif os.path.isfile(caminho):
             os.remove(caminho)
 
-    def new(self, regioes, diretorio, inforegiao=""):
+    def new(self, regioes, diretorio, inforegiao="",km2_região=0):
         chave = self._hash_bbox(regioes)
         self.ultimaregiao = regioes
         now = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -109,8 +111,10 @@ class CacheBoundingBox:
         inforegiao = json.dumps(inforegiao).replace('\n', '').replace('\r', '')
         self.cache[chave] = {
             'regiao': regiao_legivel,
+            'regiaodados': regioes,
             'diretorio': diretorio,
-            'inforegiao': inforegiao,          
+            'inforegiao': inforegiao,
+            'km2_região': km2_região,            
             'created': now,
             'lastrequest': now
 
@@ -127,6 +131,38 @@ class CacheBoundingBox:
         hash_completo = hash_obj.hexdigest()
         return hash_completo[:tamanho]
 
+
+
+    def find_smallest_containing_region(self, regiao_alvo: list) -> list | None:
+        """
+        Finds the smallest (by area in km²) cached region that fully contains the given target region.
+
+        Args:
+            regiao_alvo (list): The target region to check containment for.
+
+        Returns:
+            list | None: The smallest region that contains the target, or None if none found.
+        """
+        smallest_region = None  # Initialize the variable to hold the best match (smallest containing region)
+        smallest_area = float('inf')  # Initialize with infinity to ensure any real area is smaller
+
+        for data in self.cache.values():  # Iterate through all cached regions
+            candidate_region = data.get('regiaodados')  # Extract the candidate region data
+            km2 = data.get('km2_região', float('inf'))  # Get the area in km², or infinity if not available
+
+            # Check if the target region is fully inside the candidate region
+            if candidate_region and rg.is_region_inside_another(regiao_alvo, candidate_region):
+                # Update if this candidate has a smaller area than the current smallest
+                if km2 < smallest_area:
+                    smallest_area = km2
+                    smallest_region = candidate_region
+
+        # If the found region has the same exlusion regions return smallest_region
+        # if smallest_region != None and rg.compare_regions_without_bounding_box(regiao_alvo, smallest_region):
+        #     return smallest_region
+
+        return smallest_region   
+
     
     def get_cache(self, regioes):
             chave = self._hash_bbox(regioes)
@@ -136,7 +172,13 @@ class CacheBoundingBox:
                 # Atualiza o timestamp de último acesso
                 entry['lastrequest'] = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
                 self._schedule_save()
-                return entry['diretorio']
+                return entry['regiaodados']
+            # melhorar verificando as áreas de exclusão
+            regtemp = rg.find_smallest_containing_region(self, regioes)
+            if regtemp!=None:
+                self.ultimaregiao = regtemp 
+                return regtemp
+     
             return None
 
     def lastrequestupdate(self, regioes):
@@ -198,7 +240,7 @@ class CacheBoundingBox:
     def salvar_route_cache_item(self,chave,dados):
         diretorio_rel = dados.get('diretorio')
         if not diretorio_rel:
-            print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
+            # print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
             return
 
         diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / diretorio_rel
@@ -206,11 +248,11 @@ class CacheBoundingBox:
 
         route_data = self.route_cache.cache.get(chave)
         if route_data is None:
-            print(f"[AVISO] Chave '{chave}' não possui dados em route_cache. Pulando...")
+            # print(f"[AVISO] Chave '{chave}' não possui dados em route_cache. Pulando...")
             return
 
         caminho_arquivo = diretorio / "route_cache.bin.gz"
-        caminho_old = diretorio / "route_cache.old.gz"
+        caminho_old = diretorio / "route_cache.bkp.gz"
 
         try:
             if caminho_arquivo.exists():
@@ -220,7 +262,7 @@ class CacheBoundingBox:
             with gzip.open(caminho_arquivo, "wb") as f:
                 pickle.dump(route_data, f)
             caminho_old.unlink(missing_ok=True)     
-            print(f"[OK] Route cache salvo para '{chave}' em '{caminho_arquivo}'")
+            # print(f"[OK] Route cache salvo para '{chave}' em '{caminho_arquivo}'")
         except Exception as e:
             print(f"[ERRO] Falha ao salvar route_cache para '{chave}': {e}")
     
@@ -246,26 +288,26 @@ class CacheBoundingBox:
         restaurando os dados em self.route_cache.cache[chave].
         Em caso de erro ao carregar o arquivo principal, tenta carregar o arquivo de backup (.old.gz).
         """
-        print(f"Cache contém {len(self.cache)} entradas")
+        # print(f"Cache contém {len(self.cache)} entradas")
         for chave, dados in self.cache.items():
             diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / dados.get('diretorio')
 
             if not diretorio:
-                print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
+                # print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
                 continue
 
             caminho_arquivo = diretorio / "route_cache.bin.gz"
-            caminho_old =  diretorio / "route_cache.old.gz"
+            caminho_old =  diretorio / "route_cache.bkp.gz"
 
             if not caminho_arquivo.exists() and not caminho_old.exists():
-                print(f"[AVISO] Nenhum arquivo encontrado para chave '{chave}'")
+                # print(f"[AVISO] Nenhum arquivo encontrado para chave '{chave}'")
                 continue
 
             try:
                 with gzip.open(caminho_arquivo, "rb") as f:
                     route_data = pickle.load(f)
                     self.route_cache.cache[chave] = route_data
-                print(f"[OK] Route cache carregado para '{chave}' de '{caminho_arquivo}'")
+                # print(f"[OK] Route cache carregado para '{chave}' de '{caminho_arquivo}'")
             except Exception as e:
                 print(f"[ERRO] Falha ao carregar '{caminho_arquivo}': {e}")
                 if caminho_old.exists():
@@ -409,10 +451,9 @@ class CacheBoundingBox:
         ws1.title = "Cache Bounding Box"
 
         # Aba 1: Cache Bounding Box
-        headers1 = ['Chave', 'Regiao', 'Municipios Cobertos', 'Diretório', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
+        headers1 = ['Chave', 'Regiao', 'Municipios Cobertos', 'Diretório', 'Km2 Região', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
         ws1.append(headers1)
         col_widths1 = [len(h) for h in headers1]
-
 
 
         for chave, dados in self.cache.items():
@@ -423,6 +464,7 @@ class CacheBoundingBox:
                 dados.get('regiao', ''),
                 dados.get('inforegiao', '').encode('utf-8').decode('unicode_escape'),
                 dados.get('diretorio', ''),
+                dados.get('km2_região', ''),
                 str(numrotascached),
                 str(numcomunidadescached),
                 dados.get('created', ''),
@@ -469,7 +511,6 @@ class CacheBoundingBox:
 # ---------------------------------------------------------------------------------------------------------------    
 
 # Instância global
-print("Instanciando CacheBoundingBox...")
 cCacheBoundingBox = CacheBoundingBox()
 cCacheBoundingBox.clean_old_cache_entries()
 

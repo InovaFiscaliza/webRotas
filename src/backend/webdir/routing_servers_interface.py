@@ -52,7 +52,7 @@ from pathlib import Path
 import webRota as wr
 import project_folders as pf
 import CacheBoundingBox as cb
-
+import regions as rg
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
     """
@@ -537,8 +537,9 @@ def PreparaServidorRoteamento(regioes):
             else:
                 wr.wLog("Dados de roteamento encontrados no diretorio filtro OSMR cache, ativando o servidor OSMR")
                 AtivaServidorOSMR(regioes)   
-            info_regiao = sf.ObterMunicipiosNoBoundingBoxOrdenados(wr.extrair_bounding_box_de_regioes(regioes))   
-            cb.cCacheBoundingBox.new(regioes,f"filtro_{cb.cCacheBoundingBox.chave(regioes)}",info_regiao) 
+            info_regiao = sf.ObterMunicipiosNoBoundingBoxOrdenados(rg.extrair_bounding_box_de_regioes(regioes))  
+            km2_região = wr.calc_km2_regiao(regioes)
+            cb.cCacheBoundingBox.new(regioes,f"filtro_{cb.cCacheBoundingBox.chave(regioes)}",info_regiao,km2_região) 
         else:
             wr.wLog("Dados de roteamento encontrados no cache, nao e necessario executar osmosis")
             AtivaServidorOSMR(regioes)

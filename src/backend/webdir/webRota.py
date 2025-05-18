@@ -2,7 +2,6 @@
 import os
 import psutil
 import math
-import shutil
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import datetime
@@ -12,15 +11,18 @@ import requests
 import math
 import numpy as np
 import polyline
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point, Polygon, box
+import shapely.ops
 from geopy.distance import geodesic
 import base64
 import mimetypes
+import pyproj
 
 import shapeFiles as sf
 import geraMapa as gm
 import routing_servers_interface as si
 import CacheBoundingBox as cb
+import regions as rg
 ###########################################################################################################################
 class ClRouteDetailList:
     def __init__(self):
@@ -812,9 +814,9 @@ def GeraArquivoExclusoes(regioes, arquivo_saida="exclusion.poly"):
     wLog("GeraArquivoExclusoes")
     try:
         with open(arquivo_saida, "w") as f:
-            f.write(f"AreasRoteamento\n")
+            f.write(f"routingAreas\n")
             for regiao in regioes:
-                nome = regiao.get("nome", "SemNome").replace(" ", "_")
+                nome = regiao.get("name", "none").replace(" ", "_")
                 coordenadas = regiao.get("coord", [])
 
                 # Escrever o nome da região no arquivo
@@ -1138,28 +1140,41 @@ def ServerSetupJavaScript(RouteDetail):
         RouteDetail.mapcode += f"    const UserName = '{UserData.nome}';\n"
         RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
     return RouteDetail
-################################################################################
-def extrair_bounding_box_de_regioes(regioes: list, nome_alvo: str = "regiaoBoundingbox") -> tuple:
-    """
-    Extrai o bounding box de uma região nomeada dentro de uma lista de regiões.
 
-    :param regioes: Lista de dicionários contendo as regiões, onde cada item tem chave 'nome' e 'coord'.
-    :param nome_alvo: Nome da região alvo para extração do bounding box.
-    :return: Tupla no formato (lon_min, lat_min, lon_max, lat_max), ou None se não encontrada.
-    """
-    for regiao in regioes:
-        if regiao.get("nome", "") == nome_alvo:
-            coords = regiao.get("coord", [])
-            if len(coords) >= 3:
-                lon_min = coords[0][1]
-                lat_min = coords[2][0]
-                lon_max = coords[1][1]
-                lat_max = coords[0][0]
-                return (lon_min, lat_min, lon_max, lat_max)
-    return None
+
+
 ################################################################################
+def calc_km2_regiao(regioes: list, nome_alvo: str = "boundingBoxRegion") -> float:
+    """
+    Calcula a área em km² da região nomeada dentro da lista de regiões.
+
+    :param regioes: Lista de dicionários contendo as regiões.
+    :param nome_alvo: Nome da região alvo para extração do bounding box.
+    :return: Área da região em quilômetros quadrados (km²), ou None se a região não for encontrada.
+    """
+    bbox = rg.extrair_bounding_box_de_regioes(regioes, nome_alvo)
+    if not bbox:
+        return None
+
+    lon_min, lat_min, lon_max, lat_max = bbox
+
+    # Cria polígono geográfico
+    bbox_polygon = box(lon_min, lat_min, lon_max, lat_max)
+
+    # Define projetor para área em metros usando uma projeção equivalente (ex: Albers Equal Area)
+    proj = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:6933", always_xy=True)  # WGS84 → Equal Area (m)
+
+    # Projeta as coordenadas do bounding box
+    projected_polygon = shapely.ops.transform(proj.transform, bbox_polygon)
+
+    # Calcula a área em metros quadrados e converte para km²
+    area_km2 = projected_polygon.area / 1_000_000.0
+
+    return round(area_km2, 2)
+################################################################################
+
 def DesenhaComunidades(RouteDetail, regioes):
-    bounding_box = extrair_bounding_box_de_regioes(regioes)
+    bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
     
     polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
     if(not polylinesComunidades):
@@ -1638,21 +1653,13 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "PontosVisita")
     return fileMap, fileNameStatic, fileKml
 ###########################################################################################################################
-def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita, distancia_km=50):
-    lat_min, lat_max, lon_min, lon_max = calcula_bounding_box_pontos(pontoinicial,
-        pontosvisita, margem_km=50
-    )
-    # 1 grau de latitude = 111 km
-    # graus_lat = distancia_km / 111.0
-    # lat_min = lat_min- graus_lat;
-    # lat_max = lat_max+ graus_lat;
-    # lon_min = lon_min- graus_lat;
-    # lon_max = lon_max+ graus_lat;
-
+def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita):
+    
+    lat_min, lat_max, lon_min, lon_max = calcula_bounding_box_pontos(pontoinicial,pontosvisita, margem_km=50)
     NewRegioes = []
 
     regioesglobal = {
-        "nome": "regiaoBoundingbox",
+        "name": "boundingBoxRegion",
         "coord": [
             [lat_max, lon_min],
             [lat_max, lon_max],
@@ -1665,8 +1672,12 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita, dis
     for regiao in regioes:
         nome = regiao.get("nome", "SemNome").replace(" ", "_")
         coordenadas = regiao.get("coord", [])
-        regiaook = {"nome": nome, "coord": coordenadas}
+        regiaook = {"name": nome, "coord": coordenadas}
         NewRegioes.append(regiaook)
+    
+    if (cb.cCacheBoundingBox.get_cache(NewRegioes)!=None):
+        NewRegioes = cb.cCacheBoundingBox.get_cache(NewRegioes)
+       
     return NewRegioes
 ###########################################################################################################################
 def calcula_bounding_box_pontos(pontoinicial, pontos, margem_km=50):
