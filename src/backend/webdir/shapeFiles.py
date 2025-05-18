@@ -53,6 +53,9 @@ SHAPEFILE_AREA_URBANIZADA_PATH = (
 ###########################################################################################################################
 # https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
 ##########################################################################################################################
+
+
+
 def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     """
     Função para obter o limite geográfico e o centroide de um município específico e retornar a Polyline.
