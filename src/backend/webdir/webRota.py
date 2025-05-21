@@ -23,6 +23,7 @@ import geraMapa as gm
 import routing_servers_interface as si
 import CacheBoundingBox as cb
 import regions as rg
+import GuiOutput as gi
 ###########################################################################################################################
 class ClRouteDetailList:
     def __init__(self):
@@ -1172,7 +1173,7 @@ def calc_km2_regiao(regioes: list, nome_alvo: str = "boundingBoxRegion") -> floa
 
     return round(area_km2, 2)
 ################################################################################
-import GuiOutput as gi
+
 
 def DesenhaComunidades(RouteDetail, regioes):
     bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
@@ -1182,7 +1183,8 @@ def DesenhaComunidades(RouteDetail, regioes):
        polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
        cb.cCacheBoundingBox.comunidades_cache.add_polyline(regioes, polylinesComunidades)
        
-    gi.cGuiOutput.jsonComunitiesCreate(polylinesComunidades)
+    gi.cGuiOutput.json_comunities_create(polylinesComunidades)
+    gi.cGuiOutput.criar_json_routing()
     
     RouteDetail.mapcode += f"listComunidades = [\n"
     indPol = 0

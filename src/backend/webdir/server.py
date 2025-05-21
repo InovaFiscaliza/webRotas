@@ -31,6 +31,7 @@ import webRota as wr
 import server_env as se
 import routing_servers_interface as rsi
 import CacheBoundingBox as cb
+import GuiOutput as gi
 
 ################################################################################
 """ Variáveis globais """
@@ -249,6 +250,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         pontoinicial = data.get("PontoInicial", [])
         # Nome do usuário para o log trancorrer com o nome correto o quanto antes sem o "none"
         wr.UserData.nome = user
+        gi.cGuiOutput.requisition_data = data
         # Process the request according to the request type
         match request_type:
             case "Contorno":

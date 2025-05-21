@@ -11,8 +11,11 @@ class GuiOutput:
     def __init__(self):
         self.json = ""  
         self.jsonComunities = None  
+        self.requisition_data = None
+        self.url = ""
+
     
-    def jsonComunitiesCreate(self, polylinesComunidades):
+    def json_comunities_create(self, polylinesComunidades):
         """
         Gera uma string com o conteúdo de urbanCommunities formatado como JSON,
         mas sem as chaves externas (sem { }).
@@ -42,7 +45,33 @@ class GuiOutput:
         # Retorna a string gerada
         return self.jsonComunities
 
-    
+
+    def criar_json_routing(self):
+        estrutura = {
+            "url": self.url,
+            "routing": [
+                        self.requisition_data
+                       ],
+            "response": {
+                          "cacheId": "6a59481fbc73-123456",
+                          "boundingBox": [],
+                          "location": {
+                                        "limits": [],
+                                        "urbanAreas": [],
+                                        "urbanCommunities": []
+                                      },
+                          "routes": [] 
+                        }    
+        }
+
+        json_formatado = json.dumps(estrutura, indent=2, ensure_ascii=False)
+        
+        # Salvar em arquivo (opcional)
+        with open("routing.json", "w", encoding="utf-8") as f:
+            f.write(json_formatado)
+
+        return json_formatado
+        
 
     
     
