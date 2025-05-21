@@ -1172,6 +1172,7 @@ def calc_km2_regiao(regioes: list, nome_alvo: str = "boundingBoxRegion") -> floa
 
     return round(area_km2, 2)
 ################################################################################
+import GuiOutput as gi
 
 def DesenhaComunidades(RouteDetail, regioes):
     bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
@@ -1181,7 +1182,8 @@ def DesenhaComunidades(RouteDetail, regioes):
        polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
        cb.cCacheBoundingBox.comunidades_cache.add_polyline(regioes, polylinesComunidades)
        
-
+    gi.cGuiOutput.jsonComunitiesCreate(polylinesComunidades)
+    
     RouteDetail.mapcode += f"listComunidades = [\n"
     indPol = 0
     for polyline in polylinesComunidades:

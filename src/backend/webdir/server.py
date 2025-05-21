@@ -81,8 +81,10 @@ def _process():
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400
     
-    with open("../../../tests/routing3.json", "r") as f:
-        json_string = f.read()
+    # with open("../../../tests/routing3.json", "r") as f:
+    #     json_string = f.read()
+    
+    json_string=ProcessaRequisicoesAoServidor(data)
     return Response(json_string, mimetype='application/json')
 
 #-----------------------------------------------------------------------------------#
