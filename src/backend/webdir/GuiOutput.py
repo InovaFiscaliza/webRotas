@@ -12,15 +12,15 @@ class GuiOutput:
         self.json = ""  
         self.jsonComunities = None  
     
-    def jsonComunitiesCreate(self,polylinesComunidades):
+    def jsonComunitiesCreate(self, polylinesComunidades):
         """
-        Gera uma string JSON formatada com as comunidades urbanas a partir de listas de coordenadas.
+        Gera uma string com o conteúdo de urbanCommunities formatado como JSON,
+        mas sem as chaves externas (sem { }).
         
-        :param polylinesComunidades: Lista de listas de coordenadas. Cada sublista representa um polígono,
-                                    onde cada coordenada é uma tupla/lista (lat, lon).
-        :return: String JSON formatada com indentação.
+        :param polylinesComunidades: Lista de listas de coordenadas (lat, lon).
+        :return: String JSON no formato '"urbanCommunities": [ ... ]'
         """
-        # Reestrutura os dados se estiverem como [(lat, lon)] e não [[lon, lat]]
+        # Prepara os dados como lista de listas
         urban_communities = []
         for polyline in polylinesComunidades:
             community = []
@@ -28,13 +28,18 @@ class GuiOutput:
                 lat, lon = coord
                 community.append([lat, lon])
             urban_communities.append(community)
-        
-        output_dict = {"urbanCommunities": urban_communities}
-        self.jsonComunities = json.dumps(output_dict, indent=2)
-        
-        with open("temp.json", "w", encoding="utf-8") as f:
-             f.write(self.jsonComunities)
-        
+
+        # Gera JSON apenas da lista com indentação
+        json_array = json.dumps(urban_communities, indent=2)
+
+        # Monta manualmente com a chave (sem as chaves externas)
+        self.jsonComunities = f'"urbanCommunities": {json_array}'
+
+        # Salva no arquivo
+        # with open("temp.json", "w", encoding="utf-8") as f:
+        #    f.write(self.jsonComunities)
+
+        # Retorna a string gerada
         return self.jsonComunities
 
     
