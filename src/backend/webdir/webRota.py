@@ -1662,16 +1662,18 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita):
     lat_min, lat_max, lon_min, lon_max = calcula_bounding_box_pontos(pontoinicial,pontosvisita, margem_km=50)
     NewRegioes = []
 
-    regioesglobal = {
-        "name": "boundingBoxRegion",
-        "coord": [
+    box = [
             [lat_max, lon_min],
             [lat_max, lon_max],
             [lat_min, lon_max],
-            [lat_min, lon_min],
-        ],
+            [lat_min, lon_min]
+          ]
+    regioesglobal = {
+        "name": "boundingBoxRegion",
+        "coord": box
     }
 
+    gi.cGuiOutput.bounding_box = box
     NewRegioes.append(regioesglobal)
     for regiao in regioes:
         nome = regiao.get("nome", "SemNome").replace(" ", "_")
@@ -1679,7 +1681,7 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes,pontoinicial,pontosvisita):
         regiaook = {"name": nome, "coord": coordenadas}
         NewRegioes.append(regiaook)
     
-    if (cb.cCacheBoundingBox.get_cache(NewRegioes)!=None):
+    if (cb.cCacheBoundingBox.get_cache(NewRegioes) is not None):
         NewRegioes = cb.cCacheBoundingBox.get_cache(NewRegioes)
        
     return NewRegioes

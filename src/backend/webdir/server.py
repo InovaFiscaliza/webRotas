@@ -77,7 +77,7 @@ def _process():
     session_id = request.args.get("sessionId")
     if not session_id:
         return jsonify({"error": "Invalid or missing sessionId"}), 400
-
+    gi.cGuiOutput.session_id = session_id
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400

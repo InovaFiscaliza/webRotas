@@ -53,6 +53,8 @@ import webRota as wr
 import project_folders as pf
 import CacheBoundingBox as cb
 import regions as rg
+import shapeFiles as sf
+import GuiOutput as gi
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
     """
@@ -520,15 +522,15 @@ def limpar_cache_files_osmr(regioes):
 
 
 ################################################################################
-import shapeFiles as sf
 def PreparaServidorRoteamento(regioes):
     roteamento_ok=False
+    gi.cGuiOutput.cache_id = cb.cCacheBoundingBox.chave(regioes)
     while not roteamento_ok:
         if (cb.cCacheBoundingBox.get_cache(regioes)==None):
             wr.GeraArquivoExclusoes(
                 regioes,
                 arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"exclusion_{cb.cCacheBoundingBox.chave(regioes)}.poly",
-            )
+            ) 
             cb.cCacheBoundingBox.route_cache_clear_regioes()
             wr.wLog("FiltrarRegiãoComOsmosis")
             if(FiltrarRegiaoComOsmosis(regioes)==1):

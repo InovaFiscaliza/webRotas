@@ -13,6 +13,10 @@ class GuiOutput:
         self.jsonComunities = None  
         self.requisition_data = None
         self.url = ""
+        self.cache_id = None
+        self.bounding_box = None
+        self.session_id = None
+        
 
     
     def json_comunities_create(self, polylinesComunidades):
@@ -31,17 +35,10 @@ class GuiOutput:
                 lat, lon = coord
                 community.append([lat, lon])
             urban_communities.append(community)
-
-        # Gera JSON apenas da lista com indentação
-        json_array = json.dumps(urban_communities, indent=2)
-
-        # Monta manualmente com a chave (sem as chaves externas)
-        self.jsonComunities = f'"urbanCommunities": {json_array}'
-
+        self.jsonComunities = urban_communities
         # Salva no arquivo
         # with open("temp.json", "w", encoding="utf-8") as f:
         #    f.write(self.jsonComunities)
-
         # Retorna a string gerada
         return self.jsonComunities
 
@@ -49,25 +46,28 @@ class GuiOutput:
     def criar_json_routing(self):
         estrutura = {
             "url": self.url,
-            "routing": [
-                        self.requisition_data
-                       ],
-            "response": {
-                          "cacheId": "6a59481fbc73-123456",
-                          "boundingBox": [],
-                          "location": {
-                                        "limits": [],
-                                        "urbanAreas": [],
-                                        "urbanCommunities": []
-                                      },
-                          "routes": [] 
-                        }    
+            "routing": [ 
+                         { 
+                           "request": self.requisition_data,
+                           "response": {
+                                        "cacheId": f"{self.cache_id}",
+                                        "boundingBox": self.bounding_box,
+                                        "location": 
+                                        {
+                                            "limits": [],
+                                            "urbanAreas": [],
+                                            f"urbanCommunities": self.jsonComunities
+                                        },
+                                        "routes": [] 
+                                        }                               
+                         }
+                       ]          
         }
 
-        json_formatado = json.dumps(estrutura, indent=2, ensure_ascii=False)
+        json_formatado = json.dumps(estrutura, indent=4, ensure_ascii=False)
         
         # Salvar em arquivo (opcional)
-        with open("routing.json", "w", encoding="utf-8") as f:
+        with open("routingZZZZ.json", "w", encoding="utf-8") as f:
             f.write(json_formatado)
 
         return json_formatado
