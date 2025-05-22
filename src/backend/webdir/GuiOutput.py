@@ -16,6 +16,8 @@ class GuiOutput:
         self.cache_id = None
         self.bounding_box = None
         self.session_id = None
+        self.limits = None
+        self.urbanAreas = None
         
 
     
@@ -54,8 +56,8 @@ class GuiOutput:
                                         "boundingBox": self.bounding_box,
                                         "location": 
                                         {
-                                            "limits": [],
-                                            "urbanAreas": [],
+                                            "limits": self.limits,
+                                            "urbanAreas": self.urbanAreas,
                                             f"urbanCommunities": self.jsonComunities
                                         },
                                         "routes": [] 
@@ -71,9 +73,6 @@ class GuiOutput:
             f.write(json_formatado)
 
         return json_formatado
-        
-
-    
     
 # Instância global
 cGuiOutput = GuiOutput()

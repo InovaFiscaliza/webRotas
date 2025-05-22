@@ -1263,6 +1263,9 @@ def RouteCompAbrangencia(   data: dict,
 
     polMunicipio, polMunicipioAreasUrbanizadas = get_areas_urbanas_cache(cidade, uf)
     
+    gi.cGuiOutput.limits = polMunicipio
+    gi.cGuiOutput.urbanAreas = polMunicipioAreasUrbanizadas
+    
     match escopo:
         case "AreasUrbanizadas":
             pontosvisita = GeneratePointsWithinCity(polMunicipioAreasUrbanizadas, regioes, distanciaPontos)
