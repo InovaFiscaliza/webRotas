@@ -1375,7 +1375,7 @@ def RouteCompAbrangencia(
     si.PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial = pontoinicial
-    gi.cGuiOutput.pontoinicial = pontoinicial
+
     
     wLog("Desenhando Comunidades, Areas Urbanizadas e Município:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
@@ -1792,6 +1792,7 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita):
     ]
     regioesglobal = {"name": "boundingBoxRegion", "coord": box}
 
+    gi.cGuiOutput.pontoinicial = pontoinicial
     gi.cGuiOutput.bounding_box = box
     NewRegioes.append(regioesglobal)
     for regiao in regioes:
