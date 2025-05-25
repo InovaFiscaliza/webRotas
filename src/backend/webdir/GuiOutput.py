@@ -18,7 +18,7 @@ class GuiOutput:
         self.session_id = None
         self.limits = None
         self.urbanAreas = None
-        
+        self.pontoinicial = None
 
     
     def json_comunities_create(self, polylinesComunidades):
@@ -53,8 +53,8 @@ class GuiOutput:
                     "automatic": True,
                     "created": f"{data}",
                     "origin": {
-                    "lat": 2.802119,
-                    "lng": -60.688691,
+                    "lat": self.pontoinicial[0],
+                    "lng": self.pontoinicial[1],
                     "elevation": 77,
                     "description": "DEDED Roraima"
                     },

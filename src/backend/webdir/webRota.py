@@ -1375,6 +1375,8 @@ def RouteCompAbrangencia(
     si.PreparaServidorRoteamento(regioes)
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial = pontoinicial
+    gi.cGuiOutput.pontoinicial = pontoinicial
+    
     wLog("Desenhando Comunidades, Areas Urbanizadas e Município:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
     RouteDetail.mapcode += "    const TipoRoute = 'CompAbrangencia';\n"
