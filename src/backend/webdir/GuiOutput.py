@@ -4,7 +4,7 @@
 """
 
 import json
-
+from datetime import datetime
 
 
 class GuiOutput:
@@ -46,11 +46,12 @@ class GuiOutput:
 
 
     def criar_json_routing(self):
+        data = datetime.now().strftime("%d/%m/%Y %H:%M:%S") 
         routes_buf = [
                 {
                     "routeId": "abc",
                     "automatic": True,
-                    "created": "15/04/2025 13:58:49",
+                    "created": f"{data}",
                     "origin": {
                     "lat": 2.802119,
                     "lng": -60.688691,
