@@ -1635,6 +1635,8 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
 
     with open("pontosvisita.json", "w", encoding="utf-8") as f:
         json.dump(pontosvisita, f, ensure_ascii=False, indent=2)
+        
+    gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados    
 
     RouteDetail.pontosvisitaDados = pontosvisitaDados
     # Criar um mapa

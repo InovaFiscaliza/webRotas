@@ -19,6 +19,7 @@ class GuiOutput:
         self.limits = None
         self.urbanAreas = None
         self.pontoinicial = None
+        self.pontosvisitaDados = None
 
     
     def json_comunities_create(self, polylinesComunidades):
@@ -56,7 +57,7 @@ class GuiOutput:
                     "lat": self.pontoinicial[0],
                     "lng": self.pontoinicial[1],
                     "elevation": 77,
-                    "description": "DEDED Roraima"
+                    "description": f"{self.pontoinicial[1]}"
                     },
                     "waypoints": [
                     {
