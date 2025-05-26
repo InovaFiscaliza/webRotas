@@ -85,7 +85,8 @@ def _process():
     # with open("../../../tests/routing3.json", "r") as f:
     #     json_string = f.read()
     
-    json_string=ProcessaRequisicoesAoServidor(data)
+    ProcessaRequisicoesAoServidor(data)
+    json_string = gi.cGuiOutput.criar_json_routing()
     return Response(json_string, mimetype='application/json')
 
 #-----------------------------------------------------------------------------------#

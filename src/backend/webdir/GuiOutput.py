@@ -20,6 +20,8 @@ class GuiOutput:
         self.urbanAreas = None
         self.pontoinicial = None
         self.pontosvisitaDados = None
+        self.waypoints_route = None
+        self.estimated_distance = None
 
     
     def json_comunities_create(self, polylinesComunidades):
@@ -65,7 +67,7 @@ class GuiOutput:
                 "status": status,
                 "description": description
             })
-        return {"waypoints": waypoints}
+        return waypoints
     
     
     def criar_json_routing(self):
@@ -83,23 +85,8 @@ class GuiOutput:
                     "description": f"{self.pontoinicial[2]}"
                     },
                     "waypoints": waypoints,
-                    "paths": [
-                    [
-                        [
-                        2.80214,
-                        -60.68868
-                        ],
-                        [
-                        2.80144,
-                        -60.68735
-                        ],
-                        [
-                        2.80124,
-                        -60.68696
-                        ],        
-                
-                    ]
-                    ]
+                    "paths": self.waypoints_route,
+                    "estimatedDistance": self.estimated_distance
                 }
             ]
 
