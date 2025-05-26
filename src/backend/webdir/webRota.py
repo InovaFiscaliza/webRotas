@@ -1271,7 +1271,6 @@ def DesenhaComunidades(RouteDetail, regioes):
         )
 
     gi.cGuiOutput.json_comunities_create(polylinesComunidades)
-    gi.cGuiOutput.criar_json_routing()
 
     RouteDetail.mapcode += f"listComunidades = [\n"
     indPol = 0
@@ -1414,7 +1413,8 @@ def GeraArquivosSaida(RouteDetail, tipoServico):
     fileKmlF = f"templates/{fileKml}"
     # GerarKml(pontosvisita,fileKmlF)
     Gerar_Kml(RouteDetail.coordinates, RouteDetail.pontosvisitaDados, filename=fileKmlF)
-
+    
+    gi.cGuiOutput.criar_json_routing()
     return fileMap, fileMapStatic, fileKml
 
 
@@ -1637,7 +1637,6 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
         json.dump(pontosvisita, f, ensure_ascii=False, indent=2)
         
     gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados    
-
     RouteDetail.pontosvisitaDados = pontosvisitaDados
     # Criar um mapa
     # RouteDetail.mapcode += f"    const map = L.map('map');\n"

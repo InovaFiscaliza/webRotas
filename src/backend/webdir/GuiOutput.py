@@ -45,9 +45,32 @@ class GuiOutput:
         # Retorna a string gerada
         return self.jsonComunities
 
+    
+    def gerar_waypoints(self,pontosvisitaDados):
+        # [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
+        waypoints = []
+        for item in pontosvisitaDados:
+            lat, lng = float(item[0]), float(item[1])
+            description = str(item[4])
+            try:
+                elevation = int(float(item[5]))
+            except ValueError:
+                elevation = 0  # valor padrão caso erro na conversão
+            status = True
 
+            waypoints.append({
+                "lat": lat,
+                "lng": lng,
+                "elevation": elevation,
+                "status": status,
+                "description": description
+            })
+        return {"waypoints": waypoints}
+    
+    
     def criar_json_routing(self):
         data = datetime.now().strftime("%d/%m/%Y %H:%M:%S") 
+        waypoints = self.gerar_waypoints(self.pontosvisitaDados)
         routes_buf = [
                 {
                     "routeId": "abc",
@@ -57,31 +80,9 @@ class GuiOutput:
                     "lat": self.pontoinicial[0],
                     "lng": self.pontoinicial[1],
                     "elevation": 77,
-                    "description": f"{self.pontoinicial[1]}"
+                    "description": f"{self.pontoinicial[2]}"
                     },
-                    "waypoints": [
-                    {
-                        "lat": 2.812482,
-                        "lng": -61,
-                        "elevation": 122,
-                        "status": True,
-                        "description": "ABC"
-                    },
-                    {
-                        "lat": 2.840826,
-                        "lng": -60.8,
-                        "elevation": 29,
-                        "status": True,
-                        "description": "DEF"
-                    },
-                    {
-                        "lat": 2.854428,
-                        "lng": -60.7,
-                        "elevation": 82,
-                        "status": True,
-                        "description": "GHI"
-                    }
-                    ],
+                    "waypoints": waypoints,
                     "paths": [
                     [
                         [
