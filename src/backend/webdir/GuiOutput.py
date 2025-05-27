@@ -21,6 +21,18 @@ class GuiOutput:
         self.waypoints_route = None
         self.estimated_distance = None
 
+    @property
+    def pontoinicial(self):
+        return self._pontoinicial
+
+    @pontoinicial.setter
+    def pontoinicial(self, value):
+        if isinstance(value, (list, tuple)) and len(value) >= 2:
+            rounded = self.round_coords(value[:2])
+            self._pontoinicial = rounded + list(value[2:])
+        else:
+            self._pontoinicial = value
+
     def round_coords(self, coord):
         """Helper method to round coordinates to 6 decimal places"""
         if isinstance(coord, (list, tuple)):
