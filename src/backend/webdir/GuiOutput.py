@@ -48,11 +48,12 @@ class GuiOutput:
         return self.jsonComunities
 
     
-    def gerar_waypoints(self,pontosvisitaDados):
-        # [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
+    def gerar_waypoints(self, pontosvisitaDados):
+    # [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
         waypoints = []
         for item in pontosvisitaDados:
-            lat, lng = float(item[0]), float(item[1])
+            lat = round(float(item[0]), 6)
+            lng = round(float(item[1]), 6)
             description = str(item[4])
             try:
                 elevation = int(float(item[5]))
@@ -68,7 +69,7 @@ class GuiOutput:
                 "description": description
             })
         return waypoints
-    
+
     
     def criar_json_routing(self):
         data = datetime.now().strftime("%d/%m/%Y %H:%M:%S") 
