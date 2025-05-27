@@ -101,8 +101,11 @@ def _reprocess():
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400
-    
-    return jsonify({ "error": "Mensagem erro de teste" }), 500
+
+    ProcessaRequisicoesAoServidor(data)
+    json_string = gi.cGuiOutput.criar_json_routing()    
+    # return jsonify({ "error": "Mensagem erro de teste" }), 500
+    return Response(json_string, mimetype='application/json')
 
 #-----------------------------------------------------------------------------------#
 # OUTRAS ROTAS
