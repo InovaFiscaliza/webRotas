@@ -2,12 +2,26 @@
     "User": "Usuário9",
     "TipoRequisicao": "PontosVisita",
     "Descricao": "Teste de pontos de visita",
-    "PontoInicial": [-30.04676485750787, -51.205997590562255,"Anatel RS"],
+    "PontoInicial": [
+        -30.046765,
+        -51.205998,
+        "Anatel RS"
+    ],
     "RaioDaEstacao": 200,
     "GpsProximoPonto": "ProximoDaRota",
     "pontosvisita": [
-        [-30.04314734814176, -51.22296612431298,"Local","Porto Alegre"],
-        [-1.447029794024141, -48.52001148155231,"Local","Belem"]
+        [
+            -30.043147,
+            -51.222966,
+            "Local",
+            "Porto Alegre"
+        ],
+        [
+            -1.447030,
+            -48.520011,
+            "Local",
+            "Belem"
+        ]
     ],
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
     "regioes": []

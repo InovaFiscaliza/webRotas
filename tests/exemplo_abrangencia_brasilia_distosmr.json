@@ -3,15 +3,15 @@
     "Descricao": "Teste de abrangência Dsitrito Federal",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [
-        -15.805379934328398,         
-        -47.88247829790569,
+        -15.805380,         
+        -47.882478,
         "Anatel DF"
     ],
     "RaioDaEstacao": 200,
     "GpsProximoPonto": "ProximoDaRota",
     "cidade": "Brasília",
     "uf": "DF",
-    "Escopo":"AreasUrbanizadas",
+    "Escopo": "AreasUrbanizadas",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
     "distancia_pontos": 3000,
     "regioes": []
