@@ -386,12 +386,6 @@ def GenerateRouteMapOSMR(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon)
 
     response = GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
     data = response.json()
-
-    import json
-
-    with open("RouteDetailData.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
     # Verificar se a solicitação foi bem-sucedida
     if response.status_code == 200 and "routes" in data:
         route = data["routes"][0]
@@ -1625,15 +1619,6 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
         )  # Batch faz chamadas em lote para o OpenElevation
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
 
-    import json
-
-    # Suponha que pontosvisitaDados já esteja preenchida corretamente
-
-    with open("pontosvisitaDados.json", "w", encoding="utf-8") as f:
-        json.dump(pontosvisitaDados, f, ensure_ascii=False, indent=2)
-
-    with open("pontosvisita.json", "w", encoding="utf-8") as f:
-        json.dump(pontosvisita, f, ensure_ascii=False, indent=2)
 
     gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
     RouteDetail.pontosvisitaDados = pontosvisitaDados
