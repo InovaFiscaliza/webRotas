@@ -41,7 +41,13 @@
 
                     this.controller('clearAll');
                     this.create('boundingBox',              routing.response.boundingBox);
-                  //this.create('avoidZones',               routing.response.avoidZones);
+
+                    const avoidZonesRaw = routing.request.regioes;
+                    if (avoidZonesRaw) {
+                        const avoidZones = avoidZonesRaw.map(el => el.coord);
+                        this.create('avoidZones',           avoidZones);
+                    }
+                    
                     this.create('locationLimits',           routing.response.location.limits);
                     this.create('locationUrbanAreas',       routing.response.location.urbanAreas);
                     this.create('locationUrbanCommunities', routing.response.location.urbanCommunities);
@@ -176,7 +182,7 @@
 
                 case 'polygon':
                     coords = geoData;
-                    handle = window.L.polygon(coords,  options).addTo(map);
+                    handle = window.L.polygon(coords, options).addTo(map);
                     break;
 
                 default:

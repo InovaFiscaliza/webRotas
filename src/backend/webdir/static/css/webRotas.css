@@ -78,9 +78,14 @@ input:focus {
   box-shadow: none;
 }
 
-input.spinner-disabled::-webkit-inner-spin-button,
-input.spinner-disabled::-webkit-outer-spin-button {
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
 }
 
 button,

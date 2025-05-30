@@ -49,7 +49,7 @@
           │   ├── locationLimits
           │   ├── locationUrbanAreas
           │   ├── locationUrbanCommunities
-          │   ├── waypoints
+          │   ├── waypoints[]
           │   ├── routeMidpoint
           │   ├── routeOrigin
           │   ├── routePath
@@ -156,7 +156,7 @@
                     options: {
                         weight: 1,
                         color: 'rgba(255,0,0,0.5)',
-                        fillColor: 'rgba(255,0,0,0.25)',
+                        fillColor: 'rgba(255,0,0,0.75)',
                         interactive: false
                     }
                 },

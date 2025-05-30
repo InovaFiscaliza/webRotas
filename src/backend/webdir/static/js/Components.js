@@ -231,7 +231,6 @@
                 }, initialPointGrid);
             
                 this.createElement('input', {
-                    classList: ['spinner-disabled'],
                     id: 'initialPointLatitude',
                     type: 'number',
                     step: 'any',
@@ -251,7 +250,6 @@
                 }, initialPointGrid);
             
                 this.createElement('input', {
-                    classList: ['spinner-disabled'],
                     id: 'initialPointLongitude',
                     type: 'number',
                     step: 'any',

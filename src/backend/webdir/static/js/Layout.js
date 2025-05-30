@@ -40,7 +40,7 @@
                         htmlRouteEl,
                         routing,
                         (routeEl, index1, index2) => {
-                            return `[${index1},${index2}]: ${routeEl.estimatedDistance} km${routeEl.automatic ? ' (AUTOMÁTICA)' : ''}`
+                            return `[${index1},${index2}]: ${routeEl.estimatedDistance.toFixed(1)} km${routeEl.automatic ? ' (AUTOMÁTICA)' : ''}`
                         },
                         {
                             click:      (event) => window.app.modules.Callbacks.onRouteListSelectionChanged(event),
@@ -66,7 +66,7 @@
                         route.waypoints,
                         (routeEl, index) => {
                             const routeElDescription = routeEl.description.length ? ` ${routeEl.description}` : '';
-                            return `${index}: (${routeEl.lat}, ${routeEl.lng}, ${routeEl.elevation}m)${routeElDescription}`;
+                            return `${index}: (${routeEl.lat.toFixed(6)}, ${routeEl.lng.toFixed(6)}, ${routeEl.elevation.toFixed(0)}m)${routeElDescription}`;
                         },
                         {
                             click:      (event) => window.app.modules.Callbacks.onPointListSelectionChanged(event, htmlPointsEl),
