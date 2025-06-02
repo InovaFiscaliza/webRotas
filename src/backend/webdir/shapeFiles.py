@@ -37,11 +37,12 @@ Uso típico:
 import webRota as wr
 import uf_code as uf
 
+from shapely.ops import unary_union
 import geopandas as gpd
 from shapely.geometry import box, Polygon, MultiPolygon
 import uf_code as uf
 import pyproj
-
+import math
 
 SHAPEFILE_MUNICIPIO_PATH = "../../resources/BR_Municipios/BR_Municipios_2023.shp"
 SHAPEFILE_FAVELA_PATH = "../../resources/Comunidades/qg_2022_670_fcu_agregPolygon.shp"
@@ -55,6 +56,118 @@ SHAPEFILE_AREA_URBANIZADA_PATH = (
 ##########################################################################################################################
 
 
+def expand_bounding_box(box, margin_km):
+    """
+    Expande o bounding box em uma margem de distância ao redor (em km).
+
+    :param box: lista com 4 pontos do bounding box no formato
+                [
+                    [lat_max, lon_min],
+                    [lat_max, lon_max],
+                    [lat_min, lon_max],
+                    [lat_min, lon_min],
+                ]
+    :param margin_km: distância em quilômetros para expandir o bounding box
+    :return: novo box expandido no mesmo formato
+    """
+
+    lat_max, lon_min = box[0]
+    _, lon_max = box[1]
+    lat_min, _ = box[2]
+
+    # Calcula latitude média para ajustar longitude
+    lat_mean = (lat_max + lat_min) / 2.0
+
+    # 1 grau latitude ~ 111 km
+    km_in_degree_lat = 111.0
+    # 1 grau longitude ~ 111 km * cos(latitude)
+    km_in_degree_lon = 111.0 * math.cos(math.radians(lat_mean))
+
+    # Convertendo margin_km para graus
+    delta_lat = margin_km / km_in_degree_lat
+    delta_lon = margin_km / km_in_degree_lon if km_in_degree_lon != 0 else 0
+
+    # Expande box
+    new_box = [
+        [lat_max + delta_lat, lon_min - delta_lon],
+        [lat_max + delta_lat, lon_max + delta_lon],
+        [lat_min - delta_lat, lon_max + delta_lon],
+        [lat_min - delta_lat, lon_min - delta_lon],
+    ]
+
+    return new_box
+
+
+def get_bounding_box_for_municipalities(lista_municipios):
+    # Carrega o shapefile dos municípios
+    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+
+    # Normaliza os nomes dos municípios e siglas dos estados na entrada
+    entrada = {(item["municipio"].strip().lower(), item["siglaEstado"].strip().upper()) for item in lista_municipios}
+
+    # Filtra os municípios correspondentes
+    gdf_filtrado = gdf[
+        gdf.apply(
+            lambda row: (row["NM_MUN"].strip().lower(), row["SIGLA_UF"].strip().upper()) in entrada,
+            axis=1
+        )
+    ]
+
+    if gdf_filtrado.empty:
+        raise ValueError("Nenhum município da lista foi encontrado no shapefile.")
+
+    # Obtém os limites da união dos polígonos
+    bounds = gdf_filtrado.total_bounds  # [minx, miny, maxx, maxy]
+    minx, miny, maxx, maxy = bounds
+
+    # Converte para o formato solicitado
+    box = [
+        [maxy, minx],
+        [maxy, maxx],
+        [miny, maxx],
+        [miny, minx],
+    ]
+    return box
+
+
+def get_bounding_box_from_states(estados_siglas: list) -> list:
+    """
+    Retorna um bounding box que engloba todos os municípios dos estados informados,
+    no formato:
+        [
+            [lat_max, lon_min],
+            [lat_max, lon_max],
+            [lat_min, lon_max],
+            [lat_min, lon_min],
+        ]
+
+    :param estados_siglas (list): Lista de siglas de estados (ex: ['RJ', 'SP', 'MG'])
+    :return: Lista com as 4 coordenadas do bounding box combinado
+    """
+    # Carrega o shapefile completo de municípios
+    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+
+    # Obtém os códigos dos estados a partir das siglas
+    codigos_uf = [uf.SIGLAS_UF[sigla]["CD_UF"] for sigla in estados_siglas]
+
+    # Filtra os municípios dos estados desejados
+    gdf_filtrado = gdf[gdf["CD_UF"].isin(codigos_uf)]
+
+    if gdf_filtrado.empty:
+        raise ValueError(f"Nenhum município encontrado para os estados {estados_siglas}.")
+
+    # União das geometrias
+    geometria_total = unary_union(gdf_filtrado.geometry)
+    minx, miny, maxx, maxy = geometria_total.bounds
+
+    # Formato de saída: (lat, lon)
+    box = [
+        [maxy, minx],
+        [maxy, maxx],
+        [miny, maxx],
+        [miny, minx],
+    ]
+    return box
 
 def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     """

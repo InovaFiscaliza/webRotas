@@ -1726,8 +1726,21 @@ def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
         RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
 
     return RouteDetail.coordinates, RouteDetail.DistanceTotal, pontosvisita
-
-
+################################################################################
+def create_standard_cache(data):
+    from flask import jsonify
+    UserData.nome = "CacheCreator"
+    wLog("#############################################################################################")
+    wLog("Recebida solicitação criar cache das GR")
+    
+    # regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita)
+    estados_siglas = data[""]
+    bbox = sf.get_bounding_box_from_states(estados_siglas: list)
+    
+    
+    cb.cCacheBoundingBox._schedule_save()
+    wLog("#############################################################################################")    
+    return jsonify({"Info": f"Standard cache criado com sucesso"}), 200
 ################################################################################
 def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     UserData.nome = user

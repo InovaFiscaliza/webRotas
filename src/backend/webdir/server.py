@@ -245,6 +245,9 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         except KeyError as e:
             return jsonify({"error": f"Campo TipoRequisicao não encontrado: {e}"}), 400
         
+        if (request_type == "StandardCache"):
+            return wr.create_standard_cache(data)
+        
         if not REQUIRED_KEYS[request_type].issubset(data.keys()):
             return jsonify({"error": f"Campos necessários: {REQUIRED_KEYS[request_type]}"}), 400
         
