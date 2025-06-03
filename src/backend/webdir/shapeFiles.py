@@ -129,6 +129,11 @@ def get_bounding_box_for_municipalities(lista_municipios):
     ]
     return box
 
+def get_gr_data(data, gr_alvo):
+    for regiao in data.get("RegioesCache", []):
+        if regiao.get("GR") == gr_alvo:
+            return regiao
+    return None  # Se não encontrar
 
 def get_bounding_box_from_states(estados_siglas: list) -> list:
     """

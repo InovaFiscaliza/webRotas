@@ -1733,14 +1733,49 @@ def create_standard_cache(data):
     wLog("#############################################################################################")
     wLog("Recebida solicitação criar cache das GR")
     
-    # regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita)
-    estados_siglas = data[""]
-    bbox = sf.get_bounding_box_from_states(estados_siglas: list)
+    gr_data = sf.get_gr_data(data, "GR02")
+    estados_siglas = gr_data["SiglaEstado"]
+    lista_municipios = gr_data["ListaMunicipios"]
+    
+    create_standard_cache_from_place(estados_siglas,lista_municipios)
     
     
     cb.cCacheBoundingBox._schedule_save()
     wLog("#############################################################################################")    
     return jsonify({"Info": f"Standard cache criado com sucesso"}), 200
+################################################################################
+def create_standard_cache_from_place(estados_siglas,lista_municipios,regioes):
+    wLog(f"Calculando cache para os estados: {estados_siglas} e municípios: {lista_municipios}")
+    
+    if not lista_municipios:
+       bbox = sf.get_bounding_box_from_states(estados_siglas)
+    else:
+       bbox = sf.get_bounding_box_for_municipalities(lista_municipios)
+
+    bbox = sf.expand_bounding_box(box, 50) # 50 km de margem
+    wLog(f"Bounding Box calculado: {bbox}")    
+    regioes = update_regions_bounding_box(bbox,regioes)
+    si.PreparaServidorRoteamento(regioes)
+    
+################################################################################     
+def update_regions_bounding_box(bbox,regioes):
+
+    NewRegioes = []
+
+    box = bbox
+    regioesglobal = {"name": "boundingBoxRegion", "coord": box}
+    NewRegioes.append(regioesglobal)
+    for regiao in regioes:
+        nome = regiao.get("nome", "SemNome").replace(" ", "_")
+        coordenadas = regiao.get("coord", [])
+        regiaook = {"name": nome, "coord": coordenadas}
+        NewRegioes.append(regiaook)
+
+    if cb.cCacheBoundingBox.get_cache(NewRegioes) is not None:
+        NewRegioes = cb.cCacheBoundingBox.get_cache(NewRegioes)
+
+    return NewRegioes
+        
 ################################################################################
 def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     UserData.nome = user
