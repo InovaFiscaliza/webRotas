@@ -1741,13 +1741,13 @@ def create_standard_cache(data):
         estados_siglas = gr_data["SiglaEstado"]
         lista_municipios = gr_data["ListaMunicipios"]
         regioes = gr_data["regioes"]
-        cb.cCacheBoundingBox.gr = gr_data["GR"] + " - " + ", ".join(gr_data["UO"])
+        cb.cCacheBoundingBox.gr = gr_data["GR"] + "  " + ", ".join(gr_data["UO"])
         cb.cCacheBoundingBox.state = ", ".join(gr_data["SiglaEstado"])
-        wLog(f"{cb.cCacheBoundingBox.gr} - {cb.cCacheBoundingBox.state}")
+        wLog(f"{cb.cCacheBoundingBox.gr} {cb.cCacheBoundingBox.state}")
         create_standard_cache_from_place(estados_siglas, lista_municipios, regioes)
         cb.cCacheBoundingBox.gr = ""
         cb.cCacheBoundingBox.state = ""
-    
+
     cb.cCacheBoundingBox._schedule_save()
     wLog(
         "#############################################################################################"
@@ -1757,7 +1757,9 @@ def create_standard_cache(data):
 
 ################################################################################
 def create_standard_cache_from_place(estados_siglas, lista_municipios, regioes):
-    wLog(f"Calculando cache para os estados: {estados_siglas} e municípios: {lista_municipios}")
+    wLog(
+        f"Calculando cache para os estados: {estados_siglas} e municípios: {lista_municipios}"
+    )
     if not lista_municipios:
         bbox = sf.get_bounding_box_from_states(estados_siglas)
     else:
