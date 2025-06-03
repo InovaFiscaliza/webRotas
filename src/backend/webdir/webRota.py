@@ -1757,6 +1757,12 @@ def create_standard_cache_from_place(estados_siglas,lista_municipios,regioes):
     regioes = update_regions_bounding_box(bbox,regioes)
     si.PreparaServidorRoteamento(regioes)
     
+    bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
+    polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
+    if not polylinesComunidades:
+        polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
+        cb.cCacheBoundingBox.comunidades_cache.add_polyline(regioes, polylinesComunidades)
+    
 ################################################################################     
 def update_regions_bounding_box(bbox,regioes):
 
