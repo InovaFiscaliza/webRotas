@@ -1619,7 +1619,6 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
         )  # Batch faz chamadas em lote para o OpenElevation
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
 
-
     gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
     RouteDetail.pontosvisitaDados = pontosvisitaDados
     # Criar um mapa
@@ -1726,45 +1725,58 @@ def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
         RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
 
     return RouteDetail.coordinates, RouteDetail.DistanceTotal, pontosvisita
+
+
 ################################################################################
 def create_standard_cache(data):
     from flask import jsonify
+
     UserData.nome = "CacheCreator"
-    wLog("#############################################################################################")
+    wLog(
+        "#############################################################################################"
+    )
     wLog("Recebida solicitação criar cache das GR")
-    
+
     gr_data = sf.get_gr_data(data, "GR02")
     estados_siglas = gr_data["SiglaEstado"]
     lista_municipios = gr_data["ListaMunicipios"]
     regioes = gr_data["regioes"]
-    create_standard_cache_from_place(estados_siglas,lista_municipios,regioes)
-    
-    
-    cb.cCacheBoundingBox._schedule_save()
-    wLog("#############################################################################################")    
-    return jsonify({"Info": f"Standard cache criado com sucesso"}), 200
-################################################################################
-def create_standard_cache_from_place(estados_siglas,lista_municipios,regioes):
-    wLog(f"Calculando cache para os estados: {estados_siglas} e municípios: {lista_municipios}")
-    
-    if not lista_municipios:
-       bbox = sf.get_bounding_box_from_states(estados_siglas)
-    else:
-       bbox = sf.get_bounding_box_for_municipalities(lista_municipios)
+    create_standard_cache_from_place(estados_siglas, lista_municipios, regioes)
 
-    bbox = sf.expand_bounding_box(bbox, 50) # 50 km de margem
-    wLog(f"Bounding Box calculado: {bbox}")    
-    regioes = update_regions_bounding_box(bbox,regioes)
+    cb.cCacheBoundingBox._schedule_save()
+    wLog(
+        "#############################################################################################"
+    )
+    return jsonify({"Info": f"Standard cache criado com sucesso"}), 400
+
+
+################################################################################
+def create_standard_cache_from_place(estados_siglas, lista_municipios, regioes):
+    wLog(
+        f"Calculando cache para os estados: {estados_siglas} e municípios: {lista_municipios}"
+    )
+
+    if not lista_municipios:
+        bbox = sf.get_bounding_box_from_states(estados_siglas)
+    else:
+        bbox = sf.get_bounding_box_for_municipalities(lista_municipios)
+
+    bbox = sf.expand_bounding_box(bbox, 50)  # 50 km de margem
+    wLog(f"Bounding Box calculado: {bbox}")
+    regioes = update_regions_bounding_box(bbox, regioes)
     si.PreparaServidorRoteamento(regioes)
-    
+
     bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
     polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
     if not polylinesComunidades:
         polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
-        cb.cCacheBoundingBox.comunidades_cache.add_polyline(regioes, polylinesComunidades)
-    
-################################################################################     
-def update_regions_bounding_box(bbox,regioes):
+        cb.cCacheBoundingBox.comunidades_cache.add_polyline(
+            regioes, polylinesComunidades
+        )
+
+
+################################################################################
+def update_regions_bounding_box(bbox, regioes):
 
     NewRegioes = []
 
@@ -1781,7 +1793,8 @@ def update_regions_bounding_box(bbox,regioes):
         NewRegioes = cb.cCacheBoundingBox.get_cache(NewRegioes)
 
     return NewRegioes
-        
+
+
 ################################################################################
 def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     UserData.nome = user
