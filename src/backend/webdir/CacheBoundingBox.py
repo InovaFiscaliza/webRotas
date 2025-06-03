@@ -80,6 +80,8 @@ class CacheBoundingBox:
         self._debounce_delay = 4  # segundos
         self._lock = threading.Lock()
         self._load_from_disk_sync()
+        self.gr = ""
+        self.state = ""
 
 
     def get_comunidades(self, regioes):
@@ -112,6 +114,8 @@ class CacheBoundingBox:
         self.cache[chave] = {
             'regiao': regiao_legivel,
             'regiaodados': regioes,
+            'gr': self.gr,
+            'state': self.state,
             'diretorio': diretorio,
             'inforegiao': inforegiao,
             'km2_região': km2_região,            
@@ -451,7 +455,7 @@ class CacheBoundingBox:
         ws1.title = "Cache Bounding Box"
 
         # Aba 1: Cache Bounding Box
-        headers1 = ['Chave', 'Regiao', 'Municipios Cobertos', 'Diretório', 'Km2 Região', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
+        headers1 = ['Chave', 'Regiao','GR','Estado', 'Municipios Cobertos', 'Diretório', 'Km2 Região', 'Num Rotas Cache', 'Cache Comunidades', 'Criado em', 'Último Acesso']
         ws1.append(headers1)
         col_widths1 = [len(h) for h in headers1]
 
@@ -463,6 +467,8 @@ class CacheBoundingBox:
                 chave,
                 dados.get('regiao', ''),
                 dados.get('inforegiao', '').encode('utf-8').decode('unicode_escape'),
+                dados.get('gr', ''),
+                dados.get('state', ''),
                 dados.get('diretorio', ''),
                 dados.get('km2_região', ''),
                 str(numrotascached),

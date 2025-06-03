@@ -1736,13 +1736,18 @@ def create_standard_cache(data):
         "#############################################################################################"
     )
     wLog("Recebida solicitação criar cache das GR")
-
-    gr_data = sf.get_gr_data(data, "GR02")
-    estados_siglas = gr_data["SiglaEstado"]
-    lista_municipios = gr_data["ListaMunicipios"]
-    regioes = gr_data["regioes"]
-    create_standard_cache_from_place(estados_siglas, lista_municipios, regioes)
-
+    for regiao in data["RegioesCache"]:
+        gr_data = regiao
+        estados_siglas = gr_data["SiglaEstado"]
+        lista_municipios = gr_data["ListaMunicipios"]
+        regioes = gr_data["regioes"]
+        cb.cCacheBoundingBox.gr = gr_data["GR"] + " - " + ", ".join(gr_data["UO"])
+        cb.cCacheBoundingBox.state = ", ".join(gr_data["SiglaEstado"])
+        wLog(f"{cb.cCacheBoundingBox.gr} - {cb.cCacheBoundingBox.state}")
+        create_standard_cache_from_place(estados_siglas, lista_municipios, regioes)
+        cb.cCacheBoundingBox.gr = ""
+        cb.cCacheBoundingBox.state = ""
+    
     cb.cCacheBoundingBox._schedule_save()
     wLog(
         "#############################################################################################"
@@ -1752,17 +1757,13 @@ def create_standard_cache(data):
 
 ################################################################################
 def create_standard_cache_from_place(estados_siglas, lista_municipios, regioes):
-    wLog(
-        f"Calculando cache para os estados: {estados_siglas} e municípios: {lista_municipios}"
-    )
-
+    wLog(f"Calculando cache para os estados: {estados_siglas} e municípios: {lista_municipios}")
     if not lista_municipios:
         bbox = sf.get_bounding_box_from_states(estados_siglas)
     else:
         bbox = sf.get_bounding_box_for_municipalities(lista_municipios)
 
     bbox = sf.expand_bounding_box(bbox, 50)  # 50 km de margem
-    wLog(f"Bounding Box calculado: {bbox}")
     regioes = update_regions_bounding_box(bbox, regioes)
     si.PreparaServidorRoteamento(regioes)
 
