@@ -1736,8 +1736,8 @@ def create_standard_cache(data):
     gr_data = sf.get_gr_data(data, "GR02")
     estados_siglas = gr_data["SiglaEstado"]
     lista_municipios = gr_data["ListaMunicipios"]
-    
-    create_standard_cache_from_place(estados_siglas,lista_municipios)
+    regioes = gr_data["regioes"]
+    create_standard_cache_from_place(estados_siglas,lista_municipios,regioes)
     
     
     cb.cCacheBoundingBox._schedule_save()
@@ -1752,7 +1752,7 @@ def create_standard_cache_from_place(estados_siglas,lista_municipios,regioes):
     else:
        bbox = sf.get_bounding_box_for_municipalities(lista_municipios)
 
-    bbox = sf.expand_bounding_box(box, 50) # 50 km de margem
+    bbox = sf.expand_bounding_box(bbox, 50) # 50 km de margem
     wLog(f"Bounding Box calculado: {bbox}")    
     regioes = update_regions_bounding_box(bbox,regioes)
     si.PreparaServidorRoteamento(regioes)
