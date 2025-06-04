@@ -127,7 +127,7 @@ class GuiOutput:
                 "origin": {
                     "lat": round(float(self.pontoinicial[0]), 6),
                     "lng": round(float(self.pontoinicial[1]), 6),
-                    "elevation": 77,
+                    "elevation": 0,
                     "description": f"{self.pontoinicial[2]}",
                 },
                 "waypoints": waypoints,
