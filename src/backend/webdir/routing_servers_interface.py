@@ -155,6 +155,8 @@ def FiltrarRegiaoComOsmosis(regioes):
         wr.wLog(f"Diretório '{destino}' já existe. Ignorando processamento.")
         return 0 # Não criou diretório pode ignorar criação dos indices OSMR
     
+    wr.wLog(f"Fazendo osmosis no diretório {pf.OSMOSIS_TEMPDATA_PATH}/filtro_{chave}",level="debug")
+    
     remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{chave}")
     criar_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")/f"filtro_{chave}")  
     subprocess.run(["podman", 

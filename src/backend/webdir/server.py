@@ -319,7 +319,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 
                 # Present used arguments
                 wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
-                wr.wLog(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos}m",level="debug")
+                wr.wLog(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos} m")
                 wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
 
                 # Process the received data
