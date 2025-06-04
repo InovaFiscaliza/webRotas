@@ -273,7 +273,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 numeropontos = data.get("numeropontos", default_points(raio))
 
                 # Present used arguments
-                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
+                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
                 wr.wLog(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m, Número de Pontos: {numeropontos}",level="debug")
                 wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
                 
@@ -295,7 +295,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 pontosvisita = data["pontosvisita"]
                 
                 # Present used arguments
-                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
+                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
                 wr.wLog(f"Pontos de Visita: {pontosvisita}",level="debug")
                 wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
                 
@@ -318,7 +318,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 distanciaPontos = data["distancia_pontos"]
                 
                 # Present used arguments
-                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
+                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
                 wr.wLog(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos}m",level="debug")
                 wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
 
