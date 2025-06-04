@@ -1,16 +1,16 @@
 {
-    "User": "Usuário11",
-    "Descricao": "Teste de abrangência Distrito Federal",
+    "User": "Usuário13",
+    "Descricao": "Teste de abrangência Belem",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [
-        -15.805380,         
-        -47.882478,
-        "Anatel DF"
+        -1.427402, 
+        -48.485215,
+        "Anatel PA"
     ],
     "RaioDaEstacao": 200,
     "GpsProximoPonto": "ProximoDaRota",
-    "cidade": "Brasília",
-    "uf": "DF",
+    "cidade": "Belém",
+    "uf": "PA",
     "Escopo": "AreasUrbanizadas",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
     "distancia_pontos": 3000,

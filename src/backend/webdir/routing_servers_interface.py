@@ -560,7 +560,8 @@ def PreparaServidorRoteamento(regioes):
         if VerificarOsrmAtivo():
             roteamento_ok=True    
         else:   
-            wr.wLog("Erro de cache encontrado reiniciando geração dos mapas")
+            cache_id = cb.cCacheBoundingBox.chave(regioes)
+            wr.wLog(f"Erro de cache encontrado reiniciando geração dos mapas - id: {cache_id}")
             limpar_cache_files_osmr(regioes) 
 
 ################################################################################
