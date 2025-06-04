@@ -162,6 +162,8 @@ def FiltrarRegiaoComOsmosis(regioes):
     subprocess.run(["podman", 
                     "run", 
                     "--rm",
+                    "-m", 
+                    "32g", 
                     "-v", 
                     f"{pf.OSMOSIS_PATH}:/data", 
                     "--name", 
@@ -501,12 +503,20 @@ def remover_arquivos_osmr():
             except Exception as e:
                 wr.wLog(f"Erro ao remover {item}: {e}", level="error")
 ################################################################################
+def esperar_container_parar(nome_usuario, timeout=30):
+    for _ in range(timeout):
+        # Verifica se o container ainda está rodando
+        result = subprocess.run(["podman", "ps", "--filter", f"name={nome_usuario}", "--format", "{{.ID}}"], capture_output=True, text=True)
+        if not result.stdout.strip():
+            return  # Container finalizou
+        time.sleep(1)
+    raise TimeoutError(f"Container de {nome_usuario} ainda está ativo após {timeout} segundos.")
+################################################################################
 def limpar_cache_files_osmr(regioes):
     try: 
         wr.wLog(f"Parando todos os containers osmr do usário {wr.UserData.nome}",level="debug")
         parar_containers_osmr(wr.UserData.nome)
-        
-        cb.cCacheBoundingBox.delete(regioes) 
+        esperar_container_parar(wr.UserData.nome)
         wr.wLog("Apagando arquivo de log...",level="debug")
         log_file = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
         try:
@@ -517,12 +527,12 @@ def limpar_cache_files_osmr(regioes):
         except Exception as e:
             wr.wLog(f"Erro ao remover {log_file}: {e}")
         remover_arquivos_osmr()   
-
         wr.wLog("Limpeza concluída com sucesso.",level="debug")
     except Exception as e:
         wr.wLog(f"Erro durante a limpeza dos caches : {e}")
-
-
+        
+    cb.cCacheBoundingBox.delete(regioes) 
+  
 ################################################################################
 def PreparaServidorRoteamento(regioes):
     roteamento_ok=False
