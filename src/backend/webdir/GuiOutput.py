@@ -158,8 +158,8 @@ class GuiOutput:
         json_formatado = json.dumps(estrutura, indent=4, ensure_ascii=False)
 
         # Salvar em arquivo (opcional)
-        with open("routingZZZZ.json", "w", encoding="utf-8") as f:
-            f.write(json_formatado)
+        # with open("routingZZZZ.json", "w", encoding="utf-8") as f:
+        #    f.write(json_formatado)
 
         return json_formatado
 
