@@ -1738,15 +1738,16 @@ def create_standard_cache(data):
     wLog("Recebida solicitação criar cache das GR")
     for regiao in data["RegioesCache"]:
         gr_data = regiao
-        estados_siglas = gr_data["SiglaEstado"]
-        lista_municipios = gr_data["ListaMunicipios"]
-        regioes = gr_data["regioes"]
-        cb.cCacheBoundingBox.gr = gr_data["GR"] + "  " + ", ".join(gr_data["UO"])
-        cb.cCacheBoundingBox.state = ", ".join(gr_data["SiglaEstado"])
-        wLog(f"{cb.cCacheBoundingBox.gr} {cb.cCacheBoundingBox.state}")
-        create_standard_cache_from_place(estados_siglas, lista_municipios, regioes)
-        cb.cCacheBoundingBox.gr = ""
-        cb.cCacheBoundingBox.state = ""
+        if gr_data["GR"] == "GR12":
+            estados_siglas = gr_data["SiglaEstado"]
+            lista_municipios = gr_data["ListaMunicipios"]
+            regioes = gr_data["regioes"]
+            cb.cCacheBoundingBox.gr = gr_data["GR"] + "  " + ", ".join(gr_data["UO"])
+            cb.cCacheBoundingBox.state = ", ".join(gr_data["SiglaEstado"])
+            wLog(f"{cb.cCacheBoundingBox.gr} {cb.cCacheBoundingBox.state}")
+            create_standard_cache_from_place(estados_siglas, lista_municipios, regioes)
+            cb.cCacheBoundingBox.gr = ""
+            cb.cCacheBoundingBox.state = ""
 
     cb.cCacheBoundingBox._schedule_save()
     wLog(
