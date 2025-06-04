@@ -55,7 +55,7 @@ SHAPEFILE_AREA_URBANIZADA_PATH = (
 # https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
 ##########################################################################################################################
 
-
+##############################################################################################################
 def expand_bounding_box(box, margin_km):
     """
     Expande o bounding box em uma margem de distância ao redor (em km).
@@ -97,7 +97,7 @@ def expand_bounding_box(box, margin_km):
 
     return new_box
 
-
+##############################################################################################################
 def uf_sigla_para_codigo_ibge(sigla):
     """
     Converte a sigla de uma Unidade Federativa (UF) brasileira para o código IBGE (CD_UF).
@@ -143,7 +143,7 @@ def uf_sigla_para_codigo_ibge(sigla):
 
     return sigla_to_ibge.get(sigla)
 
-
+##############################################################################################################
 def get_bounding_box_for_municipalities(lista_municipios):
     # Carrega o shapefile dos municípios
     gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
@@ -184,13 +184,13 @@ def get_bounding_box_for_municipalities(lista_municipios):
     ]
     return box
 
-
+##############################################################################################################
 def get_gr_data(data, gr_alvo):
     for regiao in data.get("RegioesCache", []):
         if regiao.get("GR") == gr_alvo:
             return regiao
     return None  # Se não encontrar
-
+##############################################################################################################
 
 def get_bounding_box_from_states(estados_siglas: list) -> list:
     """
@@ -233,7 +233,7 @@ def get_bounding_box_from_states(estados_siglas: list) -> list:
     ]
     return box
 
-
+##############################################################################################################
 def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     """
     Função para obter o limite geográfico e o centroide de um município específico e retornar a Polyline.
