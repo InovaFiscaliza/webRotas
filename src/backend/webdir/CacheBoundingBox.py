@@ -277,7 +277,7 @@ class CacheBoundingBox:
         except Exception as e:
             print(f"[ERRO] Falha ao salvar route_cache para '{chave}': {e}")
 
-    def salvar_route_cache_individual(self):
+    def salvar_route_cache_individualOLD(self):
         """
         Salva cada entrada do self.route_cache em um arquivo .bin.gz (Gzip + Pickle)
         dentro do diretório correspondente definido em self.cache.
@@ -290,6 +290,35 @@ class CacheBoundingBox:
             return
         for chave, dados in self.cache.items():
             self.salvar_route_cache_item(chave, dados)
+
+    def salvar_route_cache_individual(self):
+        """
+        Salva cada entrada do self.route_cache em um arquivo .bin.gz (Gzip + Pickle)
+        dentro do diretório correspondente definido em self.cache.
+        Antes de salvar, renomeia o arquivo antigo para route_cache.old.gz, se existir.
+        """
+        if self.ultimaregiao is not None:
+            chave = self._hash_bbox(self.ultimaregiao)
+            try:
+                dados = self.cache[chave]
+                self.salvar_route_cache_item(chave, dados)
+            except KeyError:
+                # wr.wLog(f"[AVISO] Chave '{chave}' não encontrada no cache. Nenhum dado salvo para esta região.", level="warning")
+                pass
+            except Exception as e:
+                # wr.wLog(f"[ERRO] Falha ao salvar cache da chave '{chave}': {e}", level="error")
+                pass
+            return
+
+        for chave, dados in self.cache.items():
+            try:
+                self.salvar_route_cache_item(chave, dados)
+            except Exception as e:
+                # wr.wLog(f"[ERRO] Falha ao salvar item do cache chave='{chave}': {e}", level="error")
+                pass
+
+
+
 
     def carregar_route_cache_individual(self):
         """
