@@ -1745,8 +1745,8 @@ def create_standard_cache(data):
         cb.cCacheBoundingBox.state = ", ".join(gr_data["SiglaEstado"])
         wLog(f"{cb.cCacheBoundingBox.gr} {cb.cCacheBoundingBox.state}")
         create_standard_cache_from_place(estados_siglas, lista_municipios, regioes)
-        cb.cCacheBoundingBox.gr = ""
-        cb.cCacheBoundingBox.state = ""
+        cb.cCacheBoundingBox.gr = " "
+        cb.cCacheBoundingBox.state = " "
 
     cb.cCacheBoundingBox._schedule_save()
     wLog(
