@@ -62,6 +62,7 @@ import PolylineCache as pl
 import atexit
 import signal
 import threading
+import time 
 
 import regions as rg
 
@@ -92,11 +93,33 @@ class CacheBoundingBox:
         self.lastrequestupdate(self.ultimaregiao)
         self.comunidades_cache.add_polyline(regioes, polylinesComunidades)
 
-    def remover_item_disco(self, caminho):
+    def remover_item_disco_old(self, caminho):
         if os.path.isdir(caminho):
             shutil.rmtree(caminho)
         elif os.path.isfile(caminho):
             os.remove(caminho)
+        
+    def remover_item_disco(self, caminho: Path, tentativas=80, espera=1.0):
+        """
+        Remove o diretório 'caminho' com tratamento de erros e reintentos.
+        Ignora se o caminho não existir. Tenta novamente se estiver em uso.
+        """  
+        if not caminho.exists():
+            # wr.wLog(f"Caminho não encontrado para remoção: {caminho}", level="debug")
+            return
+        for tentativa in range(1, tentativas + 1):
+            try:
+                shutil.rmtree(caminho)
+                # wr.wLog(f"Remoção bem-sucedida: {caminho}", level="debug")
+                return
+            except PermissionError as e:
+                # wr.wLog(f"Tentativa {tentativa}: Permissão negada ao remover {caminho} - {e}", level="warning")
+                time.sleep(espera)
+            except Exception as e:
+                #  wr.wLog(f"Tentativa {tentativa}: Erro ao remover {caminho} - {e}", level="error")
+                time.sleep(espera)
+        # print(f"Falha final ao remover diretório após {tentativas} tentativas: {caminho}")            
+                
 
     def new(self, regioes, diretorio, inforegiao="", km2_região=0):
         chave = self._hash_bbox(regioes)
