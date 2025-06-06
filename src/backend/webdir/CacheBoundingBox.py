@@ -81,8 +81,8 @@ class CacheBoundingBox:
         self._debounce_delay = 4  # segundos
         self._lock = threading.Lock()
         self._load_from_disk_sync()
-        self.gr = " "
-        self.state = " "
+        self.gr = "-"
+        self.state = "-"
 
     def get_comunidades(self, regioes):
         self.lastrequestupdate(self.ultimaregiao)
