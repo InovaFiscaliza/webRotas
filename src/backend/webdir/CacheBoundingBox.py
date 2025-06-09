@@ -200,12 +200,17 @@ class CacheBoundingBox:
         if entry:
             # Atualiza o timestamp de último acesso
             entry["lastrequest"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            self.gr = entry["gr"]
+            self.state = entry["state"]
             self._schedule_save()
             return entry["regiaodados"]
         # melhorar verificando as áreas de exclusão
         regtemp = self.find_smallest_containing_region(regioes)
         if regtemp != None:
             self.ultimaregiao = regtemp
+            entry = self.cache.get(self._hash_bbox(regtemp))
+            self.gr = entry["gr"]
+            self.state = entry["state"]            
             return regtemp
 
         return None
