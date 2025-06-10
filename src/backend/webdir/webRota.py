@@ -24,7 +24,7 @@ import routing_servers_interface as si
 import CacheBoundingBox as cb
 import regions as rg
 import GuiOutput as gi
-
+import WebrotasJsOutput as wo
 
 ###########################################################################################################################
 class ClRouteDetailList:
@@ -1386,7 +1386,13 @@ def RouteCompAbrangencia(
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
 
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
+    
+    wo.cWrJsOut.DesenhaRegioes(RouteDetail, regioes)
+    
+    
     RouteDetail.GeraMapPolylineCaminho()
+
+    
 
     fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "CompAbrangencia")
     return fileMap, fileNameStatic, fileKml
@@ -1825,6 +1831,7 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
 
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados)
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
+    wo.cWrJsOut.DesenhaRegioes(RouteDetail, regioes)
     RouteDetail.GeraMapPolylineCaminho()
 
     # servidor temp     python3 -m http.server 8080
@@ -1959,6 +1966,8 @@ def RouteContorno(
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
 
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
+    wo.cWrJsOut.DesenhaRegioes(RouteDetail, regioes)
+    
     RouteDetail.GeraMapPolylineCaminho()
     # GerarKml(coordenadasrota, filename="rota.kml")
 
