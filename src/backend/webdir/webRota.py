@@ -1966,7 +1966,7 @@ def RouteContorno(
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
 
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
-    wo.cWrJsOut.DesenhaRegioes(RouteDetail, regioes)
+    wo.cWrJsOut.DesenhaRegioes(regioes)
     
     RouteDetail.GeraMapPolylineCaminho()
     # GerarKml(coordenadasrota, filename="rota.kml")

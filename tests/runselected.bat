@@ -2,8 +2,8 @@ cd ..
 set WEBROTAS_HOME=%CD%
 cd tests
 
-rem uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_visita_saopaulo_cidades_interior.json
-rem exit
+uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_contorno.json
+exit
 
 rem uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" criar_cache_grs.json
 uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_abrangencia_joaopessoa.json
