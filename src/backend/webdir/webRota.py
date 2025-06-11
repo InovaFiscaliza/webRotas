@@ -2011,14 +2011,18 @@ def RouteContorno(
 
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView([{central_point[0]}, {central_point[1]}], 13);\n"
-    RouteDetail.mapcode += (
-        f"     map.setView([{central_point[0]}, {central_point[1]}], 13);\n"
-    )
+    RouteDetail.mapcode += (f"     map.setView([{central_point[0]}, {central_point[1]}], 13);\n")
+    cWrJsOut.append_mapcode(f"     map.setView([{central_point[0]}, {central_point[1]}], 13);\n")
 
     # Adicionar uma marca no ponto central
     RouteDetail.mapcode += f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map); \n"
     RouteDetail.mapcode += f"    markerCentral.bindTooltip('Ponto Central', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
     RouteDetail.mapcode += "     markerCentral.setIcon(iMarquerVerde);\n"
+    
+    cWrJsOut.append_mapcode(f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map); \n")
+    cWrJsOut.append_mapcode(f"    markerCentral.bindTooltip('Ponto Central', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n")
+    cWrJsOut.append_mapcode("     markerCentral.setIcon(iMarquerVerde);\n")
+
 
     pontosvisita = OrdenarPontos(pontosvisita, pontoinicial)
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
