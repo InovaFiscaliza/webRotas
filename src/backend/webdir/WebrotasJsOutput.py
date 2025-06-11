@@ -22,7 +22,7 @@ class WebrotasJsOutput:
         Adiciona um trecho ao mapcode, como uma 'soma' de código JavaScript.
         Ignora se bypass estiver ativo.
         """
-        if self.bypass:
+        if not self.ativo:
             return
         self.mapcode += trecho + "\n"
 
@@ -92,8 +92,8 @@ class WebrotasJsOutput:
     def ServerSetupJavaScript(self,ServerTec):
         if ServerTec == "OSMR":
             self.mapcode += f"    const ServerTec = 'OSMR';\n"
-            self.mapcode += f"    const UserName = '{UserData.nome}';\n"
-            self.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
+            self.mapcode += f"    const UserName = '{wr.UserData.nome}';\n"
+            self.mapcode += f"    const OSRMPort = {wr.UserData.OSMRport};\n"
         return self
 
 

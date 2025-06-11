@@ -1260,7 +1260,7 @@ def get_polyline_comunities(regioes):
         polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
         cb.cCacheBoundingBox.comunidades_cache.add_polyline(regioes, polylinesComunidades)
     gi.cGuiOutput.json_comunities_create(polylinesComunidades)
-    return 
+    return polylinesComunidades
 
 ################################################################################
 # polylinesComunidades = get_polyline_comunities(regioes) 
@@ -1417,9 +1417,8 @@ def RouteCompAbrangencia(
     RouteDetail.mapcode += "    const TipoRoute = 'CompAbrangencia';\n"
     
     polylinesComunidades = get_polyline_comunities(regioes) 
-    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades)
-    
-    # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    cWrJsOut.DesenhaComunidades(polylinesComunidades)
 
     RouteDetail = DesenhaMunicipioAreasUrbanizadas(
         RouteDetail, cidade, polMunicipioAreasUrbanizadas
@@ -1868,8 +1867,8 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     RouteDetail.mapcode += f"    const TipoRoute = 'PontosVisita';\n"
     
     polylinesComunidades = get_polyline_comunities(regioes) 
-    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades)
-    # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    cWrJsOut.DesenhaComunidades(polylinesComunidades)
 
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView(13);\n"
@@ -2006,12 +2005,9 @@ def RouteContorno(
     cWrJsOut.append_mapcode(f"    const TipoRoute = 'DriveTest';\n")
     
     polylinesComunidades = get_polyline_comunities(regioes) 
-    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades)
-    cWrJsOut.DesenhaComunidades(regioes, polylinesComunidades)
+    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    cWrJsOut.DesenhaComunidades(polylinesComunidades)
     
-    # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
-    
-
 
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView([{central_point[0]}, {central_point[1]}], 13);\n"
