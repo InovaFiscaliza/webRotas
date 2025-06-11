@@ -2025,7 +2025,12 @@ def RouteContorno(
 
 
     pontosvisita = OrdenarPontos(pontosvisita, pontoinicial)
+    
+    # ---------------------
+    # Parei aqui 
+    
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
+    
 
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
     cWrJsOut.DesenhaRegioes(regioes)
