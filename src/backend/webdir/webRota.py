@@ -1253,9 +1253,51 @@ def calc_km2_regiao(regioes: list, nome_alvo: str = "boundingBoxRegion") -> floa
 
 
 ################################################################################
+def get_polyline_comunities(regioes):
+    bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
+    polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
+    if not polylinesComunidades:
+        polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
+        cb.cCacheBoundingBox.comunidades_cache.add_polyline(regioes, polylinesComunidades)
+    gi.cGuiOutput.json_comunities_create(polylinesComunidades)
+    return 
+
+################################################################################
+# polylinesComunidades = get_polyline_comunities(regioes) 
+def DesenhaComunidades(RouteDetail, polylinesComunidades):
+
+    RouteDetail.mapcode += f"listComunidades = [\n"
+    indPol = 0
+    for polyline in polylinesComunidades:
+        i = 0
+        RouteDetail.mapcode += f"[\n"
+        for coordenada in polyline:
+            # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
+            lat, lon = coordenada
+            if i == len(polyline) - 1:  # Verifica se é o último elemento
+                RouteDetail.mapcode += f"[{lat}, {lon}]\n"
+            else:
+                RouteDetail.mapcode += f"[{lat}, {lon}],"
+            i = i + 1
+        if indPol == len(polylinesComunidades) - 1:  # Verifica se é o último elemento
+            RouteDetail.mapcode += f"]\n"
+        else:
+            RouteDetail.mapcode += f"],\n"
+        indPol = indPol + 1
+    RouteDetail.mapcode += f"];\n"
+
+    RouteDetail.mapcode += f"let polyComunidades = [];"
+    i = 0
+    for polyline in polylinesComunidades:
+        RouteDetail.mapcode += f"polyTmp = L.polygon(listComunidades[{i}], {{ color: 'rgb(102,0,204)',fillColor: 'rgb(102,0,204)',fillOpacity: 0.3, weight: 1}}).addTo(map);\n"
+        RouteDetail.mapcode += f"polyComunidades.push(polyTmp);\n"
+        i = i + 1
+    return RouteDetail
 
 
-def DesenhaComunidades(RouteDetail, regioes):
+################################################################################
+
+def DesenhaComunidadesOLD(RouteDetail, regioes):
     bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
 
     polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
@@ -1373,7 +1415,11 @@ def RouteCompAbrangencia(
     wLog("Desenhando Comunidades, Areas Urbanizadas e Município:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
     RouteDetail.mapcode += "    const TipoRoute = 'CompAbrangencia';\n"
-    RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    
+    polylinesComunidades = get_polyline_comunities(regioes) 
+    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades)
+    
+    # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
 
     RouteDetail = DesenhaMunicipioAreasUrbanizadas(
         RouteDetail, cidade, polMunicipioAreasUrbanizadas
@@ -1820,7 +1866,10 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     wLog("Desenhando Comunidades:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
     RouteDetail.mapcode += f"    const TipoRoute = 'PontosVisita';\n"
-    RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    
+    polylinesComunidades = get_polyline_comunities(regioes) 
+    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades)
+    # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
 
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView(13);\n"
@@ -1946,10 +1995,23 @@ def RouteContorno(
 
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial = pontoinicial
+    cWrJsOut = wo.WebrotasJsOutput()
+    
+    
     wLog("Desenhando Comunidades:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
+    cWrJsOut.ServerSetupJavaScript(ServerTec)
+    
     RouteDetail.mapcode += f"    const TipoRoute = 'DriveTest';\n"
-    RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    cWrJsOut.append_mapcode(f"    const TipoRoute = 'DriveTest';\n")
+    
+    polylinesComunidades = get_polyline_comunities(regioes) 
+    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades)
+    cWrJsOut.DesenhaComunidades(regioes, polylinesComunidades)
+    
+    # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    
+
 
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView([{central_point[0]}, {central_point[1]}], 13);\n"
@@ -1966,7 +2028,7 @@ def RouteContorno(
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
 
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
-    wo.cWrJsOut.DesenhaRegioes(regioes)
+    cWrJsOut.DesenhaRegioes(regioes)
     
     RouteDetail.GeraMapPolylineCaminho()
     # GerarKml(coordenadasrota, filename="rota.kml")

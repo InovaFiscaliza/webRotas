@@ -17,6 +17,45 @@ class WebrotasJsOutput:
         self.mapcode = ""
         self.ativo = ativo
 
+    def append_mapcode(self, trecho: str):
+        """
+        Adiciona um trecho ao mapcode, como uma 'soma' de código JavaScript.
+        Ignora se bypass estiver ativo.
+        """
+        if self.bypass:
+            return
+        self.mapcode += trecho + "\n"
+
+    @ignorar_se_inativo
+    def DesenhaComunidades(self, polylinesComunidades):
+        self.mapcode += f"listComunidades = [\n"
+        indPol = 0
+        for polyline in polylinesComunidades:
+            i = 0
+            self.mapcode += f"[\n"
+            for coordenada in polyline:
+                # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
+                lat, lon = coordenada
+                if i == len(polyline) - 1:  # Verifica se é o último elemento
+                    self.mapcode += f"[{lat}, {lon}]\n"
+                else:
+                    self.mapcode += f"[{lat}, {lon}],"
+                i = i + 1
+            if indPol == len(polylinesComunidades) - 1:  # Verifica se é o último elemento
+                self.mapcode += f"]\n"
+            else:
+                self.mapcode += f"],\n"
+            indPol = indPol + 1
+        self.mapcode += f"];\n"
+
+        self.mapcode += f"let polyComunidades = [];"
+        i = 0
+        for polyline in polylinesComunidades:
+            self.mapcode += f"polyTmp = L.polygon(listComunidades[{i}], {{ color: 'rgb(102,0,204)',fillColor: 'rgb(102,0,204)',fillOpacity: 0.3, weight: 1}}).addTo(map);\n"
+            self.mapcode += f"polyComunidades.push(polyTmp);\n"
+            i = i + 1
+        return self
+    
     @ignorar_se_inativo
     def DesenhaRegioes(self, regioes):
         # Processa as regiões
@@ -49,8 +88,18 @@ class WebrotasJsOutput:
                 self.mapcode += f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
         return self
 
+    @ignorar_se_inativo
+    def ServerSetupJavaScript(self,ServerTec):
+        if ServerTec == "OSMR":
+            self.mapcode += f"    const ServerTec = 'OSMR';\n"
+            self.mapcode += f"    const UserName = '{UserData.nome}';\n"
+            self.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
+        return self
+
+
+
 # Instância global
 # import WebrotasJsOutput as wo    
-cWrJsOut = WebrotasJsOutput()
+
 
 
