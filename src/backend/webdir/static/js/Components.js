@@ -107,7 +107,7 @@
             ['panel-on', 'grid'].forEach(className => {
                 panel.classList.add(className);
             });
-            Object.assign(panel.style, { gridTemplateRows: '26px 22px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 1fr)', gridTemplateColumns: 'minmax(0px, 1fr)'
+            Object.assign(panel.style, { gridTemplateRows: '26px 22px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 1fr) 22px 52px', gridTemplateColumns: 'minmax(0px, 1fr)'
             });
 
             // TÍTULO
@@ -318,6 +318,18 @@
                 classList: ['text-list'],
                 id: 'pointsToVisit',
                 style: { gridArea: '7 / 1 / 8 / 2' }
+            }, panel);
+
+            this.createElement('label', {
+                classList: ['label-text-list'],
+                style: { gridArea: '8 / 1 / 9 / 2' },
+                textContent: 'Outras informações:'
+            }, panel);
+
+            this.createElement('div', {
+                classList: ['text-area'],
+                id: 'routeIds',
+                style: { gridArea: '9 / 1 / 10 / 2' }
             }, panel);
             // </GRID PRINCIPAL>
         }

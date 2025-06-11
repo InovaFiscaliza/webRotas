@@ -350,9 +350,7 @@
 
                     panel.classList.toggle('panel-on');
                     panel.classList.toggle('panel-off');
-                    if (panel.classList.contains('panel-on')) {
-                        setTimeout(() => map.invalidateSize(), 300);
-                    }
+                    setTimeout(() => map.invalidateSize(), 300);
 
                     btn.classList.toggle('btn-panel-on');
                     btn.classList.toggle('btn-panel-off');
@@ -421,7 +419,10 @@
                     break;
 
                 case 'toolbarExportBtn':
-                    // ...
+                    window.app.modules.Utils.exportAsZip()
+                        .then(()  => new DialogBox('Arquivo .zip salvo para uso em ambiente offline.', 'info'))
+                        .catch(ME => new DialogBox(`Failed to export data: ${ME.message}`, 'error'))
+
                     /*
                     let msg = null;
                     try {

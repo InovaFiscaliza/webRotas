@@ -191,6 +191,22 @@ label.label-form-field {
 
 
 /*-----------------------------------------------------------------------------------
+    ## CAMPO DE TEXTO ##
+-----------------------------------------------------------------------------------*/
+.text-area {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: auto;
+    word-break: break-all;
+    user-select: text;
+    padding: 5px;
+    text-align: justify;
+    border: 1px solid #ccc;
+}
+
+
+/*-----------------------------------------------------------------------------------
     ## MENU DE CONTEXTO ##
 -----------------------------------------------------------------------------------*/
 .context-menu {

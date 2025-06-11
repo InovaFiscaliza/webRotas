@@ -19,6 +19,7 @@
         static controller(type, ...args) {
             let routing, route, returnedData;
             let index1, index2;
+            let avoidZonesRaw, avoidZones = [];
 
             switch (type) {
                 case 'clearAll':
@@ -26,7 +27,7 @@
                     break;
 
                 case 'clearForUpdate':
-                    this.remove('specificLayers', 'routeMidpoint', 'routeOrigin', 'waypoints');
+                    this.remove('specificLayers', 'avoidZones', 'routeMidpoint', 'routeOrigin', 'waypoints');
                     break;
 
                 case 'draw':
@@ -42,9 +43,9 @@
                     this.controller('clearAll');
                     this.create('boundingBox',              routing.response.boundingBox);
 
-                    const avoidZonesRaw = routing.request.regioes;
+                    avoidZonesRaw = routing.request.regioes;
                     if (avoidZonesRaw) {
-                        const avoidZones = avoidZonesRaw.map(el => el.coord);
+                        avoidZones = avoidZonesRaw.map(el => el.coord);
                         this.create('avoidZones',           avoidZones);
                     }
                     
@@ -70,6 +71,13 @@
                   //window.app.modules.Utils.GeoLocation.routeMidPoint(route);
 
                     this.controller('clearForUpdate');
+
+                    avoidZonesRaw = routing.request.regioes;
+                    if (avoidZonesRaw) {
+                        avoidZones = avoidZonesRaw.map(el => el.coord);
+                        this.create('avoidZones',           avoidZones);
+                    }
+
                     this.update('routePath',                route.paths);
                   //this.create('routeMidpoint',            route.midpoint);
                     this.create('routeOrigin',              route.origin);
@@ -235,8 +243,12 @@
                 case 'specificLayers':
                     const tags = args;
                     tags.forEach(tag => {
-                        const handle = window.app.mapContext.layers[tag].handle;
+                        let handle = window.app.mapContext.layers[tag].handle;
                         if (!handle) return;
+
+                        if (!Array.isArray(handle)) {
+                            handle = [handle];
+                        }
 
                         handle.forEach(el => {
                             this.removeTooltip(map, el);

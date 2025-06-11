@@ -9,6 +9,7 @@
     "liveSassCompile.settings.excludeList": [
       "/.vscode"
     ],
-    "liveSassCompile.settings.generateMap": true
+    "liveSassCompile.settings.generateMap": true,
+    "livePreview.defaultPreviewPath": "/src/backend/webdir/static/index.html"
   }
   

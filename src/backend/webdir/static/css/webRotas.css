@@ -170,6 +170,23 @@ label.label-form-field {
 }
 
 /*-----------------------------------------------------------------------------------
+    ## CAMPO DE TEXTO ##
+-----------------------------------------------------------------------------------*/
+.text-area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  word-break: break-all;
+  -webkit-user-select: text;
+     -moz-user-select: text;
+          user-select: text;
+  padding: 5px;
+  text-align: justify;
+  border: 1px solid #ccc;
+}
+
+/*-----------------------------------------------------------------------------------
     ## MENU DE CONTEXTO ##
 -----------------------------------------------------------------------------------*/
 .context-menu {

@@ -59,7 +59,7 @@
                     const route = routing[index1].response.routes[index2];
                     const htmlPointsEl = this.getDOMElements(['pointsToVisit']).pointsToVisit;
 
-                    this.updateControlState(type, route);
+                    this.updateControlState(type, routing[index1], route);
                     
                     window.app.modules.Components.createTextList(
                         htmlPointsEl,
@@ -107,6 +107,7 @@
                         'initialPointDescription',
                         'routeListMoveUpBtn',
                         'routeListMoveDownBtn',
+                        'routeIds',
                         'toolbarExportBtn',
                         'toolbarLocationBtn',
                         'toolbarOrientationBtn',
@@ -124,6 +125,8 @@
 
                     htmlPointsEl = this.getDOMElements(['pointsToVisit']).pointsToVisit;
                     htmlPointsEl.innerHTML = '';
+
+                    htmlEl.routeIds.textContent = '';
                     break;
 
                 case 'routeLoaded':
@@ -145,17 +148,26 @@
                     break;
 
                 case 'routeSelected':
-                    const route = args[0];
+                    const routing = args[0];
+                    const route   = args[1];
 
                     htmlEl = this.getDOMElements([
                         'initialPointLatitude',
                         'initialPointLongitude',
-                        'initialPointDescription'
+                        'initialPointDescription',
+                        'routeIds'
                     ]);
 
                     this.updateEditableField(htmlEl.initialPointLatitude,    route.origin.lat);
                     this.updateEditableField(htmlEl.initialPointLongitude,   route.origin.lng);
-                    this.updateEditableField(htmlEl.initialPointDescription, route.origin.description);                    
+                    this.updateEditableField(htmlEl.initialPointDescription, route.origin.description);
+
+                    let ids = {
+                        created: route.created,
+                        cacheId: routing.response.cacheId,
+                        routeId: route.routeId
+                    };
+                    htmlEl.routeIds.textContent = JSON.stringify(ids, null, 1);
                     break;
 
                 case 'editionMode':
