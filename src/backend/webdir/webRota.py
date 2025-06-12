@@ -1669,6 +1669,94 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
         )  # Batch faz chamadas em lote para o OpenElevation
         RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
 
+    RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados) 
+    gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
+    RouteDetail.pontosvisitaDados = pontosvisitaDados
+    # Criar um mapa
+    # RouteDetail.mapcode += f"    const map = L.map('map');\n"
+    RouteDetail.mapcode += (
+        f"    map.fitBounds(L.latLngBounds(pontosVisitaOrdenados));\n"
+    )
+    # RouteDetail.pontoinicial
+    lat = RouteDetail.pontoinicial[0]
+    lon = RouteDetail.pontoinicial[1]
+    desc = RouteDetail.pontoinicial[2]
+
+    RouteDetail.mapcode += f"         mrkPtInicial = L.marker([{lat}, {lon}]).addTo(map).setIcon(createSvgIconColorAltitude('i',10000));\n"
+    RouteDetail.mapcode += f"         mrkPtInicial.bindTooltip('{desc}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
+    ##############################################
+    # Calcula rota entre os pontos os pontos a serem visitados
+    (latf, lonf) = pontosvisita[0]
+    RouteDetail = GenerateRouteMap(
+        RouteDetail, lat, lon, latf, lonf
+    )  # Faz a primeira rota saindo do ponto inicial ao primeiro ponto de visita
+
+    i = 0
+    RouteDetail.mapcode += "var markerVet = [];"
+    for ponto in pontosvisita:
+        lat, lon = ponto
+
+        # altitude = AltitudeAnatelServer(lat,lon)
+        altitude = AltitudePontoVisita(pontosvisitaDados, lat, lon)
+        Descricao = DescricaoPontoVisita(pontosvisitaDados, lat, lon)
+
+        RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"
+        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n"
+        RouteDetail.mapcode += f"         markerbufTemp.bindTooltip('Altitude: {altitude}<br>{Descricao}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
+        RouteDetail.mapcode += f"         markerVet.push(markerbufTemp);\n"
+        if i == 0:
+            (latfI, lonfI) = pontosvisita[i]
+        if i == (len(pontosvisita) - 1):
+            (latfF, lonfF) = pontosvisita[i]
+        if i > 0:
+            (lati, loni) = pontosvisita[i - 1]
+            (latf, lonf) = pontosvisita[i]
+            RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
+        i = i + 1
+    # ----------------------------------------------------------------------
+    gi.cGuiOutput.waypoints_route = RouteDetail.coordinates
+    gi.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
+    # ----------------------------------------------------------------------
+    RouteDetail = DeclaraArrayRotas(RouteDetail)
+    RouteDetail.mapcode += "           const defaultIcon = markerVet[1].getIcon();\n"
+    return RouteDetail
+################################################################################
+def PlotaPontosVisitaOLD(RouteDetail, pontosvisita, pontosvisitaDados):
+    wLog("PlotaPontosVisita - gerando rotas entre os pontos")
+    i = 0
+    RouteDetail.mapcode += f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n"
+    RouteDetail.mapcode += f"    var GpsProximoPonto = '{UserData.GpsProximoPonto}';\n"
+    RouteDetail.mapcode += f"    var pontosVisitaOrdenados = [\n"
+
+    for ponto in pontosvisita:
+        latitude, longitude = ponto
+        if i == len(pontosvisita) - 1:  # Verifica se é o último elemento
+            RouteDetail.mapcode += f"       [{latitude}, {longitude}]"
+        else:
+            RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
+        i = i + 1
+        # print(f"  Latitude: {latitude}, Longitude: {longitude}")
+    RouteDetail.mapcode += f"    ];\n"
+
+    if pontosvisitaDados != []:
+        pontosvisitaDados = MesmaOrdenacaoPontosVisita(
+            pontosvisitaDados, pontosvisita, new=False
+        )
+        pontosvisitaDados = PegaAltitudesPVD_Batch(
+            pontosvisitaDados
+        )  # Batch faz chamadas em lote para o OpenElevation
+        RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
+    else:
+        pontosvisitaDados = GeraPontosVisitaDados(pontosvisita)
+        pontosvisitaDados = MesmaOrdenacaoPontosVisita(
+            pontosvisitaDados, pontosvisita, new=True
+        )
+        pontosvisitaDados = PegaAltitudesPVD_Batch(
+            pontosvisitaDados
+        )  # Batch faz chamadas em lote para o OpenElevation
+        RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
+
+    RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados) 
     gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
     RouteDetail.pontosvisitaDados = pontosvisitaDados
     # Criar um mapa
