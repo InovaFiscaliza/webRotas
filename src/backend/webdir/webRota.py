@@ -1418,7 +1418,7 @@ def RouteCompAbrangencia(
     
     polylinesComunidades = get_polyline_comunities(regioes) 
     RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
-    cWrJsOut.DesenhaComunidades(polylinesComunidades)
+    # cWrJsOut.DesenhaComunidades(polylinesComunidades)
 
     RouteDetail = DesenhaMunicipioAreasUrbanizadas(
         RouteDetail, cidade, polMunicipioAreasUrbanizadas
@@ -1431,8 +1431,7 @@ def RouteCompAbrangencia(
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
 
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
-    
-    wo.cWrJsOut.DesenhaRegioes(RouteDetail, regioes)
+    # cWrJsOut.DesenhaRegioes(RouteDetail, regioes)
     
     
     RouteDetail.GeraMapPolylineCaminho()
@@ -1868,7 +1867,7 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     
     polylinesComunidades = get_polyline_comunities(regioes) 
     RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
-    cWrJsOut.DesenhaComunidades(polylinesComunidades)
+    # cWrJsOut.DesenhaComunidades(polylinesComunidades)
 
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView(13);\n"
