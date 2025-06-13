@@ -1721,7 +1721,31 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
     RouteDetail.mapcode += "           const defaultIcon = markerVet[1].getIcon();\n"
     return RouteDetail
 ################################################################################
-def PlotaPontosVisitaOLD(RouteDetail, pontosvisita, pontosvisitaDados):
+def adjust_pontosvisitadados(pontosvisita, pontosvisitaDados):
+    if pontosvisitaDados != []:
+        pontosvisitaDados = MesmaOrdenacaoPontosVisita(
+            pontosvisitaDados, pontosvisita, new=False
+        )
+        pontosvisitaDados = PegaAltitudesPVD_Batch(
+            pontosvisitaDados
+        )  # Batch faz chamadas em lote para o OpenElevation
+        
+    else:
+        pontosvisitaDados = GeraPontosVisitaDados(pontosvisita)
+        pontosvisitaDados = MesmaOrdenacaoPontosVisita(
+            pontosvisitaDados, pontosvisita, new=True
+        )
+        pontosvisitaDados = PegaAltitudesPVD_Batch(
+            pontosvisitaDados
+        )  # Batch faz chamadas em lote para o OpenElevation
+    return pontosvisitaDados
+    
+
+################################################################################
+def PlotaPontosVisitaNew(RouteDetail, pontosvisita, pontosvisitaDados):
+    pontosvisitaDados = adjust_pontosvisitadados(pontosvisita, pontosvisitaDados)
+    gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
+    
     wLog("PlotaPontosVisita - gerando rotas entre os pontos")
     i = 0
     RouteDetail.mapcode += f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n"
@@ -1738,26 +1762,10 @@ def PlotaPontosVisitaOLD(RouteDetail, pontosvisita, pontosvisitaDados):
         # print(f"  Latitude: {latitude}, Longitude: {longitude}")
     RouteDetail.mapcode += f"    ];\n"
 
-    if pontosvisitaDados != []:
-        pontosvisitaDados = MesmaOrdenacaoPontosVisita(
-            pontosvisitaDados, pontosvisita, new=False
-        )
-        pontosvisitaDados = PegaAltitudesPVD_Batch(
-            pontosvisitaDados
-        )  # Batch faz chamadas em lote para o OpenElevation
-        RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
-    else:
-        pontosvisitaDados = GeraPontosVisitaDados(pontosvisita)
-        pontosvisitaDados = MesmaOrdenacaoPontosVisita(
-            pontosvisitaDados, pontosvisita, new=True
-        )
-        pontosvisitaDados = PegaAltitudesPVD_Batch(
-            pontosvisitaDados
-        )  # Batch faz chamadas em lote para o OpenElevation
-        RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados)
-
+    # pontosvisitaDados = adjust_pontosvisitadados(pontosvisita, pontosvisitaDados)
+    # gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
+    
     RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados) 
-    gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
     RouteDetail.pontosvisitaDados = pontosvisitaDados
     # Criar um mapa
     # RouteDetail.mapcode += f"    const map = L.map('map');\n"
@@ -2116,7 +2124,7 @@ def RouteContorno(
     # ---------------------
     # Parei aqui 
     
-    RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
+    RouteDetail = PlotaPontosVisitaNew(RouteDetail, pontosvisita, [])
     
 
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
