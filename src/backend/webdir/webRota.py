@@ -1814,7 +1814,6 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
 
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados)
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
-    wo.cWrJsOut.DesenhaRegioes(RouteDetail, regioes)
     RouteDetail.GeraMapPolylineCaminho()
 
     # servidor temp     python3 -m http.server 8080
