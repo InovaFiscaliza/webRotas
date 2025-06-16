@@ -15,3 +15,7 @@ ngrok.exe
 server.json
 src/resources/Osmosis/TempData/*.poly
 /webRotas.tgz
+
+src/resources/BR_Municipios/Malha_Municipal_*.*
+src/resources/Comunidades/Favelas_*.*
+src/resources/Urbanizacao/Mapa_*.*
