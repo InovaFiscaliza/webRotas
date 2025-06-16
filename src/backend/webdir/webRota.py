@@ -954,7 +954,7 @@ def DesenhaRegioes(RouteDetail, regioes):
 ################################################################################
 def DesenhaMunicipio(RouteDetail, nome, polMunicipio):
     indPol = 0
-    nome = SubstAcentos(nome).replace(" ", "_")
+    nome = wl.SubstAcentos(nome).replace(" ", "_")
     for poligons in polMunicipio:
         i = 0
         RouteDetail.mapcode += f"    municipio{nome}Pol{indPol} = [\n"
@@ -974,7 +974,7 @@ def DesenhaMunicipio(RouteDetail, nome, polMunicipio):
 ################################################################################
 def DesenhaMunicipioAreasUrbanizadas(RouteDetail, nome, polMunicipioAreas):
     indPol = 0
-    nome = SubstAcentos(nome).replace(" ", "_")
+    nome = wl.SubstAcentos(nome).replace(" ", "_")
     for poligons in polMunicipioAreas:
         i = 0
         RouteDetail.mapcode += f"    municipioAreasUrbanizadas{nome}Pol{indPol} = [\n"
