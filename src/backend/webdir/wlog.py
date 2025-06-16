@@ -42,64 +42,31 @@ def wLog(log_string, level="info"):  # Levels "info","debug", "warning", "error"
         print(f"Erro ao escrever no log: {e}")
 
 ################################################################################
-def SubstAcentos(texto):
+def SubstAcentos(texto: str) -> str:
     """
     Substitui caracteres acentuados por suas versões sem acento.
+
+    :param texto: Texto de entrada possivelmente com acentos.
+    :return: Texto sem acentuação.
     """
     mapeamento = {
-        "á": "a",
-        "à": "a",
-        "ã": "a",
-        "â": "a",
-        "ä": "a",
-        "Á": "A",
-        "À": "A",
-        "Ã": "A",
-        "Â": "A",
-        "Ä": "A",
-        "é": "e",
-        "è": "e",
-        "ê": "e",
-        "ë": "e",
-        "É": "E",
-        "È": "E",
-        "Ê": "E",
-        "Ë": "E",
-        "í": "i",
-        "ì": "i",
-        "î": "i",
-        "ï": "i",
-        "Í": "I",
-        "Ì": "I",
-        "Î": "I",
-        "Ï": "I",
-        "ó": "o",
-        "ò": "o",
-        "õ": "o",
-        "ô": "o",
-        "ö": "o",
-        "Ó": "O",
-        "Ò": "O",
-        "Õ": "O",
-        "Ô": "O",
-        "Ö": "O",
-        "ú": "u",
-        "ù": "u",
-        "û": "u",
-        "ü": "u",
-        "Ú": "U",
-        "Ù": "U",
-        "Û": "U",
-        "Ü": "U",
-        "ç": "c",
-        "Ç": "C",
-        "ñ": "n",
-        "Ñ": "N",
+        # Letras minúsculas
+        "á": "a", "à": "a", "ã": "a", "â": "a", "ä": "a",
+        "é": "e", "è": "e", "ê": "e", "ë": "e",
+        "í": "i", "ì": "i", "î": "i", "ï": "i",
+        "ó": "o", "ò": "o", "õ": "o", "ô": "o", "ö": "o",
+        "ú": "u", "ù": "u", "û": "u", "ü": "u",
+        "ç": "c", "ñ": "n",
+
+        # Letras maiúsculas
+        "Á": "A", "À": "A", "Ã": "A", "Â": "A", "Ä": "A",
+        "É": "E", "È": "E", "Ê": "E", "Ë": "E",
+        "Í": "I", "Ì": "I", "Î": "I", "Ï": "I",
+        "Ó": "O", "Ò": "O", "Õ": "O", "Ô": "O", "Ö": "O",
+        "Ú": "U", "Ù": "U", "Û": "U", "Ü": "U",
+        "Ç": "C", "Ñ": "N",
     }
 
-    # Substitui cada caractere com base no mapeamento
-    for acentuado, sem_acento in mapeamento.items():
-        texto = texto.replace(acentuado, sem_acento)
+    return "".join(mapeamento.get(char, char) for char in texto)
 
-    return texto
 ################################################################################
