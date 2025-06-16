@@ -57,7 +57,6 @@ import shapeFiles as sf
 import GuiOutput as gi
 
 from wlog import log_filename
-from wlog import wLog
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
     """

@@ -24,10 +24,8 @@ import routing_servers_interface as si
 import CacheBoundingBox as cb
 import regions as rg
 import GuiOutput as gi
-import WebrotasJsOutput as wo
 from ClRouteDetail import ClRouteDetailList
 from wlog import wLog
-
 
 
 ###########################################################################################################################
@@ -883,7 +881,6 @@ class ClUserData:
 UserData = ClUserData()
 
 
-
 def VerificarServidorAtivo(url, reposta, tentativas=10, intervalo=1):
     """
     Verifica se o servidor url está ativo.
@@ -917,6 +914,7 @@ def VerificarServidorAtivo(url, reposta, tentativas=10, intervalo=1):
 
 
 ################################################################################
+
 
 ################################################################################
 def DesenhaRegioes(RouteDetail, regioes):
@@ -1119,12 +1117,15 @@ def get_polyline_comunities(regioes):
     polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
     if not polylinesComunidades:
         polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
-        cb.cCacheBoundingBox.comunidades_cache.add_polyline(regioes, polylinesComunidades)
+        cb.cCacheBoundingBox.comunidades_cache.add_polyline(
+            regioes, polylinesComunidades
+        )
     gi.cGuiOutput.json_comunities_create(polylinesComunidades)
     return polylinesComunidades
 
+
 ################################################################################
-# polylinesComunidades = get_polyline_comunities(regioes) 
+# polylinesComunidades = get_polyline_comunities(regioes)
 def DesenhaComunidades(RouteDetail, polylinesComunidades):
 
     RouteDetail.mapcode += f"listComunidades = [\n"
@@ -1157,6 +1158,7 @@ def DesenhaComunidades(RouteDetail, polylinesComunidades):
 
 
 ################################################################################
+
 
 def DesenhaComunidadesOLD(RouteDetail, regioes):
     bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
@@ -1276,9 +1278,11 @@ def RouteCompAbrangencia(
     wLog("Desenhando Comunidades, Areas Urbanizadas e Município:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
     RouteDetail.mapcode += "    const TipoRoute = 'CompAbrangencia';\n"
-    
-    polylinesComunidades = get_polyline_comunities(regioes) 
-    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+
+    polylinesComunidades = get_polyline_comunities(regioes)
+    RouteDetail = DesenhaComunidades(
+        RouteDetail, polylinesComunidades
+    )  # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
     # cWrJsOut.DesenhaComunidades(polylinesComunidades)
 
     RouteDetail = DesenhaMunicipioAreasUrbanizadas(
@@ -1293,11 +1297,8 @@ def RouteCompAbrangencia(
 
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
     # cWrJsOut.DesenhaRegioes(RouteDetail, regioes)
-    
-    
-    RouteDetail.GeraMapPolylineCaminho()
 
-    
+    RouteDetail.GeraMapPolylineCaminho()
 
     fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "CompAbrangencia")
     return fileMap, fileNameStatic, fileKml
@@ -1451,20 +1452,13 @@ def DeclaraArrayRotas(RouteDetail):
     output += f"    bufdados.time = '{timeStp}';\n"
     output += f"    bufdados.polylineRotaDat = [];\n"
     output += f"    bufdados.pontosvisitaDados = pontosvisitaDados;\n"
-    output += (
-        f"    bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;\n"
-    )
+    output += f"    bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;\n"
     output += f"    bufdados.pontoinicial = [{RouteDetail.pontoinicial[0]},{RouteDetail.pontoinicial[1]},'{RouteDetail.pontoinicial[2]}'];\n"
-    output += (
-        f"    bufdados.DistanceTotal = {RouteDetail.DistanceTotal / 1000};\n"
-    )
-    output += (
-        f"    bufdados.rotaCalculada = 1;\n"  # Rota calculada pelo WebRotas
-    )
+    output += f"    bufdados.DistanceTotal = {RouteDetail.DistanceTotal / 1000};\n"
+    output += f"    bufdados.rotaCalculada = 1;\n"  # Rota calculada pelo WebRotas
     output += f"    ListaRotasCalculadas.push(bufdados);\n"
 
-    RouteDetail.mapcode += output
-    RouteDetail.cWrJsOut.append_mapcode(output)
+    RouteDetail.append_mapcode(output)
 
     return RouteDetail
 
@@ -1502,64 +1496,69 @@ def PegaAltitudesPVD_Batch(
 def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
     wLog("PlotaPontosVisita - gerando rotas entre os pontos")
     i = 0
-    RouteDetail.mapcode += f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n"
-    RouteDetail.mapcode += f"    var GpsProximoPonto = '{UserData.GpsProximoPonto}';\n"
-    RouteDetail.mapcode += f"    var pontosVisitaOrdenados = [\n"
-    
-    RouteDetail.cWrJsOut.append_mapcode(f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n")
-    RouteDetail.cWrJsOut.append_mapcode(f"    var GpsProximoPonto = '{UserData.GpsProximoPonto}';\n")
-    RouteDetail.cWrJsOut.append_mapcode(f"    var pontosVisitaOrdenados = [\n")
+    RouteDetail.append_mapcode(f"    var RaioDaEstacao = {UserData.RaioDaEstacao};\n")
+    RouteDetail.append_mapcode(
+        f"    var GpsProximoPonto = '{UserData.GpsProximoPonto}';\n"
+    )
+    RouteDetail.append_mapcode(f"    var pontosVisitaOrdenados = [\n")
 
     for ponto in pontosvisita:
         latitude, longitude = ponto
         if i == len(pontosvisita) - 1:  # Verifica se é o último elemento
-            RouteDetail.mapcode += f"       [{latitude}, {longitude}]"
-            RouteDetail.cWrJsOut.append_mapcode(f"       [{latitude}, {longitude}]")
+            RouteDetail.append_mapcode(f"       [{latitude}, {longitude}]")
         else:
-            RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
-            RouteDetail.cWrJsOut.append_mapcode(f"       [{latitude}, {longitude}]")
+            RouteDetail.append_mapcode(f"       [{latitude}, {longitude}],")
         i = i + 1
- 
-    RouteDetail.mapcode += f"    ];\n"
-    RouteDetail.cWrJsOut.append_mapcode(f"       [{latitude}, {longitude}]")
+
+    RouteDetail.append_mapcode(f"    ];\n")
 
     if pontosvisitaDados != []:
-        pontosvisitaDados = MesmaOrdenacaoPontosVisita(pontosvisitaDados, pontosvisita, new=False)
-        pontosvisitaDados = PegaAltitudesPVD_Batch(pontosvisitaDados)  # Batch faz chamadas em lote para o OpenElevation
+        pontosvisitaDados = MesmaOrdenacaoPontosVisita(
+            pontosvisitaDados, pontosvisita, new=False
+        )
+        pontosvisitaDados = PegaAltitudesPVD_Batch(
+            pontosvisitaDados
+        )  # Batch faz chamadas em lote para o OpenElevation
 
     else:
         pontosvisitaDados = GeraPontosVisitaDados(pontosvisita)
-        pontosvisitaDados = MesmaOrdenacaoPontosVisita(pontosvisitaDados, pontosvisita, new=True)
-        pontosvisitaDados = PegaAltitudesPVD_Batch(pontosvisitaDados)  # Batch faz chamadas em lote para o OpenElevation
+        pontosvisitaDados = MesmaOrdenacaoPontosVisita(
+            pontosvisitaDados, pontosvisita, new=True
+        )
+        pontosvisitaDados = PegaAltitudesPVD_Batch(
+            pontosvisitaDados
+        )  # Batch faz chamadas em lote para o OpenElevation
 
+    RouteDetail.append_mapcode(DeclaracaopontosvisitaDadosJS(pontosvisitaDados))
 
-    RouteDetail.mapcode += DeclaracaopontosvisitaDadosJS(pontosvisitaDados) 
-    RouteDetail.cWrJsOut.append_mapcode(DeclaracaopontosvisitaDadosJS(pontosvisitaDados))
-    
     gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
     RouteDetail.pontosvisitaDados = pontosvisitaDados
 
-    RouteDetail.mapcode += ( f"    map.fitBounds(L.latLngBounds(pontosVisitaOrdenados));\n")
-    RouteDetail.cWrJsOut.append_mapcode(f"    map.fitBounds(L.latLngBounds(pontosVisitaOrdenados));\n")
-    
+    RouteDetail.append_mapcode(
+        f"    map.fitBounds(L.latLngBounds(pontosVisitaOrdenados));\n"
+    )
+
     # RouteDetail.pontoinicial
     lat = RouteDetail.pontoinicial[0]
     lon = RouteDetail.pontoinicial[1]
     desc = RouteDetail.pontoinicial[2]
 
-    RouteDetail.mapcode += f"         mrkPtInicial = L.marker([{lat}, {lon}]).addTo(map).setIcon(createSvgIconColorAltitude('i',10000));\n"
-    RouteDetail.mapcode += f"         mrkPtInicial.bindTooltip('{desc}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
-    RouteDetail.cWrJsOut.append_mapcode(f"         mrkPtInicial = L.marker([{lat}, {lon}]).addTo(map).setIcon(createSvgIconColorAltitude('i',10000));\n")
-    RouteDetail.cWrJsOut.append_mapcode(f"         mrkPtInicial.bindTooltip('{desc}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n")
-    
-    
+    RouteDetail.append_mapcode(
+        f"         mrkPtInicial = L.marker([{lat}, {lon}]).addTo(map).setIcon(createSvgIconColorAltitude('i',10000));\n"
+    )
+    RouteDetail.append_mapcode(
+        f"         mrkPtInicial.bindTooltip('{desc}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
+    )
+
     ##############################################
     # Calcula rota entre os pontos os pontos a serem visitados
     (latf, lonf) = pontosvisita[0]
-    RouteDetail = GenerateRouteMap(RouteDetail, lat, lon, latf, lonf)  # Faz a primeira rota saindo do ponto inicial ao primeiro ponto de visita
+    RouteDetail = GenerateRouteMap(
+        RouteDetail, lat, lon, latf, lonf
+    )  # Faz a primeira rota saindo do ponto inicial ao primeiro ponto de visita
 
     i = 0
-    RouteDetail.mapcode += "var markerVet = [];"
+    RouteDetail.append_mapcode("var markerVet = [];")
     for ponto in pontosvisita:
         lat, lon = ponto
 
@@ -1567,17 +1566,17 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
         altitude = AltitudePontoVisita(pontosvisitaDados, lat, lon)
         Descricao = DescricaoPontoVisita(pontosvisitaDados, lat, lon)
 
-        RouteDetail.mapcode += f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"
-        RouteDetail.mapcode += f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n"
-        RouteDetail.mapcode += f"         markerbufTemp.bindTooltip('Altitude: {altitude}<br>{Descricao}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
-        RouteDetail.mapcode += f"         markerVet.push(markerbufTemp);\n"
-        
-        RouteDetail.cWrJsOut.append_mapcode(f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n")
-        RouteDetail.cWrJsOut.append_mapcode(f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n")
-        RouteDetail.cWrJsOut.append_mapcode(f"         markerbufTemp.bindTooltip('Altitude: {altitude}<br>{Descricao}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n")
-        RouteDetail.cWrJsOut.append_mapcode(f"         markerVet.push(markerbufTemp);\n")
-        
-        
+        RouteDetail.append_mapcode(
+            f"         markerbufTemp = L.marker([{lat}, {lon}]).addTo(map).on('click', onMarkerClick).setIcon(createSvgIconColorAltitude({i},{altitude}));\n"
+        )
+        RouteDetail.append_mapcode(
+            f"         markerbufTemp._icon.setAttribute('data-id', '{i}'); markerbufTemp._icon.setAttribute('clicado', '0'); markerbufTemp._icon.setAttribute('tamanho', 'full'); markerbufTemp._icon.setAttribute('altitude', '{altitude}');\n"
+        )
+        RouteDetail.append_mapcode(
+            f"         markerbufTemp.bindTooltip('Altitude: {altitude}<br>{Descricao}', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
+        )
+        RouteDetail.append_mapcode(f"         markerVet.push(markerbufTemp);\n")
+
         if i == 0:
             (latfI, lonfI) = pontosvisita[i]
         if i == (len(pontosvisita) - 1):
@@ -1591,10 +1590,13 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
     gi.cGuiOutput.waypoints_route = RouteDetail.coordinates
     gi.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
     # ----------------------------------------------------------------------
-    RouteDetail = DeclaraArrayRotas(RouteDetail)
-    RouteDetail.mapcode += "           const defaultIcon = markerVet[1].getIcon();\n"
-    RouteDetail.cWrJsOut.append_mapcode("           const defaultIcon = markerVet[1].getIcon();\n")
+    RouteDetail.DeclaraArrayRotas()
+    RouteDetail.append_mapcode(
+        "           const defaultIcon = markerVet[1].getIcon();\n"
+    )
     return RouteDetail
+
+
 ################################################################################
 def adjust_pontosvisitadados(pontosvisita, pontosvisitaDados):
     if pontosvisitaDados != []:
@@ -1604,7 +1606,7 @@ def adjust_pontosvisitadados(pontosvisita, pontosvisitaDados):
         pontosvisitaDados = PegaAltitudesPVD_Batch(
             pontosvisitaDados
         )  # Batch faz chamadas em lote para o OpenElevation
-        
+
     else:
         pontosvisitaDados = GeraPontosVisitaDados(pontosvisita)
         pontosvisitaDados = MesmaOrdenacaoPontosVisita(
@@ -1614,7 +1616,7 @@ def adjust_pontosvisitadados(pontosvisita, pontosvisitaDados):
             pontosvisitaDados
         )  # Batch faz chamadas em lote para o OpenElevation
     return pontosvisitaDados
-    
+
 
 ################################################################################
 def PlotaPontosVisitaNoJS(RouteDetail, pontosvisita, pontosvisitaDados):
@@ -1628,9 +1630,11 @@ def PlotaPontosVisitaNoJS(RouteDetail, pontosvisita, pontosvisitaDados):
 
     # Calcula rota entre os pontos os pontos a serem visitados
     RouteDetail = GenerateRouteMap(RouteDetail)
-    
+
     (latf, lonf) = pontosvisita[0]
-    RouteDetail = GenerateRouteMap(RouteDetail, lat, lon, latf, lonf)  # Faz a primeira rota saindo do ponto inicial ao primeiro ponto de visita
+    RouteDetail = GenerateRouteMap(
+        RouteDetail, lat, lon, latf, lonf
+    )  # Faz a primeira rota saindo do ponto inicial ao primeiro ponto de visita
 
     i = 0
     for ponto in pontosvisita:
@@ -1795,11 +1799,12 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     wLog("Desenhando Comunidades:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
     RouteDetail.mapcode += f"    const TipoRoute = 'PontosVisita';\n"
-    
-    polylinesComunidades = get_polyline_comunities(regioes) 
-    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
-    # cWrJsOut.DesenhaComunidades(polylinesComunidades)
 
+    polylinesComunidades = get_polyline_comunities(regioes)
+    RouteDetail = DesenhaComunidades(
+        RouteDetail, polylinesComunidades
+    )  # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    # cWrJsOut.DesenhaComunidades(polylinesComunidades)
 
     # Processa Pontos de Visita
     wLog(f"Ordenando e processando Pontos de Visita: ")
@@ -1894,14 +1899,6 @@ def calcula_bounding_box_pontos(pontoinicial, pontos, margem_km=50):
 def RouteContorno(
     data, user, pontoinicial, central_point, regioes, radius_km=5, num_points=8
 ):
-    # Coordenadas do ponto central (latitude, longitude)
-    # central_point = [40.712776, -74.005974]  # Exemplo: Nova York
-    # central_point = [-22.90941986104239, -43.16486081793237] # Santos Dumont
-    # central_point = [-22.891147608655164, -43.05261174054559] #   Niteroi IFR
-    # central_point = [-21.701103198880247, -41.308194753766394] #   Aeroporto de Campos
-
-    # central_point = [-22.9864182585604, -43.37041245345915]
-
     UserData.nome = user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
@@ -1922,49 +1919,41 @@ def RouteContorno(
 
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial = pontoinicial
-    cWrJsOut = wo.WebrotasJsOutput()
-    
-    
+
     wLog("Desenhando Comunidades:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
-    cWrJsOut.ServerSetupJavaScript(ServerTec)
-    
-    RouteDetail.mapcode += f"    const TipoRoute = 'DriveTest';\n"
-    cWrJsOut.append_mapcode(f"    const TipoRoute = 'DriveTest';\n")
-    
-    polylinesComunidades = get_polyline_comunities(regioes) 
-    RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
-    cWrJsOut.DesenhaComunidades(polylinesComunidades)
-    
+
+    RouteDetail.append_mapcode(f"    const TipoRoute = 'DriveTest';\n")
+
+    polylinesComunidades = get_polyline_comunities(regioes)
+    # RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    RouteDetail.DesenhaComunidades(polylinesComunidades)
 
     # Criar um mapa centrado no ponto central
     # RouteDetail.mapcode += f"    const map = L.map('map').setView([{central_point[0]}, {central_point[1]}], 13);\n"
-    RouteDetail.mapcode += (f"     map.setView([{central_point[0]}, {central_point[1]}], 13);\n")
-    cWrJsOut.append_mapcode(f"     map.setView([{central_point[0]}, {central_point[1]}], 13);\n")
+    RouteDetail.append_mapcode(
+        f"     map.setView([{central_point[0]}, {central_point[1]}], 13);\n"
+    )
 
     # Adicionar uma marca no ponto central
-    RouteDetail.mapcode += f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map); \n"
-    RouteDetail.mapcode += f"    markerCentral.bindTooltip('Ponto Central', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
-    RouteDetail.mapcode += "     markerCentral.setIcon(iMarquerVerde);\n"
-    
-    cWrJsOut.append_mapcode(f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map); \n")
-    cWrJsOut.append_mapcode(f"    markerCentral.bindTooltip('Ponto Central', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n")
-    cWrJsOut.append_mapcode("     markerCentral.setIcon(iMarquerVerde);\n")
-
+    RouteDetail.append_mapcode(
+        f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map); \n"
+    )
+    RouteDetail.append_mapcode(
+        f"    markerCentral.bindTooltip('Ponto Central', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
+    )
+    RouteDetail.append_mapcode("     markerCentral.setIcon(iMarquerVerde);\n")
 
     pontosvisita = OrdenarPontos(pontosvisita, pontoinicial)
-    
+
     # ---------------------
-    # Parei aqui 
-    
-    RouteDetail.cWrJsOut = cWrJsOut
+    # Parei aqui
+
     # RouteDetail = PlotaPontosVisitaNoJS(RouteDetail, pontosvisita, [])
     RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
-    
 
-    RouteDetail = DesenhaRegioes(RouteDetail, regioes)
-    cWrJsOut.DesenhaRegioes(regioes)
-    
+    RouteDetail.DesenhaRegioes(regioes)
+
     RouteDetail.GeraMapPolylineCaminho()
     # GerarKml(coordenadasrota, filename="rota.kml")
 
