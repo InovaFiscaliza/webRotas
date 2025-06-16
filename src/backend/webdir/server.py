@@ -32,6 +32,8 @@ import server_env as se
 import routing_servers_interface as rsi
 import CacheBoundingBox as cb
 import GuiOutput as gi
+from wlog import log_filename
+from wlog import wLog
 
 ################################################################################
 """ Variáveis globais """
@@ -48,8 +50,8 @@ env = se.ServerEnv()
 ################################################################################
 # TODO #4 Use standard paths defined in a configuration section or file. May use ProgramData/Anatel/WebRotas, as other applications from E!, where ProgramData folder should use system variables.
 
-wr.log_filename = env.log_file
-wr.wLog(f"Arquivo de log: {env.log_file}")
+log_filename = env.log_file
+wLog(f"Arquivo de log: {env.log_file}")
 
 app = Flask(__name__, static_folder="static", static_url_path="/webRotas")
 CORS(app)  # Habilita CORS para todas as rotas

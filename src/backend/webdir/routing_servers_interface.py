@@ -56,7 +56,8 @@ import regions as rg
 import shapeFiles as sf
 import GuiOutput as gi
 
-
+from wlog import log_filename
+from wlog import wLog
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
     """
@@ -149,7 +150,7 @@ def mover_arquivo(origem: str, destino: str) -> bool:
 ################################################################################
 def init_and_load_podman_images():
     wr.wLog(f"init_and_load_podman_images", level="debug")
-    logok = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
+    logok = f"{log_filename}.{wr.UserData.nome}.OSMR"
     subprocess.run(
         ["podman", "machine", "init"], stdout=open(logok, "a"), stderr=subprocess.STDOUT
     )
@@ -173,7 +174,7 @@ def init_and_load_podman_images():
 ################################################################################
 def FiltrarRegiaoComOsmosis(regioes):
     chave = cb.cCacheBoundingBox.chave(regioes)
-    logok = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
+    logok = f"{log_filename}.{wr.UserData.nome}.OSMR"
 
     destino = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
     # Se o diretório de destino já existe, não faz nada, pode ser um cache já feito corrompido, vale tentar poupar o tempo.
@@ -233,7 +234,7 @@ def AtivaServidorOSMR(regioes):
     wr.wLog(
         f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}", level="debug"
     )
-    logok_osmr = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
+    logok_osmr = f"{log_filename}.{wr.UserData.nome}.OSMR"
     wr.wLog(f"Ativando Servidor OSMR", level="info")
     subprocess.run(
         ["podman", "stop", f"osmr_{wr.UserData.nome}"],
@@ -260,7 +261,7 @@ def GerarIndicesExecutarOSRMServer(regioes):
 
     # os.chdir("../../resources/OSMR/data")
     chave = cb.cCacheBoundingBox.chave(regioes)
-    logok = f"{wr.log_filename}.{wr.UserData.nome}"
+    logok = f"{log_filename}.{wr.UserData.nome}"
     DIRETORIO_REGIAO = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
     DIRETORIO_REGIAO_CONTAINER = f"filtro_{chave}"
     subprocess.run(
@@ -488,7 +489,7 @@ def VerificarFalhaServidorOSMR():
         "Error: statfs",
         "Unable to restore terminal:",
     ]
-    logfile = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
+    logfile = f"{log_filename}.{wr.UserData.nome}.OSMR"
     if procurar_multiplas_strings_em_arquivo(logfile, erros_procurados):
         wr.wLog("Erro detectado no log!", level="debug")
         return True
@@ -657,7 +658,7 @@ def limpar_cache_files_osmr(regioes):
         parar_containers_osmr(wr.UserData.nome)
         esperar_container_parar(wr.UserData.nome)
         wr.wLog("Apagando arquivo de log...", level="debug")
-        log_file = f"{wr.log_filename}.{wr.UserData.nome}.OSMR"
+        log_file = f"{log_filename}.{wr.UserData.nome}.OSMR"
         backup_file = log_file + ".LastError"
         try:
             if os.path.exists(log_file):
