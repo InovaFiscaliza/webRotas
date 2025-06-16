@@ -1,18 +1,18 @@
 {
-    "User": "Usuário11",
-    "Descricao": "Teste de abrangência Distrito Federal",
+    "User": "Usuário16",
+    "Descricao": "Teste de abrangência João Pessoa",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [
-        -15.805380,         
-        -47.882478,
-        "Anatel DF"
+        -7.124323, 
+        -34.838705,
+        "Anatel PA"
     ],
     "RaioDaEstacao": 200,
     "GpsProximoPonto": "ProximoDaRota",
-    "cidade": "Brasília",
-    "uf": "DF",
+    "cidade": "João Pessoa",
+    "uf": "PB",
     "Escopo": "AreasUrbanizadas",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
-    "distancia_pontos": 3000,
+    "distancia_pontos": 2000,
     "regioes": []
 }

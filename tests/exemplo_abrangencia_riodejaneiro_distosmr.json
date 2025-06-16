@@ -3,15 +3,15 @@
     "Descricao": "Teste de abrangência Rio de Janeiro",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [
-        -22.90236790344037,
-        -43.17420024484698,
+        -22.902368,
+        -43.174200,
         "Anatel Rio de Janeiro"
     ],
     "RaioDaEstacao": 200,
     "GpsProximoPonto": "ProximoDaRota",
     "cidade": "Rio de Janeiro",
     "uf": "RJ",
-    "Escopo":"AreasUrbanizadas",
+    "Escopo": "AreasUrbanizadas",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
     "distancia_pontos": 3000,
     "regioes": []

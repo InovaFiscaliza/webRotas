@@ -1,18 +1,18 @@
 {
-    "User": "Usuário11",
-    "Descricao": "Teste de abrangência Distrito Federal",
+    "User": "Usuário15",
+    "Descricao": "Teste de abrangência Goiânia",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [
-        -15.805380,         
-        -47.882478,
-        "Anatel DF"
+        -30.046908, 
+        -51.205955,
+        "Anatel RS"
     ],
     "RaioDaEstacao": 200,
     "GpsProximoPonto": "ProximoDaRota",
-    "cidade": "Brasília",
-    "uf": "DF",
+    "cidade": "Porto Alegre",
+    "uf": "RS",
     "Escopo": "AreasUrbanizadas",
     "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
-    "distancia_pontos": 3000,
+    "distancia_pontos": 2000,
     "regioes": []
 }

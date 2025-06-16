@@ -19,3 +19,9 @@ src/resources/Osmosis/TempData/*.poly
 src/resources/BR_Municipios/Malha_Municipal_*.*
 src/resources/Comunidades/Favelas_*.*
 src/resources/Urbanizacao/Mapa_*.*
+
+/src/resources/Estados/BR_UF_2024.prj
+/src/resources/Estados/BR_UF_2024.dbf
+/src/resources/Estados/BR_UF_2024.cpg
+/src/resources/Estados/BR_UF_2024.shp
+/src/resources/Estados/BR_UF_2024.shx

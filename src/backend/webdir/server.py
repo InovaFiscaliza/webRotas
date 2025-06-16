@@ -31,6 +31,9 @@ import webRota as wr
 import server_env as se
 import routing_servers_interface as rsi
 import CacheBoundingBox as cb
+import GuiOutput as gi
+from wlog import log_filename
+from wlog import wLog
 
 ################################################################################
 """ Variáveis globais """
@@ -47,8 +50,8 @@ env = se.ServerEnv()
 ################################################################################
 # TODO #4 Use standard paths defined in a configuration section or file. May use ProgramData/Anatel/WebRotas, as other applications from E!, where ProgramData folder should use system variables.
 
-wr.log_filename = env.log_file
-wr.wLog(f"Arquivo de log: {env.log_file}")
+log_filename = env.log_file
+wLog(f"Arquivo de log: {env.log_file}")
 
 app = Flask(__name__, static_folder="static", static_url_path="/webRotas")
 CORS(app)  # Habilita CORS para todas as rotas
@@ -76,13 +79,16 @@ def _process():
     session_id = request.args.get("sessionId")
     if not session_id:
         return jsonify({"error": "Invalid or missing sessionId"}), 400
-
+    gi.cGuiOutput.session_id = session_id
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400
     
-    with open("../../../tests/routing3.json", "r") as f:
-        json_string = f.read()
+    # with open("../../../tests/routing3.json", "r") as f:
+    #     json_string = f.read()
+    
+    ProcessaRequisicoesAoServidor(data)
+    json_string = gi.cGuiOutput.criar_json_routing()
     return Response(json_string, mimetype='application/json')
 
 #-----------------------------------------------------------------------------------#
@@ -97,8 +103,11 @@ def _reprocess():
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400
-    
-    return jsonify({ "error": "Mensagem erro de teste" }), 500
+
+    ProcessaRequisicoesAoServidor(data)
+    json_string = gi.cGuiOutput.criar_json_routing()    
+    # return jsonify({ "error": "Mensagem erro de teste" }), 500
+    return Response(json_string, mimetype='application/json')
 
 #-----------------------------------------------------------------------------------#
 # OUTRAS ROTAS
@@ -238,6 +247,9 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         except KeyError as e:
             return jsonify({"error": f"Campo TipoRequisicao não encontrado: {e}"}), 400
         
+        if (request_type == "StandardCache"):
+            return wr.create_standard_cache(data)
+        
         if not REQUIRED_KEYS[request_type].issubset(data.keys()):
             return jsonify({"error": f"Campos necessários: {REQUIRED_KEYS[request_type]}"}), 400
         
@@ -247,6 +259,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         pontoinicial = data.get("PontoInicial", [])
         # Nome do usuário para o log trancorrer com o nome correto o quanto antes sem o "none"
         wr.UserData.nome = user
+        gi.cGuiOutput.requisition_data = data
         # Process the request according to the request type
         match request_type:
             case "Contorno":
@@ -262,7 +275,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 numeropontos = data.get("numeropontos", default_points(raio))
 
                 # Present used arguments
-                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
+                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
                 wr.wLog(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m, Número de Pontos: {numeropontos}",level="debug")
                 wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
                 
@@ -284,7 +297,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 pontosvisita = data["pontosvisita"]
                 
                 # Present used arguments
-                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
+                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
                 wr.wLog(f"Pontos de Visita: {pontosvisita}",level="debug")
                 wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
                 
@@ -307,8 +320,8 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 distanciaPontos = data["distancia_pontos"]
                 
                 # Present used arguments
-                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
-                wr.wLog(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos}m",level="debug")
+                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
+                wr.wLog(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos} m")
                 wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
 
                 # Process the received data
@@ -430,6 +443,7 @@ def main():
         wr.wLog(f"Starting WebRotas Server on port {env.port}...")
         rsi.init_and_load_podman_images()
         rsi.manutencao_arquivos_antigos()
+        gi.cGuiOutput.url = f"http://127.0.0.1:{env.port}/"
         app.run(debug=args.debug, port=env.port, host='0.0.0.0')
         return 0
     except Exception as e:
