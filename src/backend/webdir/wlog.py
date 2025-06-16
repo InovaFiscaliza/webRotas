@@ -13,9 +13,6 @@ def set_log_filename(filename):
 def get_log_filename():
     return _log_filename
 
-# from wlog import log_filename
-# from wlog import wLog
-
 def wLog(log_string, level="info"):  # Levels "info","debug", "warning", "error", "critical"
     levels = {"info": 1, "debug": 2, "warning": 3, "error": 4, "critical": 5}
     current_level = levels.get(level.lower(), 0)
