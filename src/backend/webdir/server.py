@@ -21,28 +21,30 @@ from flask import (
     send_file,
     send_from_directory,
     request,
-    redirect
-) 
+    redirect,
+)
 from flask_compress import Compress
 from flask_cors import CORS
 from concurrent.futures import ThreadPoolExecutor
 
+import wlog as wl
 import webRota as wr
+
+
 import server_env as se
 import routing_servers_interface as rsi
 import CacheBoundingBox as cb
 import GuiOutput as gi
-from wlog import log_filename
-from wlog import wLog
+
 
 ################################################################################
 """ Variáveis globais """
 
 REQUIRED_KEYS = {
-    "Contorno":       { "latitude", "longitude", "raio" },
-    "PontosVisita":   { "pontosvisita" },
-    "Abrangencia":    { "cidade", "uf", "Escopo", "distancia_pontos" },
-    "RoteamentoOSMR": { "PortaOSRMServer"}
+    "Contorno": {"latitude", "longitude", "raio"},
+    "PontosVisita": {"pontosvisita"},
+    "Abrangencia": {"cidade", "uf", "Escopo", "distancia_pontos"},
+    "RoteamentoOSMR": {"PortaOSRMServer"},
 }
 
 env = se.ServerEnv()
@@ -50,8 +52,12 @@ env = se.ServerEnv()
 ################################################################################
 # TODO #4 Use standard paths defined in a configuration section or file. May use ProgramData/Anatel/WebRotas, as other applications from E!, where ProgramData folder should use system variables.
 
-log_filename = env.log_file
-wLog(f"Arquivo de log: {env.log_file}")
+
+
+
+# Define o nome de log (ex: vindo do env)
+wl.set_log_filename(env.log_file)
+wl.wLog(f"Arquivo de log: {env.log_file}")
 
 app = Flask(__name__, static_folder="static", static_url_path="/webRotas")
 CORS(app)  # Habilita CORS para todas as rotas
@@ -60,21 +66,24 @@ Compress(app)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 app.config["TEMPLATES_AUTO_RELOAD"] = True  # Ativa o auto-reload dos templates
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 # INICIALIZAÇÃO
-#-----------------------------------------------------------------------------------#
+# -----------------------------------------------------------------------------------#
 @app.route("/", methods=["GET"])
 def _root():
     return redirect("/webRotas/index.html")
+
 
 @app.route("/<path:filepath>", methods=["GET"])
 def _static_files(filepath):
     return send_from_directory("static", filepath)
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 # PROCESSA REQUISIÇÃO, RETORNANDO ROTA AUTOMÁTICA
-#-----------------------------------------------------------------------------------#
-@app.route('/process', methods=['POST'])
+# -----------------------------------------------------------------------------------#
+@app.route("/process", methods=["POST"])
 def _process():
     session_id = request.args.get("sessionId")
     if not session_id:
@@ -83,18 +92,19 @@ def _process():
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400
-    
+
     # with open("../../../tests/routing3.json", "r") as f:
     #     json_string = f.read()
-    
+
     ProcessaRequisicoesAoServidor(data)
     json_string = gi.cGuiOutput.criar_json_routing()
-    return Response(json_string, mimetype='application/json')
+    return Response(json_string, mimetype="application/json")
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 # REPROCESSA REQUISIÇÃO, RETORNANDO ROTA CUSTOMIZADA
-#-----------------------------------------------------------------------------------#
-@app.route('/reprocess', methods=['POST'])
+# -----------------------------------------------------------------------------------#
+@app.route("/reprocess", methods=["POST"])
 def _reprocess():
     session_id = request.args.get("sessionId")
     if not session_id:
@@ -105,18 +115,20 @@ def _reprocess():
         return jsonify({"error": "Invalid or missing JSON"}), 400
 
     ProcessaRequisicoesAoServidor(data)
-    json_string = gi.cGuiOutput.criar_json_routing()    
+    json_string = gi.cGuiOutput.criar_json_routing()
     # return jsonify({ "error": "Mensagem erro de teste" }), 500
-    return Response(json_string, mimetype='application/json')
+    return Response(json_string, mimetype="application/json")
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 # OUTRAS ROTAS
-#-----------------------------------------------------------------------------------#
+# -----------------------------------------------------------------------------------#
 @app.route("/ok", methods=["GET"])
 def _ok():
     return "ok"
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 @app.route("/map/<filename>")
 def mapa_leaflet(filename):
     template_file = filename
@@ -128,7 +140,7 @@ def mapa_leaflet(filename):
         return f"Erro: {e}", 404
 
 
-#-----------------------------------------------------------------------------------#
+# -----------------------------------------------------------------------------------#
 # URL do servidor OSRM
 @app.route("/route", methods=["GET"])
 def get_route():
@@ -157,12 +169,13 @@ def get_route():
         return jsonify(osrm_response.json())
 
     except requests.RequestException as e:
-        return jsonify(
-            {"error": f"Falha na comunicação com o servidor OSRM: {str(e)}"}
-        ), 500
+        return (
+            jsonify({"error": f"Falha na comunicação com o servidor OSRM: {str(e)}"}),
+            500,
+        )
 
 
-#-----------------------------------------------------------------------------------#
+# -----------------------------------------------------------------------------------#
 @app.route("/health", methods=["GET"])
 def get_health():
     # Parâmetros da requisição (origem e destino)
@@ -182,11 +195,13 @@ def get_health():
         return jsonify(osrm_response.json())
 
     except requests.RequestException as e:
-        return jsonify(
-            {"error": f"Falha na comunicação com o servidor OSRM: {str(e)}"}
-        ), 500
+        return (
+            jsonify({"error": f"Falha na comunicação com o servidor OSRM: {str(e)}"}),
+            500,
+        )
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 @app.route("/download/<filename>")
 def download_file(filename):
     # Caminho absoluto ou relativo para o arquivo
@@ -196,12 +211,14 @@ def download_file(filename):
     except Exception as e:
         return f"Erro ao enviar o arquivo: {e}"
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 @app.route("/webrotas", methods=["POST"])
 def process_location():
     # Obtém o JSON da requisição
     data = request.get_json()
     return ProcessaRequisicoesAoServidor(data)
+
 
 ################################################################################
 def SalvaDataArq(data):
@@ -217,19 +234,21 @@ def SalvaDataArq(data):
         wr.wLog(f"Erro ao salvar os dados: {e}")
         return jsonify({"error": "Erro ao salvar os dados"}), 500
 
+
 ###9
 
-def default_points(radi:int) -> int:
+
+def default_points(radi: int) -> int:
     """Calcula o número de pontos padrão para a rota de contorno à partir do raio
-    
+
     :param radi: Raio em metros
     :return: Número de pontos padrão
     """
     MIN_POINTS = 9
     POINTS_PER_KM = 2
     TWO_PI = 6.28318530718
-    
-    return max(MIN_POINTS, int(TWO_PI * radi * POINTS_PER_KM /1000))
+
+    return max(MIN_POINTS, int(TWO_PI * radi * POINTS_PER_KM / 1000))
 
 
 ################################################################################
@@ -237,7 +256,7 @@ def default_points(radi:int) -> int:
 ################################################################################
 def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
     """Processa as requisições ao servidor WebRotas.
-    
+
     :param data: Dicionário com os dados da requisição.
     :return: Tupla com a resposta da requisição e o código HTTP.
     """
@@ -246,13 +265,18 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
             request_type = data["TipoRequisicao"]
         except KeyError as e:
             return jsonify({"error": f"Campo TipoRequisicao não encontrado: {e}"}), 400
-        
-        if (request_type == "StandardCache"):
+
+        if request_type == "StandardCache":
             return wr.create_standard_cache(data)
-        
+
         if not REQUIRED_KEYS[request_type].issubset(data.keys()):
-            return jsonify({"error": f"Campos necessários: {REQUIRED_KEYS[request_type]}"}), 400
-        
+            return (
+                jsonify(
+                    {"error": f"Campos necessários: {REQUIRED_KEYS[request_type]}"}
+                ),
+                400,
+            )
+
         # set variables to arguments used in all types of requests
         user = unidecode(data.get("User", "Anatel"))
         regioes = data.get("regioes", [])
@@ -263,8 +287,12 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         # Process the request according to the request type
         match request_type:
             case "Contorno":
-                wr.wLog("#############################################################################################")
-                wr.wLog("Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)")
+                wr.wLog(
+                    "#############################################################################################"
+                )
+                wr.wLog(
+                    "Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)"
+                )
 
                 # mandatory arguments
                 latitude = data["latitude"]
@@ -276,41 +304,53 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
 
                 # Present used arguments
                 wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
-                wr.wLog(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m, Número de Pontos: {numeropontos}",level="debug")
-                wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
-                
+                wr.wLog(
+                    f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m, Número de Pontos: {numeropontos}",
+                    level="debug",
+                )
+                wr.wLog(f"Regiões Evitar: {regioes}", level="debug")
+
                 # Process the received data
                 central_point = [latitude, longitude]
-                fileName,fileNameStatic,fileKml=wr.RouteContorno(   data,
-                                                                    user,
-                                                                    pontoinicial,
-                                                                    central_point,
-                                                                    regioes,radius_km=raio,
-                                                                    num_points=numeropontos)
-                wr.wLog("#############################################################################################")
+                fileName, fileNameStatic, fileKml = wr.RouteContorno(
+                    data,
+                    user,
+                    pontoinicial,
+                    central_point,
+                    regioes,
+                    radius_km=raio,
+                    num_points=numeropontos,
+                )
+                wr.wLog(
+                    "#############################################################################################"
+                )
 
             case "PontosVisita":
-                wr.wLog("#############################################################################################")
+                wr.wLog(
+                    "#############################################################################################"
+                )
                 wr.wLog("Recebida solicitação pontos de visita")
 
                 # mandatory arguments
                 pontosvisita = data["pontosvisita"]
-                
+
                 # Present used arguments
                 wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
-                wr.wLog(f"Pontos de Visita: {pontosvisita}",level="debug")
-                wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
-                
+                wr.wLog(f"Pontos de Visita: {pontosvisita}", level="debug")
+                wr.wLog(f"Regiões Evitar: {regioes}", level="debug")
+
                 # Process the received data
-                fileName, fileNameStatic, fileKml = wr.RoutePontosVisita(   data,
-                                                                            user,
-                                                                            pontoinicial,
-                                                                            pontosvisita,
-                                                                            regioes)
-                wr.wLog("#############################################################################################")
-            
+                fileName, fileNameStatic, fileKml = wr.RoutePontosVisita(
+                    data, user, pontoinicial, pontosvisita, regioes
+                )
+                wr.wLog(
+                    "#############################################################################################"
+                )
+
             case "Abrangencia":
-                wr.wLog("#############################################################################################")
+                wr.wLog(
+                    "#############################################################################################"
+                )
                 wr.wLog("Recebida solicitação de compromisso de abrangência")
 
                 # mandatory arguments
@@ -318,42 +358,48 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 uf = data["uf"]
                 escopo = data["Escopo"]
                 distanciaPontos = data["distancia_pontos"]
-                
+
                 # Present used arguments
                 wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}")
-                wr.wLog(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos} m")
-                wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
+                wr.wLog(
+                    f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos} m"
+                )
+                wr.wLog(f"Regiões Evitar: {regioes}", level="debug")
 
                 # Process the received data
-                fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(data,
-                                                                        user,
-                                                                        pontoinicial,
-                                                                        cidade,
-                                                                        uf,
-                                                                        escopo,
-                                                                        distanciaPontos,
-                                                                        regioes)
-                wr.wLog("#############################################################################################")
+                fileName, fileNameStatic, fileKml = wr.RouteCompAbrangencia(
+                    data,
+                    user,
+                    pontoinicial,
+                    cidade,
+                    uf,
+                    escopo,
+                    distanciaPontos,
+                    regioes,
+                )
+                wr.wLog(
+                    "#############################################################################################"
+                )
 
             case "RoteamentoOSMR":
-                wr.wLog("#############################################################################################")
+                wr.wLog(
+                    "#############################################################################################"
+                )
                 wr.wLog("Recebida solicitação de RoteamentoOSMR")
-                
+
                 # mandatory arguments
                 porta = data["PortaOSRMServer"]
-                
+
                 # optional arguments
                 pontosvisita = data.get("pontosvisita", [])
                 pontoinicial = data.get("pontoinicial", [])
-                recalcularrota = data.get("recalcularrota",1)
-                username =  data["UserName"]
-            
+                recalcularrota = data.get("recalcularrota", 1)
+                username = data["UserName"]
+
                 # Processa a requisição
-                polylineRota, DistanceTotal, pontosvisita = wr.RoteamentoOSMR(  username,
-                                                                                porta,
-                                                                                pontosvisita,
-                                                                                pontoinicial,
-                                                                                recalcularrota)
+                polylineRota, DistanceTotal, pontosvisita = wr.RoteamentoOSMR(
+                    username, porta, pontosvisita, pontoinicial, recalcularrota
+                )
                 cb.cCacheBoundingBox._schedule_save()
                 # Retorna uma resposta de confirmação
                 wr.wLog(
@@ -364,40 +410,58 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                             "RotaRecalculada": recalcularrota,
                             "pontosVisita": pontosvisita,
                         }
-                    ),level="debug"
+                    ),
+                    level="debug",
                 )
-                wr.wLog("#############################################################################################")
-                return jsonify(
-                    {
-                        "polylineRota": polylineRota,
-                        "DistanceTotal": DistanceTotal,
-                        "RotaRecalculada": recalcularrota,
-                        "pontosVisita": pontosvisita,
-                    }
-                ), 200
+                wr.wLog(
+                    "#############################################################################################"
+                )
+                return (
+                    jsonify(
+                        {
+                            "polylineRota": polylineRota,
+                            "DistanceTotal": DistanceTotal,
+                            "RotaRecalculada": recalcularrota,
+                            "pontosVisita": pontosvisita,
+                        }
+                    ),
+                    200,
+                )
 
             case _:
-                return jsonify({"error": f"Tipo de requisição parcialmente definido. Favor atualizar webrota para processamento da requisição `{request_type}`"}), 400
-        
+                return (
+                    jsonify(
+                        {
+                            "error": f"Tipo de requisição parcialmente definido. Favor atualizar webrota para processamento da requisição `{request_type}`"
+                        }
+                    ),
+                    400,
+                )
+
         cb.cCacheBoundingBox._schedule_save()
         # Retorna uma resposta de confirmação
-        return jsonify(
-            {
-                "MapaOk": fileName,
-                "Url": f"http://127.0.0.1:{env.port}/map/{fileName}",
-                "HtmlStatic": f"http://127.0.0.1:{env.port}/download/{fileNameStatic}",
-                "Kml": f"http://127.0.0.1:{env.port}/download/{fileKml}",
-            }
-        ), 200
+        return (
+            jsonify(
+                {
+                    "MapaOk": fileName,
+                    "Url": f"http://127.0.0.1:{env.port}/map/{fileName}",
+                    "HtmlStatic": f"http://127.0.0.1:{env.port}/download/{fileNameStatic}",
+                    "Kml": f"http://127.0.0.1:{env.port}/download/{fileKml}",
+                }
+            ),
+            200,
+        )
+
 
 ################################################################################
 executor = ThreadPoolExecutor(max_workers=40)
 ListaTarefas = []
 
+
 ################################################################################
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments.
-    
+
     :return: Parsed arguments.
     """
 
@@ -414,7 +478,7 @@ def parse_args() -> argparse.Namespace:
         default=env.debug_mode,
         help="Ativa modo de debug (default: %(default)s)",
     )
-    
+
     try:
         args, unknown = parser.parse_known_args()
         if unknown:
@@ -434,7 +498,7 @@ def main():
     try:
         # Parse command line arguments
         args = parse_args()
-        
+
         # Get an available port for the server
         env.get_port(args.port)
         env.save_server_data()
@@ -444,7 +508,7 @@ def main():
         rsi.init_and_load_podman_images()
         rsi.manutencao_arquivos_antigos()
         gi.cGuiOutput.url = f"http://127.0.0.1:{env.port}/"
-        app.run(debug=args.debug, port=env.port, host='0.0.0.0')
+        app.run(debug=args.debug, port=env.port, host="0.0.0.0")
         return 0
     except Exception as e:
         wr.wLog(f"Server error: {e}")

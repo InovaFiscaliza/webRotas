@@ -25,9 +25,11 @@ import CacheBoundingBox as cb
 import regions as rg
 import GuiOutput as gi
 from ClRouteDetail import ClRouteDetailList
-from wlog import wLog
+import wlog as wl
 
-
+###########################################################################################################################
+def wLog(log_string, level="info"):
+    wl.wLog(log_string, level)
 ###########################################################################################################################
 def Haversine(lat1, lon1, lat2, lon2):
     # Raio da Terra em metros

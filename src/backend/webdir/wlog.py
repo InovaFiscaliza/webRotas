@@ -1,22 +1,26 @@
-
-
-################################################################################
-WARNING_LEVEL = "info"
-log_filename = "WebRotasServer.log"
 import webRota as wr
 import datetime
 import os
 
+################################################################################
+WARNING_LEVEL = "info"
+_log_filename = "WebRotasServer.log"  # Agora com underline → uso interno
+
+def set_log_filename(filename):
+    global _log_filename
+    _log_filename = filename
+
+def get_log_filename():
+    return _log_filename
+
 # from wlog import log_filename
 # from wlog import wLog
 
-def wLog(
-    log_string, level="info"
-):  # Levels "info","debug", "warning", "error", "critical"
+def wLog(log_string, level="info"):  # Levels "info","debug", "warning", "error", "critical"
     levels = {"info": 1, "debug": 2, "warning": 3, "error": 4, "critical": 5}
     current_level = levels.get(level.lower(), 0)
 
-    log_file = f"{log_filename}.{wr.UserData.nome}"  # Nome do arquivo de log
+    log_file = f"{_log_filename}.{wr.UserData.nome}"  # Nome do arquivo de log
 
     timStp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_string = SubstAcentos(log_string)

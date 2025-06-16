@@ -1,4 +1,5 @@
-from wlog import wLog
+
+import wlog as wl
 import datetime
 import webRota as wr
 ###########################################################################################################################
@@ -8,7 +9,7 @@ def ignorar_se_inativo(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         if not getattr(self, "ativo", True):
-            wLog(f"Bypass: {func.__name__} ignorado porque self.ativo=False", level="debug")
+            wl.wLog(f"Bypass: {func.__name__} ignorado porque self.ativo=False", level="debug")
             return self  # mantém encadeamento de chamadas
         return func(self, *args, **kwargs)
     return wrapper
@@ -33,7 +34,7 @@ class ClRouteDetailList:
     # ---------------------------------------------------------------------------------------
     @ignorar_se_inativo
     def GeraMapPolylineCaminho(self):
-        wLog("Plotando polyline rota")
+        wl.wLog("Plotando polyline rota")
         self.mapcode += "\n"
 
         self.mapcode += """var polylineRotaDat = ["""
@@ -140,7 +141,7 @@ class ClRouteDetailList:
     @ignorar_se_inativo
     def DesenhaRegioes(self, regioes):
         # Processa as regiões
-        wr.wLog("Plotando Regiões de mapeamento e exclusões")
+        wl.wLog("Plotando Regiões de mapeamento e exclusões")
 
         RegiaoExclusão = False
         for regiao in regioes:
@@ -153,7 +154,7 @@ class ClRouteDetailList:
 
             self.mapcode += f"    regiao{nome} = [\n"
             coordenadas = regiao.get("coord", [])
-            wr.wLog(f"  Região: {nome}", level="debug")
+            wl.wLog(f"  Região: {nome}", level="debug")
             i = 0
             for coord in coordenadas:
                 latitude, longitude = coord

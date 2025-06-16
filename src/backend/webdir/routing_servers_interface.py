@@ -56,7 +56,9 @@ import regions as rg
 import shapeFiles as sf
 import GuiOutput as gi
 
-from wlog import log_filename
+import wlog as wl
+
+
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
     """
@@ -149,6 +151,8 @@ def mover_arquivo(origem: str, destino: str) -> bool:
 ################################################################################
 def init_and_load_podman_images():
     wr.wLog(f"init_and_load_podman_images", level="debug")
+    
+    log_filename = wl.get_log_filename()
     logok = f"{log_filename}.{wr.UserData.nome}.OSMR"
     subprocess.run(
         ["podman", "machine", "init"], stdout=open(logok, "a"), stderr=subprocess.STDOUT
@@ -173,6 +177,7 @@ def init_and_load_podman_images():
 ################################################################################
 def FiltrarRegiaoComOsmosis(regioes):
     chave = cb.cCacheBoundingBox.chave(regioes)
+    log_filename = wl.get_log_filename()
     logok = f"{log_filename}.{wr.UserData.nome}.OSMR"
 
     destino = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
@@ -233,6 +238,7 @@ def AtivaServidorOSMR(regioes):
     wr.wLog(
         f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}", level="debug"
     )
+    log_filename = wl.get_log_filename()
     logok_osmr = f"{log_filename}.{wr.UserData.nome}.OSMR"
     wr.wLog(f"Ativando Servidor OSMR", level="info")
     subprocess.run(
@@ -260,6 +266,7 @@ def GerarIndicesExecutarOSRMServer(regioes):
 
     # os.chdir("../../resources/OSMR/data")
     chave = cb.cCacheBoundingBox.chave(regioes)
+    log_filename = wl.get_log_filename()
     logok = f"{log_filename}.{wr.UserData.nome}"
     DIRETORIO_REGIAO = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
     DIRETORIO_REGIAO_CONTAINER = f"filtro_{chave}"
@@ -488,6 +495,7 @@ def VerificarFalhaServidorOSMR():
         "Error: statfs",
         "Unable to restore terminal:",
     ]
+    log_filename = wl.get_log_filename()
     logfile = f"{log_filename}.{wr.UserData.nome}.OSMR"
     if procurar_multiplas_strings_em_arquivo(logfile, erros_procurados):
         wr.wLog("Erro detectado no log!", level="debug")
@@ -657,6 +665,7 @@ def limpar_cache_files_osmr(regioes):
         parar_containers_osmr(wr.UserData.nome)
         esperar_container_parar(wr.UserData.nome)
         wr.wLog("Apagando arquivo de log...", level="debug")
+        log_filename = wl.get_log_filename()
         log_file = f"{log_filename}.{wr.UserData.nome}.OSMR"
         backup_file = log_file + ".LastError"
         try:
