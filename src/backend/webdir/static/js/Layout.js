@@ -40,7 +40,7 @@
                         htmlRouteEl,
                         routing,
                         (routeEl, index1, index2) => {
-                            return `[${index1},${index2}]: ${routeEl.estimatedDistance} km${routeEl.automatic ? ' (AUTOMÁTICA)' : ''}`
+                            return `[${index1},${index2}]: ${routeEl.estimatedDistance.toFixed(1)} km${routeEl.automatic ? ' (AUTOMÁTICA)' : ''}`
                         },
                         {
                             click:      (event) => window.app.modules.Callbacks.onRouteListSelectionChanged(event),
@@ -59,14 +59,14 @@
                     const route = routing[index1].response.routes[index2];
                     const htmlPointsEl = this.getDOMElements(['pointsToVisit']).pointsToVisit;
 
-                    this.updateControlState(type, route);
+                    this.updateControlState(type, routing[index1], route);
                     
                     window.app.modules.Components.createTextList(
                         htmlPointsEl,
                         route.waypoints,
                         (routeEl, index) => {
                             const routeElDescription = routeEl.description.length ? ` ${routeEl.description}` : '';
-                            return `${index}: (${routeEl.lat}, ${routeEl.lng}, ${routeEl.elevation}m)${routeElDescription}`;
+                            return `${index}: (${routeEl.lat.toFixed(6)}, ${routeEl.lng.toFixed(6)}, ${routeEl.elevation.toFixed(0)}m)${routeElDescription}`;
                         },
                         {
                             click:      (event) => window.app.modules.Callbacks.onPointListSelectionChanged(event, htmlPointsEl),
@@ -107,6 +107,7 @@
                         'initialPointDescription',
                         'routeListMoveUpBtn',
                         'routeListMoveDownBtn',
+                        'routeIds',
                         'toolbarExportBtn',
                         'toolbarLocationBtn',
                         'toolbarOrientationBtn',
@@ -124,6 +125,8 @@
 
                     htmlPointsEl = this.getDOMElements(['pointsToVisit']).pointsToVisit;
                     htmlPointsEl.innerHTML = '';
+
+                    htmlEl.routeIds.textContent = '';
                     break;
 
                 case 'routeLoaded':
@@ -145,17 +148,26 @@
                     break;
 
                 case 'routeSelected':
-                    const route = args[0];
+                    const routing = args[0];
+                    const route   = args[1];
 
                     htmlEl = this.getDOMElements([
                         'initialPointLatitude',
                         'initialPointLongitude',
-                        'initialPointDescription'
+                        'initialPointDescription',
+                        'routeIds'
                     ]);
 
                     this.updateEditableField(htmlEl.initialPointLatitude,    route.origin.lat);
                     this.updateEditableField(htmlEl.initialPointLongitude,   route.origin.lng);
-                    this.updateEditableField(htmlEl.initialPointDescription, route.origin.description);                    
+                    this.updateEditableField(htmlEl.initialPointDescription, route.origin.description);
+
+                    let ids = {
+                        created: route.created,
+                        cacheId: routing.response.cacheId,
+                        routeId: route.routeId
+                    };
+                    htmlEl.routeIds.textContent = JSON.stringify(ids, null, 1);
                     break;
 
                 case 'editionMode':

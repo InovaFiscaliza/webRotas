@@ -117,8 +117,75 @@
     }
 
     /*---------------------------------------------------------------------------------*/
+    async function exportAsZip() {
+        const zip = new window.JSZip();
+
+        // HTML
+        const html = window.top.document.documentElement.outerHTML;
+        zip.file("index.html", html);
+
+        // Arquivos auxiliares: CSS, JS e imagens
+        const assets = [
+            "css/DialogBox.css",
+            "css/Tooltip.css",
+            "css/webRotas.css",
+            "images/ArrowLeft_32.png",
+            "images/ArrowRight_32.png",
+            "images/Edit_32.png",
+            "images/Trash_32.png",
+            "images/addFiles_32.png",
+            "images/colorbar.svg",
+            "images/error.svg",
+            "images/export.png",
+            "images/gps-off.png",
+            "images/gps-on.png",
+            "images/import.png",
+            "images/info.svg",
+            "images/layers.png",
+            "images/north.png",
+            "images/pin_18.png",
+            "images/route.svg",
+            "images/warning.svg",
+            "js/webRotas.js",
+            "js/Callbacks.js",
+            "js/Communication.js",
+            "js/Components.js",
+            "js/DialogBox.js",
+            "js/Layout.js",
+            "js/Plot.js",
+            "js/Tooltip.js",
+            "js/Utils.js"
+        ];
+
+        for (const path of assets) {
+            try {
+                const response = await fetch(path);
+                const blob = await response.blob();
+                zip.file(path, blob);
+            } catch (ME) {
+                this.consoleLog(`Failed to fetch ${path}: ${ME.message}`, 'error');
+            }
+        }
+
+        const content = await zip.generateAsync({ type: "blob" });
+        
+        const link = window.document.createElement("a");
+        link.href = URL.createObjectURL(content);
+        link.download = "webRotas.zip";
+        link.target = "_blank";
+
+        window.document.body.appendChild(link);
+        link.click();
+        window.document.body.removeChild(link);
+
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+
+    /*---------------------------------------------------------------------------------*/
     const saveToFile = (fileType, filename, data, ...args) => {
-        const link = document.createElement('a', { download: filename });
+        const link = window.document.createElement('a');
+        link.download = filename;
+
         let revokeNeeded = false;
     
         switch (fileType) {
@@ -481,7 +548,8 @@
         consoleLog,
         uuid,
         hash,
-        getTimeStamp,        
+        getTimeStamp,
+        exportAsZip,
         saveToFile,
         resolvePushType,
         GeoLocation,

@@ -78,9 +78,14 @@ input:focus {
   box-shadow: none;
 }
 
-input.spinner-disabled::-webkit-inner-spin-button,
-input.spinner-disabled::-webkit-outer-spin-button {
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
 }
 
 button,
@@ -162,6 +167,23 @@ label.label-form-field {
 .text-list li.hover {
   background-color: var(--backgroundColor-selectedFocus);
   color: #fff;
+}
+
+/*-----------------------------------------------------------------------------------
+    ## CAMPO DE TEXTO ##
+-----------------------------------------------------------------------------------*/
+.text-area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  word-break: break-all;
+  -webkit-user-select: text;
+     -moz-user-select: text;
+          user-select: text;
+  padding: 5px;
+  text-align: justify;
+  border: 1px solid #ccc;
 }
 
 /*-----------------------------------------------------------------------------------
