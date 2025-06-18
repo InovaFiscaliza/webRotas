@@ -19,6 +19,7 @@ $z-indices: (
     toolbar: 400,
     document: 600,
     context-menu: 800,
+    colorbar: 800,
     tooltip: 800,
     modal: 1000
 );
@@ -256,6 +257,18 @@ label.label-form-field {
   color: #fff;
 }
 
+
+/*-----------------------------------------------------------------------------------
+    ## COLORBAR ##
+-----------------------------------------------------------------------------------*/
+.colorbar {
+    position: absolute;
+    bottom: 66px;
+    right: 0px;
+    width: 100px;
+    height: 500px;
+    z-index: map-get($z-indices, 'colorbar')
+}
 
 /*-----------------------------------------------------------------------------------
     ## OUTRAS COISAS AINDA NÃO REVISADAS ##

@@ -79,17 +79,53 @@
         }
 
         /*---------------------------------------------------------------------------------*/
-        static colorbar() {
-            const svgContainer = window.document.getElementById("colorbar");
-            if (!svgContainer) return;
-        
-            // Limpa o conteúdo anterior
-            svgContainer.innerHTML = "";
-            
-            // Insere o novo SVG
-            svgContainer.appendChild(generateScaleSVG(globalMinElevation, globalMaxElevation));
+        static createColorbar() {
+            let mainContainer = window.document.querySelector('.colorbar');
+            if (mainContainer) {
+                mainContainer.remove();
+            }
+
+            window.app.mapContext.settings.colorbar = (window.app.mapContext.settings.colorbar === "hidden") ? "visible" : "hidden";
+            if (window.app.mapContext.settings.colorbar === "hidden") {
+                return;
+            }
+
+            mainContainer = document.createElement("div");
+            mainContainer.className = "colorbar";
+
+            const svgContainer = document.createElement("div");
+            svgContainer.id = "svgContainer";
+            Object.assign(svgContainer.style, {
+                width: "100%",
+                height: "100%",
+                position: "absolute",
+                top: "0",
+                left: "0"
+            });
+
+            mainContainer.appendChild(svgContainer);
+            window.document.body.appendChild(mainContainer);
+
+            this.updateColorbar();
         }
 
+        /*---------------------------------------------------------------------------------*/
+        static createSvgElement(tagName, attributes = {}) {
+            const el = document.createElementNS("http://www.w3.org/2000/svg", tagName);
+            Object.entries(attributes).forEach(([k, v]) => el.setAttribute(k, v));
+            return el;
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static updateColorbar() {
+            const svgContainer = window.document.getElementById("svgContainer");
+            if (!svgContainer) return;
+            svgContainer.innerHTML = "";
+
+            const svg = window.app.modules.Utils.Image.colorbar();
+            svgContainer.appendChild(svg);
+        }
 
         /*-----------------------------------------------------------------------------------
             ## PAINEL À ESQUERDA DO MAPA ##
@@ -559,67 +595,54 @@
 
         /*---------------------------------------------------------------------------------*/
         static createBasemapSelector() {
-            let tooltip = document.querySelector('.tooltip');
-            if (tooltip) {
-                tooltip.remove();
-                tooltip = null;
-            }
+            const basemaps = window.app.mapContext.layers.basemap;
+            const currentBasemap = window.app.mapContext.settings.basemap;
 
-            let popup = document.querySelector('.basemap-popup');
+            let popup = window.document.querySelector('.basemap-popup');
+            if (popup) popup.remove();
 
-            if (popup) {
-                popup.remove();
-                popup = null;
-            } else {
-                const map = window.app.map;
-                const basemaps = window.L.dataSet.Basemap.items;
-        
-                popup = document.createElement('div');
-                popup.className = 'basemap-popup';
-        
-                Object.assign(popup.style, {
-                    position: 'fixed',
-                    right: '10px',
-                    bottom: '56px',
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    padding: '10px 10px 10px 5px',
-                    borderRadius: '3px',
-                    fontFamily: 'Helvetica, Arial, sans-serif',
-                    fontSize: '11px',
-                    color: '#333',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                    transition: 'opacity 0.2s ease',
+            popup = window.document.createElement('div');
+            popup.className = 'basemap-popup';
+    
+            Object.assign(popup.style, {
+                width: '100%',
+                height: '100%',
+                lineHeight: '1.5'
+            });
+    
+            // Rádios
+            Object.entries(basemaps).forEach(([key, layer]) => {
+                const label = window.document.createElement('label');
+                Object.assign(label.style, {
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
                 });
-        
-                // Rádios
-                const current = window.L.dataSet.Basemap.value;
-                Object.entries(basemaps).forEach(([key, layer]) => {
-                    const label = document.createElement('label');
-                    label.style.display = 'flex';
-                    label.style.alignItems = 'center';
-                    label.style.cursor = 'pointer';
-        
-                    const radio = document.createElement('input');
-                    radio.type = 'radio';
-                    radio.name = 'basemap';
-                    radio.value = key;
-                    radio.checked = (key === current);
-                    radio.style.marginRight = '5px';
-        
-                    radio.addEventListener('change', () => {
-                        const oldKey = window.L.dataSet.Basemap.value;
-                        map.removeLayer(basemaps[oldKey]);
-                        window.L.dataSet.Basemap.value = key;
-                        map.addLayer(basemaps[key]);
-                    });
-        
-                    label.appendChild(radio);
-                    label.appendChild(document.createTextNode(key));
-                    popup.appendChild(label);
-                });    
-                document.body.appendChild(popup);
-            }
+    
+                const radio = window.document.createElement('input');
+                Object.assign(radio, {
+                    type: 'radio',
+                    name: "basemap",
+                    value: key,
+                    checked: key === currentBasemap
+                });
+                radio.style.marginRight = '5px';
+    
+                radio.addEventListener('change', () => {
+                    const { map } = window.app;
+                    const oldKey  = window.app.mapContext.settings.basemap;
+                    map.removeLayer(basemaps[oldKey]);
+                    
+                    window.app.mapContext.settings.basemap = key;
+                    map.addLayer(layer);
+                });
+    
+                label.appendChild(radio);
+                label.appendChild(window.document.createTextNode(key));
+                popup.appendChild(label);
+            });
+
+            return popup;
         }
     }
 

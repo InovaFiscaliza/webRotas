@@ -472,6 +472,7 @@
                     }
     
                     new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'error', [], 800); 
+                    new DialogBox('Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...  Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...', '', [{ text: 'OK', callback: () => console.log('OK'), focus: true }, { text: 'Cancel', callback: () => console.error('Cancel'), focus: false }]);
 
                     /*
                     window.app.mapContext.settings.orientation.status = !window.app.mapContext.settings.orientation.status;
@@ -495,16 +496,12 @@
                     break;
 
                 case 'toolbarColorbarBtn':
-                    // ...
-                    new DialogBox('Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...  Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...', '', [{ text: 'OK', callback: () => console.log('OK'), focus: true }, { text: 'Cancel', callback: () => console.error('Cancel'), focus: false }]) 
+                    window.app.modules.Components.createColorbar();
                     break;
 
                 case 'toolbarBasemapsBtn':
-                    const routeList     = window.document.getElementById('routeList');
-                    const routeSelected = Array.from(routeList.children).find(item => item.classList.contains('selected'));
-                    const routeInfo  = window.app.analysisContext.routeList[routeIndex];
-
-                    window.app.modules.Plot.setView('zoom', [...routeInfo.waypoints, routeInfo.origin]);
+                    const radioButtonGroup = window.app.modules.Components.createBasemapSelector();
+                    new DialogBox(radioButtonGroup, 'question', []);
                     break;
 
                 default:

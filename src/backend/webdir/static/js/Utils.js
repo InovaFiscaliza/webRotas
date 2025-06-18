@@ -6,12 +6,16 @@
       ├── uuid
       ├── hash
       ├── getTimeStamp
+      ├── exportAsZip
       ├── saveToFile
+      ├── resolvePushType
       ├── GeoLocation (class)
       │   ├── startLocationTracking
       │   ├── stopLocationTracking
       │   ├── stopLocationTracking
       │   └── routeMidPoint
+      ├── Elevation
+      │   └── range
       └── Image (class)
           ├── parulaColormap
           ├── customPinIcon
@@ -392,35 +396,33 @@
             });
         }
 
-
         /*---------------------------------------------------------------------------------*/
         static colorbar() {
             let minValue, maxValue, step;
 
-            minValue = window.app.mapContext.colormap.range.min;
-            maxValue = window.app.mapContext.colormap.range.max;
+            minValue = window.app.mapContext.settings.colormap.range.min;
+            maxValue = window.app.mapContext.settings.colormap.range.max;
             if (maxValue === minValue) {
                 maxValue++;
             }
+            step = (maxValue - minValue) / 7;
 
-            step = (maxValue - minValue) / 15;
-            
-            // Criando o elemento SVG diretamente via JavaScript
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("viewBox", "0 0 100 1000");
-            svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-            svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-            svg.style.width = "100%"; // Garante que ele ocupa todo o espaço do container
-            svg.style.height = "100%";
+            const svg = window.app.modules.Components.createSvgElement("svg", {
+                viewBox: "0 0 100 1000",
+                preserveAspectRatio: "xMidYMid meet",
+                xmlns: "http://www.w3.org/2000/svg"
+            });
+            Object.assign(svg.style, {
+                width: "100%",
+                height: "100%"
+            });
         
             // Criando o gradiente
-            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-            const linearGradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-            linearGradient.setAttribute("id", "grad");
-            linearGradient.setAttribute("x1", "0");
-            linearGradient.setAttribute("y1", "1");
-            linearGradient.setAttribute("x2", "0");
-            linearGradient.setAttribute("y2", "0");
+            const defs = window.app.modules.Components.createSvgElement("defs");
+            const linearGradient = window.app.modules.Components.createSvgElement("linearGradient", {
+                id: "grad",
+                x1: "0", y1: "1", x2: "0", y2: "0"
+            });
         
             // Cores do gradiente
             let colors = [];
@@ -431,62 +433,50 @@
 
             // Criando os "stops" no gradiente
             colors.forEach((color, index) => {
-                const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-                stop.setAttribute("offset", `${index * (100 / (colors.length - 1))}%`); // Percentual de cada cor no gradiente
-                stop.setAttribute("style", `stop-color:${color}; stop-opacity:1`);
+                const stop = window.app.modules.Components.createSvgElement("stop", {
+                    offset: `${index * (100 / (colors.length - 1))}%`,
+                    style: `stop-color:${color}; stop-opacity:1`
+                });
                 linearGradient.appendChild(stop);
-            });
-        
+            });        
         
             defs.appendChild(linearGradient);
             svg.appendChild(defs);
         
             // Criando o fundo branco
-            const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            background.setAttribute("x", "0");
-            background.setAttribute("y", "0");
-            background.setAttribute("width", "120");
-            background.setAttribute("height", "1000");
-            background.setAttribute("rx", "10");
-            background.setAttribute("ry", "10");
-            background.setAttribute("fill", "white");
-            background.setAttribute("fill-opacity", "0.8");
+            const background = window.app.modules.Components.createSvgElement("rect", {
+                x: "0", y: "0", width: "120", height: "1000",
+                rx: "10", ry: "10", fill: "white", "fill-opacity": "0.8"
+            });
             svg.appendChild(background);
         
             // Criando o retângulo de escala com gradiente
-            const scaleRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            scaleRect.setAttribute("x", "5");
-            scaleRect.setAttribute("y", "5");
-            scaleRect.setAttribute("width", "45");
-            scaleRect.setAttribute("height", "990");
-            scaleRect.setAttribute("rx", "10");
-            scaleRect.setAttribute("ry", "10");
-            scaleRect.setAttribute("fill", "url(#grad)");
+            const scaleRect = window.app.modules.Components.createSvgElement("rect", {
+                x: "5", y: "5", width: "45", height: "990",
+                rx: "10", ry: "10", fill: "url(#grad)"
+            });
             svg.appendChild(scaleRect);
         
             // Criando as marcações e os textos da escala
-            for (let ii = 0; ii < 16; ii++) {
-                const y = 985 - (ii * 969) / 15;
+            for (let ii = 0; ii < 8; ii++) {
+                const y = 985 - (ii * 969) / 7;
                 const value = (minValue + ii * step).toFixed(1);
-        
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", "5");
-                line.setAttribute("x2", "50");
-                line.setAttribute("y1", y);
-                line.setAttribute("y2", y);
-                line.setAttribute("stroke", "white");
-                line.setAttribute("stroke-opacity", "0.3");
-                line.setAttribute("stroke-width", "2");
+
+                const line = window.app.modules.Components.createSvgElement("line", {
+                    x1: "5", x2: "50", y1: y, y2: y,
+                    stroke: "white", "stroke-opacity": "0.3", "stroke-width": "2"
+                });
                 svg.appendChild(line);
-        
-                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", "114");
-                text.setAttribute("y", y + 7);
-                text.setAttribute("font-family", "sans-serif");
-                text.setAttribute("font-size", "19");
-                text.setAttribute("fill", "black");
-                text.setAttribute("text-anchor", "end");
+
+                const text = window.app.modules.Components.createSvgElement("text", {
+                    x: "114", y: y + 7,
+                    "font-family": "sans-serif",
+                    "font-size": "19",
+                    fill: "black",
+                    "text-anchor": "end"
+                });
                 text.textContent = `${Math.round(value)}m`;
+                text.style.userSelect = "none";
                 svg.appendChild(text);
             }
         

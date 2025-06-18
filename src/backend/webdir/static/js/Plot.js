@@ -38,6 +38,7 @@
                     route = routing.response.routes[index2];
             
                     window.app.mapContext.settings.colormap.range = window.app.modules.Utils.Elevation.range(route);
+                    window.app.modules.Components.updateColorbar();
                   //window.app.modules.Utils.GeoLocation.routeMidPoint(route);
 
                     this.controller('clearAll');
@@ -68,6 +69,7 @@
                     route = routing.response.routes[index2];
 
                     window.app.mapContext.settings.colormap.range = window.app.modules.Utils.Elevation.range(route);
+                    window.app.modules.Components.updateColorbar();
                   //window.app.modules.Utils.GeoLocation.routeMidPoint(route);
 
                     this.controller('clearForUpdate');
