@@ -915,8 +915,6 @@ def VerificarServidorAtivo(url, reposta, tentativas=10, intervalo=1):
     return False
 
 
-################################################################################
-
 
 ################################################################################
 def DesenhaRegioes(RouteDetail, regioes):
@@ -932,22 +930,23 @@ def DesenhaRegioes(RouteDetail, regioes):
         else:
             RegiaoExclusão = False
 
-        RouteDetail.mapcode += f"    regiao{nome} = [\n"
+        RouteDetail.append_mapcode(f"    regiao{nome} = [")
         coordenadas = regiao.get("coord", [])
         wLog(f"  Região: {nome}", level="debug")
         i = 0
         for coord in coordenadas:
             latitude, longitude = coord
             if i == len(coordenadas) - 1:  # Verifica se é o último elemento
-                RouteDetail.mapcode += f"       [{latitude}, {longitude}]\n"
+                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}]")
             else:
-                RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
+                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}],")
+
             i = i + 1
-        RouteDetail.mapcode += f"    ];\n"
+        RouteDetail.append_mapcode(f"    ];")
         if RegiaoExclusão:
-            RouteDetail.mapcode += f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'red',fillColor: 'lightred',fillOpacity: 0.2, weight: 1}}).addTo(map);\n"
+            RouteDetail.append_mapcode(f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'red',fillColor: 'lightred',fillOpacity: 0.2, weight: 1}}).addTo(map);")
         else:
-            RouteDetail.mapcode += f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
+            RouteDetail.append_mapcode(f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);")
     return RouteDetail
 
 
