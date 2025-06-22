@@ -1280,12 +1280,9 @@ def RouteCompAbrangencia(
     wLog("Desenhando Comunidades, Areas Urbanizadas e Município:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
     RouteDetail.mapcode += "    const TipoRoute = 'CompAbrangencia';\n"
-
+    
     polylinesComunidades = get_polyline_comunities(regioes)
-    RouteDetail = DesenhaComunidades(
-        RouteDetail, polylinesComunidades
-    )  # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
-    # cWrJsOut.DesenhaComunidades(polylinesComunidades)
+    RouteDetail.DesenhaComunidades(polylinesComunidades)
 
     RouteDetail = DesenhaMunicipioAreasUrbanizadas(
         RouteDetail, cidade, polMunicipioAreasUrbanizadas
@@ -1800,13 +1797,10 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
 
     wLog("Desenhando Comunidades:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
-    RouteDetail.mapcode += f"    const TipoRoute = 'PontosVisita';\n"
+    RouteDetail.append_mapcode(f"    const TipoRoute = 'PontosVisita';")
 
     polylinesComunidades = get_polyline_comunities(regioes)
-    RouteDetail = DesenhaComunidades(
-        RouteDetail, polylinesComunidades
-    )  # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
-    # cWrJsOut.DesenhaComunidades(polylinesComunidades)
+    RouteDetail.DesenhaComunidades(polylinesComunidades)
 
     # Processa Pontos de Visita
     wLog(f"Ordenando e processando Pontos de Visita: ")
@@ -1816,8 +1810,6 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     RouteDetail = DesenhaRegioes(RouteDetail, regioes)
     RouteDetail.GeraMapPolylineCaminho()
 
-    # servidor temp     python3 -m http.server 8080
-    #
     fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "PontosVisita")
     return fileMap, fileNameStatic, fileKml
 
@@ -1926,8 +1918,7 @@ def RouteContorno(
 
     RouteDetail.append_mapcode(f"    const TipoRoute = 'DriveTest';\n")
 
-    polylinesComunidades = get_polyline_comunities(regioes)
-    # RouteDetail = DesenhaComunidades(RouteDetail, polylinesComunidades) # RouteDetail = DesenhaComunidades(RouteDetail, regioes)
+    polylinesComunidades = get_polyline_comunities(regioes)  
     RouteDetail.DesenhaComunidades(polylinesComunidades)
 
     # Criar um mapa centrado no ponto central
