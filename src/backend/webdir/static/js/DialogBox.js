@@ -49,7 +49,16 @@ class DialogBox {
         `;
 
         this.handle.querySelector(".dialog-box-popup-close-btn").onclick = () => this.close();
-        this.handle.querySelector(".dialog-box-popup-text").innerHTML = dialogContent;
+        
+        let container = this.handle.querySelector(".dialog-box-popup-text");
+        if (typeof dialogContent === 'string') {
+            container.innerHTML = dialogContent;
+        } else if (dialogContent instanceof HTMLElement) {
+            container.appendChild(dialogContent);
+        } else {
+            return;
+        }
+        
         this.handle.querySelector(".dialog-box-popup-icon").src = Object.keys(DialogBox.icon).includes(dialogType) ? DialogBox.icon[dialogType] : DialogBox.icon.info;
         this.makeDraggable()
 
