@@ -956,16 +956,21 @@ def DesenhaMunicipio(RouteDetail, nome, polMunicipio):
     nome = wl.SubstAcentos(nome).replace(" ", "_")
     for poligons in polMunicipio:
         i = 0
-        RouteDetail.mapcode += f"    municipio{nome}Pol{indPol} = [\n"
+        # RouteDetail.mapcode += f"    municipio{nome}Pol{indPol} = [\n"
+        RouteDetail.append_mapcode(f"    municipio{nome}Pol{indPol} = [")
+        
         for coordenada in poligons:
             # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
             longitude, latitude = coordenada
             if i == len(poligons) - 1:  # Verifica se é o último elemento
-                RouteDetail.mapcode += f"       [{latitude}, {longitude}]]\n"
+                # RouteDetail.mapcode += f"       [{latitude}, {longitude}]]\n"
+                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}]]")
             else:
-                RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
+                # RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
+                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}],")
             i = i + 1
-        RouteDetail.mapcode += f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
+        # RouteDetail.mapcode += f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
+        RouteDetail.append_mapcode(f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);")
         indPol = indPol + 1
     return RouteDetail
 
@@ -976,16 +981,20 @@ def DesenhaMunicipioAreasUrbanizadas(RouteDetail, nome, polMunicipioAreas):
     nome = wl.SubstAcentos(nome).replace(" ", "_")
     for poligons in polMunicipioAreas:
         i = 0
-        RouteDetail.mapcode += f"    municipioAreasUrbanizadas{nome}Pol{indPol} = [\n"
+        # RouteDetail.mapcode += f"    municipioAreasUrbanizadas{nome}Pol{indPol} = [\n"
+        RouteDetail.append_mapcode(f"    municipioAreasUrbanizadas{nome}Pol{indPol} = [")
         for coordenada in poligons:
             # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
             longitude, latitude = coordenada
             if i == len(poligons) - 1:  # Verifica se é o último elemento
-                RouteDetail.mapcode += f"       [{latitude}, {longitude}]]\n"
+                # RouteDetail.mapcode += f"       [{latitude}, {longitude}]]\n"
+                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}]]")
             else:
-                RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
+                # RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
+                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}],")
             i = i + 1
-        RouteDetail.mapcode += f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);\n"
+        # RouteDetail.mapcode += f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);\n"
+        RouteDetail.append_mapcode(f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);")
         indPol = indPol + 1
     return RouteDetail
 
@@ -1074,9 +1083,14 @@ def GeneratePointsWithinCity(city_boundary: list, regioes: list, distance: int) 
 ################################################################################
 def ServerSetupJavaScript(RouteDetail):
     if ServerTec == "OSMR":
-        RouteDetail.mapcode += f"    const ServerTec = 'OSMR';\n"
-        RouteDetail.mapcode += f"    const UserName = '{UserData.nome}';\n"
-        RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
+        # RouteDetail.mapcode += f"    const ServerTec = 'OSMR';\n"
+        # RouteDetail.mapcode += f"    const UserName = '{UserData.nome}';\n"
+        # RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
+        
+        RouteDetail.append_mapcode(f"    const ServerTec = 'OSMR';")
+        RouteDetail.append_mapcode(f"    const UserName = '{UserData.nome}';") 
+        RouteDetail.append_mapcode(f"    const OSRMPort = {UserData.OSMRport};")    
+        
     return RouteDetail
 
 
@@ -1127,7 +1141,7 @@ def get_polyline_comunities(regioes):
 
 ################################################################################
 # polylinesComunidades = get_polyline_comunities(regioes)
-def DesenhaComunidades(RouteDetail, polylinesComunidades):
+def DesenhaComunidadesOLD(RouteDetail, polylinesComunidades):
 
     RouteDetail.mapcode += f"listComunidades = [\n"
     indPol = 0
@@ -1278,7 +1292,8 @@ def RouteCompAbrangencia(
 
     wLog("Desenhando Comunidades, Areas Urbanizadas e Município:")
     RouteDetail = ServerSetupJavaScript(RouteDetail)
-    RouteDetail.mapcode += "    const TipoRoute = 'CompAbrangencia';\n"
+
+    RouteDetail.append_mapcode("    const TipoRoute = 'CompAbrangencia';")
     
     polylinesComunidades = get_polyline_comunities(regioes)
     RouteDetail.DesenhaComunidades(polylinesComunidades)
