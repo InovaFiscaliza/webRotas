@@ -414,7 +414,7 @@ def keep_last_n_containers_running(numcontainersmax=5):
     for container_id in running_ids:
         if container_id not in ids_to_keep:
             wr.wLog(f"Parando contêiner antigo: {container_id}")
-            subprocess.run(["podman", "stop", container_id])
+            subprocess.run(["podman", "stop", container_id],stdout=subprocess.DEVNULL)
 
 ################################################################################
 def StopOldContainers(days=30):
