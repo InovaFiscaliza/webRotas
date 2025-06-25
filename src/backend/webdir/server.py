@@ -261,7 +261,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
     :return: Tupla com a resposta da requisição e o código HTTP.
     """
     with app.app_context():
-        rsi.keep_last_n_containers_running(numcontainersmax=3)
+        rsi.keep_last_n_containers_running()
         try:
             request_type = data["TipoRequisicao"]
         except KeyError as e:

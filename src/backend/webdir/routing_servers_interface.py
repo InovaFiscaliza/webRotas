@@ -48,6 +48,7 @@ import requests
 import socket
 import glob
 from pathlib import Path
+import json
 
 import webRota as wr
 import project_folders as pf
@@ -58,6 +59,7 @@ import GuiOutput as gi
 
 import wlog as wl
 
+CONFIG_FILE = pf.PROJECT_PATH / "src" / "backend" / "webdir" / "containers_config.json"
 
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
@@ -88,9 +90,6 @@ def FindFreePort(start_port=50000, max_port=65535):
 
 
 ################################################################################
-import os
-import shutil
-
 
 def remover_diretorio(filtro: str) -> bool:
     """
@@ -377,11 +376,26 @@ def get_containers():
     return containers
 
 ################################################################################
-def keep_last_n_containers_running(numcontainersmax=5):
+
+def load_config_numcontainers():
     """
-    Mantém apenas os 5 contêineres mais recentemente criados em execução.
-    Os demais serão parados se estiverem em execução.
+    Carrega o número máximo de contêineres permitidos em execução a partir do arquivo JSON.
+    Retorna 5 se não conseguir carregar.
     """
+    try:
+        with open(CONFIG_FILE, "r") as f:
+            config = json.load(f)
+            return int(config.get("numcontainersmax", 5))
+    except Exception as e:
+        wr.wLog(f"Erro ao carregar {CONFIG_FILE}: {e}")
+        return 4
+
+################################################################################
+def keep_last_n_containers_running():
+    """
+    Mantém apenas os contêineres mais recentes definidos no JSON em execução.
+    """
+    num_max = load_config_numcontainers()
     containers = get_containers()
     now = datetime.datetime.now()
 
@@ -390,19 +404,14 @@ def keep_last_n_containers_running(numcontainersmax=5):
             cleaned = " ".join(created_at.split()[:2])[:26]
             return datetime.datetime.strptime(cleaned, "%Y-%m-%d %H:%M:%S.%f")
         except ValueError:
-            return now  # Se não conseguir interpretar, trata como agora (evita parada indevida)
+            return now  # Se falhar, assume como se fosse "agora"
 
-    # Ordena os contêineres pela data de criação (mais recentes primeiro)
     containers_sorted = sorted(
-        containers,
-        key=lambda c: parse_created_time(c[1]),
-        reverse=True
+        containers, key=lambda c: parse_created_time(c[1]), reverse=True
     )
 
-    # Mantém os n primeiros, para os demais verifica se estão em execução
-    ids_to_keep = {container_id for container_id, _ in containers_sorted[:numcontainersmax-1]}
+    ids_to_keep = {c[0] for c in containers_sorted[:num_max-1]}
 
-    # Lista contêineres em execução
     result = subprocess.run(
         ["podman", "ps", "--format", "{{.ID}}"],
         capture_output=True,
@@ -410,12 +419,14 @@ def keep_last_n_containers_running(numcontainersmax=5):
     )
     running_ids = set(result.stdout.strip().splitlines())
 
-    # Para todos que não estão nos 5 mais recentes
     for container_id in running_ids:
         if container_id not in ids_to_keep:
-            wr.wLog(f"Parando contêiner antigo: {container_id}")
-            subprocess.run(["podman", "stop", container_id],stdout=subprocess.DEVNULL)
-
+            wr.wLog(f"Parando contêiner: {container_id}")
+            subprocess.run(
+                ["podman", "stop", container_id],
+                stdout=subprocess.DEVNULL
+            )
+            
 ################################################################################
 def StopOldContainers(days=30):
     """
