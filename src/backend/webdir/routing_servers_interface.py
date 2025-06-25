@@ -172,6 +172,7 @@ def init_and_load_podman_images():
         stdout=open(logok, "a"),
         stderr=subprocess.STDOUT,
     )
+    
 
 
 ################################################################################
@@ -375,6 +376,45 @@ def get_containers():
         containers.append((container_id, created_at))
     return containers
 
+################################################################################
+def keep_last_n_containers_running(numcontainersmax=5):
+    """
+    Mantém apenas os 5 contêineres mais recentemente criados em execução.
+    Os demais serão parados se estiverem em execução.
+    """
+    containers = get_containers()
+    now = datetime.datetime.now()
+
+    def parse_created_time(created_at):
+        try:
+            cleaned = " ".join(created_at.split()[:2])[:26]
+            return datetime.datetime.strptime(cleaned, "%Y-%m-%d %H:%M:%S.%f")
+        except ValueError:
+            return now  # Se não conseguir interpretar, trata como agora (evita parada indevida)
+
+    # Ordena os contêineres pela data de criação (mais recentes primeiro)
+    containers_sorted = sorted(
+        containers,
+        key=lambda c: parse_created_time(c[1]),
+        reverse=True
+    )
+
+    # Mantém os 5 primeiros, para os demais verifica se estão em execução
+    ids_to_keep = {container_id for container_id, _ in containers_sorted[:numcontainersmax]}
+
+    # Lista contêineres em execução
+    result = subprocess.run(
+        ["podman", "ps", "--format", "{{.ID}}"],
+        capture_output=True,
+        text=True,
+    )
+    running_ids = set(result.stdout.strip().splitlines())
+
+    # Para todos que não estão nos 5 mais recentes
+    for container_id in running_ids:
+        if container_id not in ids_to_keep:
+            wr.wLog(f"Parando contêiner antigo: {container_id}")
+            subprocess.run(["podman", "stop", container_id])
 
 ################################################################################
 def StopOldContainers(days=30):
