@@ -399,8 +399,8 @@ def keep_last_n_containers_running(numcontainersmax=5):
         reverse=True
     )
 
-    # Mantém os 5 primeiros, para os demais verifica se estão em execução
-    ids_to_keep = {container_id for container_id, _ in containers_sorted[:numcontainersmax]}
+    # Mantém os n primeiros, para os demais verifica se estão em execução
+    ids_to_keep = {container_id for container_id, _ in containers_sorted[:numcontainersmax-1]}
 
     # Lista contêineres em execução
     result = subprocess.run(
