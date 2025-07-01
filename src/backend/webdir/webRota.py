@@ -318,13 +318,10 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     else:
         # Estou aqui 
         wLog(f"Erro na solicitação: {data}", level="debug")
-        find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
+        cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
       
     cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
     return response
-###########################################################################################################################
-def find_server_for_this_route(start_lat, start_lon, end_lat, end_lon):
-    return
 ###########################################################################################################################
 def GenerateRouteMap(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon):
     if ServerTec == "OSMR":

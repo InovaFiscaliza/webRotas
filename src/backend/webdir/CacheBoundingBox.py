@@ -305,19 +305,6 @@ class CacheBoundingBox:
         except Exception as e:
             print(f"[ERRO] Falha ao salvar route_cache para '{chave}': {e}")
 
-    def salvar_route_cache_individualOLD(self):
-        """
-        Salva cada entrada do self.route_cache em um arquivo .bin.gz (Gzip + Pickle)
-        dentro do diretório correspondente definido em self.cache.
-        Antes de salvar, renomeia o arquivo antigo para route_cache.old.gz, se existir.
-        """
-        if self.ultimaregiao != None:
-            chave = self._hash_bbox(self.ultimaregiao)
-            dados = self.cache[chave]
-            self.salvar_route_cache_item(chave, dados)
-            return
-        for chave, dados in self.cache.items():
-            self.salvar_route_cache_item(chave, dados)
 
     def salvar_route_cache_individual(self):
         """
@@ -344,8 +331,6 @@ class CacheBoundingBox:
             except Exception as e:
                 # wr.wLog(f"[ERRO] Falha ao salvar item do cache chave='{chave}': {e}", level="error")
                 pass
-
-
 
 
     def carregar_route_cache_individual(self):
@@ -597,6 +582,9 @@ class CacheBoundingBox:
             zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
         os.remove(xlsx_path)
 
+    def find_server_for_this_route(self,start_lat, start_lon, end_lat, end_lon):
+        
+        return
 
 # ---------------------------------------------------------------------------------------------------------------
 
