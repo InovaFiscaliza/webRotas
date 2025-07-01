@@ -314,13 +314,16 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     data = response.json()
     # Verificar se a solicitação foi bem-sucedida
     if response.status_code == 200 and "routes" in data:
-       pass 
-    # fazer o cache da solicitação
-    cb.cCacheBoundingBox.route_cache_set(
-        start_lat, start_lon, end_lat, end_lon, response
-    )
+        # fazer o cache da solicitação
+        cb.cCacheBoundingBox.route_cache_set(
+            start_lat, start_lon, end_lat, end_lon, response
+        )
+        return response
+    else:
+        # Estou aqui 
+        wLog(f"Erro na solicitação: {data}", level="debug")
+        
     return response
-
 
 ###########################################################################################################################
 def GenerateRouteMap(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon):
