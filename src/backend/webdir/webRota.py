@@ -306,10 +306,15 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     if ServerTec == "OSMR":
         # URL da solicitação ao servidor OSMR
         url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{start_coords[1]},{start_coords[0]};{end_coords[1]},{end_coords[0]}?overview=full&geometries=polyline&steps=true"
-
+    
     wLog(url, level="debug")
     # Fazer a solicitação
     response = requests.get(url)
+    
+    data = response.json()
+    # Verificar se a solicitação foi bem-sucedida
+    if response.status_code == 200 and "routes" in data:
+       pass 
     # fazer o cache da solicitação
     cb.cCacheBoundingBox.route_cache_set(
         start_lat, start_lon, end_lat, end_lon, response
