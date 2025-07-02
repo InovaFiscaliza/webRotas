@@ -583,9 +583,12 @@ class CacheBoundingBox:
         os.remove(xlsx_path)
 
     def find_server_for_this_route(self,start_lat, start_lon, end_lat, end_lon):
+         
+        return
+    
+    def list_servers_online(self):
         
         return
-
 # ---------------------------------------------------------------------------------------------------------------
 
 # Instância global
