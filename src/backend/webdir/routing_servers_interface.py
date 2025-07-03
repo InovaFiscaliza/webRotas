@@ -345,7 +345,7 @@ def manutencao_arquivos_antigos():
 
 
 ################################################################################
-def get_containers():
+def get_containersOLD():
     """
     Obtém a lista de contêineres, incluindo o ID e a data de criação.
     Retorna uma lista de tuplas (container_id, created_at).
@@ -373,6 +373,39 @@ def get_containers():
         containers.append((container_id, created_at))
     return containers
 
+################################################################################
+def get_containers():
+    """
+    Obtém a lista de contêineres cujo nome começa com 'osmr_', incluindo o ID e a data de criação.
+    Retorna uma lista de tuplas (container_id, created_at).
+    """
+
+    subprocess.run(
+        ["podman", "machine", "start"],
+        capture_output=True,
+        text=True,
+    )
+
+    # Inclui o nome do contêiner no formato
+    result = subprocess.run(
+        ["podman", "ps", "-a", "--format", "{{.ID}} {{.CreatedAt}} {{.Names}}"],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        wr.wLog("Erro ao listar contêineres")
+        return []
+
+    containers = []
+    for line in result.stdout.strip().splitlines():
+        parts = line.split(maxsplit=2)
+        if len(parts) == 3:
+            container_id, created_at, name = parts
+            if name.startswith("osmr_"):
+                containers.append((container_id, created_at))
+
+    return containers
 ################################################################################
 
 def load_config_numcontainers():
