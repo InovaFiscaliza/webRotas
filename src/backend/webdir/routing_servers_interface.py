@@ -441,7 +441,7 @@ def keep_last_n_containers_running():
         containers, key=lambda c: parse_created_time(c[1]), reverse=True
     )
 
-    ids_to_keep = {c[0] for c in containers_sorted[:num_max-1]}
+    ids_to_keep = {c[0] for c in containers_sorted[:num_max]}
 
     result = subprocess.run(
         ["podman", "ps", "--format", "{{.ID}}"],
