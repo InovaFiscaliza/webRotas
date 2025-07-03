@@ -235,14 +235,12 @@ def AtivaServidorOSMR(regioes):
     # startserver filtro 8001 osmr_server8001
     chave = cb.cCacheBoundingBox.chave(regioes)
     wr.UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
-    wr.wLog(
-        f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}", level="debug"
-    )
+    wr.wLog(f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}", level="debug")
     log_filename = wl.get_log_filename()
     logok_osmr = f"{log_filename}.{wr.UserData.nome}.OSMR"
     wr.wLog(f"Ativando Servidor OSMR", level="info")
     subprocess.run(
-        ["podman", "stop", f"osmr_{wr.UserData.nome}"],
+        ["podman", "stop", f"osmr_{wr.UserData.nome}_{chave}"],
         stdout=open(logok_osmr, "a"),
         stderr=subprocess.STDOUT,
     )
@@ -252,7 +250,7 @@ def AtivaServidorOSMR(regioes):
     port_map = f"{wr.UserData.OSMRport}:5000"
     log_file = open(logok_osmr, "a")
 
-    comando = f"""podman run --rm --name osmr_{wr.UserData.nome} -m 32g -t -i \
+    comando = f"""podman run --rm --name osmr_{wr.UserData.nome}_{chave} -m 32g -t -i \
     -p {port_map} \
     -v "{volume_host}:{volume_container}" \
     localhost/osmr_webrota osrm-routed --algorithm mld {volume_container}/filtro-latest.osm.pbf"""
@@ -271,7 +269,7 @@ def GerarIndicesExecutarOSRMServer(regioes):
     DIRETORIO_REGIAO = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
     DIRETORIO_REGIAO_CONTAINER = f"filtro_{chave}"
     subprocess.run(
-        ["podman", "stop", f"osmr_{chave}"],
+        ["podman", "stop", f"osmr_{wr.UserData.nome}_{chave}"],
         stdout=open(logok, "a"),
         stderr=subprocess.STDOUT,
     )
@@ -658,7 +656,8 @@ def parar_containers_osmr(nome_usuario):
         linhas = podman_ps.stdout.strip().splitlines()
         for linha in linhas:
             container_id, container_name = linha.strip().split(maxsplit=1)
-            if container_name == f"osmr_{nome_usuario}":
+            # if container_name == f"osmr_{nome_usuario}":
+            if container_name.startswith(f"osmr_{nome_usuario}_"):    
                 subprocess.run(
                     ["podman", "stop", container_id],
                     stdout=subprocess.DEVNULL,
