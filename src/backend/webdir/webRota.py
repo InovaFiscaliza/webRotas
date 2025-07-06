@@ -289,6 +289,10 @@ ServerTec = "OSMR"
 def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
 
     # Tenta buscar do cache
+    cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
+    
+    
+    
     cached_response = cb.cCacheBoundingBox.route_cache_get(
         start_lat, start_lon, end_lat, end_lon
     )
@@ -318,8 +322,12 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     else:
         # Estou aqui 
         wLog(f"Erro na solicitação: {data}", level="debug")
-        cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
-      
+        # cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
+        
+        cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
+        
+        
+        
     cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
     return response
 ###########################################################################################################################
@@ -1147,50 +1155,6 @@ def get_polyline_comunities(regioes):
 ################################################################################
 # polylinesComunidades = get_polyline_comunities(regioes)
 def DesenhaComunidadesOLD(RouteDetail, polylinesComunidades):
-
-    RouteDetail.mapcode += f"listComunidades = [\n"
-    indPol = 0
-    for polyline in polylinesComunidades:
-        i = 0
-        RouteDetail.mapcode += f"[\n"
-        for coordenada in polyline:
-            # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
-            lat, lon = coordenada
-            if i == len(polyline) - 1:  # Verifica se é o último elemento
-                RouteDetail.mapcode += f"[{lat}, {lon}]\n"
-            else:
-                RouteDetail.mapcode += f"[{lat}, {lon}],"
-            i = i + 1
-        if indPol == len(polylinesComunidades) - 1:  # Verifica se é o último elemento
-            RouteDetail.mapcode += f"]\n"
-        else:
-            RouteDetail.mapcode += f"],\n"
-        indPol = indPol + 1
-    RouteDetail.mapcode += f"];\n"
-
-    RouteDetail.mapcode += f"let polyComunidades = [];"
-    i = 0
-    for polyline in polylinesComunidades:
-        RouteDetail.mapcode += f"polyTmp = L.polygon(listComunidades[{i}], {{ color: 'rgb(102,0,204)',fillColor: 'rgb(102,0,204)',fillOpacity: 0.3, weight: 1}}).addTo(map);\n"
-        RouteDetail.mapcode += f"polyComunidades.push(polyTmp);\n"
-        i = i + 1
-    return RouteDetail
-
-
-################################################################################
-
-
-def DesenhaComunidadesOLD(RouteDetail, regioes):
-    bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
-
-    polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
-    if not polylinesComunidades:
-        polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
-        cb.cCacheBoundingBox.comunidades_cache.add_polyline(
-            regioes, polylinesComunidades
-        )
-
-    gi.cGuiOutput.json_comunities_create(polylinesComunidades)
 
     RouteDetail.mapcode += f"listComunidades = [\n"
     indPol = 0

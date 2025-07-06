@@ -582,11 +582,31 @@ class CacheBoundingBox:
             zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
         os.remove(xlsx_path)
 
-    def find_server_for_this_route(self,start_lat, start_lon, end_lat, end_lon):
-        # estou aqui
-        for dados in self.cache.items():
-            dados.get("regiao", "")
-        return
+    def find_server_for_this_route(self, start_lat, start_lon, end_lat, end_lon):
+        """
+        Verifica se ambos os pontos estão dentro do bounding box de alguma região no cache.
+        Retorna a primeira região correspondente, ou None se nenhuma região contiver os dois pontos.
+        """
+        for dados in self.cache.values():
+            locregiao = dados.get("regiao", "")
+            box = dados.get("bounding_box", [])
+
+            if len(box) != 4:
+                continue  # Ignora caixas malformadas
+
+            # Extrai os extremos da bounding box
+            latitudes = [coord[0] for coord in box]
+            longitudes = [coord[1] for coord in box]
+            lat_min, lat_max = min(latitudes), max(latitudes)
+            lon_min, lon_max = min(longitudes), max(longitudes)
+
+            # Verifica se os dois pontos estão dentro da caixa
+            if (lat_min <= start_lat <= lat_max and lon_min <= start_lon <= lon_max and
+                lat_min <= end_lat <= lat_max and lon_min <= end_lon <= lon_max):
+                return locregiao  # Ou retornar `dados` inteiro, se desejar
+
+        return None  # Nenhuma região encontrada
+
     
     def list_servers_online(self):
         
