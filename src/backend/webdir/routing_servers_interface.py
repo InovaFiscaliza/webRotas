@@ -386,9 +386,9 @@ def get_containers():
         text=True,
     )
 
-    # Inclui o nome do contêiner no formato
+    # Usa delimitador claro entre os campos para evitar problemas com espaços
     result = subprocess.run(
-        ["podman", "ps", "-a", "--format", "{{.ID}} {{.CreatedAt}} {{.Names}}"],
+        ["podman", "ps", "-a", "--format", "{{.ID}}||{{.CreatedAt}}||{{.Names}}"],
         capture_output=True,
         text=True,
     )
@@ -396,16 +396,19 @@ def get_containers():
     if result.returncode != 0:
         wr.wLog("Erro ao listar contêineres")
         return []
-
+    
+    wr.wLog(f"Saída podman:\n{result.stdout}")
+    
     containers = []
     for line in result.stdout.strip().splitlines():
-        parts = line.split(maxsplit=2)
+        parts = line.split("||")
         if len(parts) == 3:
-            container_id, created_at, name = parts
+            container_id, created_at, name = [p.strip() for p in parts]
             if name.startswith("osmr_"):
                 containers.append((container_id, created_at))
 
     return containers
+
 ################################################################################
 
 def load_config_numcontainers():
@@ -452,7 +455,7 @@ def keep_last_n_containers_running():
 
     for container_id in running_ids:
         if container_id not in ids_to_keep:
-            wr.wLog(f"Parando contêiner: {container_id}")
+            wr.wLog(f"Parando conteiner: {container_id}")
             subprocess.run(
                 ["podman", "stop", container_id],
                 stdout=subprocess.DEVNULL
