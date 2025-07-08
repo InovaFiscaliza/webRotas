@@ -584,28 +584,41 @@ class CacheBoundingBox:
 
     def find_server_for_this_route(self, start_lat, start_lon, end_lat, end_lon):
         """
-        Verifica se ambos os pontos estão dentro do bounding box de alguma região no cache.
-        Retorna a primeira região correspondente, ou None se nenhuma região contiver os dois pontos.
+        Verifica se ambos os pontos estão dentro do bounding box da região "boundingBoxRegion"
+        presente em algum item do cache.
+        Retorna a primeira região correspondente (string JSON original), ou None.
         """
+
         for dados in self.cache.values():
             locregiao = dados.get("regiao", "")
-            box = dados.get("bounding_box", [])
 
-            if len(box) != 4:
-                continue  # Ignora caixas malformadas
+            try:
+                regioes = json.loads(locregiao)
+            except (json.JSONDecodeError, TypeError):
+                continue  # pula se a string for inválida
 
-            # Extrai os extremos da bounding box
-            latitudes = [coord[0] for coord in box]
-            longitudes = [coord[1] for coord in box]
+            # Procura pela região "boundingBoxRegion"
+            box = None
+            for regiao in regioes:
+                if regiao.get("name") == "boundingBoxRegion":
+                    box = regiao.get("coord")
+                    break
+
+            if not box or len(box) != 4:
+                continue  # bounding box ausente ou malformada
+
+            # Extrai extremos do retângulo
+            latitudes = [p[0] for p in box]
+            longitudes = [p[1] for p in box]
             lat_min, lat_max = min(latitudes), max(latitudes)
             lon_min, lon_max = min(longitudes), max(longitudes)
 
-            # Verifica se os dois pontos estão dentro da caixa
+            # Verifica se os dois pontos estão dentro do retângulo
             if (lat_min <= start_lat <= lat_max and lon_min <= start_lon <= lon_max and
                 lat_min <= end_lat <= lat_max and lon_min <= end_lon <= lon_max):
-                return locregiao  # Ou retornar `dados` inteiro, se desejar
+                return locregiao  # ou return dados, se quiser mais contexto
 
-        return None  # Nenhuma região encontrada
+        return None
 
     
     def list_servers_online(self):
