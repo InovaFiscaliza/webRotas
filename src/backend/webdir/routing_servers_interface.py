@@ -410,6 +410,48 @@ def get_containers():
     return containers
 
 ################################################################################
+def get_container_by_cacheid(cacheid):
+    """
+    Retorna uma lista com o contêiner cujo nome começa com 'osmr_' e contém o cacheid.
+    Para cada contêiner, inclui: (container_id, created_at, porta)
+    """
+
+    result = subprocess.run(
+        ["podman", "ps", "-a", "--format", "{{.ID}}||{{.CreatedAt}}||{{.Names}}"],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        wr.wLog("Erro ao listar contêineres")
+        return []
+
+    containers = []
+    for line in result.stdout.strip().splitlines():
+        parts = line.split("||")
+        if len(parts) == 3:
+            container_id, created_at, name = [p.strip() for p in parts]
+            if name.startswith("osmr_") and cacheid in name:
+                # Obtemos a(s) porta(s)
+                port_result = subprocess.run(
+                    ["podman", "port", container_id],
+                    capture_output=True,
+                    text=True,
+                )
+                if port_result.returncode == 0:
+                    porta = port_result.stdout.strip().splitlines()[0] if port_result.stdout.strip() else "desconhecida"
+                else:
+                    porta = "erro"
+                containers.append((container_id, created_at, porta))
+
+    return containers
+###########################################################################################################################
+def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon): 
+    cache =  cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
+    resultados = get_container_by_cacheid(cache)
+    for cid, created, porta in resultados:
+        print(f"ID: {cid}, Criado: {created}, Porta: {porta}")    
+################################################################################
 
 def load_config_numcontainers():
     """

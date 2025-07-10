@@ -581,15 +581,18 @@ class CacheBoundingBox:
         with zipfile.ZipFile(caminho_zip, "w", zipfile.ZIP_DEFLATED) as zipf:
             zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
         os.remove(xlsx_path)
-
+    # ------------------------------------------------------------------------------------------------
     def find_server_for_this_route(self, start_lat, start_lon, end_lat, end_lon):
         """
         Verifica se ambos os pontos estão dentro do bounding box da região "boundingBoxRegion"
         presente em algum item do cache.
         Retorna a primeira região correspondente (string JSON original), ou None.
         """
+        
 
-        for dados in self.cache.values():
+        # for dados in self.cache.values():
+        for chave, dados in self.cache.items():   
+            chaveBuf = chave
             locregiao = dados.get("regiao", "")
 
             try:
@@ -616,10 +619,10 @@ class CacheBoundingBox:
             # Verifica se os dois pontos estão dentro do retângulo
             if (lat_min <= start_lat <= lat_max and lon_min <= start_lon <= lon_max and
                 lat_min <= end_lat <= lat_max and lon_min <= end_lon <= lon_max):
-                return locregiao  # ou return dados, se quiser mais contexto
+                return chaveBuf  
 
         return None
-
+    # ------------------------------------------------------------------------------------------------
     
     def list_servers_online(self):
         
