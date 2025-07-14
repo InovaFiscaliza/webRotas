@@ -28,6 +28,7 @@ class ClRouteDetailList:
         self.mapcode = ""
         self.pontoinicial = None
         self.DistanceTotal = 0
+        self.tempo_total = 0
         self.cWrJsOut = None
 
         

@@ -447,10 +447,11 @@ def get_container_by_cacheid(cacheid):
     return containers
 ###########################################################################################################################
 def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon): 
-    cache =  cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
-    resultados = get_container_by_cacheid(cache)
-    for cid, created, porta in resultados:
-        print(f"ID: {cid}, Criado: {created}, Porta: {porta}")    
+    # cache =  cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
+    # resultados = get_container_by_cacheid(cache)
+    # for cid, created, porta in resultados:
+    #    print(f"ID: {cid}, Criado: {created}, Porta: {porta}")    
+    return
 ################################################################################
 
 def load_config_numcontainers():

@@ -291,10 +291,10 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
     # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115) 
          
-    cached_response = cb.cCacheBoundingBox.route_cache_get(start_lat, start_lon, end_lat, end_lon)
-    if cached_response is not None:
-        wLog(f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}",level="debug",)
-        return cached_response
+    # cached_response = cb.cCacheBoundingBox.route_cache_get(start_lat, start_lon, end_lat, end_lon)
+    # if cached_response is not None:
+    #    wLog(f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}",level="debug",)
+    #    return cached_response
 
     # Coordenadas de início e fim
     start_coords = (start_lat, start_lon)
@@ -304,13 +304,15 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
         # URL da solicitação ao servidor OSMR
         url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{start_coords[1]},{start_coords[0]};{end_coords[1]},{end_coords[0]}?overview=full&geometries=polyline&steps=true"
     
+    # http://localhost:50000/route/v1/driving/-51.512533967708904,-29.972345983755194;-51.72406122295204,-30.03608928259163?overview=full&geometries=polyline&steps=true
+    
     wLog(url, level="debug")
     # Fazer a solicitação
     response = requests.get(url)
     
     data = response.json()
     # Verificar se a solicitação foi bem-sucedida
-    if response.status_code == 200 and "routes" in data:
+    if response.status_code == 200 and "routes" in data and (route_failure(data) == False):
         pass
     else:
         # Estou aqui 
@@ -319,12 +321,46 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
         # Tenta buscar do cache
         # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
         # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115) 
-        response = si.start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)    
+        response2 = si.start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)    
         
              
         
     cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
     return response
+
+###########################################################################################################################
+def route_failure(resposta_osrm):
+    """
+    Verifica se a resposta da API OSRM (ou similar) indica falha na rota,
+    mesmo que 'code' seja 'Ok'. Retorna True se a rota falhou, False caso contrário.
+    """
+    if resposta_osrm.get("code") != "Ok":
+        return True
+
+    rotas = resposta_osrm.get("routes", [])
+    if not rotas:
+        return True
+
+    rota = rotas[0]
+    if rota.get("distance", 1) == 0 or rota.get("duration", 1) == 0:
+        return True
+
+    if len(rota.get("geometry", "")) < 10:
+        return True
+
+    legs = rota.get("legs", [])
+    if not legs or len(legs[0].get("steps", [])) == 0:
+        return True
+
+    # Verifica se os waypoints são iguais
+    waypoints = resposta_osrm.get("waypoints", [])
+    if (
+        len(waypoints) >= 2
+        and waypoints[0].get("location") == waypoints[1].get("location")
+    ):
+        return True
+
+    return False
 
 ###########################################################################################################################
 def GenerateRouteMap(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon):
@@ -359,9 +395,10 @@ def GenerateRouteMapOSMR(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon)
         geometry = route["geometry"]
         coordinates = polyline.decode(geometry)
         RouteDetailLoc.coordinates.append(coordinates)
-        RouteDetailLoc.DistanceTotal = (
-            RouteDetailLoc.DistanceTotal + calcular_distancia_totalOSMR(data)
-        )
+        dist,temp = calcular_distancia_totalOSMR(data)
+        RouteDetailLoc.DistanceTotal = RouteDetailLoc.DistanceTotal + dist
+        RouteDetailLoc.tempo_total = RouteDetailLoc.tempo_total + temp
+
     else:
         wLog(f"Erro na solicitação: {data}", level="debug")
         return RouteDetailLoc
@@ -669,14 +706,34 @@ def calcular_distancia_totalOSMR(osmr_saida):
     :return: Distância total da rota em metros.
     """
     distancia_total = 0
-
+    tempo_total = 0
     if "routes" in osmr_saida and osmr_saida["routes"]:
         for leg in osmr_saida["routes"][0]["legs"]:
             for step in leg["steps"]:
                 distancia_total += step["distance"]
+                tempo_total += step["duration"]
 
-    return distancia_total
+    return distancia_total,tempo_total
+################################################################################
+def formatar_duracao_osrm(duracao_em_segundos):
+    """
+    Converte a duração em segundos da resposta OSRM para uma string legível.
+    Exemplo: 3665 -> '1h 1min 5s'
+    """
+    duracao_em_segundos = int(round(duracao_em_segundos))
+    horas = duracao_em_segundos // 3600
+    minutos = (duracao_em_segundos % 3600) // 60
+    segundos = duracao_em_segundos % 60
 
+    partes = []
+    if horas > 0:
+        partes.append(f"{horas}h")
+    if minutos > 0:
+        partes.append(f"{minutos}min")
+    if segundos > 0 or not partes:
+        partes.append(f"{segundos}s")
+
+    return " ".join(partes)
 
 ################################################################################
 def DistanciaRota(start_lat, start_lon, end_lat, end_lon):
@@ -684,7 +741,11 @@ def DistanciaRota(start_lat, start_lon, end_lat, end_lon):
     data = response.json()
     # Verificar se a solicitação foi bem-sucedida
     if response.status_code == 200 and "routes" in data:
-        return calcular_distancia_totalOSMR(data)
+        dist,temp = calcular_distancia_totalOSMR(data)
+        tmp = formatar_duracao_osrm(temp)
+        print(f"Distancia e Tempo total {dist} - {tmp}")
+        return dist
+        
     else:
         wLog("DistanciaRota - erro pegando rota OSMR")
         quit()
@@ -1771,6 +1832,9 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     pontosvisita = PegaPontosVisita(pontosvisitaDados)
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita)
     si.PreparaServidorRoteamento(regioes)
+    
+    # GetRouteFromServer(-29.972345983755194, -51.512533967708904,-30.03608928259163, -51.72406122295204)
+    
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial = pontoinicial
 

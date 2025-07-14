@@ -286,6 +286,9 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         wr.UserData.nome = user
         gi.cGuiOutput.requisition_data = data
         # Process the request according to the request type
+        
+        
+        
         match request_type:
             case "Contorno":
                 wr.wLog(
