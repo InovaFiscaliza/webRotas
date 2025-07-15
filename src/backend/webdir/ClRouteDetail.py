@@ -96,9 +96,9 @@ class ClRouteDetailList:
             f"    bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;\n"
         )
         output += f"    bufdados.pontoinicial = [{self.pontoinicial[0]},{self.pontoinicial[1]},'{self.pontoinicial[2]}'];\n"
-        output += (
-            f"    bufdados.DistanceTotal = {self.DistanceTotal / 1000};\n"
-        )
+        output += f"    bufdados.DistanceTotal = {self.DistanceTotal / 1000};\n"
+        output += f"    bufdados.tempo_total = '{self.tempo_total}';\n"
+        
         output += (
             f"    bufdados.rotaCalculada = 1;\n"  # Rota calculada pelo WebRotas
         )

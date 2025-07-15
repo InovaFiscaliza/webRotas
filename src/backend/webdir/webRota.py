@@ -1601,6 +1601,7 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
     # ----------------------------------------------------------------------
     gi.cGuiOutput.waypoints_route = RouteDetail.coordinates
     gi.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
+    gi.cGuiOutput.estimated_time = RouteDetail.tempo_total
     # ----------------------------------------------------------------------
     RouteDetail.DeclaraArrayRotas()
     RouteDetail.append_mapcode(
@@ -1664,6 +1665,7 @@ def PlotaPontosVisitaNoJS(RouteDetail, pontosvisita, pontosvisitaDados):
     # ----------------------------------------------------------------------
     gi.cGuiOutput.waypoints_route = RouteDetail.coordinates
     gi.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
+    gi.cGuiOutput.estimated_time = RouteDetail.tempo_total
     # ----------------------------------------------------------------------
     return RouteDetail
 

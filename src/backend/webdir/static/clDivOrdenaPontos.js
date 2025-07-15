@@ -165,9 +165,9 @@ function clDivOrdenaPontos() {
             let item = ListaRotasCalculadas[i];
             fmtDist = item.DistanceTotal.toFixed(2);  
             if(item.rotaCalculada==0) // Rota não calculada, proposta pelo usuário
-                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km`, `${item.id}`);
+                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km - ${item.tempo_total}`, `${item.id}`);
             else
-                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km - Calculada`, `${item.id}`);    
+                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km - ${item.tempo_total} - Calculada`, `${item.id}`);    
             
             wLog(`Item ${i}:`);
             wLog(`ID: ${item.id}`);
@@ -175,6 +175,7 @@ function clDivOrdenaPontos() {
             wLog(`Pontos de Visita: ${item.pontosvisitaDados}`);
             wLog(`Ponto Inicial: ${item.pontoinicial}`);
             wLog(`Distância Total: ${item.DistanceTotal}`);
+            wLog(`Tempo Total: ${item.tempo_total}`);
         }
         selectRotas.selectedIndex = selIndex;
         AtivaControles();
@@ -428,6 +429,7 @@ function clDivOrdenaPontos() {
             ListaRotasCalculadas[0].pontosVisitaOrdenados
             ListaRotasCalculadas[0].pontoinicial
             ListaRotasCalculadas[0].DistanceTotal
+            ListaRotasCalculadas[0].tempo_total
             ListaRotasCalculadas[0].rotaCalculada
         */   
         selId = parseInt(value); // Converte para número, se necessário
@@ -571,6 +573,7 @@ function clDivOrdenaPontos() {
             wLog(`   Pontos de Visita:`, rota.pontosvisitaDados);
             wLog(`   Ponto Inicial: ${rota.pontoinicial}`);
             wLog(`   Distância Total: ${rota.DistanceTotal} km`); 
+            wLog(`   Tempo Total: ${rota.tempo_total}`); 
             wLog(`   rotaCalculada: ${rota.rotaCalculada} `);
         });
 
@@ -589,6 +592,7 @@ function clDivOrdenaPontos() {
             ListaRotasCalculadas[0].pontosVisitaOrdenados
             ListaRotasCalculadas[0].pontoinicial
             ListaRotasCalculadas[0].DistanceTotal
+            ListaRotasCalculadas[0].tempo_total
             ListaRotasCalculadas[0].rotaCalculada
             */
 
@@ -610,7 +614,8 @@ function clDivOrdenaPontos() {
             bufdados.pontosvisitaDados = pontosvisitaDados;
             bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;
             bufdados.pontoinicial = pntinicialBuf;
-            bufdados.DistanceTotal = data.DistanceTotal/1000;   
+            bufdados.DistanceTotal = data.DistanceTotal/1000; 
+            bufdados.tempo_total = data.tempo_total;  
             if(bMudouOrdemPontos)
                 bufdados.rotaCalculada = 0; // Rota proposta pelo usuário
             else
@@ -744,6 +749,7 @@ function clDivOrdenaPontos() {
         // Guardando dados para uso posterior e atualizando as variáveis globais da rota
         polylineRotaDat = data.polylineRota;
         DistanceTotal = data.DistanceTotal;
+        tempo_total = data.tempo_total;
         poly_lineRota = RedesenhaRota(polylineRotaDat,rotaSel);
         rotaRecalculada = data.RotaRecalculada; 
         pontosVisitaOrdenados = data.pontosVisita

@@ -20,6 +20,7 @@ class GuiOutput:
         self.pontosvisitaDados = None
         self.waypoints_route = None
         self.estimated_distance = None
+        self.estimated_time = None
 
     @property
     def pontoinicial(self):
