@@ -156,6 +156,24 @@ function clDivOrdenaPontos() {
         selectHandle.appendChild(opcao); // Adiciona a opção ao select
     }
 
+    function formatarDuracaoOSRM(duracaoEmSegundos) {
+        duracaoEmSegundos = Math.round(duracaoEmSegundos);
+
+        const dias = Math.floor(duracaoEmSegundos / 86400); // 1 dia = 86400s
+        const horas = Math.floor((duracaoEmSegundos % 86400) / 3600);
+        const minutos = Math.floor((duracaoEmSegundos % 3600) / 60);
+        const segundos = duracaoEmSegundos % 60;
+
+        const partes = [];
+        if (dias > 0) partes.push(`${dias}d`);
+        if (horas > 0) partes.push(`${horas}h`);
+        if (minutos > 0) partes.push(`${minutos}min`);
+        // if (segundos > 0 || partes.length === 0) partes.push(`${segundos}s`);
+        if (partes.length === 0) partes.push(`${segundos}s`);
+
+        return partes.join(" ");
+    }
+
 
     function CarregaRotasCalculadas(selIndex)
     {
@@ -164,10 +182,11 @@ function clDivOrdenaPontos() {
         for (let i = 0; i < ListaRotasCalculadas.length; i++) {
             let item = ListaRotasCalculadas[i];
             fmtDist = item.DistanceTotal.toFixed(2);  
+            fmtTemp = formatarDuracaoOSRM(item.tempo_total); 
             if(item.rotaCalculada==0) // Rota não calculada, proposta pelo usuário
-                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km - ${item.tempo_total}`, `${item.id}`);
+                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km - ${fmtTemp}`, `${item.id}`);
             else
-                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km - ${item.tempo_total} - Calculada`, `${item.id}`);    
+                adicionarItemAoSelect(selectRotas,`Rota #${item.id} - ${item.time} - ${fmtDist} km - ${fmtTemp} - Calculada`, `${item.id}`);    
             
             wLog(`Item ${i}:`);
             wLog(`ID: ${item.id}`);

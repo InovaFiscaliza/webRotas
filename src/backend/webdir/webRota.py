@@ -741,7 +741,7 @@ def DistanciaRota(start_lat, start_lon, end_lat, end_lon):
     if response.status_code == 200 and "routes" in data:
         dist,temp = calcular_distancia_totalOSMR(data)
         tmp = formatar_duracao_osrm(temp)
-        print(f"Distancia e Tempo total {dist} - {tmp}")
+        # print(f"Distancia e Tempo total {dist} - {tmp}")
         return dist
         
     else:
