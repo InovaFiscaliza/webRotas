@@ -545,9 +545,7 @@ def OrdenarPontos(pontosvisita, pontoinicial):
     # BenchmarkRotas(pontosvisita,pontoinicial)
     tempoestimado = estimar_tempo_ordenacao(pontosvisita)
     tempoestimado = formatar_tempo_vasto(tempoestimado)
-    wLog(
-        f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}] - Tempo estimado: {tempoestimado}"
-    )
+    wLog(f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}] - Tempo estimado: {tempoestimado}")
 
     if (
         UserData.AlgoritmoOrdenacaoPontos == "DistanciaGeodesica"
@@ -1475,31 +1473,6 @@ def get_formatted_timestamp():
     return now.strftime("%Y/%m/%d_%H:%M:%S")
 
 
-################################################################################
-def DeclaraArrayRotas(RouteDetail):
-    # var estruturas = []; // Array vazio
-    # Salvar
-    # sessionStorage.setItem('sessionId', 'abc123');
-    # // Recuperar
-    # const sessionId = sessionStorage.getItem('sessionId');
-    # AAAAAAAAAAAAAAAAAAAAAAAa
-    timeStp = get_formatted_timestamp()
-    output = ""
-    output += f"    var ListaRotasCalculadas = [];\n"
-    output += f"    var bufdados = {{}};\n"
-    output += f"    bufdados.id = 0;\n"
-    output += f"    bufdados.time = '{timeStp}';\n"
-    output += f"    bufdados.polylineRotaDat = [];\n"
-    output += f"    bufdados.pontosvisitaDados = pontosvisitaDados;\n"
-    output += f"    bufdados.pontosVisitaOrdenados = pontosVisitaOrdenados;\n"
-    output += f"    bufdados.pontoinicial = [{RouteDetail.pontoinicial[0]},{RouteDetail.pontoinicial[1]},'{RouteDetail.pontoinicial[2]}'];\n"
-    output += f"    bufdados.DistanceTotal = {RouteDetail.DistanceTotal / 1000};\n"
-    output += f"    bufdados.rotaCalculada = 1;\n"  # Rota calculada pelo WebRotas
-    output += f"    ListaRotasCalculadas.push(bufdados);\n"
-
-    RouteDetail.append_mapcode(output)
-
-    return RouteDetail
 
 
 ################################################################################
