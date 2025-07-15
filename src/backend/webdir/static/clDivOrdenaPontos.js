@@ -13,7 +13,7 @@ function clDivOrdenaPontos() {
         wLog('A div já está aberta.');
         document.getElementById('divOrdenaPontos').style.top = '10px';
         document.getElementById('divOrdenaPontos').style.left = '10px'; 
-        document.getElementById('divOrdenaPontos').style.width = '300px'; // Tamanho inicial
+        document.getElementById('divOrdenaPontos').style.width = '330px'; // Tamanho inicial
         document.getElementById('divOrdenaPontos').style.height = '600px';
         return; // Sai da função se a div já existir
     }
@@ -27,7 +27,7 @@ function clDivOrdenaPontos() {
     // iDlg.style.transform = 'translate(-50%, -50%)';
     iDlg.style.top = '10px';
     iDlg.style.left = '10px'; 
-    iDlg.style.width = '300px'; // Tamanho inicial
+    iDlg.style.width = '330px'; // Tamanho inicial
     iDlg.style.height = '600px';
     iDlg.style.backgroundColor = '#f9f9f9';
     iDlg.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.4)';  // sombra em torno do div para destaque na interface
