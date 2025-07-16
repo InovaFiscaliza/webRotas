@@ -401,7 +401,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 username = data["UserName"]
 
                 # Processa a requisição
-                polylineRota, DistanceTotal, pontosvisita = wr.RoteamentoOSMR(
+                polylineRota, DistanceTotal, tempo_total, pontosvisita = wr.RoteamentoOSMR(
                     username, porta, pontosvisita, pontoinicial, recalcularrota
                 )
                 cb.cCacheBoundingBox._schedule_save()
@@ -411,6 +411,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                         {
                             "polylineRota": polylineRota,
                             "DistanceTotal": DistanceTotal,
+                            "tempo_total": tempo_total,
                             "RotaRecalculada": recalcularrota,
                             "pontosVisita": pontosvisita,
                         }
@@ -425,6 +426,7 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                         {
                             "polylineRota": polylineRota,
                             "DistanceTotal": DistanceTotal,
+                            "tempo_total": tempo_total,
                             "RotaRecalculada": recalcularrota,
                             "pontosVisita": pontosvisita,
                         }

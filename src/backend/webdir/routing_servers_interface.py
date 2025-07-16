@@ -397,7 +397,7 @@ def get_containers():
         wr.wLog("Erro ao listar contêineres")
         return []
     
-    wr.wLog(f"Saída podman:\n{result.stdout}")
+    # wr.wLog(f"Saída podman:\n{result.stdout}")
     
     containers = []
     for line in result.stdout.strip().splitlines():

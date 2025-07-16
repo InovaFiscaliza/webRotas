@@ -1723,7 +1723,7 @@ def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
         latf, lonf = pontosvisita[i + 1]
         RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
 
-    return RouteDetail.coordinates, RouteDetail.DistanceTotal, pontosvisita
+    return RouteDetail.coordinates, RouteDetail.DistanceTotal, RouteDetail.tempo_total, pontosvisita
 
 
 ################################################################################
