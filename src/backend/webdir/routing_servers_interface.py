@@ -229,11 +229,29 @@ def FiltrarRegiaoComOsmosis(regioes):
     remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}") / f"filtro_{chave}")
     return 1  # Criou diretório roda ciração dos indices OSMR
 
+################################################################################
+def handle_container(cacheid):
+    containers = get_container_by_cacheid(cacheid)
 
+    if not containers:
+        # não encontrou nenhum container com esse cacheid
+        wr.wLog(f"Nenhum contêiner encontrado para cacheid {cacheid}")
+        return None
+
+    # se há pelo menos um container, pegue a porta do primeiro
+    container_id, created_at, porta = containers[0]
+    wr.wLog(f"Contêiner {container_id} (criado em {created_at}) está na porta {porta}")
+    return porta
 ################################################################################
 def AtivaServidorOSMR(regioes):
     # startserver filtro 8001 osmr_server8001
     chave = cb.cCacheBoundingBox.chave(regioes)
+    #-------------------------------------------------
+    porta = handle_container(chave)
+    if(porta):
+        wr.UserData.OSMRport = porta
+        return
+    #-------------------------------------------------
     wr.UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
     wr.wLog(f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}", level="debug")
     log_filename = wl.get_log_filename()
@@ -344,34 +362,6 @@ def manutencao_arquivos_antigos():
     StopOldContainers(days=30)
 
 
-################################################################################
-def get_containersOLD():
-    """
-    Obtém a lista de contêineres, incluindo o ID e a data de criação.
-    Retorna uma lista de tuplas (container_id, created_at).
-    """
-
-    subprocess.run(
-        ["podman", "machine", "start"],
-        capture_output=True,
-        text=True,
-    )
-    result = subprocess.run(
-        ["podman", "ps", "-a", "--format", "{{.ID}} {{.CreatedAt}}"],
-        capture_output=True,
-        text=True,
-    )
-
-    if result.returncode != 0:
-        wr.wLog("Erro ao listar contêineres")
-        return []
-
-    containers = []
-    for line in result.stdout.splitlines():
-        parts = line.split(maxsplit=1)
-        container_id, created_at = parts[0], parts[1]
-        containers.append((container_id, created_at))
-    return containers
 
 ################################################################################
 def get_containers():
@@ -432,19 +422,24 @@ def get_container_by_cacheid(cacheid):
         if len(parts) == 3:
             container_id, created_at, name = [p.strip() for p in parts]
             if name.startswith("osmr_") and cacheid in name:
-                # Obtemos a(s) porta(s)
                 port_result = subprocess.run(
                     ["podman", "port", container_id],
                     capture_output=True,
                     text=True,
                 )
                 if port_result.returncode == 0:
-                    porta = port_result.stdout.strip().splitlines()[0] if port_result.stdout.strip() else "desconhecida"
+                    raw_port = port_result.stdout.strip().splitlines()[0] if port_result.stdout.strip() else "desconhecida"
+                    if "->" in raw_port and ":" in raw_port:
+                        porta = raw_port.split(":")[-1]  # pega só a última parte (ex: 50000)
+                    else:
+                        porta = raw_port
                 else:
                     porta = "erro"
+
                 containers.append((container_id, created_at, porta))
 
     return containers
+
 ###########################################################################################################################
 def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon): 
     # cache =  cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
@@ -487,7 +482,7 @@ def keep_last_n_containers_running():
         containers, key=lambda c: parse_created_time(c[1]), reverse=True
     )
 
-    ids_to_keep = {c[0] for c in containers_sorted[:num_max]}
+    ids_to_keep = {c[0] for c in containers_sorted[:num_max-1]}
 
     result = subprocess.run(
         ["podman", "ps", "--format", "{{.ID}}"],
