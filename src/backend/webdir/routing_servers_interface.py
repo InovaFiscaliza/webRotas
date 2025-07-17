@@ -247,7 +247,7 @@ def AtivaServidorOSMR(regioes):
     # startserver filtro 8001 osmr_server8001
     chave = cb.cCacheBoundingBox.chave(regioes)
     #-------------------------------------------------
-    porta = handle_container(chave)
+    porta = handle_container(chave) # verifica se o container já está em execução para aquela região
     if(porta):
         wr.UserData.OSMRport = porta
         return
