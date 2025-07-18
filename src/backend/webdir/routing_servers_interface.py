@@ -268,7 +268,7 @@ def AtivaServidorOSMR(regioes):
     port_map = f"{wr.UserData.OSMRport}:5000"
     log_file = open(logok_osmr, "a")
 
-    comando = f"""podman run --rm --name osmr_{wr.UserData.nome}_{chave} -m 32g -t -i \
+    comando = f"""podman run --tty=false --rm --name osmr_{wr.UserData.nome}_{chave} -m 32g -t -i \
     -p {port_map} \
     -v "{volume_host}:{volume_container}" \
     localhost/osmr_webrota osrm-routed --algorithm mld {volume_container}/filtro-latest.osm.pbf"""
