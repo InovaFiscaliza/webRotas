@@ -230,7 +230,7 @@ def FiltrarRegiaoComOsmosis(regioes):
     return 1  # Criou diretório roda ciração dos indices OSMR
 
 ################################################################################
-def handle_container(cacheid):
+def region_container_alive(cacheid):
     containers = get_container_by_cacheid(cacheid)
 
     if not containers:
@@ -247,7 +247,7 @@ def AtivaServidorOSMR(regioes):
     # startserver filtro 8001 osmr_server8001
     chave = cb.cCacheBoundingBox.chave(regioes)
     #-------------------------------------------------
-    porta = handle_container(chave) # verifica se o container já está em execução para aquela região
+    porta = region_container_alive(chave) # verifica se o container já está em execução para aquela região
     if(porta):
         wr.UserData.OSMRport = porta
         return
@@ -442,11 +442,19 @@ def get_container_by_cacheid(cacheid):
 
 ###########################################################################################################################
 def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon): 
-    # cache =  cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
-    # resultados = get_container_by_cacheid(cache)
+    cache,regioes =  cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
+    
+    wr.wLog(f"Ativando região para essa rota: {cache}")
+    # porta = region_container_alive(cache)
+    # if porta==None:
+    #    # aborta não tem servidor possivel
+    #    wr.wLog(f"Erro grave nenhuma região encontrada para essa rota")
+    #    return None
+
+    AtivaServidorOSMR(regioes) 
     # for cid, created, porta in resultados:
     #    print(f"ID: {cid}, Criado: {created}, Porta: {porta}")    
-    return
+    return True
 ################################################################################
 
 def load_config_numcontainers():
@@ -616,7 +624,7 @@ def VerificarFalhaServidorOSMR():
         "Required files are missing, cannot continue",
         "Error: CreateFile TempData",
         "Error: statfs",
-        "Unable to restore terminal:",
+        "UnableZZZ to restore terminal:",
     ]
     log_filename = wl.get_log_filename()
     logfile = f"{log_filename}.{wr.UserData.nome}.OSMR"
@@ -815,7 +823,7 @@ def PreparaServidorRoteamento(regioes):
     roteamento_ok = False
     gi.cGuiOutput.cache_id = cb.cCacheBoundingBox.chave(regioes)
     while not roteamento_ok:
-        if cb.cCacheBoundingBox.get_cache(regioes) == None:
+        if cb.cCacheBoundingBox.get_cache(regioes) == None:   # servidor não tem cache ID
             wr.GeraArquivoExclusoes(
                 regioes,
                 arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")
@@ -827,13 +835,9 @@ def PreparaServidorRoteamento(regioes):
                 wr.wLog("GerarIndicesExecutarOSRMServer")
                 GerarIndicesExecutarOSRMServer(regioes)
             else:
-                wr.wLog(
-                    "Dados de roteamento encontrados no diretorio filtro OSMR cache, ativando o servidor OSMR"
-                )
+                wr.wLog("Dados de roteamento encontrados no diretorio filtro OSMR cache, ativando o servidor OSMR")
                 AtivaServidorOSMR(regioes)
-            info_regiao = sf.ObterMunicipiosNoBoundingBoxOrdenados(
-                rg.extrair_bounding_box_de_regioes(regioes)
-            )
+            info_regiao = sf.ObterMunicipiosNoBoundingBoxOrdenados(rg.extrair_bounding_box_de_regioes(regioes))
             km2_região = wr.calc_km2_regiao(regioes)
             cb.cCacheBoundingBox.new(
                 regioes,
@@ -842,9 +846,7 @@ def PreparaServidorRoteamento(regioes):
                 km2_região,
             )
         else:
-            wr.wLog(
-                "Dados de roteamento encontrados no cache, nao e necessario executar osmosis"
-            )
+            wr.wLog("Dados de roteamento encontrados no cache, nao e necessario executar osmosis")
             AtivaServidorOSMR(regioes)
         if VerificarOsrmAtivo():
             roteamento_ok = True

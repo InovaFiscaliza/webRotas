@@ -725,8 +725,6 @@ function clDivOrdenaPontos() {
         }
     }
     ////////////////////////////////
-    // servidorOnline = verificarServidorOSMR();
-    ////////////////////////////////
     rotaRecalculada=0;  // Flag deste diálogo que indica se ondem de pontos foi recalculada no servidor
     async function RefazRotaNoServidor(pontosVisita,rotaSel)
     {
@@ -780,6 +778,7 @@ function clDivOrdenaPontos() {
     ////////////////////////////////
     function verificarServidorOSMR() {
 
+        return true 
         // Get the actual port the page was loaded from
         const port = window.location.port || "5001"; // Use URL port or fallback to 5001
 
@@ -807,6 +806,8 @@ function clDivOrdenaPontos() {
             return false;
         }
     }
+    
+
     ////////////////////////////////
     function haversine(lat1, lon1, lat2, lon2) {
         const R = 6371e3; // Raio da Terra em metros

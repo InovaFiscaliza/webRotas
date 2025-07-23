@@ -62,7 +62,7 @@ import PolylineCache as pl
 import atexit
 import signal
 import threading
-import time 
+import time
 
 import regions as rg
 
@@ -98,12 +98,12 @@ class CacheBoundingBox:
             shutil.rmtree(caminho)
         elif os.path.isfile(caminho):
             os.remove(caminho)
-        
+
     def remover_item_disco(self, caminho: Path, tentativas=80, espera=1.0):
         """
         Remove o diretório 'caminho' com tratamento de erros e reintentos.
         Ignora se o caminho não existir. Tenta novamente se estiver em uso.
-        """  
+        """
         if not caminho.exists():
             # wr.wLog(f"Caminho não encontrado para remoção: {caminho}", level="debug")
             return
@@ -118,8 +118,7 @@ class CacheBoundingBox:
             except Exception as e:
                 #  wr.wLog(f"Tentativa {tentativa}: Erro ao remover {caminho} - {e}", level="error")
                 time.sleep(espera)
-        # print(f"Falha final ao remover diretório após {tentativas} tentativas: {caminho}")            
-                
+        # print(f"Falha final ao remover diretório após {tentativas} tentativas: {caminho}")
 
     def new(self, regioes, diretorio, inforegiao="", km2_região=0):
         chave = self._hash_bbox(regioes)
@@ -210,7 +209,7 @@ class CacheBoundingBox:
             self.ultimaregiao = regtemp
             entry = self.cache.get(self._hash_bbox(regtemp))
             self.gr = entry["gr"]
-            self.state = entry["state"]            
+            self.state = entry["state"]
             return regtemp
 
         return None
@@ -305,7 +304,6 @@ class CacheBoundingBox:
         except Exception as e:
             print(f"[ERRO] Falha ao salvar route_cache para '{chave}': {e}")
 
-
     def salvar_route_cache_individual(self):
         """
         Salva cada entrada do self.route_cache em um arquivo .bin.gz (Gzip + Pickle)
@@ -331,7 +329,6 @@ class CacheBoundingBox:
             except Exception as e:
                 # wr.wLog(f"[ERRO] Falha ao salvar item do cache chave='{chave}': {e}", level="error")
                 pass
-
 
     def carregar_route_cache_individual(self):
         """
@@ -581,6 +578,7 @@ class CacheBoundingBox:
         with zipfile.ZipFile(caminho_zip, "w", zipfile.ZIP_DEFLATED) as zipf:
             zipf.write(xlsx_path, arcname=os.path.basename(xlsx_path))
         os.remove(xlsx_path)
+
     # ------------------------------------------------------------------------------------------------
     def find_server_for_this_route(self, start_lat, start_lon, end_lat, end_lon):
         """
@@ -588,10 +586,17 @@ class CacheBoundingBox:
         presente em algum item do cache.
         Retorna a primeira região correspondente (string JSON original), ou None.
         """
-        
 
-        # for dados in self.cache.values():
-        for chave, dados in self.cache.items():   
+        # Converte entradas para float
+        try:
+            start_lat = float(start_lat)
+            start_lon = float(start_lon)
+            end_lat = float(end_lat)
+            end_lon = float(end_lon)
+        except ValueError:
+            return None  # coordenadas inválidas
+
+        for chave, dados in self.cache.items():
             chaveBuf = chave
             locregiao = dados.get("regiao", "")
 
@@ -610,23 +615,34 @@ class CacheBoundingBox:
             if not box or len(box) != 4:
                 continue  # bounding box ausente ou malformada
 
-            # Extrai extremos do retângulo
-            latitudes = [p[0] for p in box]
-            longitudes = [p[1] for p in box]
+            # Extrai extremos do retângulo e converte para float
+            try:
+                latitudes = [float(p[0]) for p in box]
+                longitudes = [float(p[1]) for p in box]
+            except (ValueError, TypeError):
+                continue  # ignora se houver dado inválido
+
             lat_min, lat_max = min(latitudes), max(latitudes)
             lon_min, lon_max = min(longitudes), max(longitudes)
 
             # Verifica se os dois pontos estão dentro do retângulo
-            if (lat_min <= start_lat <= lat_max and lon_min <= start_lon <= lon_max and
-                lat_min <= end_lat <= lat_max and lon_min <= end_lon <= lon_max):
-                return chaveBuf  
+            if (
+                lat_min <= start_lat <= lat_max
+                and lon_min <= start_lon <= lon_max
+                and lat_min <= end_lat <= lat_max
+                and lon_min <= end_lon <= lon_max
+            ):
+                return chaveBuf, locregiao
 
         return None
+
     # ------------------------------------------------------------------------------------------------
-    
+
     def list_servers_online(self):
-        
+
         return
+
+
 # ---------------------------------------------------------------------------------------------------------------
 
 # Instância global
