@@ -17,6 +17,7 @@ from geopy.distance import geodesic
 import base64
 import mimetypes
 import pyproj
+import socket
 
 import shapeFiles as sf
 import geraMapa as gm
@@ -283,8 +284,13 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
 
 ###########################################################################################################################
 ServerTec = "OSMR"
-
-
+###########################################################################################################################
+def porta_disponivel(host, port):
+    try:
+        with socket.create_connection((host, port), timeout=2):
+            return True
+    except OSError:
+        return False
 ###########################################################################################################################
 def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
 
@@ -307,22 +313,31 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     # http://localhost:50000/route/v1/driving/-51.512533967708904,-29.972345983755194;-51.72406122295204,-30.03608928259163?overview=full&geometries=polyline&steps=true
     
     wLog(url, level="debug")
-    # Fazer a solicitação
-    response = requests.get(url)
+
+    portOk = False
+    if porta_disponivel("localhost", UserData.OSMRport):
+       response = requests.get(url)
+       data = response.json()
+       portOk = True
+
     
-    data = response.json()
     # Verificar se a solicitação foi bem-sucedida
-    if response.status_code == 200 and "routes" in data and (route_failure(data) == False):
-        pass
-    else:
-        # Estou aqui 
-        wLog(f"Erro na solicitação: {data}", level="debug")
-        # cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
-        # Tenta buscar do cache
-        # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
-        # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115) 
-        response2 = si.start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)    
-        
+    if portOk:
+        if response.status_code == 200 and "routes" in data and (route_failure(data) == False):
+            cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
+            return response
+      
+    # Estou aqui 
+    wLog(f"GetRouteFromServer erro na solicitação - rota pedia nao existe ou servidor fora do ar ")
+    # cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
+    # Tenta buscar do cache
+    # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
+    # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115) 
+    responseTmp = si.start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)  
+    if responseTmp == None:  
+       wLog(f"Não temos cache para a rota")
+       return None 
+    return GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
              
         
     cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
@@ -365,9 +380,7 @@ def route_failure(resposta_osrm):
 ###########################################################################################################################
 def GenerateRouteMap(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon):
     if ServerTec == "OSMR":
-        return GenerateRouteMapOSMR(
-            RouteDetailLoc, start_lat, start_lon, end_lat, end_lon
-        )
+        return GenerateRouteMapOSMR(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon)
     return RouteDetailLoc
 
 
@@ -1714,9 +1727,7 @@ def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
     # for ponto in pontosvisita:
     #     wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
 
-    RouteDetail = GenerateRouteMap(
-        RouteDetail, pontoinicial[0], pontoinicial[1], latfI, lonfI
-    )
+    RouteDetail = GenerateRouteMap(RouteDetail, pontoinicial[0], pontoinicial[1], latfI, lonfI)
 
     for i in range(len(pontosvisita) - 1):
         lati, loni = pontosvisita[i]
