@@ -443,18 +443,25 @@ def get_container_by_cacheid(cacheid):
 ###########################################################################################################################
 def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon): 
     cache,regioes =  cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
-    
+    if(cache==None):
+        wr.wLog(f"Não encontrada região no cache para essa rota - id: {cache}")
+        return False        
     wr.wLog(f"Ativando região para essa rota: {cache}")
-    # porta = region_container_alive(cache)
-    # if porta==None:
-    #    # aborta não tem servidor possivel
-    #    wr.wLog(f"Erro grave nenhuma região encontrada para essa rota")
-    #    return None
-
-    AtivaServidorOSMR(regioes) 
+    AtivaServidorOSMR(regioes)
+    porta = None
+    while porta==None: 
+        porta = region_container_alive(cache) # verifica se o container já está em execução para aquela região
+        if(porta):
+            wr.UserData.OSMRport = porta
+            wr.wLog(f"Servidor iniciado - id: {cache}")
+            return True
+    # else:
+    #     wr.wLog(f"Não foi possível iniciar o servidor - id: {cache}")
+    #     return False
+    
     # for cid, created, porta in resultados:
     #    print(f"ID: {cid}, Criado: {created}, Porta: {porta}")    
-    return True
+    
 ################################################################################
 
 def load_config_numcontainers():

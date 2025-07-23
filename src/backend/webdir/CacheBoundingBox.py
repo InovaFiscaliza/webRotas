@@ -594,16 +594,14 @@ class CacheBoundingBox:
             end_lat = float(end_lat)
             end_lon = float(end_lon)
         except ValueError:
-            return None  # coordenadas inválidas
+            return None,None  # coordenadas inválidas
 
         for chave, dados in self.cache.items():
             chaveBuf = chave
-            locregiao = dados.get("regiao", "")
+            locregiao = dados.get("regiaodados", "")
 
-            try:
-                regioes = json.loads(locregiao)
-            except (json.JSONDecodeError, TypeError):
-                continue  # pula se a string for inválida
+
+            regioes = locregiao
 
             # Procura pela região "boundingBoxRegion"
             box = None
@@ -634,7 +632,7 @@ class CacheBoundingBox:
             ):
                 return chaveBuf, locregiao
 
-        return None
+        return None,None
 
     # ------------------------------------------------------------------------------------------------
 

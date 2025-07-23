@@ -334,7 +334,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
     # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115) 
     responseTmp = si.start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)  
-    if responseTmp == None:  
+    if responseTmp == False:  
        wLog(f"Não temos cache para a rota")
        return None 
     return GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
