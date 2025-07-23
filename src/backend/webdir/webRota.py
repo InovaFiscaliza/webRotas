@@ -313,22 +313,14 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     # http://localhost:50000/route/v1/driving/-51.512533967708904,-29.972345983755194;-51.72406122295204,-30.03608928259163?overview=full&geometries=polyline&steps=true
     
     wLog(url, level="debug")
-
-    portOk = False
     if porta_disponivel("localhost", UserData.OSMRport):
        response = requests.get(url)
        data = response.json()
-       portOk = True
+       if response.status_code == 200 and "routes" in data and (route_failure(data) == False):
+          cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
+          return response
 
-    
-    # Verificar se a solicitação foi bem-sucedida
-    if portOk:
-        if response.status_code == 200 and "routes" in data and (route_failure(data) == False):
-            cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
-            return response
-      
-    # Estou aqui 
-    wLog(f"GetRouteFromServer erro na solicitação - rota pedia nao existe ou servidor fora do ar ")
+    wLog(f"GetRouteFromServer erro na solicitacao - rota pedida nao existe ou servidor fora do ar ")
     # cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
     # Tenta buscar do cache
     # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
