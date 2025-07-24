@@ -439,24 +439,33 @@ def get_container_by_cacheid(cacheid):
                 containers.append((container_id, created_at, porta))
 
     return containers
-
+###########################################################################################################################
+def check_osrm_server(host: str, port: int, timeout: int = 3) -> bool:
+    """Verifica se o servidor OSRM está ativo, consultando /health ou root."""
+    url = f"http://{host}:{port}/health"
+    try:
+        response = requests.get(url, timeout=timeout)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
 ###########################################################################################################################
 def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon): 
     cache,regioes =  cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
     if(cache==None):
-        wr.wLog(f"Não encontrada região no cache para essa rota - id: {cache}")
+        wr.wLog(f"Não encontrada região no cache para essa rota - id: {cache}", level="debug")
         return False        
-    wr.wLog(f"Ativando região para essa rota: {cache}")
+    wr.wLog(f"Ativando região para essa rota: {cache}", level="debug")
     AtivaServidorOSMR(regioes)
+    time.sleep(1)  
     porta = None
     while porta==None: 
         porta = region_container_alive(cache) # verifica se o container já está em execução para aquela região  
-        time.sleep(1)    
         if(porta):
             wr.UserData.OSMRport = porta
-            wr.wLog(f"Servidor iniciado - id: {cache}")
-            return True
-        
+            if(check_osrm_server("localhost",porta,3)):
+               wr.wLog(f"Servidor iniciado - id: {cache}", level="debug")
+               return True
+        time.sleep(1)  
     # else:
     #     wr.wLog(f"Não foi possível iniciar o servidor - id: {cache}")
     #     return False

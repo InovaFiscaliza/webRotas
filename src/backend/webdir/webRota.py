@@ -299,7 +299,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
          
     cached_response = cb.cCacheBoundingBox.route_cache_get(start_lat, start_lon, end_lat, end_lon)
     if cached_response is not None:
-        wLog(f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}",level="debug",)
+        wLog(f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}",level="debug")
         return cached_response
 
     # Coordenadas de início e fim
@@ -320,7 +320,7 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
           cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
           return response
 
-    wLog(f"GetRouteFromServer erro na solicitacao - rota pedida nao existe ou servidor fora do ar ")
+    wLog(f"GetRouteFromServer erro na solicitacao - rota pedida nao existe ou servidor fora do ar ", level="debug")
     # cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
     # Tenta buscar do cache
     # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
