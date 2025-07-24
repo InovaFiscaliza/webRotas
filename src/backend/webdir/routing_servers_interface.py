@@ -235,12 +235,12 @@ def region_container_alive(cacheid):
 
     if not containers:
         # não encontrou nenhum container com esse cacheid
-        wr.wLog(f"Nenhum contêiner encontrado para cacheid {cacheid}")
+        wr.wLog(f"Nenhum contêiner encontrado para cacheid {cacheid}", level="debug")
         return None
 
     # se há pelo menos um container, pegue a porta do primeiro
     container_id, created_at, porta = containers[0]
-    wr.wLog(f"Contêiner {container_id} (criado em {created_at}) está na porta {porta}")
+    wr.wLog(f"Contêiner {container_id} (criado em {created_at}) está na porta {porta}", level="debug")
     return porta
 ################################################################################
 def AtivaServidorOSMR(regioes):
