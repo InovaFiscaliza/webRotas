@@ -67,6 +67,7 @@ import time
 import regions as rg
 
 
+
 # ---------------------------------------------------------------------------------------------------------------
 class CacheBoundingBox:
     def __init__(self):
@@ -302,7 +303,8 @@ class CacheBoundingBox:
             caminho_old.unlink(missing_ok=True)
             # print(f"[OK] Route cache salvo para '{chave}' em '{caminho_arquivo}'")
         except Exception as e:
-            print(f"[ERRO] Falha ao salvar route_cache para '{chave}': {e}")
+            pass
+            # wLog(f"Cache ralha ao salvar route_cache para '{chave}': {e}", level="debug")
 
     def salvar_route_cache_individual(self):
         """
@@ -357,7 +359,7 @@ class CacheBoundingBox:
                     self.route_cache.cache[chave] = route_data
                 # print(f"[OK] Route cache carregado para '{chave}' de '{caminho_arquivo}'")
             except Exception as e:
-                print(f"[ERRO] Falha ao carregar '{caminho_arquivo}': {e}")
+                # wLog(f"Cache falha ao carregar '{caminho_arquivo}': {e}", level="debug")
                 if caminho_old.exists():
                     try:
                         with gzip.open(caminho_old, "rb") as f:

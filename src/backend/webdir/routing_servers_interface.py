@@ -450,11 +450,13 @@ def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon):
     AtivaServidorOSMR(regioes)
     porta = None
     while porta==None: 
-        porta = region_container_alive(cache) # verifica se o container já está em execução para aquela região
+        porta = region_container_alive(cache) # verifica se o container já está em execução para aquela região  
+        time.sleep(1)    
         if(porta):
             wr.UserData.OSMRport = porta
             wr.wLog(f"Servidor iniciado - id: {cache}")
             return True
+        
     # else:
     #     wr.wLog(f"Não foi possível iniciar o servidor - id: {cache}")
     #     return False
