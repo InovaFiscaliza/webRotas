@@ -256,7 +256,7 @@ def AtivaServidorOSMR(regioes):
     wr.wLog(f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}", level="debug")
     log_filename = wl.get_log_filename()
     logok_osmr = f"{log_filename}.{wr.UserData.nome}.OSMR"
-    wr.wLog(f"Ativando Servidor OSMR", level="info")
+    wr.wLog(f"Ativando Servidor OSMR", level="debug")
     subprocess.run(
         ["podman", "stop", f"osmr_{wr.UserData.nome}_{chave}"],
         stdout=open(logok_osmr, "a"),
@@ -384,7 +384,7 @@ def get_containers():
     )
 
     if result.returncode != 0:
-        wr.wLog("Erro ao listar contêineres")
+        # wr.wLog("Erro ao listar contêineres")
         return []
     
     # wr.wLog(f"Saída podman:\n{result.stdout}")
@@ -413,7 +413,7 @@ def get_container_by_cacheid(cacheid):
     )
 
     if result.returncode != 0:
-        wr.wLog("Erro ao listar contêineres")
+        # wr.wLog("Erro ao listar contêineres")
         return []
 
     containers = []
@@ -445,7 +445,16 @@ def check_osrm_server(host: str, port: int, timeout: int = 3) -> bool:
     url = f"http://{host}:{port}/health"
     try:
         response = requests.get(url, timeout=timeout)
-        return response.status_code == 200
+        if response.status_code == 200:
+            url = "http://{host}:{port}/route/v1/driving/-51.512533967708904,-29.972345983755194;-51.72406122295204,-30.03608928259163?overview=full&geometries=polyline&steps=true"       
+            wr.wLog(url)
+            
+            response = requests.get(url)
+            data = response.json()
+            if response.status_code == 200 and "routes" in data:
+               return True    
+            else:
+               return False
     except requests.exceptions.RequestException:
         return False
 ###########################################################################################################################
@@ -463,7 +472,7 @@ def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon):
         if(porta):
             wr.UserData.OSMRport = porta
             if(check_osrm_server("localhost",porta,3)):
-               wr.wLog(f"Servidor iniciado - id: {cache}", level="debug")
+               wr.wLog(f"Servidor iniciado - id: {cache} -  ({start_lat}, {start_lon}), ({end_lat}, {end_lon})")
                return True
         time.sleep(1)  
     # else:
