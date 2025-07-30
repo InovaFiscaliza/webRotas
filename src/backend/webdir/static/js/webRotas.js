@@ -37,7 +37,7 @@
       │           ├── automatic
       |           ├── created
       │           ├── origin
-      │           ├── waypoints
+      │           ├── waypoints[]
       │           ├── paths
       │           └── estimatedDistance
       ├── map                 (L.map)
@@ -83,8 +83,7 @@
     (5) Ajustar estrutura de "request.json". Ao invés de "pontosvisita", usar "waypoints",
         ao invés de lista de listas, usar lista de objetos etc.
     (6) Ao adicionar uma routa à routingContext, validar se rota já se encontra por meio
-        de análise de cacheId e routeId. E inicializar "avoidZones" e "midPoint" p/ possibilitar
-        plot.
+        de análise de cacheId e routeId.
     (7) inserir dataset=index na árvore.
     ...
 */
@@ -156,7 +155,7 @@
                     options: {
                         weight: 1,
                         color: 'rgba(255,0,0,0.5)',
-                        fillColor: 'rgba(255,0,0,0.75)',
+                        fillColor: 'rgba(255,0,0,0.25)',
                         interactive: false
                     }
                 },
@@ -309,6 +308,11 @@
 
     /*---------------------------------------------------------------------------------*/
     async function appStartup() {
+        /*
+            Inicialmente, carregam-se os scripts auxiliares (Callbacks, Communication, 
+            Components, Layout, Plot e Utils). Além disso, caso o protocolo seja "file:", 
+            carrega-se o script da sessão (session.js).
+        */
         try {
             await loadScript('js/Callbacks.js');
             await loadScript('js/Communication.js');
@@ -317,7 +321,15 @@
             await loadScript('js/Plot.js');
             await loadScript('js/Utils.js');
 
-            window.addEventListener("load",         (event) => window.app.modules.Callbacks.onWindowLoad(event));            
+            if (window.location.protocol === "file:") {
+                try {
+                    await loadScript('data/session.js');
+                } catch (ME) {
+                    (window.app.modules.Utils) ? window.app.modules.Utils.consoleLog(ME, 'error') : console.error(ME);
+                }
+            }
+
+            window.addEventListener("load",         (event) => window.app.modules.Callbacks.onWindowLoad(event));
             window.addEventListener("beforeunload", (event) => window.app.modules.Callbacks.onWindowBeforeUnload(event));
             window.addEventListener("storage",      (event) => window.app.modules.Callbacks.onLocalStorageUpdate(event));
 

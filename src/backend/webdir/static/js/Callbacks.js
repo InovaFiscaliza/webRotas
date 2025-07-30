@@ -42,7 +42,7 @@
 
         /*---------------------------------------------------------------------------------*/
         static onLocalStorageUpdate(event) {
-            if (event.storageArea !== localStorage) {
+            if (event.storageArea !== window.localStorage) {
                 return;
             }
 
