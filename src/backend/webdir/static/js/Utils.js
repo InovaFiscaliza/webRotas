@@ -142,72 +142,118 @@
     }
 
     /*---------------------------------------------------------------------------------*/
-    async function exportAsKML(polylineRota, pontosVisita, pontosVisitaDados) {
-        const timestamp = getTimeStamp();
-        const kmlInicio = `<?xml version="1.0" encoding="UTF-8"?>
-    <kml xmlns="http://www.opengis.net/kml/2.2">
-    <Document>
-        <name>webRotas ${timestamp}</name>
-        <Style id="lineStyleBlue">
-        <LineStyle>
-            <color>ff00ff00</color> <!-- verde em formato ABGR -->
-            <width>4</width>
-        </LineStyle>
-        </Style>
-    `;
+    async function leafletLayersToKML(documentName) {
+        const layers = Object.values(window.app.map._layers);
+        const features = [];
 
-        const kmlFim = `
-    </Document>
-    </kml>`;
+        layers.forEach(layer => {
+            if (layer instanceof window.L.Marker   ||
+                layer instanceof window.L.Polyline ||
+                layer instanceof window.L.Polygon) {
 
-        let kmlPontos = '';
-        ind = 0;
-        pontosVisita.forEach(([latitude, longitude]) => {
-            descricao = EncontrarDado(pontosVisitaDados, latitude, longitude, 4);
-            altitude = EncontrarDado(pontosVisitaDados, latitude, longitude, 5);
-            kmlPontos += `
-            <Placemark>
-            <name>P${ind}  ${descricao}</name>
-            <description>${descricao}</description>
-            <Point>
-                <coordinates>${longitude},${latitude},${altitude}</coordinates>
-            </Point>
-            </Placemark>`;
-            ind++;
+                if (!layer._tag) {
+                    return;
+                }
+
+                try {
+                    const geojson = layer.toGeoJSON();
+
+                    if (!geojson || geojson.type !== 'Feature') {
+                        return;
+                    }
+
+                    geojson.properties.name = layer._tag;
+
+                    const { color, weight, fillColor, opacity } = layer.options;
+                    if (color) {
+                        const rgbaColor = Image.rgbaToHexAndAlpha(color);
+                        geojson.properties.stroke = rgbaColor.hex;
+                    }
+
+                    if (weight) {
+                        geojson.properties['stroke-width'] = weight;
+                    }
+
+                    let fillOpacitySet = false;
+                    if (fillColor) {
+                        const rgba = Image.rgbaToHexAndAlpha(fillColor);
+
+                        if (rgba) {
+                            geojson.properties.fill = rgba.hex;
+                            geojson.properties['fill-opacity'] = rgba.alpha;
+                            fillOpacitySet = true;
+                        }
+                    }
+
+                    if (!fillOpacitySet && !!opacity) {
+                        geojson.properties['fill-opacity'] = opacity;
+                    }
+
+                    features.push(geojson);
+                } catch (ME) {
+                    consoleLog(`Failed to convert layer to GeoJSON: ${ME.message}`, 'warn');
+                }
+            }
         });
 
-        let kmlPolyline = '';
-        for (let i = 0; i < polylineRota.length; i++) {
-            kmlPolyline = kmlPolyline + `
-        <Placemark>
-        <name>Rota${i}</name>
-        <styleUrl>#lineStyleBlue</styleUrl>
-        <LineString>
-            <coordinates>
-        `;
-            polylineRota[i].forEach(([latitude, longitude]) => {
-                kmlPolyline += `          ${longitude},${latitude},0\n`;
-            });
-
-            kmlPolyline += `
-            </coordinates>
-        </LineString>
-        </Placemark>`;
+        if (features.length === 0) {
+            throw new Error('No markers, lines, or polygons found on the map to export.');
         }
-        // Combinar todas as partes
-        const kmlConteudo = kmlInicio + kmlPontos + kmlPolyline + kmlFim;
 
-        // Salvar o arquivo KML
-        this.saveToFile('kml', filename, kmlConteudo);
+        const featureCollection = {
+            type: 'FeatureCollection',
+            features: features
+        };
 
-        function EncontrarDado(pontosvisitaDados, lat, lon, iDado) {
-            const ponto = pontosvisitaDados.find(p => p[0] === lat && p[1] === lon);
-            return ponto ? ponto[iDado] : "Dado não encontrado";
+        // Description
+        const { currentSelection } = window.app.modules.Layout.findSelectedRoute();
+        const [index1, index2] = JSON.parse(currentSelection.dataset.index);
+        const routing = window.app.routingContext[index1];
+        const route = routing.response.routes[index2];
+
+        const ids = {
+            created: route.created,
+            cacheId: routing.response.cacheId,
+            routeId: route.routeId
+        };
+        const documentDescription = JSON.stringify(ids, null, 1);
+
+        // Convert to KML
+        return tokml(featureCollection, {
+            documentName,
+            documentDescription,
+            name: 'name',
+            description: 'description',
+            simplestyle: true,
+            timestamp: 'timestamp'
+        });
+    }
+
+    /*---------------------------------------------------------------------------------*/
+    async function exportAsKML(fileName) {
+        if (window.app.routingContext.length === 0) {
+            new DialogBox('No routes to export');
+            return;
+        }
+
+        // KML (da rota selecionada)
+        let kmlContent = '';
+        try {
+            kmlContent = await leafletLayersToKML(fileName);
+        } catch (ME) {
+            consoleLog(`Failed to export KML. Reason: ${ME.message}`, 'error');
+        }
+
+        if (kmlContent) {
+            let data = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+            saveToFile('kml', fileName, data);
+        } else {
+            consoleLog("KML content is empty. The file will be saved only if valid.", "warn");
         }
     }
 
     /*---------------------------------------------------------------------------------*/
-    async function exportAsZip() {
+    async function exportAsZip(fileName) {
         if (window.app.routingContext.length === 0) {
             new DialogBox('No routes to export');
             return;
@@ -263,7 +309,7 @@
                 const blob = await response.blob();
                 zip.file(path, blob);
             } catch (ME) {
-                this.consoleLog(`Failed to fetch ${path}: ${ME.message}`, 'error');
+                consoleLog(`Failed to fetch ${path}: ${ME.message}`, 'error');
             }
         }
 
@@ -276,31 +322,28 @@
             session += `\twindow.localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});\n`;
         }
         session += `}`;
-
         zip.file("data/session.js", session);
 
-        const content = await zip.generateAsync({ type: "blob" });
-        
-        const link    = window.document.createElement("a");
-        link.href     = URL.createObjectURL(content);
-        link.download = defaultFileName('webRotas', 'zip');
-        link.target   = "_blank";
-
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
-
-        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        const data = await zip.generateAsync({ type: "blob" });
+        saveToFile('zip', fileName, data);
     }
 
     /*---------------------------------------------------------------------------------*/
     const saveToFile = (fileType, filename, data, ...args) => {
-        const link = window.document.createElement('a');
+        const link    = window.document.createElement('a');
         link.download = filename;
+        link.target   = "_blank";
 
         let revokeNeeded = false;
     
         switch (fileType) {
+            case 'zip':
+            case 'kml': {
+                link.href    = URL.createObjectURL(data);
+                revokeNeeded = true;
+                break;
+            }
+            /*
             case 'image': {
                 let { format, quality, width, height } = args[0] || { format: 'image/png', quality: 1, width: 1024, height: 768 };
 
@@ -318,12 +361,6 @@
                 link.href = canvas.toDataURL(format, quality);
                 break;
             }
-            case 'kml': {
-                const blob = new Blob([data], { type: 'application/vnd.google-earth.kml+xml' });
-                link.href = URL.createObjectURL(blob);
-                revokeNeeded = true;
-                break;
-            }
             case 'json': {
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 link.href = URL.createObjectURL(blob);
@@ -336,6 +373,7 @@
                 revokeNeeded = true;
                 break;
             }
+            */
             default:
                 throw new Error(`Unexpected filetype: ${fileType}`);
         }
@@ -642,6 +680,23 @@
                 pin:   `rgb(${red}, ${green}, ${blue})`,
                 label: `rgb(${r}, ${g}, ${b})`
             }
+        }
+
+        /*---------------------------------------------------------------------------------*/
+        static rgbaToHexAndAlpha(input) {
+            if (typeof input !== 'string') return null;
+
+            const match = input.match(/^rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)$/i);
+            if (!match) return null;
+
+            const r = parseInt(match[1]);
+            const g = parseInt(match[2]);
+            const b = parseInt(match[3]);
+            const a = match[4] !== undefined ? parseFloat(match[4]) : 1.0;
+
+            const hex = `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+
+            return { hex, alpha: a };
         }
     }
 

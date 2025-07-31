@@ -73,18 +73,26 @@
     a url do servidor, a sessionId e os detalhes das rotas.
 
     ToDo:
-    (1) Editar elemento "menu-context" que suporta o mapa, de forma que ele possa ser
-        dragado por meio do ponto de ancoragem.
-    (2) Criar possibilidade de abrir o streeview no próprio webRotas, encapsulando-o em
-        um iframe, ou abrindo uma nova aba controlável (evitando bloqueio do navegador).
-    (3) Implementar "ping" a cada 10s, de forma que o servidor possa registrar as sessões
-        ativas no seu controle de sessões.
-    (4) Implementar leitura múltipla de arquivos (tanto de "request" quando de "routing").
-    (5) Ajustar estrutura de "request.json". Ao invés de "pontosvisita", usar "waypoints",
-        ao invés de lista de listas, usar lista de objetos etc.
-    (6) Ao adicionar uma routa à routingContext, validar se rota já se encontra por meio
-        de análise de cacheId e routeId.
-    (7) inserir dataset=index na árvore.
+    (01) Editar elemento "menu-context" que suporta o mapa, de forma que ele possa ser
+         dragado por meio do ponto de ancoragem.
+    (02) Criar possibilidade de abrir o streeview no próprio webRotas, encapsulando-o em
+         um iframe, ou abrindo uma nova aba controlável (evitando bloqueio do navegador).
+    (03) Implementar "ping" a cada 10s, de forma que o servidor possa registrar as sessões
+         ativas no seu controle de sessões.
+    (04) Implementar leitura múltipla de arquivos (tanto de "request" quando de "routing").
+    (05) Ajustar estrutura de "request.json". Ao invés de "pontosvisita", usar "waypoints",
+         ao invés de lista de listas, usar lista de objetos etc.
+    (06) Ao adicionar uma routa à routingContext, validar se rota já se encontra por meio
+         de análise de cacheId e routeId.
+    (07) inserir dataset=index na árvore.
+    (08) Criar um fallback para o caso do app não carregar os CSS/JS das bibliotecas Leaflet,
+         toKML e JSZip.
+    (09) Ajustar colorbar, de forma que as suas dimensões sejam ajustáveis ao tamanho do
+         navegador.
+    (10) Verificar se é possível passar o ícone customizado do Leaflet para o toKML, de 
+         forma que o KML exportado possa ser visualizado no Google Earth.
+    (11) Inserir um label no popup (basemaps e exportFile) que contextualize o usuário,
+         ao invés de apenas apresentar as opções.
     ...
 */
 (function () {
@@ -301,6 +309,10 @@
                     offsetResolver: (direction) => { 
                         return (direction === "top") ? [0, -41] : [0, 0] 
                     }
+                },
+                exportFile: {
+                    options: (window.location.protocol === "file:") ? ["KML"] : ["KML", "HTML+JS+CSS"],
+                    selected: "KML"
                 }
             }
         }
