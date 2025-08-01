@@ -61,6 +61,7 @@ import wlog as wl
 
 CONFIG_FILE = pf.PROJECT_PATH / "src" / "backend" / "webdir" / "containers_config.json"
 
+
 ################################################################################
 def FindFreePort(start_port=50000, max_port=65535):
     """
@@ -90,6 +91,7 @@ def FindFreePort(start_port=50000, max_port=65535):
 
 
 ################################################################################
+
 
 def remover_diretorio(filtro: str) -> bool:
     """
@@ -150,9 +152,9 @@ def mover_arquivo(origem: str, destino: str) -> bool:
 ################################################################################
 def init_and_load_podman_images():
     wr.wLog(f"init_and_load_podman_images", level="debug")
-    
+
     log_filename = wl.get_log_filename()
-    logok = f"{log_filename}.{wr.UserData.nome}.OSMR"
+    logok = f"{log_filename}.{wr.UserData.ssid}.OSMR"
     subprocess.run(
         ["podman", "machine", "init"], stdout=open(logok, "a"), stderr=subprocess.STDOUT
     )
@@ -171,14 +173,13 @@ def init_and_load_podman_images():
         stdout=open(logok, "a"),
         stderr=subprocess.STDOUT,
     )
-    
 
 
 ################################################################################
 def FiltrarRegiaoComOsmosis(regioes):
     chave = cb.cCacheBoundingBox.chave(regioes)
     log_filename = wl.get_log_filename()
-    logok = f"{log_filename}.{wr.UserData.nome}.OSMR"
+    logok = f"{log_filename}.{wr.UserData.ssid}.OSMR"
 
     destino = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
     # Se o diretório de destino já existe, não faz nada, pode ser um cache já feito corrompido, vale tentar poupar o tempo.
@@ -203,7 +204,7 @@ def FiltrarRegiaoComOsmosis(regioes):
             "-v",
             f"{pf.OSMOSIS_PATH}:/data",
             "--name",
-            f"osmosis_{wr.UserData.nome}",
+            f"osmosis_{wr.UserData.ssid}",
             "localhost/osmosis_webrota",
             "osmosis",
             "--read-pbf",
@@ -229,6 +230,7 @@ def FiltrarRegiaoComOsmosis(regioes):
     remover_diretorio(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}") / f"filtro_{chave}")
     return 1  # Criou diretório roda ciração dos indices OSMR
 
+
 ################################################################################
 def region_container_alive(cacheid):
     containers = get_container_by_cacheid(cacheid)
@@ -240,25 +242,34 @@ def region_container_alive(cacheid):
 
     # se há pelo menos um container, pegue a porta do primeiro
     container_id, created_at, porta = containers[0]
-    wr.wLog(f"Contêiner {container_id} (criado em {created_at}) está na porta {porta}", level="debug")
+    wr.wLog(
+        f"Contêiner {container_id} (criado em {created_at}) está na porta {porta}",
+        level="debug",
+    )
     return porta
+
+
 ################################################################################
 def AtivaServidorOSMR(regioes):
     # startserver filtro 8001 osmr_server8001
     chave = cb.cCacheBoundingBox.chave(regioes)
-    #-------------------------------------------------
-    porta = region_container_alive(chave) # verifica se o container já está em execução para aquela região
-    if(porta):
+    # -------------------------------------------------
+    porta = region_container_alive(
+        chave
+    )  # verifica se o container já está em execução para aquela região
+    if porta:
         wr.UserData.OSMRport = porta
         return
-    #-------------------------------------------------
+    # -------------------------------------------------
     wr.UserData.OSMRport = FindFreePort(start_port=50000, max_port=65535)
-    wr.wLog(f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}", level="debug")
+    wr.wLog(
+        f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}", level="debug"
+    )
     log_filename = wl.get_log_filename()
-    logok_osmr = f"{log_filename}.{wr.UserData.nome}.OSMR"
+    logok_osmr = f"{log_filename}.{wr.UserData.ssid}.OSMR"
     wr.wLog(f"Ativando Servidor OSMR", level="debug")
     subprocess.run(
-        ["podman", "stop", f"osmr_{wr.UserData.nome}_{chave}"],
+        ["podman", "stop", f"osmr_{wr.UserData.ssid}_{chave}"],
         stdout=open(logok_osmr, "a"),
         stderr=subprocess.STDOUT,
     )
@@ -268,7 +279,7 @@ def AtivaServidorOSMR(regioes):
     port_map = f"{wr.UserData.OSMRport}:5000"
     log_file = open(logok_osmr, "a")
 
-    comando = f"""podman run --tty=false --rm --name osmr_{wr.UserData.nome}_{chave} -m 32g -t -i \
+    comando = f"""podman run --tty=false --rm --name osmr_{wr.UserData.ssid}_{chave} -m 32g -t -i \
     -p {port_map} \
     -v "{volume_host}:{volume_container}" \
     localhost/osmr_webrota osrm-routed --algorithm mld {volume_container}/filtro-latest.osm.pbf"""
@@ -283,11 +294,11 @@ def GerarIndicesExecutarOSRMServer(regioes):
     # os.chdir("../../resources/OSMR/data")
     chave = cb.cCacheBoundingBox.chave(regioes)
     log_filename = wl.get_log_filename()
-    logok = f"{log_filename}.{wr.UserData.nome}"
+    logok = f"{log_filename}.{wr.UserData.ssid}"
     DIRETORIO_REGIAO = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
     DIRETORIO_REGIAO_CONTAINER = f"filtro_{chave}"
     subprocess.run(
-        ["podman", "stop", f"osmr_{wr.UserData.nome}_{chave}"],
+        ["podman", "stop", f"osmr_{wr.UserData.ssid}_{chave}"],
         stdout=open(logok, "a"),
         stderr=subprocess.STDOUT,
     )
@@ -362,7 +373,6 @@ def manutencao_arquivos_antigos():
     StopOldContainers(days=30)
 
 
-
 ################################################################################
 def get_containers():
     """
@@ -386,9 +396,9 @@ def get_containers():
     if result.returncode != 0:
         # wr.wLog("Erro ao listar contêineres")
         return []
-    
+
     # wr.wLog(f"Saída podman:\n{result.stdout}")
-    
+
     containers = []
     for line in result.stdout.strip().splitlines():
         parts = line.split("||")
@@ -398,6 +408,7 @@ def get_containers():
                 containers.append((container_id, created_at))
 
     return containers
+
 
 ################################################################################
 def get_container_by_cacheid(cacheid):
@@ -428,9 +439,15 @@ def get_container_by_cacheid(cacheid):
                     text=True,
                 )
                 if port_result.returncode == 0:
-                    raw_port = port_result.stdout.strip().splitlines()[0] if port_result.stdout.strip() else "desconhecida"
+                    raw_port = (
+                        port_result.stdout.strip().splitlines()[0]
+                        if port_result.stdout.strip()
+                        else "desconhecida"
+                    )
                     if "->" in raw_port and ":" in raw_port:
-                        porta = raw_port.split(":")[-1]  # pega só a última parte (ex: 50000)
+                        porta = raw_port.split(":")[
+                            -1
+                        ]  # pega só a última parte (ex: 50000)
                     else:
                         porta = raw_port
                 else:
@@ -439,6 +456,8 @@ def get_container_by_cacheid(cacheid):
                 containers.append((container_id, created_at, porta))
 
     return containers
+
+
 ###########################################################################################################################
 def check_osrm_server(host: str, port: int, timeout: int = 3) -> bool:
     """Verifica se o servidor OSRM está ativo, consultando /health ou root."""
@@ -446,43 +465,56 @@ def check_osrm_server(host: str, port: int, timeout: int = 3) -> bool:
     try:
         response = requests.get(url, timeout=timeout)
         if response.status_code == 200:
-            url = "http://{host}:{port}/route/v1/driving/-51.512533967708904,-29.972345983755194;-51.72406122295204,-30.03608928259163?overview=full&geometries=polyline&steps=true"       
+            url = "http://{host}:{port}/route/v1/driving/-51.512533967708904,-29.972345983755194;-51.72406122295204,-30.03608928259163?overview=full&geometries=polyline&steps=true"
             wr.wLog(url)
-            
+
             response = requests.get(url)
             data = response.json()
             if response.status_code == 200 and "routes" in data:
-               return True    
+                return True
             else:
-               return False
+                return False
     except requests.exceptions.RequestException:
         return False
+
+
 ###########################################################################################################################
-def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon): 
-    cache,regioes =  cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
-    if(cache==None):
-        wr.wLog(f"Não encontrada região no cache para essa rota - id: {cache}", level="debug")
-        return False        
+def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon):
+    cache, regioes = cb.cCacheBoundingBox.find_server_for_this_route(
+        start_lat, start_lon, end_lat, end_lon
+    )
+    if cache == None:
+        wr.wLog(
+            f"Não encontrada região no cache para essa rota - id: {cache}",
+            level="debug",
+        )
+        return False
     wr.wLog(f"Ativando região para essa rota: {cache}", level="debug")
     AtivaServidorOSMR(regioes)
-    time.sleep(1)  
+    time.sleep(1)
     porta = None
-    while porta==None: 
-        porta = region_container_alive(cache) # verifica se o container já está em execução para aquela região  
-        if(porta):
+    while porta == None:
+        porta = region_container_alive(
+            cache
+        )  # verifica se o container já está em execução para aquela região
+        if porta:
             wr.UserData.OSMRport = porta
-            if(check_osrm_server("localhost",porta,3)):
-               wr.wLog(f"Servidor iniciado - id: {cache} -  ({start_lat}, {start_lon}), ({end_lat}, {end_lon})")
-               return True
-        time.sleep(1)  
+            if check_osrm_server("localhost", porta, 3):
+                wr.wLog(
+                    f"Servidor iniciado - id: {cache} -  ({start_lat}, {start_lon}), ({end_lat}, {end_lon})"
+                )
+                return True
+        time.sleep(1)
     # else:
     #     wr.wLog(f"Não foi possível iniciar o servidor - id: {cache}")
     #     return False
-    
+
     # for cid, created, porta in resultados:
-    #    print(f"ID: {cid}, Criado: {created}, Porta: {porta}")    
-    
+    #    print(f"ID: {cid}, Criado: {created}, Porta: {porta}")
+
+
 ################################################################################
+
 
 def load_config_numcontainers():
     """
@@ -496,6 +528,7 @@ def load_config_numcontainers():
     except Exception as e:
         wr.wLog(f"Erro ao carregar {CONFIG_FILE}: {e}")
         return 4
+
 
 ################################################################################
 def keep_last_n_containers_running():
@@ -517,7 +550,7 @@ def keep_last_n_containers_running():
         containers, key=lambda c: parse_created_time(c[1]), reverse=True
     )
 
-    ids_to_keep = {c[0] for c in containers_sorted[:num_max-1]}
+    ids_to_keep = {c[0] for c in containers_sorted[: num_max - 1]}
 
     result = subprocess.run(
         ["podman", "ps", "--format", "{{.ID}}"],
@@ -529,11 +562,9 @@ def keep_last_n_containers_running():
     for container_id in running_ids:
         if container_id not in ids_to_keep:
             wr.wLog(f"Parando conteiner: {container_id}")
-            subprocess.run(
-                ["podman", "stop", container_id],
-                stdout=subprocess.DEVNULL
-            )
-            
+            subprocess.run(["podman", "stop", container_id], stdout=subprocess.DEVNULL)
+
+
 ################################################################################
 def StopOldContainers(days=30):
     """
@@ -654,7 +685,7 @@ def VerificarFalhaServidorOSMR():
         "UnableZZZ to restore terminal:",
     ]
     log_filename = wl.get_log_filename()
-    logfile = f"{log_filename}.{wr.UserData.nome}.OSMR"
+    logfile = f"{log_filename}.{wr.UserData.ssid}.OSMR"
     if procurar_multiplas_strings_em_arquivo(logfile, erros_procurados):
         wr.wLog("Erro detectado no log!", level="debug")
         return True
@@ -766,7 +797,7 @@ def parar_containers_osmr(nome_usuario):
         for linha in linhas:
             container_id, container_name = linha.strip().split(maxsplit=1)
             # if container_name == f"osmr_{nome_usuario}":
-            if container_name.startswith(f"osmr_{nome_usuario}_"):    
+            if container_name.startswith(f"osmr_{nome_usuario}_"):
                 subprocess.run(
                     ["podman", "stop", container_id],
                     stdout=subprocess.DEVNULL,
@@ -782,7 +813,7 @@ def parar_containers_osmr(nome_usuario):
 def remover_arquivos_osmr():
     wr.wLog("Removendo arquivos osmozis e osmr", level="debug")
 
-    caminhos = [f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.nome}*"]
+    caminhos = [f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.ssid}*"]
 
     for caminho in caminhos:
         for item in glob.glob(caminho, recursive=True):
@@ -818,14 +849,14 @@ def esperar_container_parar(nome_usuario, timeout=30):
 def limpar_cache_files_osmr(regioes):
     try:
         wr.wLog(
-            f"Parando todos os containers osmr do usário {wr.UserData.nome}",
+            f"Parando todos os containers osmr do usário {wr.UserData.ssid}",
             level="debug",
         )
-        parar_containers_osmr(wr.UserData.nome)
-        esperar_container_parar(wr.UserData.nome)
+        parar_containers_osmr(wr.UserData.ssid)
+        esperar_container_parar(wr.UserData.ssid)
         wr.wLog("Apagando arquivo de log...", level="debug")
         log_filename = wl.get_log_filename()
-        log_file = f"{log_filename}.{wr.UserData.nome}.OSMR"
+        log_file = f"{log_filename}.{wr.UserData.ssid}.OSMR"
         backup_file = log_file + ".LastError"
         try:
             if os.path.exists(log_file):
@@ -850,7 +881,7 @@ def PreparaServidorRoteamento(regioes):
     roteamento_ok = False
     gi.cGuiOutput.cache_id = cb.cCacheBoundingBox.chave(regioes)
     while not roteamento_ok:
-        if cb.cCacheBoundingBox.get_cache(regioes) == None:   # servidor não tem cache ID
+        if cb.cCacheBoundingBox.get_cache(regioes) == None:  # servidor não tem cache ID
             wr.GeraArquivoExclusoes(
                 regioes,
                 arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")
@@ -862,9 +893,13 @@ def PreparaServidorRoteamento(regioes):
                 wr.wLog("GerarIndicesExecutarOSRMServer")
                 GerarIndicesExecutarOSRMServer(regioes)
             else:
-                wr.wLog("Dados de roteamento encontrados no diretorio filtro OSMR cache, ativando o servidor OSMR")
+                wr.wLog(
+                    "Dados de roteamento encontrados no diretorio filtro OSMR cache, ativando o servidor OSMR"
+                )
                 AtivaServidorOSMR(regioes)
-            info_regiao = sf.ObterMunicipiosNoBoundingBoxOrdenados(rg.extrair_bounding_box_de_regioes(regioes))
+            info_regiao = sf.ObterMunicipiosNoBoundingBoxOrdenados(
+                rg.extrair_bounding_box_de_regioes(regioes)
+            )
             km2_região = wr.calc_km2_regiao(regioes)
             cb.cCacheBoundingBox.new(
                 regioes,
@@ -873,7 +908,9 @@ def PreparaServidorRoteamento(regioes):
                 km2_região,
             )
         else:
-            wr.wLog("Dados de roteamento encontrados no cache, nao e necessario executar osmosis")
+            wr.wLog(
+                "Dados de roteamento encontrados no cache, nao e necessario executar osmosis"
+            )
             AtivaServidorOSMR(regioes)
         if VerificarOsrmAtivo():
             roteamento_ok = True

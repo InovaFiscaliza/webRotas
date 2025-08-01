@@ -1,5 +1,7 @@
 import webRota as wr
 import os
+
+
 ###########################################################################################################################
 def GeraHeader():
     header = """
@@ -38,24 +40,30 @@ def GeraHeader():
             
         """
     return header
+
+
 ###########################################################################################################################
 def GeraFooter():
     footer = """
            </script>
         </body>
         </html>
-    """        
+    """
     return footer
+
+
 ###########################################################################################################################
 def AbrirArquivoComoString(caminho_arquivo):
     try:
-        with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
+        with open(caminho_arquivo, "r", encoding="utf-8") as arquivo:
             return arquivo.read()  # Lê todo o conteúdo do arquivo como uma string
     except FileNotFoundError:
         return f"Erro: O arquivo '{caminho_arquivo}' não foi encontrado."
     except Exception as e:
         return f"Erro: {e}"
-###########################################################################################################################    
+
+
+###########################################################################################################################
 def WriteToFile(file_path, content):
     """
     Escreve uma string em um arquivo, sobrescrevendo o conteúdo existente.
@@ -64,64 +72,77 @@ def WriteToFile(file_path, content):
     :param content: String a ser escrita no arquivo.
     """
     try:
-        with open(file_path, 'a') as file:  # Modo append
+        with open(file_path, "a") as file:  # Modo append
             file.write(content)
-        wr.wLog(f"Conteúdo gravado com sucesso no arquivo: {file_path}",level="debug")
+        wr.wLog(f"Conteúdo gravado com sucesso no arquivo: {file_path}", level="debug")
     except Exception as e:
-        wr.wLog(f"Erro ao gravar no arquivo: {e}",level="debug")
-###########################################################################################################################    
+        wr.wLog(f"Erro ao gravar no arquivo: {e}", level="debug")
+
+
+###########################################################################################################################
 def GeraStaticIcon(name):
     # wr.wLog(f"GeraStaticIcon - {name}",level="debug")
-    nomeuser=wr.UserData.nome
-    fileIcon = f'static/{name}.png'  
+    nomeuser = wr.UserData.ssid
+    fileIcon = f"static/{name}.png"
     base64ElevationTable = wr.FileToDataUrlBase64(fileIcon)
     content = f"img{name} = '{base64ElevationTable}';\n"
-    WriteToFile('static/tmpStaticResources.js', content)     
+    WriteToFile("static/tmpStaticResources.js", content)
+
+
 ###########################################################################################################################
 def apagar_arquivo(caminho_arquivo):
     try:
         if os.path.exists(caminho_arquivo):  # Verifica se o arquivo existe
             os.remove(caminho_arquivo)
-            wr.wLog(f"Arquivo '{caminho_arquivo}' apagado com sucesso.",level="debug")
+            wr.wLog(f"Arquivo '{caminho_arquivo}' apagado com sucesso.", level="debug")
         else:
-            wr.wLog(f"Arquivo '{caminho_arquivo}' não encontrado.",level="debug")
+            wr.wLog(f"Arquivo '{caminho_arquivo}' não encontrado.", level="debug")
     except Exception as e:
-        wr.wLog(f"Erro ao apagar o arquivo: {e}",level="debug")
+        wr.wLog(f"Erro ao apagar o arquivo: {e}", level="debug")
+
+
 ###########################################################################################################################
-def GeraMapaLeaflet(mapa,RouteDetail,static=False):
+def GeraMapaLeaflet(mapa, RouteDetail, static=False):
     wr.wLog(f"GeraMapaLeaflet - {mapa}")
-    
-    apagar_arquivo('static/tmpStaticResources.js')    
-    GeraStaticIcon("OpenElevTable") 
+
+    apagar_arquivo("static/tmpStaticResources.js")
+    GeraStaticIcon("OpenElevTable")
     GeraStaticIcon("OrdemPontos")
     GeraStaticIcon("PointerNorte")
-    GeraStaticIcon("Pointer")   
+    GeraStaticIcon("Pointer")
     GeraStaticIcon("GpsInativo")
     GeraStaticIcon("GpsAtivo")
     GeraStaticIcon("Kml")
     GeraStaticIcon("MapLayers")
 
     if static:
-       tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
-       staticResources = AbrirArquivoComoString("static/StaticResources.js")  
-       utilMap = AbrirArquivoComoString("static/UtilMap.js") 
-       sDivOrdenaPontos = AbrirArquivoComoString("static/clDivOrdenaPontos.js") 
-       mapcontextmenu = AbrirArquivoComoString("static/mapcontextmenu.js") 
+        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js")
+        staticResources = AbrirArquivoComoString("static/StaticResources.js")
+        utilMap = AbrirArquivoComoString("static/UtilMap.js")
+        sDivOrdenaPontos = AbrirArquivoComoString("static/clDivOrdenaPontos.js")
+        mapcontextmenu = AbrirArquivoComoString("static/mapcontextmenu.js")
     else:
-       tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js") 
-       staticResources = "<script src=\"{{ url_for('static', filename='StaticResources.js') }}\"></script> "    
-       utilMap = "<script src=\"{{ url_for('static', filename='UtilMap.js') }}\"></script>"
-       sDivOrdenaPontos = "<script src=\"{{ url_for('static', filename='clDivOrdenaPontos.js') }}\"></script>"
-       mapcontextmenu = "<script src=\"{{ url_for('static', filename='mapcontextmenu.js') }}\"></script>"
-       
-    javaScriptCode =  utilMap + sDivOrdenaPontos + mapcontextmenu
-       
+        tmpstaticResources = AbrirArquivoComoString("static/tmpStaticResources.js")
+        staticResources = "<script src=\"{{ url_for('static', filename='StaticResources.js') }}\"></script> "
+        utilMap = (
+            "<script src=\"{{ url_for('static', filename='UtilMap.js') }}\"></script>"
+        )
+        sDivOrdenaPontos = "<script src=\"{{ url_for('static', filename='clDivOrdenaPontos.js') }}\"></script>"
+        mapcontextmenu = "<script src=\"{{ url_for('static', filename='mapcontextmenu.js') }}\"></script>"
+
+    javaScriptCode = utilMap + sDivOrdenaPontos + mapcontextmenu
+
     header = GeraHeader()
     footer = GeraFooter()
-    tilesMap0 = """
+    tilesMap0 = (
+        """
             var map = L.map('map').setView([-22.9035, -43.1034], 13);
-            var globalMaxElevation = """ + str(wr.MaxAltitude ) +""";
-            var globalMinElevation = """ + str(wr.MinAltitude ) +""";
+            var globalMaxElevation = """
+        + str(wr.MaxAltitude)
+        + """;
+            var globalMinElevation = """
+        + str(wr.MinAltitude)
+        + """;
             var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -159,21 +180,40 @@ def GeraMapaLeaflet(mapa,RouteDetail,static=False):
             }).addTo(map);
             </script>
             
-            """    
+            """
+    )
     tilesMap1 = """
             <script>
             // Cria o marcador inicial no centro do mapa
             // const gpsMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map).bindPopup("Sua localização");
             """
     if static:
-       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources+ staticResources + javaScriptCode + "</script>" + tilesMap1 
+        tilesMap = (
+            tilesMap0
+            + " <script> "
+            + tmpstaticResources
+            + staticResources
+            + javaScriptCode
+            + "</script>"
+            + tilesMap1
+        )
     else:
-       tilesMap =  tilesMap0 + " <script> "+tmpstaticResources + "</script>" +   staticResources + javaScriptCode + tilesMap1       
-    
-    texto = header + tilesMap + RouteDetail.mapcode  + footer
-   
+        tilesMap = (
+            tilesMap0
+            + " <script> "
+            + tmpstaticResources
+            + "</script>"
+            + staticResources
+            + javaScriptCode
+            + tilesMap1
+        )
+
+    texto = header + tilesMap + RouteDetail.mapcode + footer
+
     # Abre o arquivo em modo de escrita, sobrescrevendo o conteúdo
     with open(mapa, "w", encoding="utf-8") as arquivo:
-       arquivo.write(texto)
+        arquivo.write(texto)
     return
+
+
 ###########################################################################################################################

@@ -53,8 +53,6 @@ env = se.ServerEnv()
 # TODO #4 Use standard paths defined in a configuration section or file. May use ProgramData/Anatel/WebRotas, as other applications from E!, where ProgramData folder should use system variables.
 
 
-
-
 # Define o nome de log (ex: vindo do env)
 wl.set_log_filename(env.log_file)
 wl.wLog(f"Arquivo de log: {env.log_file}")
@@ -283,12 +281,10 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
         regioes = data.get("regioes", [])
         pontoinicial = data.get("PontoInicial", [])
         # Nome do usuário para o log trancorrer com o nome correto o quanto antes sem o "none"
-        wr.UserData.nome = user
+        wr.UserData.ssid = user
         gi.cGuiOutput.requisition_data = data
         # Process the request according to the request type
-        
-        
-        
+
         match request_type:
             case "Contorno":
                 wr.wLog(
@@ -401,8 +397,10 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 username = data["UserName"]
 
                 # Processa a requisição
-                polylineRota, DistanceTotal, tempo_total, pontosvisita = wr.RoteamentoOSMR(
-                    username, porta, pontosvisita, pontoinicial, recalcularrota
+                polylineRota, DistanceTotal, tempo_total, pontosvisita = (
+                    wr.RoteamentoOSMR(
+                        username, porta, pontosvisita, pontoinicial, recalcularrota
+                    )
                 )
                 cb.cCacheBoundingBox._schedule_save()
                 # Retorna uma resposta de confirmação

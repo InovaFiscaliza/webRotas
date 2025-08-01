@@ -19,22 +19,30 @@ import webRota as wr
 import datetime
 import os
 
-#---------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------
 WARNING_LEVEL = "info"
 _log_filename = "WebRotasServer.log"  # Agora com underline → uso interno
-#---------------------------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------------------------
 def set_log_filename(filename):
     global _log_filename
     _log_filename = filename
-#---------------------------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------------------------
 def get_log_filename():
     return _log_filename
-#---------------------------------------------------------------------------------------------
-def wLog(log_string, level="info"):  # Levels "info","debug", "warning", "error", "critical"
+
+
+# ---------------------------------------------------------------------------------------------
+def wLog(
+    log_string, level="info"
+):  # Levels "info","debug", "warning", "error", "critical"
     levels = {"info": 1, "debug": 2, "warning": 3, "error": 4, "critical": 5}
     current_level = levels.get(level.lower(), 0)
 
-    log_file = f"{_log_filename}.{wr.UserData.nome}"  # Nome do arquivo de log
+    log_file = f"{_log_filename}.{wr.UserData.ssid}"  # Nome do arquivo de log
 
     timStp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_string = SubstAcentos(log_string)
@@ -55,7 +63,8 @@ def wLog(log_string, level="info"):  # Levels "info","debug", "warning", "error"
     except Exception as e:
         print(f"Erro ao escrever no log: {e}")
 
-#---------------------------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------------------------
 def SubstAcentos(texto: str) -> str:
     """
     Substitui caracteres acentuados por suas versões sem acento.
@@ -65,22 +74,58 @@ def SubstAcentos(texto: str) -> str:
     """
     mapeamento = {
         # Letras minúsculas
-        "á": "a", "à": "a", "ã": "a", "â": "a", "ä": "a",
-        "é": "e", "è": "e", "ê": "e", "ë": "e",
-        "í": "i", "ì": "i", "î": "i", "ï": "i",
-        "ó": "o", "ò": "o", "õ": "o", "ô": "o", "ö": "o",
-        "ú": "u", "ù": "u", "û": "u", "ü": "u",
-        "ç": "c", "ñ": "n",
-
+        "á": "a",
+        "à": "a",
+        "ã": "a",
+        "â": "a",
+        "ä": "a",
+        "é": "e",
+        "è": "e",
+        "ê": "e",
+        "ë": "e",
+        "í": "i",
+        "ì": "i",
+        "î": "i",
+        "ï": "i",
+        "ó": "o",
+        "ò": "o",
+        "õ": "o",
+        "ô": "o",
+        "ö": "o",
+        "ú": "u",
+        "ù": "u",
+        "û": "u",
+        "ü": "u",
+        "ç": "c",
+        "ñ": "n",
         # Letras maiúsculas
-        "Á": "A", "À": "A", "Ã": "A", "Â": "A", "Ä": "A",
-        "É": "E", "È": "E", "Ê": "E", "Ë": "E",
-        "Í": "I", "Ì": "I", "Î": "I", "Ï": "I",
-        "Ó": "O", "Ò": "O", "Õ": "O", "Ô": "O", "Ö": "O",
-        "Ú": "U", "Ù": "U", "Û": "U", "Ü": "U",
-        "Ç": "C", "Ñ": "N",
+        "Á": "A",
+        "À": "A",
+        "Ã": "A",
+        "Â": "A",
+        "Ä": "A",
+        "É": "E",
+        "È": "E",
+        "Ê": "E",
+        "Ë": "E",
+        "Í": "I",
+        "Ì": "I",
+        "Î": "I",
+        "Ï": "I",
+        "Ó": "O",
+        "Ò": "O",
+        "Õ": "O",
+        "Ô": "O",
+        "Ö": "O",
+        "Ú": "U",
+        "Ù": "U",
+        "Û": "U",
+        "Ü": "U",
+        "Ç": "C",
+        "Ñ": "N",
     }
 
     return "".join(mapeamento.get(char, char) for char in texto)
 
-#---------------------------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------------------------

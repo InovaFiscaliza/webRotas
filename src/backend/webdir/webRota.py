@@ -28,9 +28,12 @@ import GuiOutput as gi
 from ClRouteDetail import ClRouteDetailList
 import wlog as wl
 
+
 ###########################################################################################################################
 def wLog(log_string, level="info"):
     wl.wLog(log_string, level)
+
+
 ###########################################################################################################################
 def Haversine(lat1, lon1, lat2, lon2):
     # Raio da Terra em metros
@@ -284,6 +287,8 @@ def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
 
 ###########################################################################################################################
 ServerTec = "OSMR"
+
+
 ###########################################################################################################################
 def porta_disponivel(host, port):
     try:
@@ -291,15 +296,22 @@ def porta_disponivel(host, port):
             return True
     except OSError:
         return False
+
+
 ###########################################################################################################################
 def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
 
     # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
-    # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115) 
-         
-    cached_response = cb.cCacheBoundingBox.route_cache_get(start_lat, start_lon, end_lat, end_lon)
+    # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115)
+
+    cached_response = cb.cCacheBoundingBox.route_cache_get(
+        start_lat, start_lon, end_lat, end_lon
+    )
     if cached_response is not None:
-        wLog(f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}",level="debug")
+        wLog(
+            f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}",
+            level="debug",
+        )
         return cached_response
 
     # Coordenadas de início e fim
@@ -309,31 +321,44 @@ def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
     if ServerTec == "OSMR":
         # URL da solicitação ao servidor OSMR
         url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{start_coords[1]},{start_coords[0]};{end_coords[1]},{end_coords[0]}?overview=full&geometries=polyline&steps=true"
-    
+
     # http://localhost:50000/route/v1/driving/-51.512533967708904,-29.972345983755194;-51.72406122295204,-30.03608928259163?overview=full&geometries=polyline&steps=true
-    
+
     wLog(url, level="debug")
     if porta_disponivel("localhost", UserData.OSMRport):
-       response = requests.get(url)
-       data = response.json()
-       if response.status_code == 200 and "routes" in data and (route_failure(data) == False):
-          cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
-          return response
+        response = requests.get(url)
+        data = response.json()
+        if (
+            response.status_code == 200
+            and "routes" in data
+            and (route_failure(data) == False)
+        ):
+            cb.cCacheBoundingBox.route_cache_set(
+                start_lat, start_lon, end_lat, end_lon, response
+            )
+            return response
 
-    wLog(f"GetRouteFromServer erro na solicitacao - rota pedida nao existe ou servidor fora do ar ", level="debug")
+    wLog(
+        f"GetRouteFromServer erro na solicitacao - rota pedida nao existe ou servidor fora do ar ",
+        level="debug",
+    )
     # cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
     # Tenta buscar do cache
     # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
-    # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115) 
-    responseTmp = si.start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)  
-    if responseTmp == False:  
-       wLog(f"Não temos cache para a rota")
-       return None 
+    # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115)
+    responseTmp = si.start_or_find_server_for_this_route(
+        start_lat, start_lon, end_lat, end_lon
+    )
+    if responseTmp == False:
+        wLog(f"Não temos cache para a rota")
+        return None
     return GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
-             
-        
-    cb.cCacheBoundingBox.route_cache_set(start_lat, start_lon, end_lat, end_lon, response)    
+
+    cb.cCacheBoundingBox.route_cache_set(
+        start_lat, start_lon, end_lat, end_lon, response
+    )
     return response
+
 
 ###########################################################################################################################
 def route_failure(resposta_osrm):
@@ -361,18 +386,20 @@ def route_failure(resposta_osrm):
 
     # Verifica se os waypoints são iguais
     waypoints = resposta_osrm.get("waypoints", [])
-    if (
-        len(waypoints) >= 2
-        and waypoints[0].get("location") == waypoints[1].get("location")
+    if len(waypoints) >= 2 and waypoints[0].get("location") == waypoints[1].get(
+        "location"
     ):
         return True
 
     return False
 
+
 ###########################################################################################################################
 def GenerateRouteMap(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon):
     if ServerTec == "OSMR":
-        return GenerateRouteMapOSMR(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon)
+        return GenerateRouteMapOSMR(
+            RouteDetailLoc, start_lat, start_lon, end_lat, end_lon
+        )
     return RouteDetailLoc
 
 
@@ -400,7 +427,7 @@ def GenerateRouteMapOSMR(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon)
         geometry = route["geometry"]
         coordinates = polyline.decode(geometry)
         RouteDetailLoc.coordinates.append(coordinates)
-        dist,temp = calcular_distancia_totalOSMR(data)
+        dist, temp = calcular_distancia_totalOSMR(data)
         RouteDetailLoc.DistanceTotal = RouteDetailLoc.DistanceTotal + dist
         RouteDetailLoc.tempo_total = RouteDetailLoc.tempo_total + temp
 
@@ -550,7 +577,9 @@ def OrdenarPontos(pontosvisita, pontoinicial):
     # BenchmarkRotas(pontosvisita,pontoinicial)
     tempoestimado = estimar_tempo_ordenacao(pontosvisita)
     tempoestimado = formatar_tempo_vasto(tempoestimado)
-    wLog(f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}] - Tempo estimado: {tempoestimado}")
+    wLog(
+        f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}] - Tempo estimado: {tempoestimado}"
+    )
 
     if (
         UserData.AlgoritmoOrdenacaoPontos == "DistanciaGeodesica"
@@ -716,7 +745,9 @@ def calcular_distancia_totalOSMR(osmr_saida):
                 distancia_total += step["distance"]
                 tempo_total += step["duration"]
 
-    return distancia_total,tempo_total
+    return distancia_total, tempo_total
+
+
 ################################################################################
 def formatar_duracao_osrm(duracao_em_segundos):
     """
@@ -738,17 +769,18 @@ def formatar_duracao_osrm(duracao_em_segundos):
 
     return " ".join(partes)
 
+
 ################################################################################
 def DistanciaRota(start_lat, start_lon, end_lat, end_lon):
     response = GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
     data = response.json()
     # Verificar se a solicitação foi bem-sucedida
     if response.status_code == 200 and "routes" in data:
-        dist,temp = calcular_distancia_totalOSMR(data)
+        dist, temp = calcular_distancia_totalOSMR(data)
         tmp = formatar_duracao_osrm(temp)
         # print(f"Distancia e Tempo total {dist} - {tmp}")
         return dist
-        
+
     else:
         wLog("DistanciaRota - erro pegando rota OSMR")
         quit()
@@ -943,7 +975,7 @@ class ClUserData:
         """
         Inicializa os dados do usuário.
         """
-        self.nome = None
+        self.ssid = None
         self.OSMRport = None
         self.Regioes = None
         self.AlgoritmoOrdenacaoPontos = None
@@ -988,7 +1020,6 @@ def VerificarServidorAtivo(url, reposta, tentativas=10, intervalo=1):
     return False
 
 
-
 ################################################################################
 def DesenhaRegioes(RouteDetail, regioes):
     # Processa as regiões
@@ -1017,9 +1048,13 @@ def DesenhaRegioes(RouteDetail, regioes):
             i = i + 1
         RouteDetail.append_mapcode(f"    ];")
         if RegiaoExclusão:
-            RouteDetail.append_mapcode(f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'red',fillColor: 'lightred',fillOpacity: 0.2, weight: 1}}).addTo(map);")
+            RouteDetail.append_mapcode(
+                f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'red',fillColor: 'lightred',fillOpacity: 0.2, weight: 1}}).addTo(map);"
+            )
         else:
-            RouteDetail.append_mapcode(f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);")
+            RouteDetail.append_mapcode(
+                f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);"
+            )
     return RouteDetail
 
 
@@ -1031,7 +1066,7 @@ def DesenhaMunicipio(RouteDetail, nome, polMunicipio):
         i = 0
         # RouteDetail.mapcode += f"    municipio{nome}Pol{indPol} = [\n"
         RouteDetail.append_mapcode(f"    municipio{nome}Pol{indPol} = [")
-        
+
         for coordenada in poligons:
             # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
             longitude, latitude = coordenada
@@ -1043,7 +1078,9 @@ def DesenhaMunicipio(RouteDetail, nome, polMunicipio):
                 RouteDetail.append_mapcode(f"       [{latitude}, {longitude}],")
             i = i + 1
         # RouteDetail.mapcode += f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
-        RouteDetail.append_mapcode(f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);")
+        RouteDetail.append_mapcode(
+            f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);"
+        )
         indPol = indPol + 1
     return RouteDetail
 
@@ -1055,7 +1092,9 @@ def DesenhaMunicipioAreasUrbanizadas(RouteDetail, nome, polMunicipioAreas):
     for poligons in polMunicipioAreas:
         i = 0
         # RouteDetail.mapcode += f"    municipioAreasUrbanizadas{nome}Pol{indPol} = [\n"
-        RouteDetail.append_mapcode(f"    municipioAreasUrbanizadas{nome}Pol{indPol} = [")
+        RouteDetail.append_mapcode(
+            f"    municipioAreasUrbanizadas{nome}Pol{indPol} = ["
+        )
         for coordenada in poligons:
             # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
             longitude, latitude = coordenada
@@ -1067,7 +1106,9 @@ def DesenhaMunicipioAreasUrbanizadas(RouteDetail, nome, polMunicipioAreas):
                 RouteDetail.append_mapcode(f"       [{latitude}, {longitude}],")
             i = i + 1
         # RouteDetail.mapcode += f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);\n"
-        RouteDetail.append_mapcode(f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);")
+        RouteDetail.append_mapcode(
+            f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);"
+        )
         indPol = indPol + 1
     return RouteDetail
 
@@ -1159,11 +1200,11 @@ def ServerSetupJavaScript(RouteDetail):
         # RouteDetail.mapcode += f"    const ServerTec = 'OSMR';\n"
         # RouteDetail.mapcode += f"    const UserName = '{UserData.nome}';\n"
         # RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
-        
+
         RouteDetail.append_mapcode(f"    const ServerTec = 'OSMR';")
-        RouteDetail.append_mapcode(f"    const UserName = '{UserData.nome}';") 
-        RouteDetail.append_mapcode(f"    const OSRMPort = {UserData.OSMRport};")    
-        
+        RouteDetail.append_mapcode(f"    const UserName = '{UserData.ssid}';")
+        RouteDetail.append_mapcode(f"    const OSRMPort = {UserData.OSMRport};")
+
     return RouteDetail
 
 
@@ -1290,7 +1331,7 @@ def RouteCompAbrangencia(
         tuple: Arquivos de saída (mapa, mapa estático, KML).
     """
 
-    UserData.nome = user
+    UserData.ssid = user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
@@ -1323,7 +1364,7 @@ def RouteCompAbrangencia(
     RouteDetail = ServerSetupJavaScript(RouteDetail)
 
     RouteDetail.append_mapcode("    const TipoRoute = 'CompAbrangencia';")
-    
+
     polylinesComunidades = get_polyline_comunities(regioes)
     RouteDetail.DesenhaComunidades(polylinesComunidades)
 
@@ -1476,8 +1517,6 @@ def MesmaOrdenacaoPontosVisita(pontosvisitaDados, pontosvisita, new=False):
 def get_formatted_timestamp():
     now = datetime.datetime.now()
     return now.strftime("%Y/%m/%d_%H:%M:%S")
-
-
 
 
 ################################################################################
@@ -1700,7 +1739,7 @@ def AltitudePontoVisita(pontosvisitaDados, lat, lon):
 
 ################################################################################
 def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
-    UserData.nome = username
+    UserData.ssid = username
     UserData.OSMRport = porta
     RouteDetail = ClRouteDetailList()
     # Calcula trecho de roto do pontoinicial ao primeiro ponto de visita
@@ -1719,21 +1758,29 @@ def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
     # for ponto in pontosvisita:
     #     wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
 
-    RouteDetail = GenerateRouteMap(RouteDetail, pontoinicial[0], pontoinicial[1], latfI, lonfI)
+    RouteDetail = GenerateRouteMap(
+        RouteDetail, pontoinicial[0], pontoinicial[1], latfI, lonfI
+    )
 
     for i in range(len(pontosvisita) - 1):
         lati, loni = pontosvisita[i]
         latf, lonf = pontosvisita[i + 1]
+        wLog(f"GenerateRouteMap - {lati},{loni} - {latf},{lonf}")
         RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
 
-    return RouteDetail.coordinates, RouteDetail.DistanceTotal, RouteDetail.tempo_total, pontosvisita
+    return (
+        RouteDetail.coordinates,
+        RouteDetail.DistanceTotal,
+        RouteDetail.tempo_total,
+        pontosvisita,
+    )
 
 
 ################################################################################
 def create_standard_cache(data):
     from flask import jsonify
 
-    UserData.nome = "CacheCreator"
+    UserData.ssid = "CacheCreator"
     wLog(
         "#############################################################################################"
     )
@@ -1802,7 +1849,7 @@ def update_regions_bounding_box(bbox, regioes):
 
 ################################################################################
 def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
-    UserData.nome = user
+    UserData.ssid = user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
@@ -1810,9 +1857,9 @@ def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
     pontosvisita = PegaPontosVisita(pontosvisitaDados)
     regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita)
     si.PreparaServidorRoteamento(regioes)
-    
+
     # GetRouteFromServer(-29.972345983755194, -51.512533967708904,-30.03608928259163, -51.72406122295204)
-    
+
     RouteDetail = ClRouteDetailList()
     RouteDetail.pontoinicial = pontoinicial
 
@@ -1913,7 +1960,7 @@ def calcula_bounding_box_pontos(pontoinicial, pontos, margem_km=50):
 def RouteContorno(
     data, user, pontoinicial, central_point, regioes, radius_km=5, num_points=8
 ):
-    UserData.nome = user
+    UserData.ssid = user
     UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
     UserData.RaioDaEstacao = data["RaioDaEstacao"]
     UserData.GpsProximoPonto = data["GpsProximoPonto"]
@@ -1939,7 +1986,7 @@ def RouteContorno(
 
     RouteDetail.append_mapcode(f"    const TipoRoute = 'DriveTest';\n")
 
-    polylinesComunidades = get_polyline_comunities(regioes)  
+    polylinesComunidades = get_polyline_comunities(regioes)
     RouteDetail.DesenhaComunidades(polylinesComunidades)
 
     # Criar um mapa centrado no ponto central
