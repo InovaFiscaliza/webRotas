@@ -6,6 +6,9 @@
       ├── uuid
       ├── hash
       ├── getTimeStamp
+      ├── splitObject
+      ├── defaultFileName
+      ├── exportAsKML
       ├── exportAsZip
       ├── saveToFile
       ├── resolvePushType
@@ -33,7 +36,7 @@
                     - Cria sessionId, caso necessário; e
                     - Atualiza url, caso o protocolo de comunicação seja "http" ou "https".
                 */
-                if (window.localStorage.getItem('appName')) {                    
+                if (!!window.localStorage.getItem('routing') && !!JSON.parse(window.localStorage.getItem('routing')).length) {                    
                     window.app.server.url       = window.localStorage.getItem('url');
                     window.app.server.sessionId = window.localStorage.getItem('sessionId');
                     window.app.routingContext   = JSON.parse(window.localStorage.getItem('routing'));
@@ -49,9 +52,14 @@
                 break;
 
             case 'update':
+                if (window.app.routingContext.length === 0) {
+                    window.localStorage.clear();
+                    return;
+                }
+                
                 window.localStorage.setItem('appName',   window.app.name);
-                window.localStorage.setItem('url',       window.app.server.url);
                 window.localStorage.setItem('sessionId', window.app.server.sessionId);
+                window.localStorage.setItem('url',       window.app.server.url);
                 window.localStorage.setItem('routing',   JSON.stringify(window.app.routingContext));
                 break;
         }
@@ -121,36 +129,169 @@
     }
 
     /*---------------------------------------------------------------------------------*/
-    async function exportAsZip() {
+    const splitObject = (obj, keys) => {
+        return Object.fromEntries(
+            Object.entries(obj).filter(([key]) => keys.includes(key))
+        );
+    }
+
+    /*---------------------------------------------------------------------------------*/
+    const defaultFileName = (prefix = 'webRotas', extension = 'json') => {
+        const timestamp = getTimeStamp('yyyy.mm.dd_THH.MM.SS');
+        return `${prefix}_${timestamp}.${extension}`;
+    }
+
+    /*---------------------------------------------------------------------------------*/
+    async function leafletLayersToKML(documentName) {
+        const layers = Object.values(window.app.map._layers);
+        const features = [];
+
+        layers.forEach(layer => {
+            if (layer instanceof window.L.Marker   ||
+                layer instanceof window.L.Polyline ||
+                layer instanceof window.L.Polygon) {
+
+                if (!layer._tag) {
+                    return;
+                }
+
+                try {
+                    const geojson = layer.toGeoJSON();
+
+                    if (!geojson || geojson.type !== 'Feature') {
+                        return;
+                    }
+
+                    geojson.properties.name = layer._tag;
+
+                    const { color, weight, fillColor, opacity } = layer.options;
+                    if (color) {
+                        const rgbaColor = Image.rgbaToHexAndAlpha(color);
+                        geojson.properties.stroke = rgbaColor.hex;
+                    }
+
+                    if (weight) {
+                        geojson.properties['stroke-width'] = weight;
+                    }
+
+                    let fillOpacitySet = false;
+                    if (fillColor) {
+                        const rgba = Image.rgbaToHexAndAlpha(fillColor);
+
+                        if (rgba) {
+                            geojson.properties.fill = rgba.hex;
+                            geojson.properties['fill-opacity'] = rgba.alpha;
+                            fillOpacitySet = true;
+                        }
+                    }
+
+                    if (!fillOpacitySet && !!opacity) {
+                        geojson.properties['fill-opacity'] = opacity;
+                    }
+
+                    features.push(geojson);
+                } catch (ME) {
+                    consoleLog(`Failed to convert layer to GeoJSON: ${ME.message}`, 'warn');
+                }
+            }
+        });
+
+        if (features.length === 0) {
+            throw new Error('No markers, lines, or polygons found on the map to export.');
+        }
+
+        const featureCollection = {
+            type: 'FeatureCollection',
+            features: features
+        };
+
+        // Description
+        const { currentSelection } = window.app.modules.Layout.findSelectedRoute();
+        const [index1, index2] = JSON.parse(currentSelection.dataset.index);
+        const routing = window.app.routingContext[index1];
+        const route = routing.response.routes[index2];
+
+        const ids = {
+            created: route.created,
+            cacheId: routing.response.cacheId,
+            routeId: route.routeId
+        };
+        const documentDescription = JSON.stringify(ids, null, 1);
+
+        // Convert to KML
+        return tokml(featureCollection, {
+            documentName,
+            documentDescription,
+            name: 'name',
+            description: 'description',
+            simplestyle: true,
+            timestamp: 'timestamp'
+        });
+    }
+
+    /*---------------------------------------------------------------------------------*/
+    async function exportAsKML(fileName) {
+        if (window.app.routingContext.length === 0) {
+            new DialogBox('No routes to export');
+            return;
+        }
+
+        // KML (da rota selecionada)
+        let kmlContent = '';
+        try {
+            kmlContent = await leafletLayersToKML(fileName);
+        } catch (ME) {
+            consoleLog(`Failed to export KML. Reason: ${ME.message}`, 'error');
+        }
+
+        if (kmlContent) {
+            let data = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+            saveToFile('kml', fileName, data);
+        } else {
+            consoleLog("KML content is empty. The file will be saved only if valid.", "warn");
+        }
+    }
+
+    /*---------------------------------------------------------------------------------*/
+    async function exportAsZip(fileName) {
+        if (window.app.routingContext.length === 0) {
+            new DialogBox('No routes to export');
+            return;
+        }
+
         const zip = new window.JSZip();
 
-        // HTML
-        const html = window.top.document.documentElement.outerHTML;
-        zip.file("index.html", html);
-
-        // Arquivos auxiliares: CSS, JS e imagens
+        // HTML+CSS+JS
         const assets = [
+            "index.html",
             "css/DialogBox.css",
             "css/Tooltip.css",
             "css/webRotas.css",
+            "images/addFiles_32.png",
             "images/ArrowLeft_32.png",
             "images/ArrowRight_32.png",
+            "images/car.png",
+            "images/car-heading.png",
+            "images/Delete_32Red.png",
             "images/Edit_32.png",
-            "images/Trash_32.png",
-            "images/addFiles_32.png",
-            "images/colorbar.svg",
-            "images/error.svg",
+            "images/Edit_32Filled.png",
             "images/export.png",
             "images/gps-off.png",
             "images/gps-on.png",
             "images/import.png",
-            "images/info.svg",
             "images/layers.png",
             "images/north.png",
+            "images/Ok_32Green.png",
+            "images/pin.png",
             "images/pin_18.png",
+            "images/Trash_32.png",
+            "images/colorbar.svg",
+            "images/delete.svg",
+            "images/error.svg",
+            "images/info.svg",
+            "images/question.svg",
             "images/route.svg",
             "images/warning.svg",
-            "js/webRotas.js",
             "js/Callbacks.js",
             "js/Communication.js",
             "js/Components.js",
@@ -158,7 +299,8 @@
             "js/Layout.js",
             "js/Plot.js",
             "js/Tooltip.js",
-            "js/Utils.js"
+            "js/Utils.js",
+            "js/webRotas.js"
         ];
 
         for (const path of assets) {
@@ -167,32 +309,41 @@
                 const blob = await response.blob();
                 zip.file(path, blob);
             } catch (ME) {
-                this.consoleLog(`Failed to fetch ${path}: ${ME.message}`, 'error');
+                consoleLog(`Failed to fetch ${path}: ${ME.message}`, 'error');
             }
         }
 
-        const content = await zip.generateAsync({ type: "blob" });
-        
-        const link = window.document.createElement("a");
-        link.href = URL.createObjectURL(content);
-        link.download = "webRotas.zip";
-        link.target = "_blank";
+        // JSON
+        let session = `if (window.location.protocol === "file:" && window.localStorage.getItem("sessionId") !== "${window.localStorage.getItem('sessionId')}") {\n`;
+        for (let ii = 0; ii < window.localStorage.length; ii++) {
+            const key   = window.localStorage.key(ii);
+            const value = window.localStorage.getItem(key);
 
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
+            session += `\twindow.localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});\n`;
+        }
+        session += `}`;
+        zip.file("data/session.js", session);
 
-        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        const data = await zip.generateAsync({ type: "blob" });
+        saveToFile('zip', fileName, data);
     }
 
     /*---------------------------------------------------------------------------------*/
     const saveToFile = (fileType, filename, data, ...args) => {
-        const link = window.document.createElement('a');
+        const link    = window.document.createElement('a');
         link.download = filename;
+        link.target   = "_blank";
 
         let revokeNeeded = false;
     
         switch (fileType) {
+            case 'zip':
+            case 'kml': {
+                link.href    = URL.createObjectURL(data);
+                revokeNeeded = true;
+                break;
+            }
+            /*
             case 'image': {
                 let { format, quality, width, height } = args[0] || { format: 'image/png', quality: 1, width: 1024, height: 768 };
 
@@ -210,12 +361,6 @@
                 link.href = canvas.toDataURL(format, quality);
                 break;
             }
-            case 'kml': {
-                const blob = new Blob([data], { type: 'application/vnd.google-earth.kml+xml' });
-                link.href = URL.createObjectURL(blob);
-                revokeNeeded = true;
-                break;
-            }
             case 'json': {
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 link.href = URL.createObjectURL(blob);
@@ -228,6 +373,7 @@
                 revokeNeeded = true;
                 break;
             }
+            */
             default:
                 throw new Error(`Unexpected filetype: ${fileType}`);
         }
@@ -249,13 +395,17 @@
             routes:  Array(returnedData.length).fill(false)
         };
 
+        const strcmp = (a, b) => {
+            return JSON.stringify(a, Object.keys(a).sort()) === JSON.stringify(b, Object.keys(b).sort());
+        }
+
         if (routing.length !== 0) {
             for (let ii = 0; ii < returnedData.length; ii++) {
                 for (let jj = 0; jj < routing.length; jj++) {
                     if (returnedData[ii].response.cacheId === routing[jj].response.cacheId) {
                         pushContext.routing[ii] = false;
 
-                        if (JSON.stringify(returnedData[ii].response.routes) !== JSON.stringify(routing[jj].response.routes)) {
+                        if (!strcmp(returnedData[ii].response.routes, routing[jj].response.routes)) {
                             pushContext.routes[ii] = true;
                         }
                         break;
@@ -531,6 +681,23 @@
                 label: `rgb(${r}, ${g}, ${b})`
             }
         }
+
+        /*---------------------------------------------------------------------------------*/
+        static rgbaToHexAndAlpha(input) {
+            if (typeof input !== 'string') return null;
+
+            const match = input.match(/^rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)$/i);
+            if (!match) return null;
+
+            const r = parseInt(match[1]);
+            const g = parseInt(match[2]);
+            const b = parseInt(match[3]);
+            const a = match[4] !== undefined ? parseFloat(match[4]) : 1.0;
+
+            const hex = `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+
+            return { hex, alpha: a };
+        }
     }
 
     window.app.modules.Utils = {
@@ -539,6 +706,9 @@
         uuid,
         hash,
         getTimeStamp,
+        splitObject,
+        defaultFileName,
+        exportAsKML,
         exportAsZip,
         saveToFile,
         resolvePushType,

@@ -110,6 +110,10 @@
                 geoData = [geoData];
             }
 
+            if (!geoData.length) {
+                return;
+            }
+
             const type    = window.app.mapContext.layers[tag].type;
             const options = window.app.mapContext.layers[tag].options;
             let handle, coords;
@@ -153,6 +157,9 @@
                         }
 
                         marker = window.L.marker(coords, { icon }).addTo(map);
+                        if (color) {
+                            marker.options.color = color.pin;
+                        }
 
                         /*
                             Caso tooltip esteja habilitado, o marker estará relacionado a três 
@@ -201,6 +208,15 @@
             }
 
             window.app.mapContext.layers[tag].handle = handle;
+            
+            const handles = Array.isArray(handle) ? handle : [handle];
+            handles.forEach((h, index) => {
+                if (tag === "waypoints") {
+                    h._tag = `${index}`;
+                } else {
+                    h._tag = tag;
+                }
+            });
         }        
         
         /*---------------------------------------------------------------------------------*/

@@ -594,24 +594,18 @@
         }
 
         /*---------------------------------------------------------------------------------*/
-        static createBasemapSelector() {
-            const basemaps = window.app.mapContext.layers.basemap;
-            const currentBasemap = window.app.mapContext.settings.basemap;
+        static createExportSelector() {
+            const options  = window.app.mapContext.settings.exportFile.options;
+            const selected = window.app.mapContext.settings.exportFile.selected;
 
-            let popup = window.document.querySelector('.basemap-popup');
+            let popup = window.document.querySelector('.selector-popup');
             if (popup) popup.remove();
 
             popup = window.document.createElement('div');
-            popup.className = 'basemap-popup';
-    
-            Object.assign(popup.style, {
-                width: '100%',
-                height: '100%',
-                lineHeight: '1.5'
-            });
+            popup.className = 'selector-popup';
     
             // Rádios
-            Object.entries(basemaps).forEach(([key, layer]) => {
+            options.forEach((option) => {
                 const label = window.document.createElement('label');
                 Object.assign(label.style, {
                     display: 'flex',
@@ -622,16 +616,57 @@
                 const radio = window.document.createElement('input');
                 Object.assign(radio, {
                     type: 'radio',
-                    name: "basemap",
+                    name: 'exportFile',
+                    value: option,
+                    checked: option === selected
+                });
+                radio.style.marginRight = '5px';
+
+                radio.addEventListener('change', () => {
+                    window.app.mapContext.settings.exportFile.selected = option;
+                });
+    
+                label.appendChild(radio);
+                label.appendChild(window.document.createTextNode(option));
+                popup.appendChild(label);
+            });
+
+            return popup;
+        }
+
+        /*---------------------------------------------------------------------------------*/
+        static createBasemapSelector() {
+            const options  = window.app.mapContext.layers.basemap;
+            const selected = window.app.mapContext.settings.basemap;
+
+            let popup = window.document.querySelector('.selector-popup');
+            if (popup) popup.remove();
+
+            popup = window.document.createElement('div');
+            popup.className = 'selector-popup';
+    
+            // Rádios
+            Object.entries(options).forEach(([key, layer]) => {
+                const label = window.document.createElement('label');
+                Object.assign(label.style, {
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                });
+    
+                const radio = window.document.createElement('input');
+                Object.assign(radio, {
+                    type: 'radio',
+                    name: 'basemap',
                     value: key,
-                    checked: key === currentBasemap
+                    checked: key === selected
                 });
                 radio.style.marginRight = '5px';
     
                 radio.addEventListener('change', () => {
                     const { map } = window.app;
                     const oldKey  = window.app.mapContext.settings.basemap;
-                    map.removeLayer(basemaps[oldKey]);
+                    map.removeLayer(options[oldKey]);
                     
                     window.app.mapContext.settings.basemap = key;
                     map.addLayer(layer);

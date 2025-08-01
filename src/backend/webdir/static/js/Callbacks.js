@@ -42,7 +42,7 @@
 
         /*---------------------------------------------------------------------------------*/
         static onLocalStorageUpdate(event) {
-            if (event.storageArea !== localStorage) {
+            if (event.storageArea !== window.localStorage) {
                 return;
             }
 
@@ -339,7 +339,7 @@
             ## TOOLBAR ##
         -----------------------------------------------------------------------------------*/
         static onToolbarButtonClicked(event) {
-            console.log(event.target.id);
+            // console.log(event.target.id);
 
             switch (event.target.id) {
                 case 'toolbarPanelVisibilityBtn':
@@ -419,6 +419,28 @@
                     break;
 
                 case 'toolbarExportBtn':
+                    const exportButtonGroup = window.app.modules.Components.createExportSelector();
+                    new DialogBox(exportButtonGroup, 'question', [{ text: 'OK', callback: () => {
+                        const popup = window.document.querySelector('.selector-popup');
+                        const selected = popup.querySelector('input[type="radio"]:checked').value;
+
+                        switch (selected) {
+                            case 'HTML+JS+CSS': {
+                                const fileName = window.app.modules.Utils.defaultFileName('webRotas', 'zip');
+                                window.app.modules.Utils.exportAsZip(fileName);
+                                break;
+                            }
+
+                            case 'KML': {
+                                const fileName = window.app.modules.Utils.defaultFileName('webRotas', 'kml');
+                                window.app.modules.Utils.exportAsKML(fileName);
+                                break;
+                            }
+                        }
+                    }, focus: true }]);
+                    break;
+
+
                     window.app.modules.Utils.exportAsZip()
                         .then(()  => new DialogBox('Arquivo .zip salvo para uso em ambiente offline.', 'info'))
                         .catch(ME => new DialogBox(`Failed to export data: ${ME.message}`, 'error'))
