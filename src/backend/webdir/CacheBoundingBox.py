@@ -374,7 +374,8 @@ class CacheBoundingBox:
                             f"[ERRO] Também falhou ao carregar backup '{caminho_old}': {e2}"
                         )
                 else:
-                    print(f"[AVISO] Arquivo de backup '{caminho_old}' não existe.")
+                    # print(f"[AVISO] Arquivo de backup '{caminho_old}' não existe.")
+                    pass
 
     def _save_to_disk_sync(self):
         data = {

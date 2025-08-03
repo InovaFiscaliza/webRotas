@@ -395,18 +395,7 @@ def is_podman_running_health():
         return False, "The 'podman' command was not found. Please ensure it is installed and in your PATH."
 
     except subprocess.CalledProcessError as e:
-        error = e.stderr.lower()
-
-        if "permission denied" in error:
-            return False, "Permission denied while trying to run Podman. Try using root or adjust user permissions."
-
-        if "cannot connect to podman" in error or "no such file or directory" in error:
-            return False, "Failed to connect to the Podman socket or service. It may not be running."
-
-        if "executable file not found" in error:
-            return False, "Podman executable not found. Installation may be corrupted."
-
-        return False, f"Error while running 'podman ps': {e.stderr.strip()}"
+        return False, f"Podman returned an error.\nSTDOUT:\n{e.stdout}\nSTDERR:\n{e.stderr}"
 
     except Exception as e:
         return False, f"Unexpected error: {str(e)}"

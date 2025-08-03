@@ -509,13 +509,13 @@ def main():
         wr.server_port = env.port
 
         wr.wLog(f"Starting WebRotas Server on port {env.port}...")
+        rsi.init_and_load_podman_images()
         status, message = rsi.is_podman_running_health()
         if status:
             wr.wLog("Podman is healthy and operational.")
         else:
             wr.wLog(f"Podman is not healthy {message}")  
         
-        rsi.init_and_load_podman_images()
         rsi.manutencao_arquivos_antigos()
         gi.cGuiOutput.url = f"http://127.0.0.1:{env.port}/"
         app.run(debug=args.debug, port=env.port, host="0.0.0.0")
