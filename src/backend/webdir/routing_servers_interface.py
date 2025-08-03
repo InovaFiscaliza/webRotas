@@ -372,7 +372,44 @@ def manutencao_arquivos_antigos():
     DeleteOldFilesAndFolders(pf.OSMOSIS_TEMPDATA_PATH, days=365)
     StopOldContainers(days=30)
 
+################################################################################
+def is_podman_running_health():
+    """
+    Checks whether Podman is operational and capable of running containers.
 
+    Returns:
+        (bool, str): A tuple where the first element indicates success (True/False),
+                     and the second element provides a descriptive status message.
+    """
+    try:
+        result = subprocess.run(
+            ["podman", "ps"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        return True, "Podman is running and operational."
+
+    except FileNotFoundError:
+        return False, "The 'podman' command was not found. Please ensure it is installed and in your PATH."
+
+    except subprocess.CalledProcessError as e:
+        error = e.stderr.lower()
+
+        if "permission denied" in error:
+            return False, "Permission denied while trying to run Podman. Try using root or adjust user permissions."
+
+        if "cannot connect to podman" in error or "no such file or directory" in error:
+            return False, "Failed to connect to the Podman socket or service. It may not be running."
+
+        if "executable file not found" in error:
+            return False, "Podman executable not found. Installation may be corrupted."
+
+        return False, f"Error while running 'podman ps': {e.stderr.strip()}"
+
+    except Exception as e:
+        return False, f"Unexpected error: {str(e)}"
 ################################################################################
 def get_containers():
     """
