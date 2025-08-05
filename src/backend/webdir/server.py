@@ -87,6 +87,7 @@ def _process():
     if not session_id:
         return jsonify({"error": "Invalid or missing sessionId"}), 400
     gi.cGuiOutput.session_id = session_id
+    wr.UserData.ssid = session_id
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400
@@ -107,7 +108,8 @@ def _reprocess():
     session_id = request.args.get("sessionId")
     if not session_id:
         return jsonify({"error": "Invalid or missing sessionId"}), 400
-
+    gi.cGuiOutput.session_id = session_id
+    wr.UserData.ssid = session_id
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400
@@ -277,11 +279,13 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
             )
 
         # set variables to arguments used in all types of requests
-        user = unidecode(data.get("User", "Anatel"))
+        if(wr.UserData.ssid==None):
+           user = unidecode(data.get("ssid", "Anatel"))
+        else:   
+           user = wr.UserData.ssid
         regioes = data.get("regioes", [])
         pontoinicial = data.get("PontoInicial", [])
         # Nome do usuário para o log trancorrer com o nome correto o quanto antes sem o "none"
-        wr.UserData.ssid = user
         gi.cGuiOutput.requisition_data = data
         # Process the request according to the request type
 

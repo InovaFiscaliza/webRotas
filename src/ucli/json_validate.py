@@ -14,7 +14,7 @@ import logging
 SCHEMAS = {
     "PontosVisita": {
         "type": "object",
-        "required": ["User", "TipoRequisicao", "PontoInicial" , "pontosvisita"],
+        "required": ["ssid", "TipoRequisicao", "PontoInicial" , "pontosvisita"],
         "properties": {
             "User": {"type": "string"},
             "TipoRequisicao": {"type": "string"},
@@ -31,7 +31,7 @@ SCHEMAS = {
     },
     "Abrangencia": {
         "type": "object", 
-        "required": ["User", "TipoRequisicao",  "PontoInicial", "cidade", "uf", "distancia_pontos"],
+        "required": ["ssid", "TipoRequisicao",  "PontoInicial", "cidade", "uf", "distancia_pontos"],
         "properties": {
             "User": {"type": "string"},
             "TipoRequisicao": {"type": "string"},
@@ -50,7 +50,7 @@ SCHEMAS = {
     },
     "Contorno": {
         "type": "object",
-        "required": ["User", "TipoRequisicao", "PontoInicial", "latitude", "longitude", "raio"],
+        "required": ["ssid", "TipoRequisicao", "PontoInicial", "latitude", "longitude", "raio"],
         "properties": {
             "User": {"type": "string"},
             "TipoRequisicao": {"type": "string"},

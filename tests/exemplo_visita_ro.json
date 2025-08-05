@@ -1,5 +1,5 @@
 {
-    "User": "Usuário6",
+    "ssid": "Usuário6",
     "TipoRequisicao": "PontosVisita",
     "Descricao": "Teste de pontos de visita na cidade de Boa Vista com 2 regiões de exclusão e algoritmo de ordenação por distância geodésica",
     "PontoInicial": [

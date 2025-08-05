@@ -1,5 +1,5 @@
 {
-    "User": "Usuário5",
+    "ssid": "Usuário5",
     "Descricao": "Teste de pontos de visita na cidade do Rio de Janeiro com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica",
     "TipoRequisicao": "PontosVisita",
     "PontoInicial": [

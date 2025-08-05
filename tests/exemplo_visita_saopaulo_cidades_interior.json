@@ -1,5 +1,5 @@
 {
-    "User": "Usuário8",
+    "ssid": "Usuário8",
     "TipoRequisicao": "PontosVisita",
     "Descricao": "Teste de pontos de visita interior de São Paulo, sem regiões de exclusão e sem algoritmo de ordenação por distância para seguir a ordem de pontos solicitada pelo usuário",
     "PontoInicial": [

@@ -1,5 +1,5 @@
 {
-    "User": "Usuário7",
+    "ssid": "Usuário7",
     "TipoRequisicao": "PontosVisita",
     "Descricao": "Teste de pontos de visita na Serra do Rio de Janeiro, sem regiões de exclusão e algoritmo de ordenação por distância OSMR MultiThread",
     "PontoInicial": [-22.902368,-43.174200,"Anatel Rio de Janeiro"],

@@ -1,5 +1,5 @@
 {
-    "User": "Usuário1",
+    "ssid": "Usuário1",
     "Descricao": "Teste de abrangência na cidade de Campos dos Goytacazes, sem regiões de exclusão e algoritmo de ordenação por distância OSMR MultiThread",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [

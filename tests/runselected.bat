@@ -12,6 +12,7 @@ uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" 
 rem uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_visita_portoalegre-belem.json
 rem uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_abrangencia_sp_pesado.json
 rem uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" criar_cache_grs.json
+pause
 exit
 
 rem uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" criar_cache_grs.json
@@ -30,5 +31,5 @@ uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" 
 uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_visita_portoalegre-belem.json
 uv run --project "%WEBROTAS_HOME%" "%WEBROTAS_HOME%\src\ucli\webrota_client.py" exemplo_abrangencia_riodejaneiro_distosmr.json
 
-
+pause
 

@@ -1,5 +1,5 @@
 {
-    "User": "Usuário2",
+    "ssid": "Usuário2",
     "Descricao": "Teste de abrangência de uma estação em Niterói com 3 regiões de exclusão e algoritmo de ordenação por distância geodésica",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [

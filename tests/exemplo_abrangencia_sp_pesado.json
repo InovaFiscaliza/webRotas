@@ -1,5 +1,5 @@
 {
-    "User": "Usuário3",
+    "ssid": "Usuário3",
     "Descricao": "Teste de abrangência na cidade de São Paulo, sem regiões de exclusão e algoritmo de ordenação por distância OSMR MultiThread",
     "TipoRequisicao": "Abrangencia",
     "PontoInicial": [
