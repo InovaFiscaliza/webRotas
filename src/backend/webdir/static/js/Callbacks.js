@@ -207,25 +207,26 @@
             ## PAINEL À ESQUERDA DO MAPA ##
         -----------------------------------------------------------------------------------*/
         static onPanelButtonClicked(event) {
-            let currentSelection, index1, index2;
-            console.log(event.target.id);
+            // console.log(event.target.id);
 
             switch (event.target.id) {
-                case 'routeListAddBtn':
-                    ({ currentSelection } = window.app.modules.Layout.findSelectedRoute());
-                    ([index1, index2] = JSON.parse(currentSelection.dataset.index));
+                case 'routeListAddBtn': {
+                    const { currentSelection } = window.app.modules.Layout.findSelectedRoute();
+                    const [index1, index2] = JSON.parse(currentSelection.dataset.index);
                     
-                    let refRoute = JSON.parse(JSON.stringify(window.app.routingContext[index1].response.routes[index2]));
+                  //let refRoute = JSON.parse(JSON.stringify(window.app.routingContext[index1].response.routes[index2]));
+                    let refRoute = structuredClone(window.app.routingContext[index1].response.routes[index2]);
                     refRoute.automatic = false;
                     window.app.routingContext[index1].response.routes.splice(index2+1, 0, refRoute);
 
                     window.app.modules.Utils.syncLocalStorage('update');
                     window.app.modules.Layout.startup(index1, index2+1);
                     break;
+                }
 
-                case 'routeListDelBtn':
-                    ({ currentSelection } = window.app.modules.Layout.findSelectedRoute());
-                    ([index1, index2] = JSON.parse(currentSelection.dataset.index));
+                case 'routeListDelBtn': {
+                    const { currentSelection } = window.app.modules.Layout.findSelectedRoute();
+                    const [index1, index2] = JSON.parse(currentSelection.dataset.index);
 
                     if (window.app.routingContext[index1].response.routes.length <= 1) {
                         window.app.routingContext.splice(index1, 1);    
@@ -236,34 +237,123 @@
                     window.app.modules.Utils.syncLocalStorage('update');
                     window.app.modules.Layout.startup();
                     break;
+                }
                 
-                case 'routeListEditModeBtn':
+                case 'routeListEditModeBtn': {
                     event.target.dataset.value = (event.target.dataset.value == 'on') ? 'off' : 'on';
                     window.app.modules.Layout.controller('editionMode', (event.target.dataset.value == 'on') ? true : false);
                     break;
+                }
 
-                case 'routeListConfirmBtn':
-                    // ...
+                case 'routeListConfirmBtn': {
+                    const { index1, index2 } = window.app.modules.Layout.findSelectedRoute();                    
+                    const currentRequest = window.app.routingContext[index1].request;
+                    const currentRoute   = window.app.routingContext[index1].response.routes[index2];
+
+                    const htmlEl = window.app.modules.Layout.getDOMElements([
+                        'initialPointLatitude',
+                        'initialPointLongitude',
+                        'initialPointDescription',
+                        'pointsToVisit'
+                    ]);
+
+                    const initialOrigin = [
+                        currentRoute.origin.lat.toFixed(6),
+                        currentRoute.origin.lng.toFixed(6),
+                        currentRoute.origin.description.trim()
+                    ];
+
+                    const editedOrigin = [
+                        parseFloat(htmlEl.initialPointLatitude.value).toFixed(6),
+                        parseFloat(htmlEl.initialPointLongitude.value).toFixed(6),
+                        htmlEl.initialPointDescription.value.trim()
+                    ];
+
+                    const hasOriginChanged     = (initialOrigin.slice(0,2).toString() !== editedOrigin.slice(0,2).toString()) ? true : false;
+                    const visitOrderIndexes    = Array.from(htmlEl.pointsToVisit.children, child => child.value);
+                    const hasVisitOrderChanged = Array.from({ length: visitOrderIndexes.length }, (_, i) => i).toString() !== visitOrderIndexes.toString();
+
+                    if (!hasOriginChanged && !hasVisitOrderChanged) {
+                        new DialogBox('No changes were made to the route.', 'info');
+                        return;
+                    }                   
+
+                    /*
+                        O servidor precisa evoluir p/ identificar a porta do container
+                        e a identificação do usuário a partir do sessionId, e não do 
+                        "PortaOSRMServer" e "UserName".
+
+                        Eliminar duplicidade de chaves: "PontoInicial" e "pontoinicial",
+                        "User" e "UserName".
+                    */
+
+                    const request = structuredClone(currentRequest);
+                    request.TipoRequisicao  = "RoteamentoOSMR";
+                    request.PortaOSRMServer = 50001;
+                    request.UserName        = request.User || "Anatel";
+                    request.recalcularrota  = hasOriginChanged ? 1 : 0;
+                    request.PontoInicial    = (hasOriginChanged) ? editedOrigin : initialOrigin;
+                    request.PontoInicial[0] = parseFloat(request.PontoInicial[0]);
+                    request.PontoInicial[1] = parseFloat(request.PontoInicial[1]);
+                    request.pontoinicial    = request.PontoInicial;
+
+                    if (hasVisitOrderChanged) {
+                        const editedPointsToVisit = visitOrderIndexes.map(index => currentRoute.waypoints[index]);
+                        request.pontosvisita = editedPointsToVisit.map(item => [item.lat, item.lng]);
+                    } else {
+                        request.pontosvisita = currentRoute.waypoints.map(item => [item.lat, item.lng]);
+                    }
+
+                    window.app.modules.Communication.computeRoute(request);
+                    console.log(request);
+
                     window.document.getElementById('routeListEditModeBtn').dataset.value = 'off';
                     window.app.modules.Layout.controller('editionMode', false);
                     break;
+                }
 
-                case 'routeListCancelBtn':
+                case 'routeListCancelBtn': {
                     window.document.getElementById('routeListEditModeBtn').dataset.value = 'off';
                     window.app.modules.Layout.controller('editionMode', false);
                     break;
+                }
 
-                case 'initialPointBtn':
+                case 'initialPointBtn': {
                     // ...
                     break;
+                }
 
                 case 'routeListMoveUpBtn':
-                    // ...
-                    break;
+                case 'routeListMoveDownBtn': {
+                    const htmlContainer = window.app.modules.Layout.getDOMElements(['pointsToVisit']).pointsToVisit;
+                    const selectedItems = Array.from(htmlContainer.children).filter(item => item.classList.contains('selected'));
 
-                case 'routeListMoveDownBtn':
-                    // ...
+                    if (selectedItems.length === 0) {
+                        return;
+                    }
+
+                    function moveItems(items, direction) {
+                        const isUp = direction === 'up';
+                        const ordered = isUp ? items : [...items].reverse();
+
+                        for (const item of ordered) {
+                            const sibling = isUp ? item.previousElementSibling : item.nextElementSibling;
+                            if (!sibling || selectedItems.includes(sibling)) continue;
+
+                            htmlContainer.insertBefore(item, isUp ? sibling : sibling.nextSibling);
+                        }
+                    }
+
+                    switch (event.target.id) {
+                        case 'routeListMoveUpBtn':
+                            moveItems(selectedItems, 'up');
+                            break;
+                        case 'routeListMoveDownBtn':
+                            moveItems(selectedItems, 'down');
+                            break;
+                    }
                     break;
+                }
 
                 default:
                     throw Error('Unexpected element Id')
@@ -272,12 +362,13 @@
 
         /*---------------------------------------------------------------------------------*/
         static onRouteListSelectionChanged(event) {
-            const { htmlRouteElChildren, currentSelection, currentRoute } = window.app.modules.Layout.findSelectedRoute();
+            const { htmlRouteElChildren, currentSelection, index1 } = window.app.modules.Layout.findSelectedRoute();
+            const currentRouting = window.app.routingContext[index1];
 
             if (currentSelection !== event.target) {
                 const [index1, index2] = JSON.parse(event.target.dataset.index);
                 const routing = window.app.routingContext[index1];
-                const isSameCacheId = currentRoute.cacheId === routing.cacheId;
+                const isSameCacheId = currentRouting.response.cacheId === routing.response.cacheId;
                 
                 htmlRouteElChildren.forEach(item => item.classList.toggle('selected', item === event.target));
                 
@@ -342,7 +433,7 @@
             // console.log(event.target.id);
 
             switch (event.target.id) {
-                case 'toolbarPanelVisibilityBtn':
+                case 'toolbarPanelVisibilityBtn': {
                     const map   = window.app.map;
                     const panel = window.document.getElementById('panel');
                     const btn   = window.document.getElementById('toolbarPanelVisibilityBtn') ;
@@ -360,8 +451,9 @@
                         tooltip = null;
                     }
                     break;
+                }
 
-                case 'toolbarImportInput':
+                case 'toolbarImportInput': {
                     if (event.target.files.length === 0) {
                         return;
                     }
@@ -417,17 +509,18 @@
                             new DialogBox(ME.message, 'error');
                         });
                     break;
+                }
 
-                case 'toolbarExportBtn':
+                case 'toolbarExportBtn': {
                     const exportButtonGroup = window.app.modules.Components.createExportSelector();
                     new DialogBox(exportButtonGroup, 'question', [{ text: 'OK', callback: () => {
                         const popup = window.document.querySelector('.selector-popup');
                         const selected = popup.querySelector('input[type="radio"]:checked').value;
 
                         switch (selected) {
-                            case 'HTML+JS+CSS': {
-                                const fileName = window.app.modules.Utils.defaultFileName('webRotas', 'zip');
-                                window.app.modules.Utils.exportAsZip(fileName);
+                            case 'JSON': {
+                                const fileName = window.app.modules.Utils.defaultFileName('webRotas', 'json');
+                                window.app.modules.Utils.exportAsJSON(fileName);
                                 break;
                             }
 
@@ -436,29 +529,18 @@
                                 window.app.modules.Utils.exportAsKML(fileName);
                                 break;
                             }
+
+                            case 'HTML+JS+CSS': {
+                                const fileName = window.app.modules.Utils.defaultFileName('webRotas', 'zip');
+                                window.app.modules.Utils.exportAsZip(fileName);
+                                break;
+                            }
                         }
                     }, focus: true }]);
                     break;
+                }
 
-
-                    window.app.modules.Utils.exportAsZip()
-                        .then(()  => new DialogBox('Arquivo .zip salvo para uso em ambiente offline.', 'info'))
-                        .catch(ME => new DialogBox(`Failed to export data: ${ME.message}`, 'error'))
-
-                    /*
-                    let msg = null;
-                    try {
-                        // CRIAR OPERAÇÃO SÍNCRONA
-                        GerarKML(polylineRotaDat, pontosVisitaOrdenados, pontosvisitaDados);
-                        msg = 'Arquivo .KML salvo para uso no MapsMe, Google Earth etc.';
-                    } catch (ME) {
-                        msg = ME.message;
-                    }
-                    alert(msg);
-                    */
-                    break;
-
-                case 'toolbarLocationBtn':
+                case 'toolbarLocationBtn': {
                     // ...
                     const currentGeolocationStatus = window.app.mapContext.settings.geolocation.status;
 
@@ -480,8 +562,9 @@
                     }
                     */
                     break;
+                }
 
-                case 'toolbarOrientationBtn':
+                case 'toolbarOrientationBtn': {
                     // ...
                     const currentOrientationStatus = window.app.mapContext.settings.orientation.status;
 
@@ -516,15 +599,26 @@
                     }
                     */
                     break;
+                }
 
-                case 'toolbarColorbarBtn':
+                case 'toolbarColorbarBtn': {
                     window.app.modules.Components.createColorbar();
                     break;
+                }
 
-                case 'toolbarBasemapsBtn':
+                case 'toolbarBasemapsBtn': {
                     const radioButtonGroup = window.app.modules.Components.createBasemapSelector();
                     new DialogBox(radioButtonGroup, 'question', []);
                     break;
+                }
+
+                case 'toolbarInitialZoomBtn': {
+                    const { currentRoute } = window.app.modules.Layout.findSelectedRoute();
+                    if (currentRoute) {
+                        window.app.modules.Plot.setView('zoom', [...currentRoute.waypoints, currentRoute.origin])
+                    }
+                    break;
+                }
 
                 default:
                     throw Error('Unexpected element Id')

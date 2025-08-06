@@ -82,17 +82,19 @@
     (04) Implementar leitura múltipla de arquivos (tanto de "request" quando de "routing").
     (05) Ajustar estrutura de "request.json". Ao invés de "pontosvisita", usar "waypoints",
          ao invés de lista de listas, usar lista de objetos etc.
-    (06) Ao adicionar uma routa à routingContext, validar se rota já se encontra por meio
-         de análise de cacheId e routeId.
-    (07) inserir dataset=index na árvore.
-    (08) Criar um fallback para o caso do app não carregar os CSS/JS das bibliotecas Leaflet,
+    (06) O servidor precisa evoluir p/ identificar a porta do container e a identificação 
+         do usuário a partir do sessionId, e não do "PortaOSRMServer" e "UserName".
+    (07) Criar um fallback para o caso do app não carregar os CSS/JS das bibliotecas Leaflet,
          toKML e JSZip.
-    (09) Ajustar colorbar, de forma que as suas dimensões sejam ajustáveis ao tamanho do
+    (08) Ajustar colorbar, de forma que as suas dimensões sejam ajustáveis ao tamanho do
          navegador.
-    (10) Verificar se é possível passar o ícone customizado do Leaflet para o toKML, de 
+    (09) Verificar se é possível passar o ícone customizado do Leaflet para o toKML, de 
          forma que o KML exportado possa ser visualizado no Google Earth.
-    (11) Inserir um label no popup (basemaps e exportFile) que contextualize o usuário,
+    (10) Inserir um label no popup (basemaps e exportFile) que contextualize o usuário,
          ao invés de apenas apresentar as opções.
+    (11) Evoluir a organização da informação de exportFile, de forma que seja possível 
+         descrever o que cada opção faz, e quais são os formatos de exportação disponíveis 
+         para cada protocolo (file: ou http:).
     ...
 */
 (function () {
@@ -204,7 +206,13 @@
                         iconType: 'customPinIcon',
                         iconTooltip: {
                             status: true,
-                            textResolver: ({ lat, lng, elevation, description }) => { return `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
+                            textResolver: ({ lat, lng, elevation, description }) => { 
+                                if (description) {
+                                    return `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)`
+                                } else {
+                                    return `(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)`
+                                }                                 
+                            },
                             offsetResolver: 'default'
                         }
                     }
@@ -311,8 +319,8 @@
                     }
                 },
                 exportFile: {
-                    options: (window.location.protocol === "file:") ? ["KML"] : ["KML", "HTML+JS+CSS"],
-                    selected: "KML"
+                    options: (window.location.protocol === "file:") ? ["JSON", "KML"] : ["JSON", "KML", "HTML+JS+CSS"],
+                    selected: "JSON"
                 }
             }
         }

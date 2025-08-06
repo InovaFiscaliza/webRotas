@@ -379,7 +379,7 @@
             ['grid-toolbar'].forEach(className => {
                 container.classList.add(className);
             });
-            Object.assign(container.style, { gridTemplateRows: '1fr', gridTemplateColumns: '22px 22px 22px minmax(0, 1fr) 22px 22px 22px 22px' });
+            Object.assign(container.style, { gridTemplateRows: '1fr', gridTemplateColumns: '22px 22px 22px minmax(0, 1fr) 22px 22px 22px 22px 22px' });
 
             this.createElement('button', {
                 classList: ['btn-panel-on'],
@@ -441,8 +441,17 @@
             }, container);
 
             this.createElement('button', {
+                id: 'toolbarInitialZoomBtn',
+                style: { gridArea: '1 / 7 / 2 / 8', width: '18px', height: '18px', backgroundImage: 'url(images/restore-initial-zoom.png)' },
+                eventListeners: {
+                    click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
+                },
+                dataset: { tooltip: 'Zoom inicial' }
+            }, container);
+
+            this.createElement('button', {
                 id: 'toolbarColorbarBtn',
-                style: { gridArea: '1 / 7 / 2 / 8', width: '18px', height: '18px', backgroundImage: 'url(images/colorbar.svg)' },
+                style: { gridArea: '1 / 8 / 2 / 9', width: '18px', height: '18px', backgroundImage: 'url(images/colorbar.svg)' },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
@@ -451,7 +460,7 @@
 
             this.createElement('button', {
                 id: 'toolbarBasemapsBtn',
-                style: { gridArea: '1 / 8 / 2 / 9', width: '18px', height: '18px', backgroundImage: 'url(images/layers.png)' },
+                style: { gridArea: '1 / 9 / 2 / 10', width: '18px', height: '18px', backgroundImage: 'url(images/layers.png)' },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
@@ -584,6 +593,7 @@
             textList.forEach((element, index) => {
                 const el = this.createElement('li', {
                     textContent: textResolver(element, index),
+                    value: index,
                     eventListeners: eventListeners
                 }, parentElement);
 

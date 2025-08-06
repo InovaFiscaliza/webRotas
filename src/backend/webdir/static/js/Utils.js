@@ -206,8 +206,7 @@
         };
 
         // Description
-        const { currentSelection } = window.app.modules.Layout.findSelectedRoute();
-        const [index1, index2] = JSON.parse(currentSelection.dataset.index);
+        const { index1, index2 } = window.app.modules.Layout.findSelectedRoute();
         const routing = window.app.routingContext[index1];
         const route = routing.response.routes[index2];
 
@@ -230,6 +229,22 @@
     }
 
     /*---------------------------------------------------------------------------------*/
+    async function exportAsJSON(fileName) {
+        if (window.app.routingContext.length === 0) {
+            new DialogBox('No routes to export');
+            return;
+        }
+
+        const jsonData = {
+            url: window.app.server.url,
+            routing: window.app.routingContext
+        }
+
+        const data = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+        saveToFile('json', fileName, data);
+    }
+
+    /*---------------------------------------------------------------------------------*/
     async function exportAsKML(fileName) {
         if (window.app.routingContext.length === 0) {
             new DialogBox('No routes to export');
@@ -245,7 +260,7 @@
         }
 
         if (kmlContent) {
-            let data = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+            const data = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
             saveToFile('kml', fileName, data);
         } else {
             consoleLog("KML content is empty. The file will be saved only if valid.", "warn");
@@ -337,8 +352,9 @@
         let revokeNeeded = false;
     
         switch (fileType) {
-            case 'zip':
-            case 'kml': {
+            case 'json':            
+            case 'kml': 
+            case 'zip':{
                 link.href    = URL.createObjectURL(data);
                 revokeNeeded = true;
                 break;
@@ -359,12 +375,6 @@
                 context.drawImage(data, 0, 0, width, height);
 
                 link.href = canvas.toDataURL(format, quality);
-                break;
-            }
-            case 'json': {
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                link.href = URL.createObjectURL(blob);
-                revokeNeeded = true;
                 break;
             }
             case 'binary': {
@@ -390,60 +400,33 @@
     /*---------------------------------------------------------------------------------*/
     function resolvePushType(returnedData) {
         const routing = window.app.routingContext;
-        const pushContext = {
-            routing: Array(returnedData.length).fill(true),
-            routes:  Array(returnedData.length).fill(false)
-        };
+        let renderUpdate = Array(returnedData.length).fill(true);
 
         const strcmp = (a, b) => {
             return JSON.stringify(a, Object.keys(a).sort()) === JSON.stringify(b, Object.keys(b).sort());
         }
 
-        if (routing.length !== 0) {
-            for (let ii = 0; ii < returnedData.length; ii++) {
+        if (routing.length === 0) {
+            routing.push(...returnedData);
+        } else {
+            for (let ii = 0; ii < returnedData.length; ii++) {                
                 for (let jj = 0; jj < routing.length; jj++) {
-                    if (returnedData[ii].response.cacheId === routing[jj].response.cacheId) {
-                        pushContext.routing[ii] = false;
-
-                        if (!strcmp(returnedData[ii].response.routes, routing[jj].response.routes)) {
-                            pushContext.routes[ii] = true;
-                        }
+                    if (returnedData[ii].response.cacheId === routing[jj].response.cacheId && 
+                        strcmp(returnedData[ii].response.routes, routing[jj].response.routes)) {
+                        renderUpdate[ii] = false;
                         break;
                     }
                 }
-            }
-        }
 
-        let renderUpdate = false;
-        for (let kk = 0; kk < returnedData.length; kk++) {
-            if (pushContext.routing[kk]) {
-                routing.push(returnedData[kk]);
-
-                if (!renderUpdate) {
-                    renderUpdate = true;
-                    
-                    const lastIndex = routing.length-1;
-                    window.app.modules.Layout.controller('routeLoaded', lastIndex, 0);
-                    window.app.modules.Plot.controller('draw', lastIndex, 0);
-                }
-
-            } else if (pushContext.routes[kk]) {
-                routing[kk].response.routes.push(...returnedData[kk].response.routes);
-
-                if (!renderUpdate) {
-                    renderUpdate = true;
-
-                    const lastIndex = routing[kk].response.routes.length-1;
-                    window.app.modules.Layout.controller('routeLoaded', kk, lastIndex);
-                    window.app.modules.Plot.controller('draw', kk, lastIndex);
+                if (renderUpdate[ii]) {
+                    routing.push(returnedData[ii]);
                 }
             }
         }
 
-        const hasTrueInRouting = pushContext.routing.some(Boolean);
-        const hasTrueInRoutes  = pushContext.routes.some(Boolean);
-
-        if (hasTrueInRouting || hasTrueInRoutes) {
+        if (renderUpdate.some(Boolean)) {
+            window.app.modules.Layout.controller('routeLoaded', 0, 0);
+            window.app.modules.Plot.controller('draw', 0, 0);
             return true;
         } else {
             new DialogBox('Route is already in the list');
@@ -708,6 +691,7 @@
         getTimeStamp,
         splitObject,
         defaultFileName,
+        exportAsJSON,
         exportAsKML,
         exportAsZip,
         saveToFile,

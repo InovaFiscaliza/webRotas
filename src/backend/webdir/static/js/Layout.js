@@ -81,7 +81,9 @@
                     ({ index1, index2 } = this.findSelectedRoute());
                     this.updateControlState(type, editionMode);
 
-                    this.controller('routeSelected', index1, index2);
+                    if (!editionMode) {
+                        this.controller('routeSelected', index1, index2);
+                    }
                     break;
 
                 default: 
@@ -111,7 +113,8 @@
                         'toolbarExportBtn',
                         'toolbarLocationBtn',
                         'toolbarOrientationBtn',
-                        'toolbarColorbarBtn'
+                        'toolbarColorbarBtn',
+                        'toolbarInitialZoomBtn'
                     ]);
                     htmlElArray = Object.values(htmlEl);
                     this.toggleEnabled(htmlElArray, false);
@@ -138,7 +141,7 @@
                         'toolbarLocationBtn',
                         'toolbarOrientationBtn',
                         'toolbarColorbarBtn',
-                        'toolbarBasemapsBtn'
+                        'toolbarInitialZoomBtn'
                     ]);
                     htmlElArray = Object.values(htmlEl);                    
                     this.toggleEnabled(htmlElArray, true);
@@ -158,8 +161,8 @@
                         'routeIds'
                     ]);
 
-                    this.updateEditableField(htmlEl.initialPointLatitude,    route.origin.lat);
-                    this.updateEditableField(htmlEl.initialPointLongitude,   route.origin.lng);
+                    this.updateEditableField(htmlEl.initialPointLatitude,    route.origin.lat.toFixed(6));
+                    this.updateEditableField(htmlEl.initialPointLongitude,   route.origin.lng.toFixed(6));
                     this.updateEditableField(htmlEl.initialPointDescription, route.origin.description);
 
                     let ids = {
