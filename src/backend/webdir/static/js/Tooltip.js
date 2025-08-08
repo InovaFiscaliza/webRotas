@@ -10,6 +10,7 @@
 class Tooltip {
     static basicTooltipClasses   = ['tooltip-container', 'tooltip-arrow']
     static leafletTooltipClasses = ['leaflet-tooltip-bottom', 'leaflet-container', 'tooltip-container', 'tooltip-on-grabbing']
+    static backgroundColor       = getComputedStyle(window.document.documentElement).getPropertyValue('--tooltip-backgroundColor').trim();
 
     /*-----------------------------------------------------------------------------------
         ## TOOLTIP BÁSICO ##
@@ -112,8 +113,8 @@ class Tooltip {
                 left: `${arrowOffset}px`,
                 top: showAbove ? 'unset' : '-6px',
                 bottom: showAbove ? '-6px' : 'unset',
-                borderTop: showAbove ? '6px solid #333' : 'none',
-                borderBottom: showAbove ? 'none' : '6px solid #333'
+                borderTop: showAbove ? `6px solid ${Tooltip.backgroundColor}` : 'none',
+                borderBottom: showAbove ? 'none' : `6px solid ${Tooltip.backgroundColor}`
             });
     
             return tooltip;

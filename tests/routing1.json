@@ -137,7 +137,7 @@
         "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
         "regioes": [
           {
-            "nome": "!Teste1",
+            "name": "!Teste1",
             "coord": [
               [
                 2.840826,
@@ -154,7 +154,7 @@
             ]
           },
           {
-            "nome": "!Teste2",
+            "name": "!Teste2",
             "coord": [
               [
                 2.8,

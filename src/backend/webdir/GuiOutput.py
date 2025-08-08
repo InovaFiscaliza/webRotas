@@ -3,17 +3,22 @@
 
 import json
 from datetime import datetime
-
+import uuid
+from server_env import env
 
 class GuiOutput:
     def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.url = f"http://127.0.0.1:{env.port}/"        
+        self.requisition_data = None        
+        self.session_id = None
+        self.cache_id = None
+        self.route_id = None
         self.json = ""
         self.jsonComunities = None
-        self.requisition_data = None
-        self.url = ""
-        self.cache_id = None
         self.bounding_box = None
-        self.session_id = None
         self.limits = None
         self.urbanAreas = None
         self.pontoinicial = None
@@ -68,7 +73,7 @@ class GuiOutput:
             try:
                 elevation = int(float(item[5]))
             except ValueError:
-                elevation = 0  # valor padrão caso erro na conversão
+                elevation = -1  # valor padrão caso erro na conversão
             status = True
 
             waypoints.append(
@@ -82,7 +87,7 @@ class GuiOutput:
             )
         return waypoints
 
-    def criar_json_routing(self):
+    def criar_json_routing(self, auto_analysis=True):
         data = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         waypoints = self.gerar_waypoints(self.pontosvisitaDados)
         self.estimated_distance = round(self.estimated_distance / 1000, 1)
@@ -122,18 +127,19 @@ class GuiOutput:
 
         routes_buf = [
             {
-                "routeId": "abc",
-                "automatic": True,
+                "routeId": self.route_id if self.route_id is not None else str(uuid.uuid4()),
+                "automatic": auto_analysis,
                 "created": f"{data}",
                 "origin": {
                     "lat": round(float(self.pontoinicial[0]), 6),
                     "lng": round(float(self.pontoinicial[1]), 6),
-                    "elevation": 0,
+                    "elevation": -1, # Precisa pesquisar essa altitude
                     "description": f"{self.pontoinicial[2]}",
                 },
                 "waypoints": waypoints,
                 "paths": rounded_paths,
                 "estimatedDistance": self.estimated_distance,
+                "estimatedTime": self.estimated_time,
             }
         ]
 
@@ -157,11 +163,6 @@ class GuiOutput:
         }
 
         json_formatado = json.dumps(estrutura, indent=4, ensure_ascii=False)
-
-        # Salvar em arquivo (opcional)
-        # with open("routingZZZZ.json", "w", encoding="utf-8") as f:
-        #    f.write(json_formatado)
-
         return json_formatado
 
 

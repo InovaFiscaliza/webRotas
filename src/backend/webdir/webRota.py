@@ -108,7 +108,7 @@ def getElevationOpenElev(latitude, longitude):
                     "getElevationOpenElev Erro: Resposta da API não contém dados válidos.",
                     level="debug",
                 )
-                return 0
+                return -1
 
         except requests.exceptions.RequestException as e:
             # Captura erros relacionados à requisição (conexão, timeout, etc.)
@@ -118,12 +118,12 @@ def getElevationOpenElev(latitude, longitude):
         except ValueError as e:
             # Captura erros de decodificação JSON
             wLog(f"getElevationOpenElev Erro ao decodificar JSON: {e}")
-            return 0
+            return -1
 
         except KeyError as e:
             # Captura erros de chave ausente no JSON
             wLog(f"getElevationOpenElev Erro no formato da resposta: {e}")
-            return 0
+            return -1
 
     try:
         return fetch_elevation(url)
@@ -1254,7 +1254,6 @@ def get_polyline_comunities(regioes):
 
 
 ################################################################################
-# polylinesComunidades = get_polyline_comunities(regioes)
 def DesenhaComunidadesOLD(RouteDetail, polylinesComunidades):
 
     RouteDetail.mapcode += f"listComunidades = [\n"
@@ -1742,21 +1741,14 @@ def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
     UserData.ssid = username
     UserData.OSMRport = porta
     RouteDetail = ClRouteDetailList()
+
     # Calcula trecho de roto do pontoinicial ao primeiro ponto de visita
     (latfI, lonfI) = pontosvisita[0]
     wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}", level="debug")
-    # wLog(f"RoteamentoOSMR - pontoinicial {pontoinicial[0]},{pontoinicial[1]}",level="debug")
-    # wLog("Pontos de Visita antes ordenação:",level="debug")
-    # for ponto in pontosvisita:
-    #     wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
 
     if recalcularrota == 1:
         wLog(f"Reordenando pontos de visita", level="debug")
         pontosvisita = OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial)
-
-    # wLog("Pontos de Visita apos ordenação:",level="debug")
-    # for ponto in pontosvisita:
-    #     wLog(f"Latitude: {ponto[0]}, Longitude: {ponto[1]}",level="debug")
 
     RouteDetail = GenerateRouteMap(
         RouteDetail, pontoinicial[0], pontoinicial[1], latfI, lonfI
@@ -1775,6 +1767,78 @@ def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
         pontosvisita,
     )
 
+################################################################################
+def osrm_custom_route(data):
+    """
+    Trata-se de função que suporta a criação da rota customizada, decorrente da troca
+    do ponto inicial (origin) ou da ordem dos pontos a visitar (waypoints).
+
+    Deve retornar os paths:
+     paths[0]  = origin        → waypoints[0]
+     paths[1]  = waypoints[0]  → waypoints[1] 
+     ... 
+     paths[-1] = waypoints[-2] → waypoints[-1]
+
+    Para tanto, deve-se interrogar o servidor OSRM (Open Source Routing Machine) sempre
+    que o path específico seja desconhecido. Se não há troca no paths[0], por exemplo, 
+    mantém-se o path já conhecido, evitando nova requisição ao servidor.
+
+    Caso o servidor OSRM apresente instabilidade, retorna-se os próprios pontos
+    como path. O efeito disso é que, na visualização de mapa (no Leaflet), ficará 
+    uma linha conectando os pontos.
+
+    No front-end, cria-se um flag para controlar a qualidade da informação, que é o 
+    trigger para envio de outras requisições ao servidor para sanar pendências, 
+    como:
+    - Elevação de um ponto (origin ou waypoints);
+    - path entre dois pontos (paths).
+    """
+
+    UserData.ssid = username
+    UserData.OSMRport = osrm_port
+    RouteDetail = ClRouteDetailList()
+
+    ## Waypoints ##
+    waypoints = PegaPontosVisita(waypoints) # Converte pontos de visita para formato (lat, lon), eliminando eventual descrição
+
+    ## Bounding Box ##
+    # AtualizaRegioesBoudingBoxPontosVisita(avoid_zones, origin, waypoints) # boundingBox
+    # gi.cGuiOutput.pontoinicial = pontoinicial
+    # gi.cGuiOutput.bounding_box = box
+    gi.cGuiOutput.pontoinicial = origin
+    gi.cGuiOutput.pontoinicial = boundingBox
+
+    # si.PreparaServidorRoteamento(avoid_zones)
+
+    ## Location Urban Communities ##
+    get_polyline_comunities(avoid_zones)
+    # gi.cGuiOutput.json_comunities_create(polylinesComunidades)
+
+    ## Location Limits and Location Urban Areas ##
+    if initial_request == "CompAbrangencia":
+        cidade = data["cidade"]
+        uf = data["uf"]
+        polMunicipio, polMunicipioAreasUrbanizadas = get_areas_urbanas_cache(cidade, uf)
+        gi.cGuiOutput.limits = polMunicipio
+        gi.cGuiOutput.urbanAreas = polMunicipioAreasUrbanizadas
+    
+    ## RoutePath ##
+    if refresh_route == 1:
+        waypoints = OrdenarPontosDistanciaOSMRMultiThread(waypoints, origin)
+
+    (latfI, lonfI) = waypoints[0]
+    RouteDetail = GenerateRouteMap(
+        RouteDetail, origin[0], origin[1], latfI, lonfI
+    )
+
+    for ii in range(len(waypoints) - 1):
+        lati, loni = waypoints[ii]
+        latf, lonf = waypoints[ii + 1]
+        RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
+
+    gi.cGuiOutput.waypoints_route    = RouteDetail.coordinates
+    gi.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
+    gi.cGuiOutput.estimated_time     = RouteDetail.tempo_total
 
 ################################################################################
 def create_standard_cache(data):
@@ -1900,6 +1964,7 @@ def AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita):
 
     gi.cGuiOutput.pontoinicial = pontoinicial
     gi.cGuiOutput.bounding_box = box
+
     NewRegioes.append(regioesglobal)
     for regiao in regioes:
         nome = regiao.get("nome", "SemNome").replace(" ", "_")

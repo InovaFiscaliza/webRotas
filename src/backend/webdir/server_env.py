@@ -120,3 +120,5 @@ class ServerEnv():
         except Exception as e:
             print(f"Error removing server data file: {e}")
         
+# Initialize the server environment
+env = ServerEnv()

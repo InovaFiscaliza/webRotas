@@ -133,7 +133,7 @@
   "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
   "regioes": [
     {
-      "nome": "!Nova Vida",
+      "name": "!Nova Vida",
       "coord": [
         [
           2.790102,
@@ -178,7 +178,7 @@
       ]
     },
     {
-      "nome": "!Ocupação no Bairro Aracelis",
+      "name": "!Ocupação no Bairro Aracelis",
       "coord": [
         [
           2.794846,

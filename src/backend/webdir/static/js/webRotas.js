@@ -1,7 +1,10 @@
 /*
     ## webRotas ##
-    No contexto global do "window", o webRotas cria os objetos:
-    - L (Leaflet)
+    O projeto é escrito em JavaScript, sem frameworks, mas faz uso das bibliotecas 
+    Leaflet, JSZip e toKML. No contexto global do "window", o webRotas cria os objetos:
+    - L
+    - JSZip
+    - tokml
     - DialogBox
     - Tooltip
     - app
@@ -15,7 +18,7 @@
       │   ├── Tooltip         (new Tooltip)
       │   └── Utils           ('js/Utils.js')
       ├── server
-      │   ├── url             ('http://127.0.0.1:5000')
+      │   ├── url             ('http://127.0.0.1:5001')
       │   ├── sessionId
       │   ├── status
       │   └── statusMonitor
@@ -63,7 +66,8 @@
               ├── orientation
               ├── position
               ├── streetview
-              └── tooltip
+              ├── tooltip
+              └── exportFile
 
     window.app organiza informações geradas pelo servidor, referências para classes 
     declaradas em arquivos auxiliares ("js/Communication.js", "js/Components.js" 
@@ -95,11 +99,19 @@
     (11) Evoluir a organização da informação de exportFile, de forma que seja possível 
          descrever o que cada opção faz, e quais são os formatos de exportação disponíveis 
          para cada protocolo (file: ou http:).
+    (12) Do arquivo index.html, aberto no modo "file://", cria-se a possibilidade de editar
+         informações do servidor e a possibilidade de abri-lo noutra aba do navegador.
+         window.open("https://127.0.0.1:5001", "_blank");
+    (13) Estudar migração do "file+localStorage" p/ "Service Worker", de forma que a versão 
+         offline do app seja acessível na própria url (http://127.0.0.1:5001/webRotas/index.html, 
+         por exemplo) ao invés da origem "file://".
     ...
 */
 (function () {
     window.app = {
         name: 'webRotas',
+        version: '0.90.0',
+        released: 'R2025b (01/09/2025)',
 
         modules: {
             Callbacks: null,
@@ -114,7 +126,7 @@
         server: { 
             url: null,
             sessionId: '',
-            status: 'offline', 
+            status: (window.location.protocol === "file:") ? 'offline' : 'online',
             statusMonitor: {
                 intervalId: null, 
                 intervalMs: 10000,
@@ -352,6 +364,7 @@
             window.addEventListener("load",         (event) => window.app.modules.Callbacks.onWindowLoad(event));
             window.addEventListener("beforeunload", (event) => window.app.modules.Callbacks.onWindowBeforeUnload(event));
             window.addEventListener("storage",      (event) => window.app.modules.Callbacks.onLocalStorageUpdate(event));
+            window.addEventListener("message",      (event) => window.app.modules.Callbacks.onWindowMessage(event));
 
         } catch (ME) {
             (window.app.modules.Utils) ? window.app.modules.Utils.consoleLog(ME, 'error') : console.error(ME);

@@ -1,6 +1,7 @@
 /*
     ## webRotas Utils ##      
     - *.*
+      ├── projectInventory
       ├── syncLocalStorage
       ├── consoleLog
       ├── uuid
@@ -26,6 +27,60 @@
           └── pinColor
 */
 (function () {
+    const projectInventory = {
+        html: [
+            "index.html"
+        ],
+        css: [
+            "css/DialogBox.css",
+            "css/Tooltip.css",
+            "css/webRotas.css"
+        ],
+        js: [
+            "js/Callbacks.js",
+            "js/Communication.js",
+            "js/Components.js",
+            "js/DialogBox.js",
+            "js/Layout.js",
+            "js/Plot.js",
+            "js/Tooltip.js",
+            "js/Utils.js",
+            "js/webRotas.js"
+        ],
+        visibleImagesOnLoad: [
+            "images/route.svg",                // ÍCONE
+            "images/route_white.svg",          // MENU DE NAVEGAÇÃO (1)
+            "images/addFiles_32.png",          // PAINEL "ROTAS" (1)
+            "images/Trash_32.png",             // PAINEL "ROTAS" (2)
+            "images/Edit_32.png",              // PAINEL "ROTAS" (3A)
+            "images/pin_18.png",               // PAINEL "PONTO INICIAL" (1)
+            "images/ArrowLeft_32.png",         // TOOLBAR (1A)
+            "images/import.png",               // TOOLBAR (2)
+            "images/export.png",               // TOOLBAR (3)
+            "images/gps-off.png",              // TOOLBAR (4A)
+            "images/north.png",                // TOOLBAR (5A)
+            "images/restore-initial-zoom.png", // TOOLBAR (6)
+            "images/colorbar.svg",             // TOOLBAR (7)
+            "images/layers.png"                // TOOLBAR (8)
+        ],
+        hiddenImagesOnLoad: [
+            "images/red-circle-blink.gif",     // MENU DE NAVEGAÇÃO (2)
+            "images/Edit_32Filled.png",        // PAINEL "ROTAS" (3B)
+            "images/Ok_32Green.png",           // PAINEL "ROTAS" (4)
+            "images/Delete_32Red.png",         // PAINEL "ROTAS" (5)            
+            "images/ArrowRight_32.png",        // TOOLBAR (1B)
+            "images/gps-on.png",               // TOOLBAR (4B)
+            "images/car-heading.png",          // TOOLBAR (5A)
+            "images/info.svg",                 // POPUP (1)
+            "images/question.svg",             // POPUP (2)
+            "images/warning.svg",              // POPUP (3)
+            "images/error.svg",                // POPUP (4)
+            //"images/delete.svg",
+            //"images/car.png",
+            //"images/pin.png"
+        ]
+    };
+
     /*---------------------------------------------------------------------------------*/
     function syncLocalStorage(type) {
         switch (type) {
@@ -277,46 +332,7 @@
         const zip = new window.JSZip();
 
         // HTML+CSS+JS
-        const assets = [
-            "index.html",
-            "css/DialogBox.css",
-            "css/Tooltip.css",
-            "css/webRotas.css",
-            "images/addFiles_32.png",
-            "images/ArrowLeft_32.png",
-            "images/ArrowRight_32.png",
-            "images/car.png",
-            "images/car-heading.png",
-            "images/Delete_32Red.png",
-            "images/Edit_32.png",
-            "images/Edit_32Filled.png",
-            "images/export.png",
-            "images/gps-off.png",
-            "images/gps-on.png",
-            "images/import.png",
-            "images/layers.png",
-            "images/north.png",
-            "images/Ok_32Green.png",
-            "images/pin.png",
-            "images/pin_18.png",
-            "images/Trash_32.png",
-            "images/colorbar.svg",
-            "images/delete.svg",
-            "images/error.svg",
-            "images/info.svg",
-            "images/question.svg",
-            "images/route.svg",
-            "images/warning.svg",
-            "js/Callbacks.js",
-            "js/Communication.js",
-            "js/Components.js",
-            "js/DialogBox.js",
-            "js/Layout.js",
-            "js/Plot.js",
-            "js/Tooltip.js",
-            "js/Utils.js",
-            "js/webRotas.js"
-        ];
+        const assets = Object.values(projectInventory).flat();
 
         for (const path of assets) {
             try {
@@ -504,6 +520,27 @@
     
 
     class Image {
+        /*---------------------------------------------------------------------------------*/
+        static loadImagesForCache() {
+            if (window.location.protocol === "file:") {
+                return;
+            }
+
+            const cacheContainer = window.document.createElement('div');
+            cacheContainer.id = 'imageCache';
+            cacheContainer.style.cssText = 'width:0; height:0; overflow:hidden; position:absolute; left:-9999px; top:-9999px;';
+
+            const assets = projectInventory.hiddenImagesOnLoad;
+            assets.forEach(imageUrl => {
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                cacheContainer.appendChild(img);
+            });
+
+            window.document.getElementById("appInfoBtn").appendChild(cacheContainer);
+        }
+
+        /*---------------------------------------------------------------------------------*/
         static parulaColormap = [[ 53,  42, 135], [ 45,  53, 140], [ 38,  63, 146], [ 30,  73, 151], [ 23,  84, 157], [ 16,  94, 162],
                                  [ 11, 103, 167], [  8, 110, 170], [  6, 118, 173], [  5, 125, 176], [  5, 131, 178], [  6, 138, 180],
                                  [  8, 144, 182], [ 11, 150, 183], [ 14, 156, 185], [ 18, 161, 186], [ 23, 165, 187], [ 30, 170, 186],

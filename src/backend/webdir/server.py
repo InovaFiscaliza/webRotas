@@ -30,8 +30,7 @@ from concurrent.futures import ThreadPoolExecutor
 import wlog as wl
 import webRota as wr
 
-
-import server_env as se
+from server_env import env
 import routing_servers_interface as rsi
 import CacheBoundingBox as cb
 import GuiOutput as gi
@@ -42,12 +41,11 @@ import GuiOutput as gi
 
 REQUIRED_KEYS = {
     "Contorno": {"latitude", "longitude", "raio"},
-    "PontosVisita": {"pontosvisita"},
+    "PontosVisita": {"pontosvisita"}, # migrar para "waypoints" na refatoração
     "Abrangencia": {"cidade", "uf", "Escopo", "distancia_pontos"},
     "RoteamentoOSMR": {"PortaOSRMServer"},
+    "customRoute": {"routeId", "cacheId", "boundingBox", "avoidZones", "origin", "waypoints", "paths"},
 }
-
-env = se.ServerEnv()
 
 ################################################################################
 # TODO #4 Use standard paths defined in a configuration section or file. May use ProgramData/Anatel/WebRotas, as other applications from E!, where ProgramData folder should use system variables.
@@ -79,44 +77,25 @@ def _static_files(filepath):
 
 
 # -----------------------------------------------------------------------------------#
-# PROCESSA REQUISIÇÃO, RETORNANDO ROTA AUTOMÁTICA
+# ROTAS PRINCIPAIS
+# (requisições vindas da GUI v.2)
 # -----------------------------------------------------------------------------------#
 @app.route("/process", methods=["POST"])
 def _process():
     session_id = request.args.get("sessionId")
     if not session_id:
         return jsonify({"error": "Invalid or missing sessionId"}), 400
-    gi.cGuiOutput.session_id = session_id
-    wr.UserData.ssid = session_id
+    
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400
-
-    # with open("../../../tests/routing3.json", "r") as f:
-    #     json_string = f.read()
-
-    ProcessaRequisicoesAoServidor(data)
-    json_string = gi.cGuiOutput.criar_json_routing()
-    return Response(json_string, mimetype="application/json")
-
-
-# -----------------------------------------------------------------------------------#
-# REPROCESSA REQUISIÇÃO, RETORNANDO ROTA CUSTOMIZADA
-# -----------------------------------------------------------------------------------#
-@app.route("/reprocess", methods=["POST"])
-def _reprocess():
-    session_id = request.args.get("sessionId")
-    if not session_id:
-        return jsonify({"error": "Invalid or missing sessionId"}), 400
+    
+    gi.cGuiOutput.reset()
     gi.cGuiOutput.session_id = session_id
     wr.UserData.ssid = session_id
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "Invalid or missing JSON"}), 400
 
-    ProcessaRequisicoesAoServidor(data)
-    json_string = gi.cGuiOutput.criar_json_routing()
-    # return jsonify({ "error": "Mensagem erro de teste" }), 500
+    auto_analysis = ProcessaRequisicoesAoServidor(data, session_id, gui_version="v2")
+    json_string   = gi.cGuiOutput.criar_json_routing(auto_analysis)
     return Response(json_string, mimetype="application/json")
 
 
@@ -127,6 +106,11 @@ def _reprocess():
 def _ok():
     return "ok"
 
+# -----------------------------------------------------------------------------------#
+@app.route("/create_standard_cache", methods=["POST"])
+def _create_standard_cache():
+    data = request.get_json()    
+    return wr.create_standard_cache(data)
 
 # -----------------------------------------------------------------------------------#
 @app.route("/map/<filename>")
@@ -213,11 +197,14 @@ def download_file(filename):
 
 
 # -----------------------------------------------------------------------------------#
+# PROCESSA REQUISIÇÃO, RETORNANDO ROTA AUTOMÁTICA OU CUSTOMIZADA
+# (requisições vindas da GUI v.1)
+# -----------------------------------------------------------------------------------#
 @app.route("/webrotas", methods=["POST"])
 def process_location():
-    # Obtém o JSON da requisição
+    # Trata JSON da requisição da v.1 da GUI (a ser descontinuada)
     data = request.get_json()
-    return ProcessaRequisicoesAoServidor(data)
+    return ProcessaRequisicoesAoServidor(data, session_id="", gui_version="v1")
 
 
 ################################################################################
@@ -254,7 +241,7 @@ def default_points(radi: int) -> int:
 ################################################################################
 # pyinstaller --onefile --add-data "C:\\Users\\andre\\miniconda3\\envs\\webrotas/Lib/site-packages/flask;flask" Server.py
 ################################################################################
-def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
+def ProcessaRequisicoesAoServidor(data: dict, session_id: str, gui_version: str):
     """Processa as requisições ao servidor WebRotas.
 
     :param data: Dicionário com os dados da requisição.
@@ -262,13 +249,10 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
     """
     with app.app_context():
         rsi.keep_last_n_containers_running()
-        try:
-            request_type = data["TipoRequisicao"]
-        except KeyError as e:
-            return jsonify({"error": f"Campo TipoRequisicao não encontrado: {e}"}), 400
-
-        if request_type == "StandardCache":
-            return wr.create_standard_cache(data)
+        
+        request_type = data.get("TipoRequisicao", data.get("requestType", None))
+        if not request_type:
+            return jsonify({"error": "Tipo de requisição não especificado"}), 400
 
         if not REQUIRED_KEYS[request_type].issubset(data.keys()):
             return (
@@ -280,15 +264,22 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
 
         # set variables to arguments used in all types of requests
         if(wr.UserData.ssid==None):
-           user = unidecode(data.get("ssid", "Anatel"))
+           user = unidecode(data.get("ssid", data.get("UserName", "Anatel")))
         else:   
            user = wr.UserData.ssid
-        regioes = data.get("regioes", [])
-        pontoinicial = data.get("PontoInicial", [])
-        # Nome do usuário para o log trancorrer com o nome correto o quanto antes sem o "none"
-        gi.cGuiOutput.requisition_data = data
-        # Process the request according to the request type
 
+        regioes = data.get("regioes", data.get("avoidZones", [])) # migrar para "avoidZones" na refatoração
+
+        pontoinicial = []
+        for key in ["PontoInicial", "pontoinicial", "origin"]: # Possíveis valores de chave. Na refatoração, migrar p/ "origin".
+            if key in data:
+                pontoinicial = data[key]
+                break
+
+        gi.cGuiOutput.requisition_data = data
+        auto_analysis = True
+
+        # Process the request according to the request type
         match request_type:
             case "Contorno":
                 wr.wLog(
@@ -385,6 +376,11 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                     "#############################################################################################"
                 )
 
+            case "customRoute":
+                wr.wLog(f"## customRoute - sessionId: {session_id} ##")
+                auto_analysis = False
+                wr.osrm_custom_route(data, session_id)
+
             case "RoteamentoOSMR":
                 wr.wLog(
                     "#############################################################################################"
@@ -440,25 +436,29 @@ def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
                 return (
                     jsonify(
                         {
-                            "error": f"Tipo de requisição parcialmente definido. Favor atualizar webrota para processamento da requisição `{request_type}`"
+                            "error": f"Tipo de requisição não definido. Favor atualizar webRotas para processamento da requisição `{request_type}`"
                         }
                     ),
                     400,
                 )
 
         cb.cCacheBoundingBox._schedule_save()
-        # Retorna uma resposta de confirmação
-        return (
-            jsonify(
-                {
-                    "MapaOk": fileName,
-                    "Url": f"http://127.0.0.1:{env.port}/map/{fileName}",
-                    "HtmlStatic": f"http://127.0.0.1:{env.port}/download/{fileNameStatic}",
-                    "Kml": f"http://127.0.0.1:{env.port}/download/{fileKml}",
-                }
-            ),
-            200,
-        )
+        
+        if gui_version == "v1":
+            return (
+                jsonify(
+                    {
+                        "MapaOk": fileName,
+                        "Url": f"http://127.0.0.1:{env.port}/map/{fileName}",
+                        "HtmlStatic": f"http://127.0.0.1:{env.port}/download/{fileNameStatic}",
+                        "Kml": f"http://127.0.0.1:{env.port}/download/{fileKml}",
+                    }
+                ),
+                200,
+            )
+        else:
+            return auto_analysis
+
 
 
 ################################################################################
@@ -512,7 +512,7 @@ def main():
         env.save_server_data()
         wr.server_port = env.port
 
-        wr.wLog(f"Starting WebRotas Server on port {env.port}...")
+        ## Podman check ##
         rsi.init_and_load_podman_images()
         status, message = rsi.is_podman_running_health()
         if status:
@@ -521,7 +521,9 @@ def main():
             wr.wLog(f"Podman is not healthy {message}")  
         
         rsi.manutencao_arquivos_antigos()
-        gi.cGuiOutput.url = f"http://127.0.0.1:{env.port}/"
+
+        ## Start the Flask app ##
+        wr.wLog(f"Starting WebRotas Server on port {env.port}...")
         app.run(debug=args.debug, port=env.port, host="0.0.0.0")
         return 0
     except Exception as e:

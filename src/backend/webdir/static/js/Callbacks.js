@@ -2,16 +2,24 @@
     ## webRotas Callbacks ##
     - APP
       ├── onWindowLoad
-      └── onWindowBeforeUnload
+      ├── onWindowBeforeUnload
+      └── onLocalStorageUpdate
+    - BARRA DE NAVEGAÇÃO
+      └── onNavBarButtonClicked
     - MAPA
+      ├── onContextMenuCreation  
       ├── onContextMenuItemSelected
-      └── updateGeoLocationPosition
+      └── updateGeoLocationPosition       (!! ToDo: PENDENTE !!)
     - PAINEL À ESQUERDA DO MAPA
-      └── onPanelButtonClicked
+      ├── onPanelButtonClicked            (!! ToDo: PENDENTE "initialPointBtn" !!)
+      ├── onRouteListSelectionChanged
+      ├── onPointListSelectionChanged
+      ├── onHighlightTextListItem
+      └── onNumericFieldValidation
     - TOOLBAR
-      └── onToolbarButtonClicked
+      └── onToolbarButtonClicked          (!! ToDo: PENDENTE "toolbarLocationBtn" & toolbarOrientationBtn" !!)
     - *.*
-      └── onServerConnectionStatusChanged (PENDENTE)
+      └── onServerConnectionStatusChanged
 
     Alguns dos layers do mapa proveem interações, mas os seus callbacks estão descritos
     na sua criação.
@@ -22,15 +30,16 @@
             ## APP ##
         -----------------------------------------------------------------------------------*/
         static onWindowLoad(event) {
-            const routing = window.app.routingContext;
-
-            window.app.modules.Components.createMap();
+            window.app.modules.Components.createNavBar();
             window.app.modules.Components.createPanel();
+            window.app.modules.Components.createMap();
             window.app.modules.Components.createToolbar();
 
             window.app.modules.Utils.syncLocalStorage('startup');
             window.app.modules.Layout.startup();
 
+            window.app.modules.Communication.isServerOnlineController();
+            window.app.modules.Utils.Image.loadImagesForCache();
             window.app.modules.Utils.consoleLog('Session started');
         }
 
@@ -42,22 +51,109 @@
 
         /*---------------------------------------------------------------------------------*/
         static onLocalStorageUpdate(event) {
+            /*
+                Operação disparada quando ocorre alteração no localStorage em outra aba,
+                mesma url, mantendo consistência na lista de rotas sob análise.
+            */
             if (event.storageArea !== window.localStorage) {
                 return;
             }
 
-            new DialogBox('Changes detected in another tab. Reloading...', 'info');
+            //new DialogBox('Changes detected in another tab. Reloading...', 'info');
+            window.app.modules.Utils.consoleLog('Changes detected in another tab. Reloading...')
             window.app.modules.Utils.syncLocalStorage('startup');
             window.app.modules.Layout.startup();
         }
 
+        static onWindowMessage(event) {
+            /*
+                Operação disparada quando a versão online do webRotas é iniciada
+                a partir da sua versão offline.
+            */
+            if (event.origin === "null" || event.origin === "file://") {
+                const urlParameters = new URLSearchParams(window.location.search);
+                const expectedToken = urlParameters.get("token");
+
+                if (event.data.type === "handshake" && event.data.token === expectedToken && !!event.data.routing.length) {
+                    if (window.app.modules.Utils.resolvePushType(event.data.routing)) {
+                        window.app.modules.Utils.syncLocalStorage('update');
+                    }
+                }
+            }
+        }
+
+
+        /*-----------------------------------------------------------------------------------
+            ## BARRA DE NAVEGAÇÃO ##
+        -----------------------------------------------------------------------------------*/
+        static onNavBarButtonClicked(event) {
+            switch (event.target.id) {
+                case 'serverStatusBtn': {
+                    const protocol = window.location.protocol;
+
+                    switch (protocol) {
+                        case  "file:": {
+                            const dialogBoxText = `Esta é a versão <i>offline</i> do webRotas, executada via <b>${protocol}</b>.<br><br>
+                                Recursos que dependem de comunicação com o servidor, como a criação de rotas customizadas, foram 
+                                removidos ou desativados.<br><br>Se o servidor estiver disponível, é possível abrir a versão 
+                                <i>online</i> do webRotas. Deseja continuar?`;
+
+                            new DialogBox(dialogBoxText, '', [{ 
+                                text: 'Sim', 
+                                callback: () => {
+                                    try {
+                                        const token  = window.app.modules.Utils.uuid();
+                                        const url    = `${app.server.url}/webRotas/index.html?token=${token}`;
+                                        const newWin = window.open(url, '_blank');
+                                        setTimeout(() => newWin.postMessage({ 
+                                            type: "handshake", 
+                                            token, 
+                                            routing: window.app.routingContext 
+                                        }, url), 1000);
+                                    } catch (ME) {
+                                        new DialogBox(`${ME.message}`, 'error');
+                                    }
+                                },
+                                focus: true 
+                            }, { 
+                                text: 'Não', 
+                                callback: () => {},
+                                focus: false 
+                            }]);
+                            break;
+                        }
+
+                        default: {
+                            const dialogBoxText = `Esta é a versão <i>online</i> do webRotas, executada via <b>${protocol}</b>. Entretanto, o <i>status</i>
+                                atual do servidor é <i>offline</i>.<br><br>Quer tentar reconectar?`;
+
+                            new DialogBox(dialogBoxText, '', [{ 
+                                text: 'Sim', 
+                                callback: () => window.app.modules.Communication.isServerOnlineController(),
+                                focus: true 
+                            }, { 
+                                text: 'Não', 
+                                callback: () => {},
+                                focus: false 
+                            }]);
+                        }
+                    }
+                    break;
+                }
+
+                case 'appInfoBtn': {
+                    new DialogBox('Informações gerais sobre o app... sobre o navegador etc...', 'info');
+                    break;
+                }
+            }
+        }
 
         /*-----------------------------------------------------------------------------------
             ## MAPA ##
         -----------------------------------------------------------------------------------*/
         static onContextMenuCreation(event) {
             const map   = window.app.map;
-            const panel = document.getElementById('panel');
+            const panel = window.document.getElementById('panel');
             let context = window.document.getElementById('contextMenu');                
 
             if (!context) {
@@ -276,7 +372,7 @@
                     if (!hasOriginChanged && !hasVisitOrderChanged) {
                         new DialogBox('No changes were made to the route.', 'info');
                         return;
-                    }                   
+                    }
 
                     /*
                         O servidor precisa evoluir p/ identificar a porta do container
@@ -285,27 +381,46 @@
 
                         Eliminar duplicidade de chaves: "PontoInicial" e "pontoinicial",
                         "User" e "UserName".
+
+                        Usar nomes em inglês: "requestType", "origin", "waypoints" etc.
                     */
 
                     const request = structuredClone(currentRequest);
-                    request.TipoRequisicao  = "RoteamentoOSMR";
-                    request.PortaOSRMServer = 50001;
-                    request.UserName        = request.User || "Anatel";
-                    request.recalcularrota  = hasOriginChanged ? 1 : 0;
-                    request.PontoInicial    = (hasOriginChanged) ? editedOrigin : initialOrigin;
-                    request.PontoInicial[0] = parseFloat(request.PontoInicial[0]);
-                    request.PontoInicial[1] = parseFloat(request.PontoInicial[1]);
-                    request.pontoinicial    = request.PontoInicial;
+                    // "routeId", "origin", "waypoints", "avoidZones", "boundingBox"
+                    request.requestType     = "customRoute";
+                    request.OSRMServerPort  = 50001;
+                    request.origin          = hasOriginChanged ? editedOrigin : initialOrigin;
+                    request.origin[0]       = parseFloat(request.PontoInicial[0]);
+                    request.origin[1]       = parseFloat(request.PontoInicial[1]);
 
                     if (hasVisitOrderChanged) {
-                        const editedPointsToVisit = visitOrderIndexes.map(index => currentRoute.waypoints[index]);
-                        request.pontosvisita = editedPointsToVisit.map(item => [item.lat, item.lng]);
+                        const editedWaypointsList = visitOrderIndexes.map(index => currentRoute.waypoints[index]);
+                        request.waypoints   = editedWaypointsList.map(item => [item.lat, item.lng, item.description.trim()]);
                     } else {
-                        request.pontosvisita = currentRoute.waypoints.map(item => [item.lat, item.lng]);
+                        request.waypoints   = currentRoute.waypoints.map(item => [item.lat, item.lng, item.description.trim()]);
+                    }
+
+                    request.avoidZones      = currentRequest.regioes;
+                    request.boundingBox     = currentRoute.boundingBox;
+
+                    /*
+                        Enquanto não se refatora o backend...
+                    */
+
+                    const keysToRemove = ['pontoinicial', 'PontoInicial', 'pontosvisita', 'regioes', 'UserName', 'User'];
+                    for (const key of keysToRemove) {
+                        if (key in request) delete request[key];
                     }
 
                     window.app.modules.Communication.computeRoute(request);
                     console.log(request);
+
+                    /*
+                        Criar um novo elemento à routingContext, mas bloqueado... esse novo elemento
+                        será desbloqueado quando retornar a resposta.
+
+                        Essa sistemática tem que valer p/ novas requisições também!
+                    */
 
                     window.document.getElementById('routeListEditModeBtn').dataset.value = 'off';
                     window.app.modules.Layout.controller('editionMode', false);
@@ -542,6 +657,8 @@
 
                 case 'toolbarLocationBtn': {
                     // ...
+
+                    /*
                     const currentGeolocationStatus = window.app.mapContext.settings.geolocation.status;
 
                     if (currentGeolocationStatus === 'on') {
@@ -553,6 +670,7 @@
                     }
     
                     new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'warning'); 
+                    */
 
                     /*
                     try {
@@ -630,8 +748,11 @@
             ## *.* ##
         -----------------------------------------------------------------------------------*/
         static onServerConnectionStatusChanged() {
-            console.log('onServerConnectionStatusChanged');
-            // ...
+            const serverStatusBtn = window.document.getElementById('serverStatusBtn');
+            
+            Object.assign(serverStatusBtn.style, { 
+                display: window.app.server.status === 'online' ? 'none' : 'block'
+            });
         }
     }
 

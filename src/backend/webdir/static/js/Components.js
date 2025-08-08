@@ -18,6 +18,60 @@
 (function() {
     class Components {
         /*-----------------------------------------------------------------------------------
+            ## BARRA DE NAVEGAÇÃO ##
+        -----------------------------------------------------------------------------------*/
+        static createNavBar() {
+            const container = window.document.getElementById('app');
+            const navbar = this.createElement('nav', {
+                classList: ['grid'],
+                id: 'navbar'
+            }, container);
+
+            Object.assign(navbar.style, { 
+                gridTemplateRows: 'minmax(0px, 1fr)',
+                gridTemplateColumns: 'minmax(0px, 1fr) 22px 22px'
+            });
+
+            // TÍTULO
+            this.createTitle('icon+text', {
+                gridArea: '1 / 1 / 2 / 2',
+                iconPath: 'images/route_white.svg', 
+                innerHTML: `${window.app.name} v. ${window.app.version}<br><font style="font-size: 9px;">${window.app.released}</font>`
+            }, navbar)
+
+            this.createElement('button', {
+                classList: ['btn-input'],
+                id: 'serverStatusBtn',
+                style: { 
+                    gridArea: '1 / 2 / 2 / 3',
+                    display: (window.location.protocol === "file:") ? 'block' : 'none',
+                    width: '18px', 
+                    height: '18px', 
+                    backgroundImage: 'url(images/red-circle-blink.gif)',
+                },
+                eventListeners: {
+                    click: (event) => window.app.modules.Callbacks.onNavBarButtonClicked(event)
+                },
+                dataset: { tooltip: 'Servidor offline', tooltipDefaultPosition: 'bottom' }
+            }, navbar);
+
+            this.createElement('button', {
+                classList: ['btn-input'],
+                id: 'appInfoBtn',
+                textContent: '⋮',
+                style: { 
+                    gridArea: '1 / 3 / 2 / 4',
+                    color: 'rgb(255, 255, 255)',
+                    fontSize: '19px'
+                },
+                eventListeners: {
+                    click: (event) => window.app.modules.Callbacks.onNavBarButtonClicked(event)
+                },
+                dataset: { tooltip: 'Informações gerais', tooltipDefaultPosition: 'bottom' }
+            }, navbar);
+        }
+
+        /*-----------------------------------------------------------------------------------
             ## MAPA ##
             O mapa estará relacionado a alguns eventos: mousemove e mouseup (ambos definidos 
             em "Tooltip.js"), além de contextmenu (definido em "Callback.js"). Além disso, 
@@ -25,6 +79,11 @@
             zoomstart, que removem o menu caso exista interação com o mapa.
         -----------------------------------------------------------------------------------*/
         static createMap() {
+            const container = window.document.getElementById('app');
+            this.createElement('div', {
+                id: 'document'
+            }, container);
+
             const { center, zoom } = window.app.mapContext.settings.position;
             const basemapList      = window.app.mapContext.layers.basemap;
             const basemapSelection = window.app.mapContext.settings.basemap;
@@ -139,82 +198,127 @@
         -----------------------------------------------------------------------------------*/
         static createPanel() {
             // <GRID PRINCIPAL>
-            const panel = window.document.getElementById('panel');
-            ['panel-on', 'grid'].forEach(className => {
-                panel.classList.add(className);
-            });
-            Object.assign(panel.style, { gridTemplateRows: '26px 22px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 1fr) 22px 52px', gridTemplateColumns: 'minmax(0px, 1fr)'
-            });
+            const container = window.document.getElementById('app');
+            
+            const panel = this.createElement('div', {
+                classList: ['panel-on', 'grid'],
+                id: 'panel'
+            }, container);
 
-            // TÍTULO
-            this.createTitle('icon+text+line', {
-                gridArea: '1 / 1 / 2 / 2',
-                iconPath: 'images/route.svg', 
-                textContent: 'webRotas'                
-            }, panel)
+            Object.assign(panel.style, { 
+                gridTemplateRows: '17px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 1fr) 22px 52px', 
+                gridTemplateColumns: 'minmax(0px, 1fr)'
+            });
 
             // ROTAS - LABEL E CONTROLES
             const routeListTitleGrid = this.createElement('div', {
                 classList: ['grid'],
-                style: { gridArea: '2 / 1 / 3 / 2', gridTemplateRows: '22px', gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px 18px', padding: '0px', columnGap: '5px', overflow: 'visible' }
+                style: { 
+                    gridArea: '1 / 1 / 2 / 2', 
+                    gridTemplateRows: '17px', 
+                    gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px 18px', 
+                    padding: '0px', 
+                    columnGap: '5px', 
+                    overflow: 'visible' 
+                }
             }, panel);
 
                 // <SUB-GRID>
                 this.createElement('label', {
                     classList: ['label-text-list'],
-                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    style: { 
+                        gridArea: '1 / 1 / 2 / 2' 
+                    },
                     textContent: 'Rotas:'
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
                     classList: ['btn-top-right'],
                     id: 'routeListAddBtn',
-                    style: { gridArea: '1 / 2 / 2 / 3', width: '18px', height: '18px', backgroundImage: 'url(images/addFiles_32.png)' },
+                    style: { 
+                        gridArea: '1 / 2 / 2 / 3', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/addFiles_32.png)' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    dataset: { tooltip: 'Duplica rota' }
+                    dataset: { 
+                        tooltip: 'Duplica rota' 
+                    }
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
                     classList: ['btn-top-right', 'disabled'],
                     id: 'routeListDelBtn',
-                    style: { gridArea: '1 / 3 / 2 / 4', width: '18px', height: '18px', backgroundImage: 'url(images/Trash_32.png)' },
+                    style: { 
+                        gridArea: '1 / 3 / 2 / 4', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/Trash_32.png)' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Exclui rota' }
+                    dataset: { 
+                        tooltip: 'Exclui rota' 
+                    }
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
                     classList: ['btn-top-right'],
                     id: 'routeListEditModeBtn',
-                    style: { gridArea: '1 / 4 / 2 / 5', width: '18px', height: '18px', backgroundImage: 'url(images/Edit_32.png)' },
+                    style: { 
+                        gridArea: '1 / 4 / 2 / 5', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/Edit_32.png)' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    dataset: { tooltip: 'Habilita modo de edição da rota', value: 'off' }
+                    dataset: { 
+                        tooltip: 'Habilita modo de edição da rota', 
+                        value: 'off' 
+                    }
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
                     classList: ['btn-top-right'],
                     id: 'routeListConfirmBtn',
-                    style: { gridArea: '1 / 5 / 2 / 6', display: 'none', width: '18px', height: '18px', backgroundImage: 'url(images/Ok_32Green.png)' },
+                    style: { 
+                        gridArea: '1 / 5 / 2 / 6', 
+                        display: 'none', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/Ok_32Green.png)' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    dataset: { tooltip: 'Confirma edição' }
+                    dataset: { 
+                        tooltip: 'Confirma edição' 
+                    }
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
                     classList: ['btn-top-right'],
                     id: 'routeListCancelBtn',
-                    style: { gridArea: '1 / 6 / 2 / 7', display: 'none', width: '18px', height: '18px', backgroundImage: 'url(images/Delete_32Red.png)' },
+                    style: { 
+                        gridArea: '1 / 6 / 2 / 7', 
+                        display: 'none', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/Delete_32Red.png)' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    dataset: { tooltip: 'Cancela edição' }
+                    dataset: { 
+                        tooltip: 'Cancela edição' 
+                    }
                 }, routeListTitleGrid);
                 // </SUB-GRID>
         
@@ -222,31 +326,48 @@
             this.createElement('ul', {
                 classList: ['text-list'],
                 id: 'routeList',
-                style: { gridArea: '3 / 1 / 4 / 2' }
+                style: { 
+                    gridArea: '2 / 1 / 3 / 2' 
+                }
             }, panel);
         
             // PONTO INICIAL - LABEL E CONTROLES
             const initialPointTitleGrid = this.createElement('div', {
                 classList: ['grid'],
-                style: { gridArea: '4 / 1 / 5 / 2', gridTemplateRows: '22px', gridTemplateColumns: 'minmax(0px, 1fr) 18px', padding: '0px', overflow: 'visible' }
+                style: { 
+                    gridArea: '3 / 1 / 4 / 2', 
+                    gridTemplateRows: '22px', 
+                    gridTemplateColumns: 'minmax(0px, 1fr) 18px', 
+                    padding: '0px', 
+                    overflow: 'visible' 
+                }
             }, panel);
 
                 // <SUB-GRID>
                 this.createElement('label', {
                     classList: ['label-panel'],
-                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    style: { 
+                        gridArea: '1 / 1 / 2 / 2' 
+                    },
                     textContent: 'Ponto inicial:'
                 }, initialPointTitleGrid);
             
                 this.createElement('button', {
                     classList: ['btn-top-right', 'disabled'],
                     id: 'initialPointBtn',
-                    style: { gridArea: '1 / 2 / 2 / 3', width: '18px', height: '18px', backgroundImage: 'url(images/pin_18.png)' },
+                    style: { 
+                        gridArea: '1 / 2 / 2 / 3', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/pin_18.png)' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Captura posição do mouse' }
+                    dataset: { 
+                        tooltip: 'Captura posição do mouse' 
+                    }
                 }, initialPointTitleGrid);
                 // </SUB-GRID>
         
@@ -254,7 +375,12 @@
             const initialPointGrid = this.createElement('div', {
                 classList: ['grid', 'grid-border'],
                 id: 'initialPointGrid',
-                style: { gridArea: '5 / 1 / 6 / 2', gridTemplateRows: '17px 22px 17px 22px', gridTemplateColumns: 'minmax(0px, 1fr) minmax(0px, 1fr)', padding: '10px' }
+                style: { 
+                    gridArea: '4 / 1 / 5 / 2', 
+                    gridTemplateRows: '17px 22px 17px 22px', 
+                    gridTemplateColumns: 'minmax(0px, 1fr) minmax(0px, 1fr)', 
+                    padding: '10px' 
+                }
             });
             panel.appendChild(initialPointGrid);
 
@@ -262,7 +388,9 @@
                 this.createElement('label', {
                     classList: ['label-form-field'],
                     htmlFor: 'initialPointLatitude',
-                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    style: { 
+                        gridArea: '1 / 1 / 2 / 2' 
+                    },
                     textContent: 'Latitude:'
                 }, initialPointGrid);
             
@@ -270,18 +398,25 @@
                     id: 'initialPointLatitude',
                     type: 'number',
                     step: 'any',
-                    style: { gridArea: '2 / 1 / 3 / 2' },
+                    style: { 
+                        gridArea: '2 / 1 / 3 / 2' 
+                    },
                     eventListeners: {
                         change: (event) => window.app.modules.Callbacks.onNumericFieldValidation(event, { min: -90, max: 90 })
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Limites: [-90, 90]', tooltipDefaultPosition: 'bottom' }
+                    dataset: { 
+                        tooltip: 'Limites: [-90, 90]', 
+                        tooltipDefaultPosition: 'bottom' 
+                    }
                 }, initialPointGrid);
             
                 this.createElement('label', {
                     classList: ['label-form-field'],
                     htmlFor: 'initialPointLongitude',
-                    style: { gridArea: '1 / 2 / 2 / 3' },
+                    style: { 
+                        gridArea: '1 / 2 / 2 / 3' 
+                    },
                     textContent: 'Longitude:'
                 }, initialPointGrid);
             
@@ -289,25 +424,34 @@
                     id: 'initialPointLongitude',
                     type: 'number',
                     step: 'any',
-                    style: { gridArea: '2 / 2 / 3 / 3' },
+                    style: { 
+                        gridArea: '2 / 2 / 3 / 3' 
+                    },
                     eventListeners: {
                         change: (event) => window.app.modules.Callbacks.onNumericFieldValidation(event, { min: -180, max: 180 })
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Limites: [-180, 180]', tooltipDefaultPosition: 'bottom' }
+                    dataset: { 
+                        tooltip: 'Limites: [-180, 180]', 
+                        tooltipDefaultPosition: 'bottom' 
+                    }
                 }, initialPointGrid);
             
                 this.createElement('label', {
                     classList: ['label-form-field'],
                     htmlFor: 'initialPointDescription',
-                    style: { gridArea: '3 / 1 / 4 / 2' },
+                    style: { 
+                        gridArea: '3 / 1 / 4 / 2' 
+                    },
                     textContent: 'Descrição:'
                 }, initialPointGrid);
             
                 this.createElement('input', {
                     id: 'initialPointDescription',
                     type: 'text',
-                    style: { gridArea: '4 / 1 / 5 / 3' },
+                    style: { 
+                        gridArea: '4 / 1 / 5 / 3' 
+                    },
                     disabled: true
                 }, initialPointGrid);
                 // </SUB-GRID>
@@ -315,13 +459,23 @@
             // PONTO A VISITAR - LABEL E CONTROLES
             const pointsToVisitTitleGrid = this.createElement('div', {
                 classList: ['grid'],
-                style: { gridArea: '6 / 1 / 7 / 2', display: 'grid', gridTemplateRows: '22px', gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px', padding: '0px', columnGap: '5px', overflow: 'visible' }
+                style: { 
+                    gridArea: '5 / 1 / 6 / 2', 
+                    display: 'grid', 
+                    gridTemplateRows: '22px', 
+                    gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px', 
+                    padding: '0px', 
+                    columnGap: '5px', 
+                    overflow: 'visible' 
+                }
             }, panel);
 
                 // <SUB-GRID>        
                 this.createElement('label', {
                     classList: ['label-text-list'],
-                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    style: { 
+                        gridArea: '1 / 1 / 2 / 2' 
+                    },
                     textContent: 'Pontos a visitar:'
                 }, pointsToVisitTitleGrid);
             
@@ -329,43 +483,57 @@
                     classList: ['btn-top-right', 'disabled'],
                     id: 'routeListMoveUpBtn',
                     textContent: '▲',
-                    style: { gridArea: '1 / 2 / 2 / 3' },
+                    style: { 
+                        gridArea: '1 / 2 / 2 / 3' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Altera ordem do ponto selecionado' }
+                    dataset: { 
+                        tooltip: 'Altera ordem do ponto selecionado' 
+                    }
                 }, pointsToVisitTitleGrid);
             
                 this.createElement('button', {
                     classList: ['btn-top-right', 'disabled'],
                     id: 'routeListMoveDownBtn',
                     textContent: '▼',
-                    style: { gridArea: '1 / 3 / 2 / 4' },
+                    style: { 
+                        gridArea: '1 / 3 / 2 / 4' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Altera ordem do ponto selecionado' }
+                    dataset: { 
+                        tooltip: 'Altera ordem do ponto selecionado' 
+                    }
                 }, pointsToVisitTitleGrid);
                 // </SUB-GRID>
         
             this.createElement('ul', {
                 classList: ['text-list'],
                 id: 'pointsToVisit',
-                style: { gridArea: '7 / 1 / 8 / 2' }
+                style: { 
+                    gridArea: '6 / 1 / 7 / 2' 
+                }
             }, panel);
 
             this.createElement('label', {
                 classList: ['label-text-list'],
-                style: { gridArea: '8 / 1 / 9 / 2' },
+                style: { 
+                    gridArea: '7 / 1 / 8 / 2' 
+                },
                 textContent: 'Outras informações:'
             }, panel);
 
             this.createElement('div', {
                 classList: ['text-area'],
                 id: 'routeIds',
-                style: { gridArea: '9 / 1 / 10 / 2' }
+                style: { 
+                    gridArea: '8 / 1 / 9 / 2' 
+                }
             }, panel);
             // </GRID PRINCIPAL>
         }
@@ -375,29 +543,48 @@
             ## TOOLBAR ##
         -----------------------------------------------------------------------------------*/
         static createToolbar() {
-            let container = window.document.getElementById('toolbar');
-            ['grid-toolbar'].forEach(className => {
-                container.classList.add(className);
+            const container = window.document.getElementById('app');
+            
+            const toolbar = this.createElement('footer', {
+                classList: ['grid-toolbar'],
+                id: 'toolbar'
+            }, container);
+
+            Object.assign(toolbar.style, { 
+                gridTemplateRows: '1fr', 
+                gridTemplateColumns: '22px 22px 22px minmax(0, 1fr) 22px 22px 22px 22px 22px' 
             });
-            Object.assign(container.style, { gridTemplateRows: '1fr', gridTemplateColumns: '22px 22px 22px minmax(0, 1fr) 22px 22px 22px 22px 22px' });
 
             this.createElement('button', {
                 classList: ['btn-panel-on'],
                 id: 'toolbarPanelVisibilityBtn',
-                style: { gridArea: '1 / 1 / 2 / 2', width: '18px', height: '18px' },
+                style: { 
+                    gridArea: '1 / 1 / 2 / 2', 
+                    width: '18px', 
+                    height: '18px' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Visibilidade do painel de controle' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Visibilidade do painel de controle' 
+                }
+            }, toolbar);
 
             const btn = this.createElement('label', {
                 classList: ['btn-input'],
                 id: 'toolbarImportBtn',
                 htmlFor: 'toolbarImportInput',
-                style: { gridArea: '1 / 2 / 2 / 3', width: '16px', height: '16px', backgroundImage: 'url(images/import.png)' },
-                dataset: { tooltip: 'Importa arquivo de configuração (.json)' },
-            }, container);
+                style: { 
+                    gridArea: '1 / 2 / 2 / 3', 
+                    width: '16px', 
+                    height: '16px', 
+                    backgroundImage: 'url(images/import.png)' 
+                },
+                dataset: { 
+                    tooltip: 'Importa arquivo de configuração (.json)' 
+                },
+            }, toolbar);
 
             const input = this.createElement('input', {
                 id: 'toolbarImportInput',
@@ -415,57 +602,99 @@
 
             this.createElement('button', {
                 id: 'toolbarExportBtn',
-                style: { gridArea: '1 / 3 / 2 / 4', width: '16px', height: '16px', backgroundImage: 'url(images/export.png)' },
+                style: { 
+                    gridArea: '1 / 3 / 2 / 4', 
+                    width: '16px', 
+                    height: '16px', 
+                    backgroundImage: 'url(images/export.png)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Exporta arquivos (.html | .kml)' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Exporta arquivos (.html | .kml)' 
+                }
+            }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarLocationBtn',
-                style: { gridArea: '1 / 5 / 2 / 6', width: '18px', height: '18px', backgroundImage: 'url(images/gps-off.png)' },
+                style: { 
+                    gridArea: '1 / 5 / 2 / 6', 
+                    width: '18px', 
+                    height: '18px', 
+                    backgroundImage: 'url(images/gps-off.png)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Compartilhar localização' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Compartilhar localização' 
+                }
+            }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarOrientationBtn',
-                style: { gridArea: '1 / 6 / 2 / 7', width: '18px', height: '18px', backgroundImage: 'url(images/north.png)' },
+                style: { 
+                    gridArea: '1 / 6 / 2 / 7', 
+                    width: '18px', 
+                    height: '18px', 
+                    backgroundImage: 'url(images/north.png)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Orientação do mapa' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Orientação do mapa' 
+                }
+            }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarInitialZoomBtn',
-                style: { gridArea: '1 / 7 / 2 / 8', width: '18px', height: '18px', backgroundImage: 'url(images/restore-initial-zoom.png)' },
+                style: { 
+                    gridArea: '1 / 7 / 2 / 8', 
+                    width: '18px', 
+                    height: '18px', 
+                    backgroundImage: 'url(images/restore-initial-zoom.png)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Zoom inicial' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Zoom inicial' 
+                }
+            }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarColorbarBtn',
-                style: { gridArea: '1 / 8 / 2 / 9', width: '18px', height: '18px', backgroundImage: 'url(images/colorbar.svg)' },
+                style: { 
+                    gridArea: '1 / 8 / 2 / 9', 
+                    width: '18px', 
+                    height: '18px', 
+                    backgroundImage: 'url(images/colorbar.svg)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Barra de cores' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Barra de cores' 
+                }
+            }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarBasemapsBtn',
-                style: { gridArea: '1 / 9 / 2 / 10', width: '18px', height: '18px', backgroundImage: 'url(images/layers.png)' },
+                style: { 
+                    gridArea: '1 / 9 / 2 / 10', 
+                    width: '18px', 
+                    height: '18px', 
+                    backgroundImage: 'url(images/layers.png)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Basemap' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Basemap' 
+                }
+            }, toolbar);
         }
 
 
@@ -533,16 +762,66 @@
         /*---------------------------------------------------------------------------------*/
         static createTitle(style, options, parentElement = null) {
             switch (style) {
-                case 'icon+text+line':
+                case 'icon+text': {
+                    const { gridArea, iconPath, innerHTML } = options;
+                    
+                    const title = this.createElement('div',  { 
+                        classList: ['topdiv-container'], 
+                        style: { 
+                            gridArea: gridArea, 
+                            display: 'flex', 
+                            margin: '0', 
+                            padding: '0', 
+                            color: 'white' 
+                        } 
+                    }, parentElement);
+
+                    const content = this.createElement('div',  { 
+                        style: { 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            paddingLeft: '4px', 
+                            gap: '12px' 
+                        } 
+                    }, title);
+
+                    const img = this.createElement('img',  { 
+                        width: 18, 
+                        height: 18, 
+                        src: iconPath
+                    }, content);
+
+                    const txt = this.createElement('span', { 
+                        innerHTML: innerHTML 
+                    }, content);
+
+                    return title;
+                }
+
+                case 'icon+text+line': {
                     const { gridArea, iconPath, textContent } = options;
                     
                     const title = this.createElement('div',  { 
                         classList: ['topdiv-container'], 
-                        style: { gridArea: gridArea, display: 'flex', flexDirection: 'column', height: '26px', margin: '0', padding: '0', backgroundColor: 'rgb(191, 191, 191)' } 
+                        style: { 
+                            gridArea: gridArea, 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            height: '26px', 
+                            margin: '0', 
+                            padding: '0', 
+                            backgroundColor: 'rgb(191, 191, 191)' 
+                        } 
                     }, parentElement);
 
                     const content = this.createElement('div',  { 
-                        style: { display: 'flex', alignItems: 'center', height: '23px', paddingLeft: '4px', gap: '6px' } 
+                        style: { 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            height: '23px', 
+                            paddingLeft: '4px', 
+                            gap: '6px' 
+                        } 
                     }, title);
 
                     const img = this.createElement('img',  { 
@@ -556,10 +835,15 @@
                     }, content);
 
                     const line = this.createElement('div',  { 
-                        style: { height: '3px', width: '100%', backgroundColor: 'rgb(0,0,0)' } 
+                        style: { 
+                            height: '3px', 
+                            width: '100%', 
+                            backgroundColor: 'rgb(0,0,0)' 
+                        } 
                     }, title);
 
                     return title;
+                }
 
                 default:
                     // IMPLEMENTAR OUTROS ESTILOS À MEDIDA QUE FOR NECESSÁRIO
@@ -592,7 +876,7 @@
 
             textList.forEach((element, index) => {
                 const el = this.createElement('li', {
-                    textContent: textResolver(element, index),
+                    innerHTML: textResolver(element, index),
                     value: index,
                     eventListeners: eventListeners
                 }, parentElement);

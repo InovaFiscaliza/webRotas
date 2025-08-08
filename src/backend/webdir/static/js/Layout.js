@@ -17,10 +17,10 @@
 
         /*---------------------------------------------------------------------------------*/
         static controller(type, ...args) {
-            const routing = window.app.routingContext;
+            const routingContext = window.app.routingContext;
             let index1, index2;
 
-            if (routing.length === 0) {
+            if (routingContext.length === 0) {
                 type = 'idle';
             }
 
@@ -38,7 +38,7 @@
 
                     window.app.modules.Components.createRouteList(
                         htmlRouteEl,
-                        routing,
+                        routingContext,
                         (routeEl, index1, index2) => {
                             return `[${index1},${index2}]: ${routeEl.estimatedDistance.toFixed(1)} km${routeEl.automatic ? ' (AUTOMÁTICA)' : ''}`
                         },
@@ -55,18 +55,20 @@
 
                 case 'routeSelected':
                     index1 = args[0];
-                    index2 = args[1];                    
-                    const route = routing[index1].response.routes[index2];
+                    index2 = args[1];
+
+                    const routing = routingContext[index1].response;
+                    const route = routingContext[index1].response.routes[index2];
                     const htmlPointsEl = this.getDOMElements(['pointsToVisit']).pointsToVisit;
 
-                    this.updateControlState(type, routing[index1], route);
+                    this.updateControlState(type, routing, route);
                     
                     window.app.modules.Components.createTextList(
                         htmlPointsEl,
                         route.waypoints,
                         (routeEl, index) => {
-                            const routeElDescription = routeEl.description.length ? ` ${routeEl.description}` : '';
-                            return `${index}: (${routeEl.lat.toFixed(6)}, ${routeEl.lng.toFixed(6)}, ${routeEl.elevation.toFixed(0)}m)${routeElDescription}`;
+                            const description = routeEl.description.length ? `${routeEl.description}<br>` : '';
+                            return `<div style="display:flex;"><div style="min-width:16px;">${index}:</div><div style="padding-left:5px;">${description}(${routeEl.lat.toFixed(6)}, ${routeEl.lng.toFixed(6)}, ${routeEl.elevation.toFixed(0)}m)</div></div>`;
                         },
                         {
                             click:      (event) => window.app.modules.Callbacks.onPointListSelectionChanged(event, htmlPointsEl),
@@ -93,11 +95,9 @@
 
         /*---------------------------------------------------------------------------------*/
         static updateControlState(type, ...args) {
-            let htmlEl, htmlElArray, htmlRouteEl, htmlPointsEl;
-
             switch (type) {
-                case 'idle':
-                    htmlEl = this.getDOMElements([
+                case 'idle': {
+                    const htmlEl = this.getDOMElements([
                         'routeListAddBtn',
                         'routeListDelBtn',
                         'routeListEditModeBtn',
@@ -116,45 +116,49 @@
                         'toolbarColorbarBtn',
                         'toolbarInitialZoomBtn'
                     ]);
-                    htmlElArray = Object.values(htmlEl);
+                    const htmlElArray = Object.values(htmlEl);
                     this.toggleEnabled(htmlElArray, false);
 
-                    htmlRouteEl = this.getDOMElements(['routeList']).routeList;
+                    const htmlRouteEl = this.getDOMElements(['routeList']).routeList;
                     htmlRouteEl.innerHTML = '';
 
                     this.updateEditableField(htmlEl.initialPointLatitude,    '');
                     this.updateEditableField(htmlEl.initialPointLongitude,   '');
                     this.updateEditableField(htmlEl.initialPointDescription, '');
 
-                    htmlPointsEl = this.getDOMElements(['pointsToVisit']).pointsToVisit;
+                    const htmlPointsEl = this.getDOMElements(['pointsToVisit']).pointsToVisit;
                     htmlPointsEl.innerHTML = '';
 
                     htmlEl.routeIds.textContent = '';
                     break;
+                }
 
-                case 'routeLoaded':
-                    htmlEl = this.getDOMElements([
+                case 'routeLoaded': {
+                    const htmlEl = this.getDOMElements([
                         'routeListAddBtn',
                         'routeListDelBtn',
-                        'routeListEditModeBtn',
                         'toolbarExportBtn',
                         'toolbarLocationBtn',
                         'toolbarOrientationBtn',
                         'toolbarColorbarBtn',
                         'toolbarInitialZoomBtn'
                     ]);
-                    htmlElArray = Object.values(htmlEl);                    
+                    const htmlElArray = Object.values(htmlEl);                    
                     this.toggleEnabled(htmlElArray, true);
 
-                    htmlRouteEl = this.getDOMElements(['routeList']).routeList;
+                    const htmlEditModeBtnElArray = [this.getDOMElements(['routeListEditModeBtn']).routeListEditModeBtn];
+                    this.toggleEnabled(htmlEditModeBtnElArray, (window.location.protocol === "file:") ? false : true);
+
+                    const htmlRouteEl = this.getDOMElements(['routeList']).routeList;
                     htmlRouteEl.innerHTML = '';
                     break;
+                }
 
-                case 'routeSelected':
+                case 'routeSelected': {
                     const routing = args[0];
                     const route   = args[1];
 
-                    htmlEl = this.getDOMElements([
+                    const htmlEl = this.getDOMElements([
                         'initialPointLatitude',
                         'initialPointLongitude',
                         'initialPointDescription',
@@ -167,16 +171,19 @@
 
                     let ids = {
                         created: route.created,
-                        cacheId: routing.response.cacheId,
-                        routeId: route.routeId
+                        cacheId: routing.cacheId,
+                        routeId: route.routeId || "n/a",
+                        estimatedDistance: `${route.estimatedDistance} km`,
+                        estimatedTime: route.estimatedTime || 'unknown'
                     };
                     htmlEl.routeIds.textContent = JSON.stringify(ids, null, 1);
                     break;
+                }
 
-                case 'editionMode':
+                case 'editionMode': {
                     const editionMode = args[0]
 
-                    htmlEl = this.getDOMElements([
+                    const htmlEl = this.getDOMElements([
                         'routeListAddBtn',
                         'routeListDelBtn',
                         'routeListEditModeBtn',
@@ -203,6 +210,7 @@
                     [htmlEl.initialPointLatitude, htmlEl.initialPointLongitude, htmlEl.initialPointDescription].forEach(item => { 
                         item.disabled = !editionMode; 
                     });
+                }
             }
         }
 

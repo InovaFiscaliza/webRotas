@@ -1,11 +1,13 @@
 @charset "UTF-8";
 :root {
-  --navbar-height: 0px;
+  --navbar-height: 54px;
   --toolbar-height: 34px;
   --panel-width-off: 0px;
   --panel-width-on: 330px;
   --font-family-default: Helvetica, Arial, sans-serif;
   --font-size-default: 11px;
+  --backgroundColor-navbar: rgb(51, 51, 51); /* #050a30 */
+  --backgroundColor-toolbar: rgb(240, 240, 240);
   --backgroundColor-selected: rgba(180, 222, 255, 0.45);
   --backgroundColor-selectedFocus: rgba(50, 102, 208, 1);
 }
@@ -53,7 +55,7 @@ body {
   bottom: 0;
   left: 0;
   align-items: center;
-  background-color: rgb(240, 240, 240);
+  background-color: var(--backgroundColor-toolbar);
   z-index: 400;
 }
 
@@ -95,6 +97,7 @@ label.btn-input {
   background: none;
   background-size: contain;
   border: none;
+  border-radius: 25%;
   font-size: 12px;
   cursor: pointer;
 }
@@ -128,6 +131,10 @@ label.label-text-list {
 label.label-form-field {
   font-size: 11px;
   align-self: end;
+}
+
+img {
+  -webkit-user-drag: none;
 }
 
 /*-----------------------------------------------------------------------------------
@@ -165,6 +172,10 @@ label.label-form-field {
 .text-list li.hover {
   background-color: var(--backgroundColor-selectedFocus);
   color: #fff;
+}
+
+.text-list li * {
+  pointer-events: none;
 }
 
 /*-----------------------------------------------------------------------------------
@@ -258,11 +269,25 @@ label.label-form-field {
 /*-----------------------------------------------------------------------------------
     ## OUTRAS COISAS AINDA NÃO REVISADAS ##
 -----------------------------------------------------------------------------------*/
-#panel {
+#navbar {
   position: absolute;
   top: 0;
   left: 0;
-  height: calc(100% - var(--toolbar-height));
+  height: var(--navbar-height);
+  width: 100%;
+  background-color: var(--backgroundColor-navbar);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  z-index: 200;
+}
+
+#panel {
+  position: absolute;
+  top: var(--navbar-height);
+  left: 0;
+  height: calc(100% - var(--navbar-height) - var(--toolbar-height));
   width: calc(var(--panel-width-on) - 10px);
   flex-direction: column;
   align-items: flex-start;
@@ -292,9 +317,9 @@ label.label-form-field {
 
 #document {
   position: absolute;
-  top: 6px;
+  top: calc(var(--navbar-height) + 6px);
   left: var(--panel-width-on);
   width: calc(100% - var(--panel-width-on) - 5px);
-  height: calc(100% - var(--toolbar-height) - 11px);
+  height: calc(100% - var(--navbar-height) - var(--toolbar-height) - 11px);
   z-index: 600;
 }/*# sourceMappingURL=webRotas.css.map */
