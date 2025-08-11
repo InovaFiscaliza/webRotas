@@ -17,7 +17,7 @@
       ├── onHighlightTextListItem
       └── onNumericFieldValidation
     - TOOLBAR
-      └── onToolbarButtonClicked          (!! ToDo: PENDENTE "toolbarLocationBtn" & toolbarOrientationBtn" !!)
+      └── onToolbarButtonClicked          (!! ToDo: PENDENTE "routePositionSlider", "toolbarLocationBtn" & toolbarOrientationBtn" !!)
     - *.*
       └── onServerConnectionStatusChanged
 
@@ -142,7 +142,32 @@
                 }
 
                 case 'appInfoBtn': {
-                    new DialogBox('Informações gerais sobre o app... sobre o navegador etc...', 'info');
+                    const { name, version, released, sharepoint } = window.app;
+                    const { userAgent, platform, vendor, deviceMemory, hardwareConcurrency } = window.navigator;
+                    const { href, protocol } = window.location;
+
+                    const keyStyle = (key, value) => `<br>•&thinsp;<span style="color: gray; font-size: 10px;">${key}:</span> ${!!value ? value : 'n/a'}`;
+                    const appInfo  = `
+                    <p style="font-size: 12px;">O repositório das ferramentas desenvolvidas no Laboratório de inovação da SFI pode ser acessado 
+                    <a href="${sharepoint}" target="_blank" rel="noopener noreferrer">aqui</a>.
+                    <br><br><span style="font-size:10px;">COMPUTADOR</span>
+                    ${keyStyle('platform', platform)}
+                    ${keyStyle('deviceMemory', deviceMemory)}
+                    ${keyStyle('hardwareConcurrency', hardwareConcurrency)}
+
+                    <br><br><span style="font-size:10px;">NAVEGADOR</span>
+                    ${keyStyle('userAgent', userAgent)}
+                    ${keyStyle('vendor', vendor)}
+
+                    <br><br><span style="font-size:10px;">${name.toUpperCase()}</span>
+                    ${keyStyle('version', version)}
+                    ${keyStyle('released', released)}
+                    ${keyStyle('href', href)}
+                    ${keyStyle('protocol', protocol)}
+                    </p>
+                    `;
+
+                    new DialogBox(appInfo, 'info');
                     break;
                 }
             }
@@ -152,6 +177,11 @@
             ## MAPA ##
         -----------------------------------------------------------------------------------*/
         static onContextMenuCreation(event) {
+            /*
+                ToDo: 
+                Movimentar menu de contexto pela sua ancoragem. E, além disso, deixá-lo mais robusto, 
+                evitando a inclusão literal dos "54px" do menu de navegação, por exemplo.
+            */
             const map   = window.app.map;
             const panel = window.document.getElementById('panel');
             let context = window.document.getElementById('contextMenu');                
@@ -164,7 +194,7 @@
             const { clientX, clientY } = event.originalEvent;
             
             context.style.left  = (panel.classList.contains('panel-on')) ? `${clientX - 5 - parseInt(getComputedStyle(panel).width)}px` : `${clientX}px`;
-            context.style.top  = `${clientY}px`;
+            context.style.top  = `${clientY - 54}px`;
 
             window.document.getElementById('contextMenuCoords').textContent = `Coordenadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
@@ -302,8 +332,35 @@
         /*-----------------------------------------------------------------------------------
             ## PAINEL À ESQUERDA DO MAPA ##
         -----------------------------------------------------------------------------------*/
-        static onPanelButtonClicked(event) {
+        static onPanelButtonClicked(event, ...args) {
             // console.log(event.target.id);
+
+            const hasOriginChanged = () => {
+                const { index1, index2 } = window.app.modules.Layout.findSelectedRoute();                    
+                const currentRoute   = window.app.routingContext[index1].response.routes[index2];
+
+                const htmlEl = window.app.modules.Layout.getDOMElements([
+                    'initialPointLatitude',
+                    'initialPointLongitude',
+                    'initialPointDescription'
+                ]);
+
+                const initialOrigin = [
+                    currentRoute.origin.lat.toFixed(6),
+                    currentRoute.origin.lng.toFixed(6),
+                    currentRoute.origin.description.trim()
+                ];
+
+                const editedOrigin = [
+                    parseFloat(htmlEl.initialPointLatitude.value).toFixed(6),
+                    parseFloat(htmlEl.initialPointLongitude.value).toFixed(6),
+                    htmlEl.initialPointDescription.value.trim()
+                ];
+
+                const hasOriginRouteChanged = initialOrigin.slice(0,2).toString() !== editedOrigin.slice(0,2).toString();
+
+                return { initialOrigin, editedOrigin, hasOriginRouteChanged }
+            };
 
             switch (event.target.id) {
                 case 'routeListAddBtn': {
@@ -335,9 +392,30 @@
                     break;
                 }
                 
-                case 'routeListEditModeBtn': {
-                    event.target.dataset.value = (event.target.dataset.value == 'on') ? 'off' : 'on';
-                    window.app.modules.Layout.controller('editionMode', (event.target.dataset.value == 'on') ? true : false);
+                case 'routeListEditModeBtn':
+                case 'routeListCancelBtn': {
+                    /*
+                        Avalia-se se foi alterada a origem da rota.
+                    */
+                    const { hasOriginRouteChanged } = hasOriginChanged();
+                    if (hasOriginRouteChanged) {
+                        const { currentSelection } = window.app.modules.Layout.findSelectedRoute();
+                        const [index1, index2] = JSON.parse(currentSelection.dataset.index);
+                        window.app.modules.Plot.controller('update', index1, index2);
+                    }
+
+                    switch (event.target.id) {
+                        case 'routeListEditModeBtn': {
+                            event.target.dataset.value = (event.target.dataset.value == 'on') ? 'off' : 'on';
+                            window.app.modules.Layout.controller('editionMode', (event.target.dataset.value == 'on') ? true : false);
+                            break;
+                        }
+                        case 'routeListCancelBtn': {
+                            window.document.getElementById('routeListEditModeBtn').dataset.value = 'off';
+                            window.app.modules.Layout.controller('editionMode', false);
+                            break;
+                        }
+                    }                    
                     break;
                 }
 
@@ -346,30 +424,11 @@
                     const currentRequest = window.app.routingContext[index1].request;
                     const currentRoute   = window.app.routingContext[index1].response.routes[index2];
 
-                    const htmlEl = window.app.modules.Layout.getDOMElements([
-                        'initialPointLatitude',
-                        'initialPointLongitude',
-                        'initialPointDescription',
-                        'pointsToVisit'
-                    ]);
-
-                    const initialOrigin = [
-                        currentRoute.origin.lat.toFixed(6),
-                        currentRoute.origin.lng.toFixed(6),
-                        currentRoute.origin.description.trim()
-                    ];
-
-                    const editedOrigin = [
-                        parseFloat(htmlEl.initialPointLatitude.value).toFixed(6),
-                        parseFloat(htmlEl.initialPointLongitude.value).toFixed(6),
-                        htmlEl.initialPointDescription.value.trim()
-                    ];
-
-                    const hasOriginChanged     = (initialOrigin.slice(0,2).toString() !== editedOrigin.slice(0,2).toString()) ? true : false;
-                    const visitOrderIndexes    = Array.from(htmlEl.pointsToVisit.children, child => child.value);
+                    const { initialOrigin, editedOrigin, hasOriginRouteChanged } = hasOriginChanged();
+                    const visitOrderIndexes    = Array.from(window.document.getElementById('pointsToVisit').children, child => child.value);
                     const hasVisitOrderChanged = Array.from({ length: visitOrderIndexes.length }, (_, i) => i).toString() !== visitOrderIndexes.toString();
 
-                    if (!hasOriginChanged && !hasVisitOrderChanged) {
+                    if (!hasOriginRouteChanged && !hasVisitOrderChanged) {
                         new DialogBox('No changes were made to the route.', 'info');
                         return;
                     }
@@ -389,7 +448,7 @@
                     // "routeId", "origin", "waypoints", "avoidZones", "boundingBox"
                     request.requestType     = "customRoute";
                     request.OSRMServerPort  = 50001;
-                    request.origin          = hasOriginChanged ? editedOrigin : initialOrigin;
+                    request.origin          = hasOriginRouteChanged ? editedOrigin : initialOrigin;
                     request.origin[0]       = parseFloat(request.PontoInicial[0]);
                     request.origin[1]       = parseFloat(request.PontoInicial[1]);
 
@@ -427,14 +486,94 @@
                     break;
                 }
 
-                case 'routeListCancelBtn': {
-                    window.document.getElementById('routeListEditModeBtn').dataset.value = 'off';
-                    window.app.modules.Layout.controller('editionMode', false);
+                case 'initialPointBtn': {
+                    /*
+                        Cria-se um marcador fantasma da origem, possibilitando alteração do seu 
+                        local, com ajuste automáticos dos campos lat, lng e description, além 
+                        da informação que suporta a geração dos tooltips.
+                    */
+                    const originMarker = window.app.mapContext.layers.routeOrigin.handle[0];
+                                        
+                    const originGhost  = window.L.marker(originMarker.getLatLng(), {
+                        draggable: true, 
+                        icon: window.app.modules.Utils.Image.customPinIcon('🏠', originMarker.options.color),
+                        opacity: 0.25
+                    }).addTo(window.app.map);
+
+                    const originLat = window.document.getElementById("initialPointLatitude");
+                    const originLng = window.document.getElementById("initialPointLongitude");
+                    const originDescription = window.document.getElementById("initialPointDescription");
+
+                    originGhost.on('drag', (event) => {
+                        originLat.value = event.latlng.lat.toFixed(6);
+                        originLng.value = event.latlng.lng.toFixed(6);
+                    });
+
+                    originGhost.on('dragend', (event) => {
+                        let { lat, lng } = event.target.getLatLng();
+                        lat = Number(lat.toFixed(6));
+                        lng = Number(lng.toFixed(6));
+                        originMarker.setLatLng({ lat, lng });
+
+                        const tooltipDescription = window.app.mapContext.layers.routeOrigin.options.iconTooltip.textResolver( {
+                            lat,
+                            lng,
+                            elevation: -1,
+                            description: originDescription.value.trim()
+                        })
+                        
+                        window.app.mapContext.layers.routeOrigin.handle[0]._tooltip.setContent(tooltipDescription);
+                        window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.config.coords = [lat, lng];
+                        window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.config.text = tooltipDescription;
+                        
+                        if (window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.handle.sticky) {
+                            window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.handle.sticky.setContent(tooltipDescription);
+                            window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.handle.sticky.setLatLng({ lat, lng });
+                        }
+
+                        originGhost.remove();
+                    })
                     break;
                 }
 
-                case 'initialPointBtn': {
-                    // ...
+                case 'initialPointLatitude':
+                case 'initialPointLongitude': {
+                    /*
+                        Validação inicial
+                    */
+                    const range = args[0];
+                    this.onNumericFieldValidation(event, range);
+                    
+                    const htmlEl = window.app.modules.Layout.getDOMElements([
+                        'initialPointLatitude',
+                        'initialPointLongitude',
+                        'initialPointDescription'
+                    ]);
+
+                    const lat = parseFloat(htmlEl.initialPointLatitude.value);
+                    const lng = parseFloat(htmlEl.initialPointLongitude.value);
+
+                    /*
+                        Atualização plot
+                    */
+                    const originMarker = window.app.mapContext.layers.routeOrigin.handle[0];
+                    originMarker.setLatLng({ lat, lng });
+
+                    const tooltipDescription = window.app.mapContext.layers.routeOrigin.options.iconTooltip.textResolver( {
+                        lat,
+                        lng,
+                        elevation: -1,
+                        description: htmlEl.initialPointDescription.value.trim()
+                    })
+                    
+                    window.app.mapContext.layers.routeOrigin.handle[0]._tooltip.setContent(tooltipDescription);
+                    window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.config.coords = [lat, lng];
+                    window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.config.text = tooltipDescription;
+                    
+                    if (window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.handle.sticky) {
+                        window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.handle.sticky.setContent(tooltipDescription);
+                        window.app.mapContext.layers.routeOrigin.handle[0]._tooltipContext.handle.sticky.setLatLng({ lat, lng });
+                    }
                     break;
                 }
 
@@ -529,7 +668,7 @@
 
         /*---------------------------------------------------------------------------------*/
         static onNumericFieldValidation(event, range) {
-            let value = parseFloat(event.target.value);
+            let value = Number(parseFloat(event.target.value).toFixed(6));
 
             if (Number.isNaN(value) || value < range.min || value > range.max) {
                 event.target.value = event.target.dataset.value; // previousValue
@@ -652,6 +791,24 @@
                             }
                         }
                     }, focus: true }]);
+                    break;
+                }
+
+                case 'currentSliderPosition': {
+                    const min = Number(event.target.min);
+                    const max = Number(event.target.max);
+                    const val = Number(event.target.value);
+                    const percent = 100*(val - min) / (max - min);
+
+                    const fillColor = getComputedStyle(window.document.documentElement).getPropertyValue('--backgroundColor-slider-value').trim() || '#4caf50';
+                    const trackBg   = getComputedStyle(window.document.documentElement).getPropertyValue('--backgroundColor-slider').trim()       || 'rgb(180, 180, 180)';
+                    event.target.style.background = `linear-gradient(to right, ${fillColor} 0%, ${fillColor} ${percent}%, ${trackBg} ${percent}%, ${trackBg} 100%)`;
+
+                    window.document.getElementById("currentSliderPositionValue").textContent = `${val}%`;
+
+                    const index  = Math.floor(window.app.mapContext.layers.currentSliderPosition.mergedPaths.length * val / 100);
+                    const coords = window.app.mapContext.layers.currentSliderPosition.mergedPaths.slice(0, index);
+                    window.app.modules.Plot.update('currentSliderPosition', coords)
                     break;
                 }
 

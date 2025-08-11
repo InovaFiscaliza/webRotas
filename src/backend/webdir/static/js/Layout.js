@@ -111,6 +111,7 @@
                         'routeListMoveDownBtn',
                         'routeIds',
                         'toolbarExportBtn',
+                        'currentSliderPosition',
                         'toolbarLocationBtn',
                         'toolbarOrientationBtn',
                         'toolbarColorbarBtn',
@@ -130,6 +131,8 @@
                     htmlPointsEl.innerHTML = '';
 
                     htmlEl.routeIds.textContent = '';
+                    htmlEl.currentSliderPosition.value = 0;
+                    window.app.modules.Callbacks.onToolbarButtonClicked({ target: htmlEl.currentSliderPosition });
                     break;
                 }
 
@@ -138,6 +141,7 @@
                         'routeListAddBtn',
                         'routeListDelBtn',
                         'toolbarExportBtn',
+                        'currentSliderPosition',
                         'toolbarLocationBtn',
                         'toolbarOrientationBtn',
                         'toolbarColorbarBtn',

@@ -48,6 +48,7 @@
                     width: '18px', 
                     height: '18px', 
                     backgroundImage: 'url(images/red-circle-blink.gif)',
+                    backgroundSize: 'contain'
                 },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onNavBarButtonClicked(event)
@@ -201,7 +202,7 @@
             const container = window.document.getElementById('app');
             
             const panel = this.createElement('div', {
-                classList: ['panel-on', 'grid'],
+                classList: ['grid'],
                 id: 'panel'
             }, container);
 
@@ -237,9 +238,10 @@
                     id: 'routeListAddBtn',
                     style: { 
                         gridArea: '1 / 2 / 2 / 3', 
-                        width: '18px', 
-                        height: '18px', 
-                        backgroundImage: 'url(images/addFiles_32.png)' 
+                        width: '100%', 
+                        height: '100%', 
+                        backgroundImage: 'url(images/addFiles_32.png)',
+                        backgroundSize: 'contain'
                     },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
@@ -256,7 +258,8 @@
                         gridArea: '1 / 3 / 2 / 4', 
                         width: '18px', 
                         height: '18px', 
-                        backgroundImage: 'url(images/Trash_32.png)' 
+                        backgroundImage: 'url(images/Trash_32.png)' ,
+                        backgroundSize: 'contain'
                     },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
@@ -274,7 +277,8 @@
                         gridArea: '1 / 4 / 2 / 5', 
                         width: '18px', 
                         height: '18px', 
-                        backgroundImage: 'url(images/Edit_32.png)' 
+                        backgroundImage: 'url(images/Edit_32.png)',
+                        backgroundSize: 'contain'
                     },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
@@ -293,7 +297,8 @@
                         display: 'none', 
                         width: '18px', 
                         height: '18px', 
-                        backgroundImage: 'url(images/Ok_32Green.png)' 
+                        backgroundImage: 'url(images/Ok_32Green.png)',
+                        backgroundSize: 'contain'
                     },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
@@ -311,7 +316,8 @@
                         display: 'none', 
                         width: '18px', 
                         height: '18px', 
-                        backgroundImage: 'url(images/Delete_32Red.png)' 
+                        backgroundImage: 'url(images/Delete_32Red.png)',
+                        backgroundSize: 'contain'
                     },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
@@ -366,7 +372,7 @@
                     },
                     disabled: true,
                     dataset: { 
-                        tooltip: 'Captura posição do mouse' 
+                        tooltip: 'Altera ponto inicial diretamente no mapa' 
                     }
                 }, initialPointTitleGrid);
                 // </SUB-GRID>
@@ -402,7 +408,7 @@
                         gridArea: '2 / 1 / 3 / 2' 
                     },
                     eventListeners: {
-                        change: (event) => window.app.modules.Callbacks.onNumericFieldValidation(event, { min: -90, max: 90 })
+                        change: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event, { min: -90, max: 90 })
                     },
                     disabled: true,
                     dataset: { 
@@ -428,7 +434,7 @@
                         gridArea: '2 / 2 / 3 / 3' 
                     },
                     eventListeners: {
-                        change: (event) => window.app.modules.Callbacks.onNumericFieldValidation(event, { min: -180, max: 180 })
+                        change: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event, { min: -180, max: 180 })
                     },
                     disabled: true,
                     dataset: { 
@@ -552,7 +558,7 @@
 
             Object.assign(toolbar.style, { 
                 gridTemplateRows: '1fr', 
-                gridTemplateColumns: '22px 22px 22px minmax(0, 1fr) 22px 22px 22px 22px 22px' 
+                gridTemplateColumns: '22px 22px 22px 5px 218px minmax(0px, 1fr) 22px 22px 22px 22px 22px' 
             });
 
             this.createElement('button', {
@@ -560,8 +566,7 @@
                 id: 'toolbarPanelVisibilityBtn',
                 style: { 
                     gridArea: '1 / 1 / 2 / 2', 
-                    width: '18px', 
-                    height: '18px' 
+                    height: '100%'
                 },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
@@ -577,9 +582,8 @@
                 htmlFor: 'toolbarImportInput',
                 style: { 
                     gridArea: '1 / 2 / 2 / 3', 
-                    width: '16px', 
-                    height: '16px', 
-                    backgroundImage: 'url(images/import.png)' 
+                    height: '100%', 
+                    backgroundImage: 'url(images/import.png)'
                 },
                 dataset: { 
                     tooltip: 'Importa arquivo de configuração (.json)' 
@@ -590,7 +594,9 @@
                 id: 'toolbarImportInput',
                 type: 'file',
                 accept: '.json',
-                style: { display: 'none' },
+                style: { 
+                    display: 'none'
+                },
                 eventListeners: {
                     change: (event) => {
                         window.app.modules.Callbacks.onToolbarButtonClicked(event);
@@ -604,24 +610,60 @@
                 id: 'toolbarExportBtn',
                 style: { 
                     gridArea: '1 / 3 / 2 / 4', 
-                    width: '16px', 
-                    height: '16px', 
-                    backgroundImage: 'url(images/export.png)' 
+                    height: '100%', 
+                    backgroundImage: 'url(images/export.png)'
                 },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
                 dataset: { 
-                    tooltip: 'Exporta arquivos (.html | .kml)' 
+                    tooltip: 'Exporta arquivos (.json | .kml | .html)' 
+                }
+            }, toolbar);
+
+            this.createElement('separator', {
+                style: { 
+                    gridArea: '1 / 4 / 2 / 5',
+                    borderLeft: '1px solid #7d7d7d',
+                    height: '85%',
+                    transform: 'translateX(2px)'
+                },
+            }, toolbar);
+
+            this.createElement('input', {
+                id: 'currentSliderPosition',
+                style: { 
+                    gridArea: '1 / 5 / 2 / 6'
+                },
+                eventListeners: {
+                    input: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
+                },
+                type: 'range',
+                min: 0,
+                max: 100,
+                value: 0
+            }, toolbar);
+
+            this.createElement('label', {
+                id: 'currentSliderPositionValue',
+                textContent: '0%',
+                style: { 
+                    gridArea: '1 / 5 / 2 / 6',
+                    textAlign: 'right',
+                    color: '#4caf50',
+                    transform: 'translateY(-8px)',
+                    userSelect: 'none'
+                },
+                eventListeners: {
+                    input: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 }
             }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarLocationBtn',
                 style: { 
-                    gridArea: '1 / 5 / 2 / 6', 
-                    width: '18px', 
-                    height: '18px', 
+                    gridArea: '1 / 7 / 2 / 8', 
+                    height: '100%', 
                     backgroundImage: 'url(images/gps-off.png)' 
                 },
                 eventListeners: {
@@ -635,9 +677,8 @@
             this.createElement('button', {
                 id: 'toolbarOrientationBtn',
                 style: { 
-                    gridArea: '1 / 6 / 2 / 7', 
-                    width: '18px', 
-                    height: '18px', 
+                    gridArea: '1 / 8 / 2 / 9', 
+                    height: '100%', 
                     backgroundImage: 'url(images/north.png)' 
                 },
                 eventListeners: {
@@ -651,9 +692,8 @@
             this.createElement('button', {
                 id: 'toolbarInitialZoomBtn',
                 style: { 
-                    gridArea: '1 / 7 / 2 / 8', 
-                    width: '18px', 
-                    height: '18px', 
+                    gridArea: '1 / 9 / 2 / 10', 
+                    height: '100%', 
                     backgroundImage: 'url(images/restore-initial-zoom.png)' 
                 },
                 eventListeners: {
@@ -667,9 +707,8 @@
             this.createElement('button', {
                 id: 'toolbarColorbarBtn',
                 style: { 
-                    gridArea: '1 / 8 / 2 / 9', 
-                    width: '18px', 
-                    height: '18px', 
+                    gridArea: '1 / 10 / 2 / 11', 
+                    height: '100%', 
                     backgroundImage: 'url(images/colorbar.svg)' 
                 },
                 eventListeners: {
@@ -683,9 +722,8 @@
             this.createElement('button', {
                 id: 'toolbarBasemapsBtn',
                 style: { 
-                    gridArea: '1 / 9 / 2 / 10', 
-                    width: '18px', 
-                    height: '18px', 
+                    gridArea: '1 / 11 / 2 / 12', 
+                    height: '100%', 
                     backgroundImage: 'url(images/layers.png)' 
                 },
                 eventListeners: {

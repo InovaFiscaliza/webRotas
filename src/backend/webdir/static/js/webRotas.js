@@ -112,6 +112,7 @@
         name: 'webRotas',
         version: '0.90.0',
         released: 'R2025b (01/09/2025)',
+        sharepoint: 'https://anatel365.sharepoint.com/sites/InovaFiscaliza/SitePages/webRotas.aspx',
 
         modules: {
             Callbacks: null,
@@ -249,7 +250,10 @@
                         iconType: 'customPinIcon:Home',
                         iconTooltip: {
                             status: true,
-                            textResolver: ({ lat, lng, elevation, description }) => { return `Ponto inicial: ${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
+                            textResolver: ({ lat, lng, elevation, description }) => { 
+                                const elevationText = (elevation == -1) ? '' : `, ${elevation}m`;
+                                return `Ponto inicial: ${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º${elevationText})`
+                            },
                             offsetResolver: 'default'
                         }
                     }
@@ -259,9 +263,19 @@
                     type: 'polyline',
                     options: {
                         weight: 3,
-                        color: 'rgba(0,0,255,0.75)',
+                        color: 'rgb(180, 180, 180)',
                         interactive: false
                     }
+                },
+                currentSliderPosition: {
+                    handle: null,
+                    type: 'polyline',
+                    options: {
+                        weight: 2,
+                        color: 'rgb(76, 175, 80)',
+                        interactive: false
+                    },
+                    mergedPaths: []
                 },
                 currentPosition: {
                     handle: null,

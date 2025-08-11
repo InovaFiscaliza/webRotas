@@ -54,7 +54,7 @@
             "images/Trash_32.png",             // PAINEL "ROTAS" (2)
             "images/Edit_32.png",              // PAINEL "ROTAS" (3A)
             "images/pin_18.png",               // PAINEL "PONTO INICIAL" (1)
-            "images/ArrowLeft_32.png",         // TOOLBAR (1A)
+            "images/arrow-left.png",           // TOOLBAR (1A)
             "images/import.png",               // TOOLBAR (2)
             "images/export.png",               // TOOLBAR (3)
             "images/gps-off.png",              // TOOLBAR (4A)
@@ -68,7 +68,7 @@
             "images/Edit_32Filled.png",        // PAINEL "ROTAS" (3B)
             "images/Ok_32Green.png",           // PAINEL "ROTAS" (4)
             "images/Delete_32Red.png",         // PAINEL "ROTAS" (5)            
-            "images/ArrowRight_32.png",        // TOOLBAR (1B)
+            "images/arrow-right.png",          // TOOLBAR (1B)
             "images/gps-on.png",               // TOOLBAR (4B)
             "images/car-heading.png",          // TOOLBAR (5A)
             "images/info.svg",                 // POPUP (1)
@@ -553,9 +553,13 @@
 
         /*---------------------------------------------------------------------------------*/
         static customPinIcon(text, color) {
+            let { pin, label } = color;
+            if (!pin)   pin    = color;
+            if (!label) label  = color;
+
             let htmlContent = `<svg id="iconSvg" width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
-            \t<path d="M12.5 0 C19.4 0 25 5.6 25 12.5 C25 19.4 12.5 41 12.5 41 C12.5 41 0 19.4 0 12.5 C0 5.6 5.6 0 12.5 0Z" fill="${color.pin}"/>
-            \t<text x="50%" y="35%" alignment-baseline="middle" text-anchor="middle" font-size="12" fill="${color.label}">${text}</text>
+            \t<path d="M12.5 0 C19.4 0 25 5.6 25 12.5 C25 19.4 12.5 41 12.5 41 C12.5 41 0 19.4 0 12.5 C0 5.6 5.6 0 12.5 0Z" fill="${pin}"/>
+            \t<text x="50%" y="35%" alignment-baseline="middle" text-anchor="middle" font-size="12" fill="${label}">${text}</text>
             </svg>`;
 
             return window.L.divIcon({
@@ -563,6 +567,20 @@
                 iconSize: [25, 41],
                 iconAnchor: [12, 41],
                 className: 'pin'
+            });
+        }
+
+        /*---------------------------------------------------------------------------------*/
+        static customCircleIcon(color, radius = 21) {
+            let htmlContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${2*radius}" height="${2*radius}" viewBox="0 0 ${2*radius} ${2*radius}" aria-hidden="true">
+            \t<circle cx="${radius}" cy="${radius}" r="${radius}" fill="${color}"/>
+            </svg>`;
+
+            return window.L.divIcon({
+                html: htmlContent,
+                iconSize: [2*radius, 2*radius],
+                iconAnchor: [radius, radius+4],
+                className: ''
             });
         }
 

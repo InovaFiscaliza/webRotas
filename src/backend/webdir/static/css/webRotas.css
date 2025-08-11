@@ -10,6 +10,8 @@
   --backgroundColor-toolbar: rgb(240, 240, 240);
   --backgroundColor-selected: rgba(180, 222, 255, 0.45);
   --backgroundColor-selectedFocus: rgba(50, 102, 208, 1);
+  --backgroundColor-slider: rgb(180, 180, 180);
+  --backgroundColor-slider-value: #4caf50;
 }
 
 *, *::before, *::after {
@@ -22,6 +24,7 @@
 body {
   height: 100%;
   width: 100%;
+  overflow-x: hidden;
   font-size: var(--font-size-default);
 }
 
@@ -90,12 +93,50 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
+input[type=range] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+       appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  transform: translateY(2px);
+  cursor: pointer;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 8px solid #4caf50;
+  transform: translateY(6px);
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 8px solid #4caf50;
+  transform: translateY(6px);
+}
+
+input[type=range].disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 button,
 label.btn-input {
   align-self: center;
   text-align: center;
   background: none;
-  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   border: none;
   border-radius: 25%;
   font-size: 12px;
@@ -114,11 +155,11 @@ button.disabled {
 }
 
 button#toolbarPanelVisibilityBtn.btn-panel-on {
-  background-image: url(../images/ArrowLeft_32.png);
+  background-image: url(../images/arrow-left.png);
 }
 
 button#toolbarPanelVisibilityBtn.btn-panel-off {
-  background-image: url(../images/ArrowRight_32.png);
+  background-image: url(../images/arrow-right.png);
 }
 
 label.label-panel,
