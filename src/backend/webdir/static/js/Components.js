@@ -1,9 +1,13 @@
 /*
     ## webRotas Components ##
+    - BARRA DE NAVEGAÇÃO
+      └── createNavBar
     - MAPA
       ├── createMap
       ├── createContextMenu
-      └── createColorbar
+      ├── createColorbar
+      ├── createSvgElement
+      └── updateColorbar
     - PAINEL À ESQUERDA DO MAPA
       └── createPanel
     - TOOLBAR
@@ -384,7 +388,7 @@
                 style: { 
                     gridArea: '4 / 1 / 5 / 2', 
                     gridTemplateRows: '17px 22px 17px 22px', 
-                    gridTemplateColumns: 'minmax(0px, 1fr) minmax(0px, 1fr)', 
+                    gridTemplateColumns: 'minmax(0px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr)', 
                     padding: '10px' 
                 }
             });
@@ -442,12 +446,31 @@
                         tooltipDefaultPosition: 'bottom' 
                     }
                 }, initialPointGrid);
+
+                this.createElement('label', {
+                    classList: ['label-form-field'],
+                    htmlFor: 'initialPointElevation',
+                    style: { 
+                        gridArea: '1 / 3 / 2 / 4' 
+                    },
+                    textContent: 'Elevação:'
+                }, initialPointGrid);
+            
+                this.createElement('input', {
+                    id: 'initialPointElevation',
+                    type: 'number',
+                    step: 'any',
+                    style: { 
+                        gridArea: '2 / 3 / 3 / 4' 
+                    },
+                    disabled: true,
+                }, initialPointGrid);
             
                 this.createElement('label', {
                     classList: ['label-form-field'],
                     htmlFor: 'initialPointDescription',
                     style: { 
-                        gridArea: '3 / 1 / 4 / 2' 
+                        gridArea: '3 / 1 / 4 / 4' 
                     },
                     textContent: 'Descrição:'
                 }, initialPointGrid);
@@ -456,7 +479,7 @@
                     id: 'initialPointDescription',
                     type: 'text',
                     style: { 
-                        gridArea: '4 / 1 / 5 / 3' 
+                        gridArea: '4 / 1 / 5 / 4' 
                     },
                     disabled: true
                 }, initialPointGrid);
@@ -631,7 +654,7 @@
             }, toolbar);
 
             this.createElement('input', {
-                id: 'currentSliderPosition',
+                id: 'toolbarPositionSlider',
                 style: { 
                     gridArea: '1 / 5 / 2 / 6'
                 },
@@ -645,7 +668,7 @@
             }, toolbar);
 
             this.createElement('label', {
-                id: 'currentSliderPositionValue',
+                id: 'toolbarPositionSliderValue',
                 textContent: '0%',
                 style: { 
                     gridArea: '1 / 5 / 2 / 6',
@@ -896,7 +919,7 @@
             routing.forEach((routingEl, index1) => {
                 routingEl.response.routes.forEach((routeEl, index2) => {
                     const htmlEl = this.createElement('li', {
-                        textContent: textResolver(routeEl, index1, index2),
+                        innerHTML: textResolver(routeEl, index1, index2),
                         eventListeners: eventListeners,
                         dataset: { index: JSON.stringify([index1, index2]) }
                     }, parentElement);

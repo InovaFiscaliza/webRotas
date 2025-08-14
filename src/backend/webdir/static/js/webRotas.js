@@ -42,7 +42,8 @@
       │           ├── origin
       │           ├── waypoints[]
       │           ├── paths
-      │           └── estimatedDistance
+      │           ├── estimatedDistance
+      │           └── estimatedTime
       ├── map                 (L.map)
       └── mapContext
           ├── layers
@@ -75,37 +76,6 @@
     
     window.localStorage é usado para sincronizar informações essenciais do app, como
     a url do servidor, a sessionId e os detalhes das rotas.
-
-    ToDo:
-    (01) Editar elemento "menu-context" que suporta o mapa, de forma que ele possa ser
-         dragado por meio do ponto de ancoragem.
-    (02) Criar possibilidade de abrir o streeview no próprio webRotas, encapsulando-o em
-         um iframe, ou abrindo uma nova aba controlável (evitando bloqueio do navegador).
-    (03) Implementar "ping" a cada 10s, de forma que o servidor possa registrar as sessões
-         ativas no seu controle de sessões.
-    (04) Implementar leitura múltipla de arquivos (tanto de "request" quando de "routing").
-    (05) Ajustar estrutura de "request.json". Ao invés de "pontosvisita", usar "waypoints",
-         ao invés de lista de listas, usar lista de objetos etc.
-    (06) O servidor precisa evoluir p/ identificar a porta do container e a identificação 
-         do usuário a partir do sessionId, e não do "PortaOSRMServer" e "UserName".
-    (07) Criar um fallback para o caso do app não carregar os CSS/JS das bibliotecas Leaflet,
-         toKML e JSZip.
-    (08) Ajustar colorbar, de forma que as suas dimensões sejam ajustáveis ao tamanho do
-         navegador.
-    (09) Verificar se é possível passar o ícone customizado do Leaflet para o toKML, de 
-         forma que o KML exportado possa ser visualizado no Google Earth.
-    (10) Inserir um label no popup (basemaps e exportFile) que contextualize o usuário,
-         ao invés de apenas apresentar as opções.
-    (11) Evoluir a organização da informação de exportFile, de forma que seja possível 
-         descrever o que cada opção faz, e quais são os formatos de exportação disponíveis 
-         para cada protocolo (file: ou http:).
-    (12) Do arquivo index.html, aberto no modo "file://", cria-se a possibilidade de editar
-         informações do servidor e a possibilidade de abri-lo noutra aba do navegador.
-         window.open("https://127.0.0.1:5001", "_blank");
-    (13) Estudar migração do "file+localStorage" p/ "Service Worker", de forma que a versão 
-         offline do app seja acessível na própria url (http://127.0.0.1:5001/webRotas/index.html, 
-         por exemplo) ao invés da origem "file://".
-    ...
 */
 (function () {
     window.app = {
@@ -219,12 +189,11 @@
                         iconType: 'customPinIcon',
                         iconTooltip: {
                             status: true,
-                            textResolver: ({ lat, lng, elevation, description }) => { 
-                                if (description) {
-                                    return `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)`
-                                } else {
-                                    return `(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)`
-                                }                                 
+                            textResolver: ({ lat, lng, elevation, description }) => {
+                                const descriptionText = description.length ? `${description}<br>` : '';
+                                const elevationText   = ![null, -9999].includes(elevation) ? `, ${elevation.toFixed(1)}m` : '';
+
+                                return `${descriptionText}(${lat.toFixed(6)}º, ${lng.toFixed(6)}º${elevationText})`
                             },
                             offsetResolver: 'default'
                         }
@@ -234,13 +203,19 @@
                     handle: null,
                     type: 'marker',
                     options: {
-                        iconType: 'defaultIcon',
+                        iconType: 'customPinIcon:Circle',
                         iconTooltip: {
                             status: true,
-                            textResolver: ({ lat, lng }) => { return `Ponto central<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º)` },
+                            textResolver: ({ lat, lng }) => { 
+                                return `Ponto central<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º)` 
+                            },
                             offsetResolver: () => { return [0, 0] }
                         },
-                        iconSize: [25, 41]
+                        iconSize: [25, 41],
+                        iconOptions: {
+                            color: 'rgb(51, 51, 51)',
+                            radius: 10
+                        }
                     }
                 },
                 routeOrigin: {
@@ -251,8 +226,10 @@
                         iconTooltip: {
                             status: true,
                             textResolver: ({ lat, lng, elevation, description }) => { 
-                                const elevationText = (elevation == -1) ? '' : `, ${elevation}m`;
-                                return `Ponto inicial: ${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º${elevationText})`
+                                const descriptionText = description.length ? `: ${description}` : '';
+                                const elevationText   = ![null, -9999].includes(elevation) ? `, ${elevation.toFixed(1)}m` : '';
+
+                                return `Ponto inicial${descriptionText}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º${elevationText})`
                             },
                             offsetResolver: 'default'
                         }
@@ -267,7 +244,7 @@
                         interactive: false
                     }
                 },
-                currentSliderPosition: {
+                toolbarPositionSlider: {
                     handle: null,
                     type: 'polyline',
                     options: {

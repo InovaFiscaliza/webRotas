@@ -3,174 +3,199 @@
   "routing": [
     {
       "request": {
-        "TipoRequisicao": "PontosVisita",
-        "Descricao": "Teste de pontos de visita na cidade de Boa Vista com 2 regiões de exclusão e algoritmo de ordenação por distância geodésica",
-        "PontoInicial": [
-          2.802119,
-          -60.688691,
-          "Anatel Roraima"
-        ],
-        "RaioDaEstacao": 200,
-        "GpsProximoPonto": "ProximoDaRota",
-        "pontosvisita": [
-          [
-            2.812482,
-            -60.670263,
-            "Local",
-            "Parque do Rio Branco"
-          ],
-          [
-            2.840826,
-            -60.692496,
-            "Local",
-            "Aeroporto Internacional de Boa Vista"
-          ],
-          [
-            2.854428,
-            -60.644444,
-            "Local",
-            "Roraima Garden Shopping"
-          ],
-          [
-            2.831661,
-            -60.662501,
-            "Local",
-            "Estádio Flamarion Vasconcelos"
-          ],
-          [
-            2.827492,
-            -60.680001,
-            "Local",
-            "Praça Fábio Paracat"
-          ],
-          [
-            2.791658,
-            -60.694723,
-            "Local",
-            "Área Militar – 7º BIS"
-          ],
-          [
-            2.850549,
-            -60.706111,
-            "Local",
-            "Pátio Roraima Shopping"
-          ],
-          [
-            2.807221,
-            -60.738611,
-            "Local",
-            "Praça e Palco Aderval da Rocha Ferreira"
-          ],
-          [
-            2.892775,
-            -60.705277,
-            "Local",
-            "Bairro Pedra Pintada, p/ super. Salmos 23"
-          ],
-          [
-            2.764721,
-            -60.713611,
-            "Local",
-            "Distrito Industrial de Boa Vista - Roraima"
-          ],
-          [
-            2.837222,
-            -60.684445,
-            "Local",
-            "Parque Anauá"
-          ],
-          [
-            2.844719,
-            -60.754723,
-            "Local",
-            "Bairro Cidade Satélite"
-          ],
-          [
-            2.817774,
-            -60.728333,
-            "Local",
-            "Rua São Sebastião com Ataide Teive"
-          ],
-          [
-            2.814996,
-            -60.696664,
-            "Local",
-            "Hospital do Amor - Bairro Pericumã"
-          ],
-          [
-            2.769164,
-            -60.731389,
-            "Local",
-            "Bairro Nova Cidade – Escola Est. Dr. Luiz"
-          ],
-          [
-            2.838887,
-            -60.718613,
-            "Local",
-            "Fórum Criminal – Bairro Caranã"
-          ],
-          [
-            2.811386,
-            -60.711945,
-            "Local",
-            "Senai – RR, Bairro Asa Branca"
-          ],
-          [
-            2.803887,
-            -60.691666,
-            "Local",
-            "Hosp. Materno Infantil Bairro 13 de Set."
-          ],
-          [
-            2.793886,
-            -60.715556,
-            "Local",
-            "CRAS/Cristiana Vicente Nunes"
-          ],
-          [
-            2.816383,
-            -60.772522,
-            "Local",
-            "Praça Cruviana – Bairro Jardin Equatorial"
-          ]
-        ],
-        "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
-        "regioes": [
+        "type": "shortest",
+        "origin": {
+          "lat": 2.802119,
+          "lng": -60.688691,
+          "description": "Anatel-RR"
+        },
+        "waypoints": [
           {
-            "name": "!Teste1",
+            "lat": 2.812482,
+            "lng": -60.670263,
+            "description": "Parque do Rio Branco"
+          },
+          {
+            "lat": 2.840826,
+            "lng": -60.692496,
+            "descrition": "Aeroporto Internacional de Boa Vista"
+          },
+          {
+            "lat": 2.854428,
+            "lng": -60.644444,
+            "descrition": "Roraima Garden Shopping"
+          },
+          {
+            "lat": 2.831661,
+            "lng": -60.662501,
+            "descrition": "Estádio Flamarion Vasconcelos"
+          },
+          {
+            "lat": 2.827492,
+            "lng": -60.680001,
+            "descrition": "Praça Fábio Paracat"
+          },
+          {
+            "lat": 2.791658,
+            "lng": -60.694723,
+            "descrition": "Área Militar 7º BIS"
+          },
+          {
+            "lat": 2.850549,
+            "lng": -60.706111,
+            "descrition": "Pátio Roraima Shopping"
+          },
+          {
+            "lat": 2.807221,
+            "lng": -60.738611,
+            "descrition": "Praça e Palco Aderval da Rocha Ferreira"
+          },
+          {
+            "lat": 2.892775,
+            "lng": -60.705277,
+            "descrition": "Bairro Pedra Pintada, p/ super. Salmos 23"
+          },
+          {
+            "lat": 2.764721,
+            "lng": -60.713611,
+            "descrition": "Distrito Industrial de Boa Vista - Roraima"
+          },
+          {
+            "lat": 2.837222,
+            "lng": -60.684445,
+            "descrition": "Parque Anauá"
+          },
+          {
+            "lat": 2.844719,
+            "lng": -60.754723,
+            "descrition": "Bairro Cidade Satélite"
+          },
+          {
+            "lat": 2.817774,
+            "lng": -60.728333,
+            "descrition": "Rua São Sebastião com Ataide Teive"
+          },
+          {
+            "lat": 2.814996,
+            "lng": -60.696664,
+            "descrition": "Hospital do Amor - Bairro Pericumã"
+          },
+          {
+            "lat": 2.769164,
+            "lng": -60.731389,
+            "descrition": "Bairro Nova Cidade Escola Est. Dr. Luiz"
+          },
+          {
+            "lat": 2.838887,
+            "lng": -60.718613,
+            "descrition": "Fórum Criminal Bairro/Caranã"
+          },
+          {
+            "lat": 2.811386,
+            "lng": -60.711945,
+            "descrition": "Senai-RR, Bairro Asa Branca"
+          },
+          {
+            "lat": 2.803887,
+            "lng": -60.691666,
+            "descrition": "Hosp. Materno Infantil Bairro 13 de Set."
+          },
+          {
+            "lat": 2.793886,
+            "lng": -60.715556,
+            "descrition": "CRAS/Cristiana Vicente Nunes"
+          },
+          {
+            "lat": 2.816383,
+            "lng": -60.772522,
+            "descrition": "Praça Cruviana - Bairro Jardin Equatorial"
+          }
+        ],
+        "avoidZones": [
+          {
+            "name": "!Nova Vida",
             "coord": [
               [
-                2.840826,
-                -60.692496
+                2.790102,
+                -60.710362
               ],
               [
-                2.854428,
-                -60.644444
+                2.787367,
+                -60.710993
               ],
               [
-                2.812482,
-                -60.670263
+                2.781447,
+                -60.703978
+              ],
+              [
+                2.783551,
+                -60.70207
+              ],
+              [
+                2.785822,
+                -60.703703
+              ],
+              [
+                2.787313,
+                -60.705349
+              ],
+              [
+                2.788879,
+                -60.707795
+              ],
+              [
+                2.788879,
+                -60.707795
+              ],
+              [
+                2.788879,
+                -60.707795
+              ],
+              [
+                2.790102,
+                -60.710362
               ]
             ]
           },
           {
-            "name": "!Teste2",
+            "name": "!Ocupação no Bairro Aracelis",
             "coord": [
               [
-                2.8,
-                -60.6
+                2.794846,
+                -60.724674
               ],
               [
-                2.9,
-                -60.6
+                2.791271,
+                -60.72552
               ],
               [
-                2.85,
-                -60.5
+                2.789779,
+                -60.721354
+              ],
+              [
+                2.793233,
+                -60.72036
+              ],
+              [
+                2.794819,
+                -60.721287
+              ],
+              [
+                2.795249,
+                -60.72298
+              ],
+              [
+                2.794846,
+                -60.724674
               ]
             ]
           }
-        ]
+        ],
+        "parameters": {
+          "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
+          "GpsProximoPonto": "ProximoDaRota",    
+          "RaioDaEstacao": 200
+        }
       },
       "response": {
         "cacheId": "6a59481fbc73",
@@ -1128,36 +1153,36 @@
         },
         "routes": [
           {
-            "routeId": "43a13fbfd0ed605d6c3a6fba177b52a1c2396d917b1f4d0ffa124d3b04441fed",
+            "routeId": "3fc81f2d-e34a-4d99-a4f5-c7790fdf1818",
             "automatic": true,
             "created": "15/04/2025 13:58:49",
             "origin": {
               "lat": 2.802119,
               "lng": -60.688691,
-              "elevation": 37,
-              "description": "Anatel Roraima"
+              "description": "Anatel Roraima",
+              "elevation": 37              
             },
             "waypoints": [
               {
                 "lat": 2.812482,
                 "lng": -60.670263,
+                "description": "Parque do Rio Branco",
                 "elevation": 61,
-                "status": true,
-                "description": "Parque do Rio Branco"
+                "status": true                
               },
               {
                 "lat": 2.840826,
                 "lng": -60.692496,
+                "description": "Aeroporto Internacional de Boa Vista",
                 "elevation": 29,
-                "status": true,
-                "description": "Aeroporto Internacional de Boa Vista"
+                "status": true                
               },
               {
                 "lat": 2.854428,
                 "lng": -60.644444,
+                "description": "Roraima Garden Shopping",
                 "elevation": 82,
-                "status": true,
-                "description": "Roraima Garden Shopping"
+                "status": true                
               }
             ],
             "paths": [
@@ -2660,7 +2685,8 @@
                 ]
               ]
             ],
-            "estimatedDistance": 15.9381
+            "estimatedTime": "14:00:10",
+            "estimatedDistance": 15.9381            
           }
         ]
       }

@@ -6,88 +6,72 @@ from datetime import datetime
 import uuid
 from server_env import env
 
-class GuiOutput:
-    def __init__(self):
+class RouteRequestManager:
+    in_progress_requests = []
+
+    def __init__(self, data=None, route_id=None):
         self.reset()
+        self.request  = data
+        self.route_id = route_id        
 
     def reset(self):
-        self.url = f"http://127.0.0.1:{env.port}/"        
-        self.requisition_data = None        
+        self.request = None
+
         self.session_id = None
         self.cache_id = None
         self.route_id = None
-        self.json = ""
-        self.jsonComunities = None
+
+        self.osrm_port = None
+
+        self.routing_area = None
         self.bounding_box = None
-        self.limits = None
-        self.urbanAreas = None
-        self.pontoinicial = None
-        self.pontosvisitaDados = None
-        self.waypoints_route = None
+        self.avoid_zones = None
+        
+        self.location_limits = None
+        self.location_urban_areas = None
+        self.location_urban_communities = None
+
+        self.origin = None
+        self.waypoints = None
+        self.paths = None
+
         self.estimated_distance = None
         self.estimated_time = None
 
-    @property
-    def pontoinicial(self):
-        return self._pontoinicial
+    def update(self, data):
+        for key, value in data.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
-    @pontoinicial.setter
-    def pontoinicial(self, value):
-        if isinstance(value, (list, tuple)) and len(value) >= 2:
-            rounded = self.round_coords(value[:2])
-            self._pontoinicial = rounded + list(value[2:])
-        else:
-            self._pontoinicial = value
+    @classmethod
+    def process_request(cls, request_type, data):
+        match request_type:
+            case "shortest" | "circle" | "grid":
+                route_id    = str(uuid.uuid4())
 
-    def round_coords(self, coord):
-        """Helper method to round coordinates to 6 decimal places"""
-        if isinstance(coord, (list, tuple)):
-            return [round(float(x), 6) if x is not None else None for x in coord]
-        return round(float(coord), 6) if coord is not None else None
+                new_request = cls(data, route_id)
+                cls.in_progress_requests.append(new_request)
+                return new_request, True
 
-    def json_comunities_create(self, polylinesComunidades):
-        """
-        Gera uma string com o conteúdo de urbanCommunities formatado como JSON,
-        mas sem as chaves externas (sem { }).
+            case "ordered":
+                route_id    = data["route_id"]
 
-        :param polylinesComunidades: Lista de listas de coordenadas (lat, lon).
-        :return: String JSON no formato '"urbanCommunities": [ ... ]'
-        """
-        # Prepara os dados como lista de listas
-        urban_communities = []
-        for polyline in polylinesComunidades:
-            community = []
-            for coord in polyline:
-                lat, lon = coord
-                community.append(self.round_coords([lat, lon]))
-            urban_communities.append(community)
-        self.jsonComunities = urban_communities
-        return self.jsonComunities
+                old_request = cls.find_by_route_id(route_id)
+                if old_request:
+                    return old_request, False
+                
+                new_request = cls(data, route_id)
+                cls.in_progress_requests.append(new_request)
+                return new_request, True
 
-    def gerar_waypoints(self, pontosvisitaDados):
-        waypoints = []
-        for item in pontosvisitaDados:
-            lat = round(float(item[0]), 6)
-            lng = round(float(item[1]), 6)
-            description = str(item[4])
-            try:
-                elevation = int(float(item[5]))
-            except ValueError:
-                elevation = -1  # valor padrão caso erro na conversão
-            status = True
+            case _:
+                raise ValueError(f"Unknown request type: {request_type}")
+            
+    @classmethod
+    def find_by_route_id(cls, route_id):
+        return next((req for req in cls.in_progress_requests if req.route_id == route_id), None)
 
-            waypoints.append(
-                {
-                    "lat": lat,
-                    "lng": lng,
-                    "elevation": elevation,
-                    "status": status,
-                    "description": description,
-                }
-            )
-        return waypoints
-
-    def criar_json_routing(self, auto_analysis=True):
+    def create_initial_route(self):
         data = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         waypoints = self.gerar_waypoints(self.pontosvisitaDados)
         self.estimated_distance = round(self.estimated_distance / 1000, 1)
@@ -128,12 +112,12 @@ class GuiOutput:
         routes_buf = [
             {
                 "routeId": self.route_id if self.route_id is not None else str(uuid.uuid4()),
-                "automatic": auto_analysis,
+                "automatic": True,
                 "created": f"{data}",
                 "origin": {
                     "lat": round(float(self.pontoinicial[0]), 6),
                     "lng": round(float(self.pontoinicial[1]), 6),
-                    "elevation": -1, # Precisa pesquisar essa altitude
+                    "elevation": -9999, # Precisa pesquisar essa altitude
                     "description": f"{self.pontoinicial[2]}",
                 },
                 "waypoints": waypoints,
@@ -144,7 +128,7 @@ class GuiOutput:
         ]
 
         estrutura = {
-            "url": self.url,
+            "url": f"http://127.0.0.1:{env.port}/",
             "routing": [
                 {
                     "request": self.requisition_data,
@@ -164,7 +148,19 @@ class GuiOutput:
 
         json_formatado = json.dumps(estrutura, indent=4, ensure_ascii=False)
         return json_formatado
+    
+    def create_custom_route(self):
+        waypoints = self.gerar_waypoints(self.pontosvisitaDados)
+        self.estimated_distance = round(self.estimated_distance / 1000, 1)
 
+        routes_buf = {
+            "routeId": self.route_id,
+            "origin": self.origin,
+            "waypoints": self.waypoints,
+            "neededPaths": [],
+            "estimatedDistance": self.estimated_distance,
+            "estimatedTime": self.estimated_time
+        }
 
-# Instância global
-cGuiOutput = GuiOutput()
+        response = json.dumps(routes_buf, indent=4, ensure_ascii=False)
+        return response

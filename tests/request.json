@@ -1,137 +1,11 @@
 {
-  "TipoRequisicao": "PontosVisita",
-  "Descricao": "Teste de pontos de visita na cidade de Boa Vista com 2 regiões de exclusão e algoritmo de ordenação por distância geodésica",
-  "PontoInicial": [
-    2.802119,
-    -60.688691,
-    "Anatel Roraima"
-  ],
-  "RaioDaEstacao": 200,
-  "GpsProximoPonto": "ProximoDaRota",
-  "pontosvisita": [
-    [
-      2.812482,
-      -60.670263,
-      "Local",
-      "Parque do Rio Branco"
-    ],
-    [
-      2.840826,
-      -60.692496,
-      "Local",
-      "Aeroporto Internacional de Boa Vista"
-    ],
-    [
-      2.854428,
-      -60.644444,
-      "Local",
-      "Roraima Garden Shopping"
-    ],
-    [
-      2.831661,
-      -60.662501,
-      "Local",
-      "Estádio Flamarion Vasconcelos"
-    ],
-    [
-      2.827492,
-      -60.680001,
-      "Local",
-      "Praça Fábio Paracat"
-    ],
-    [
-      2.791658,
-      -60.694723,
-      "Local",
-      "Área Militar – 7º BIS"
-    ],
-    [
-      2.850549,
-      -60.706111,
-      "Local",
-      "Pátio Roraima Shopping"
-    ],
-    [
-      2.807221,
-      -60.738611,
-      "Local",
-      "Praça e Palco Aderval da Rocha Ferreira"
-    ],
-    [
-      2.892775,
-      -60.705277,
-      "Local",
-      "Bairro Pedra Pintada, p/ super. Salmos 23"
-    ],
-    [
-      2.764721,
-      -60.713611,
-      "Local",
-      "Distrito Industrial de Boa Vista - Roraima"
-    ],
-    [
-      2.837222,
-      -60.684445,
-      "Local",
-      "Parque Anauá"
-    ],
-    [
-      2.844719,
-      -60.754723,
-      "Local",
-      "Bairro Cidade Satélite"
-    ],
-    [
-      2.817774,
-      -60.728333,
-      "Local",
-      "Rua São Sebastião com Ataide Teive"
-    ],
-    [
-      2.814996,
-      -60.696664,
-      "Local",
-      "Hospital do Amor - Bairro Pericumã"
-    ],
-    [
-      2.769164,
-      -60.731389,
-      "Local",
-      "Bairro Nova Cidade – Escola Est. Dr. Luiz"
-    ],
-    [
-      2.838887,
-      -60.718613,
-      "Local",
-      "Fórum Criminal – Bairro Caranã"
-    ],
-    [
-      2.811386,
-      -60.711945,
-      "Local",
-      "Senai – RR, Bairro Asa Branca"
-    ],
-    [
-      2.803887,
-      -60.691666,
-      "Local",
-      "Hosp. Materno Infantil Bairro 13 de Set."
-    ],
-    [
-      2.793886,
-      -60.715556,
-      "Local",
-      "CRAS/Cristiana Vicente Nunes"
-    ],
-    [
-      2.816383,
-      -60.772522,
-      "Local",
-      "Praça Cruviana – Bairro Jardin Equatorial"
-    ]
-  ],
-  "AlgoritmoOrdenacaoPontos": "DistanciaOSMRMultiThread",
-  "regioes": [
+  "type": "shortest",
+  "origin": {
+    "lat": 2.802119,
+    "lng": -60.688691,
+    "description": "Anatel-RR"
+  },
+  "avoidZones": [
     {
       "name": "!Nova Vida",
       "coord": [
@@ -210,5 +84,109 @@
         ]
       ]
     }
-  ]
+  ],
+  "parameters": {
+    "waypoints": [
+      {
+        "lat": 2.812482,
+        "lng": -60.670263,
+        "description": "Parque do Rio Branco"
+      },
+      {
+        "lat": 2.840826,
+        "lng": -60.692496,
+        "descrition": "Aeroporto Internacional de Boa Vista"
+      },
+      {
+        "lat": 2.854428,
+        "lng": -60.644444,
+        "descrition": "Roraima Garden Shopping"
+      },
+      {
+        "lat": 2.831661,
+        "lng": -60.662501,
+        "descrition": "Estádio Flamarion Vasconcelos"
+      },
+      {
+        "lat": 2.827492,
+        "lng": -60.680001,
+        "descrition": "Praça Fábio Paracat"
+      },
+      {
+        "lat": 2.791658,
+        "lng": -60.694723,
+        "descrition": "Área Militar 7º BIS"
+      },
+      {
+        "lat": 2.850549,
+        "lng": -60.706111,
+        "descrition": "Pátio Roraima Shopping"
+      },
+      {
+        "lat": 2.807221,
+        "lng": -60.738611,
+        "descrition": "Praça e Palco Aderval da Rocha Ferreira"
+      },
+      {
+        "lat": 2.892775,
+        "lng": -60.705277,
+        "descrition": "Bairro Pedra Pintada, p/ super. Salmos 23"
+      },
+      {
+        "lat": 2.764721,
+        "lng": -60.713611,
+        "descrition": "Distrito Industrial de Boa Vista - Roraima"
+      },
+      {
+        "lat": 2.837222,
+        "lng": -60.684445,
+        "descrition": "Parque Anauá"
+      },
+      {
+        "lat": 2.844719,
+        "lng": -60.754723,
+        "descrition": "Bairro Cidade Satélite"
+      },
+      {
+        "lat": 2.817774,
+        "lng": -60.728333,
+        "descrition": "Rua São Sebastião com Ataide Teive"
+      },
+      {
+        "lat": 2.814996,
+        "lng": -60.696664,
+        "descrition": "Hospital do Amor - Bairro Pericumã"
+      },
+      {
+        "lat": 2.769164,
+        "lng": -60.731389,
+        "descrition": "Bairro Nova Cidade Escola Est. Dr. Luiz"
+      },
+      {
+        "lat": 2.838887,
+        "lng": -60.718613,
+        "descrition": "Fórum Criminal Bairro/Caranã"
+      },
+      {
+        "lat": 2.811386,
+        "lng": -60.711945,
+        "descrition": "Senai-RR, Bairro Asa Branca"
+      },
+      {
+        "lat": 2.803887,
+        "lng": -60.691666,
+        "descrition": "Hosp. Materno Infantil Bairro 13 de Set."
+      },
+      {
+        "lat": 2.793886,
+        "lng": -60.715556,
+        "descrition": "CRAS/Cristiana Vicente Nunes"
+      },
+      {
+        "lat": 2.816383,
+        "lng": -60.772522,
+        "descrition": "Praça Cruviana - Bairro Jardin Equatorial"
+      }
+    ]
+  }
 }

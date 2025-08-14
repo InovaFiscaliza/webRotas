@@ -1,16 +1,14 @@
 /*
-    ToDo:
-    - Organizar window.app.routeList, de forma que sejam registrados, de forma consistente, 
-      os "waypoints" e o "routeMidpoint" com a mesma informação (id, descrição, coordenadas,
-      altitude etc). Atualmente, ListaRotasCalculadas[0].pontoinicial é bem diferente de 
-      ListaRotasCalculadas[0].pontosvisitaDados. E, por fim, ao invés de fazer um array de array,
-      organizar a informação em objetos, de forma que tenhamos um array de objetos, evitando 
-      coisas como "coord[5]".
-
-    - Limitar a atualização dos waypointsA atualização dos waypoints parece algo complicado porque
-      demandaria alterar não apenas as suas coordenadas, mas também
-      o tooltip. Neste momento, por simplicidade, os marcadores serão
-      recriados.
+    ## webRotas Plot ##      
+    - Plot
+      ├── controller
+      ├── create
+      ├── update
+      ├── remove
+      ├── removeTooltip
+      ├── changeVisibility
+      ├── checkPlotType
+      └── setView
 */
 
 (function () {
@@ -24,11 +22,12 @@
                 }
 
                 case 'clearForUpdate': {
-                    this.remove('specificLayers', 'avoidZones', 'routeMidpoint', 'routeOrigin', 'waypoints');
+                    this.remove('specificLayers', 'routeMidpoint', 'routeOrigin', 'waypoints');
                     break;
                 }
 
-                case 'draw': {
+                case 'draw': 
+                case 'update': {
                     const index1 = args[0];
                     const index2 = args[1];
 
@@ -38,66 +37,44 @@
                     window.app.mapContext.settings.colormap.range = window.app.modules.Utils.Elevation.range(route);
                     window.app.modules.Components.updateColorbar();
                   //window.app.modules.Utils.GeoLocation.routeMidPoint(route);
+                    window.app.mapContext.layers.toolbarPositionSlider.mergedPaths = route.paths.flat();
 
-                    this.controller('clearAll');
-                    this.create('boundingBox',              routing.response.boundingBox);
+                    switch (type) {
+                        case 'draw': {
+                            this.controller('clearAll');
 
-                    const avoidZonesRaw = routing.request.regioes;
-                    let avoidZones = [];
-                    if (avoidZonesRaw) {
-                        avoidZones = avoidZonesRaw.map(el => el.coord);
-                        this.create('avoidZones',           avoidZones);
+                            const avoidZonesRaw = routing.request.avoidZones;
+                            let avoidZones = [];
+                            if (avoidZonesRaw) {
+                                avoidZones = avoidZonesRaw.map(el => el.coord);
+                                this.create('avoidZones',           avoidZones);
+                            }
+
+                            this.create('boundingBox',              routing.response.boundingBox);
+                            this.create('locationLimits',           routing.response.location.limits);
+                            this.create('locationUrbanAreas',       routing.response.location.urbanAreas);
+                            this.create('locationUrbanCommunities', routing.response.location.urbanCommunities);
+                            this.create('routePath',                route.paths);
+                            this.create('toolbarPositionSlider',   [window.app.mapContext.layers.toolbarPositionSlider.mergedPaths[0]]);
+                            break;
+                        }
+
+                        case 'update': {
+                            this.controller('clearForUpdate');
+
+                            this.update('routePath',                route.paths);
+                            break;
+                        }
                     }
-                    
-                    this.create('locationLimits',           routing.response.location.limits);
-                    this.create('locationUrbanAreas',       routing.response.location.urbanAreas);
-                    this.create('locationUrbanCommunities', routing.response.location.urbanCommunities);
 
-                    this.create('routePath',                route.paths);
-
-                    window.app.mapContext.layers.currentSliderPosition.mergedPaths = route.paths.flat();
-                    this.create('currentSliderPosition',   [route.paths[0][0]]);
-                    const routePositionSlider = window.document.getElementById("currentSliderPosition");
+                    const routePositionSlider = window.document.getElementById("toolbarPositionSlider");
                     routePositionSlider.value = 0;
                     window.app.modules.Callbacks.onToolbarButtonClicked({ target: routePositionSlider })
 
                   //this.create('routeMidpoint',            route.midpoint);
                     this.create('routeOrigin',              route.origin);
                     this.create('waypoints',                route.waypoints);
-                    this.setView('zoom',                    [...route.waypoints, route.origin])
-                    break;
-                }
-
-                case 'update': {
-                    const index1 = args[0];
-                    const index2 = args[1];
-
-                    const routing = window.app.routingContext[index1];
-                    const route = routing.response.routes[index2];
-
-                    window.app.mapContext.settings.colormap.range = window.app.modules.Utils.Elevation.range(route);
-                    window.app.modules.Components.updateColorbar();
-                  //window.app.modules.Utils.GeoLocation.routeMidPoint(route);
-
-                    this.controller('clearForUpdate');
-
-                    const avoidZonesRaw = routing.request.regioes;
-                    let avoidZones = [];
-                    if (avoidZonesRaw) {
-                        avoidZones = avoidZonesRaw.map(el => el.coord);
-                        this.create('avoidZones',           avoidZones);
-                    }
-
-                    this.update('routePath',                route.paths);
-                  //this.create('routeMidpoint',            route.midpoint);
-                    this.create('routeOrigin',              route.origin);
-                    this.create('waypoints',                route.waypoints);
-                    
-                    const currentSliderPosition = window.document.getElementById("currentSliderPosition");
-                    currentSliderPosition.value = 0;
-                    window.app.modules.Callbacks.onToolbarButtonClicked({ target: currentSliderPosition })                    
-
-                    this.setView('zoom',                    [...route.waypoints, route.origin])
+                    this.setView('zoom',                    [...route.waypoints, route.origin])                    
                     break;
                 }
 
@@ -148,6 +125,7 @@
                             ( { lat, lng, elevation } = element)
                         }
                         coords = [lat, lng];
+                        elevation = ![null, -9999].includes(elevation) ? elevation : -9999;
 
                         switch (options.iconType) {
                             case 'file':
@@ -218,7 +196,7 @@
                     break;
 
                 case 'polyline':
-                    coords = geoData;
+                    coords = geoData.filter(el => el.length > 0);
                     handle = window.L.polyline(coords, options).addTo(map);
                     break;
 

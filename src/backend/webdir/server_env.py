@@ -9,30 +9,33 @@ import port_test as pt
 # ---------------------------------------------------------------------------
 """	Constants	"""
 
-PREFERRED_PORT = 5001
+PREFERRED_PORT = 5002
 DEBUG_MODE = False
-LOG_FILE_PATH = "logs/WebRotasServer.log"
-SERVER_DATA_PATH = "TempData/server.json"
+LOG_FILE_PATH = "logs/webRotas"
+SERVER_DATA_PATH = "config/server.json"
 
 # ---------------------------------------------------------------------------
 class ServerEnv():
-
     def __init__(self):
         self.port: int = PREFERRED_PORT
+        
         """Port number for the server."""
         self.debug_mode: bool = DEBUG_MODE
+        
         """Debug mode for the server."""
         self.script_path: str = os.path.realpath(__file__)
+        
         """Path to the script file."""
         self.server_data_file: str = SERVER_DATA_PATH
+        
         """Path to the server data file."""
         self.log_file: str = LOG_FILE_PATH
+        
         """Path to the log file."""
         self.required_paths: list = []
-        """List of required folders for the server."""
         
-        self.set_paths()
-        
+        """List of required folders for the server."""        
+        self.set_paths()        
         self.test_required_paths()
 
     # ---------------------------------------------------------------------------

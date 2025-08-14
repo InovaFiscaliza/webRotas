@@ -1,12 +1,3 @@
-/*
-    ToDo:
-    - Implementar menu de contexto no tooltip do mapa, possibilitando coleta das coordenadas
-      do target relacionado ao "stickyTooltip" selecionado, a exclusão desse "stickyTooltip",
-      ou de todos os "stickyTooltip", dentre outras.
-      - ...
-*/
-
-
 class Tooltip {
     static basicTooltipClasses   = ['tooltip-container', 'tooltip-arrow']
     static leafletTooltipClasses = ['leaflet-tooltip-bottom', 'leaflet-container', 'tooltip-container', 'tooltip-on-grabbing']

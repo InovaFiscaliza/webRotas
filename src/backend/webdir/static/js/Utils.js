@@ -18,13 +18,16 @@
       │   ├── stopLocationTracking
       │   ├── stopLocationTracking
       │   └── routeMidPoint
-      ├── Elevation
+      ├── Elevation (class)
       │   └── range
       └── Image (class)
+          ├── loadImagesForCache
           ├── parulaColormap
           ├── customPinIcon
+          ├── customCircleIcon
           ├── colorbar
-          └── pinColor
+          ├── pinColor
+          └── rgbaToHexAndAlpha
 */
 (function () {
     const projectInventory = {
@@ -415,27 +418,27 @@
 
     /*---------------------------------------------------------------------------------*/
     function resolvePushType(returnedData) {
-        const routing = window.app.routingContext;
+        const routingContext = window.app.routingContext;
         let renderUpdate = Array(returnedData.length).fill(true);
 
         const strcmp = (a, b) => {
             return JSON.stringify(a, Object.keys(a).sort()) === JSON.stringify(b, Object.keys(b).sort());
         }
 
-        if (routing.length === 0) {
-            routing.push(...returnedData);
+        if (routingContext.length === 0) {
+            routingContext.push(...returnedData);
         } else {
             for (let ii = 0; ii < returnedData.length; ii++) {                
-                for (let jj = 0; jj < routing.length; jj++) {
-                    if (returnedData[ii].response.cacheId === routing[jj].response.cacheId && 
-                        strcmp(returnedData[ii].response.routes, routing[jj].response.routes)) {
+                for (let jj = 0; jj < routingContext.length; jj++) {
+                    if (returnedData[ii].response.cacheId === routingContext[jj].response.cacheId && 
+                        strcmp(returnedData[ii].response.routes, routingContext[jj].response.routes)) {
                         renderUpdate[ii] = false;
                         break;
                     }
                 }
 
                 if (renderUpdate[ii]) {
-                    routing.push(returnedData[ii]);
+                    routingContext.push(returnedData[ii]);
                 }
             }
         }
@@ -503,16 +506,18 @@
         /*---------------------------------------------------------------------------------*/
         static range(routeInfo) {
             const elevationLimits = [routeInfo.origin, ...routeInfo.waypoints].reduce((acc, curr) => {
-                if (curr.elevation < acc.min) {
-                  acc.min = curr.elevation;
-                }
-
-                if (curr.elevation > acc.max) {
-                  acc.max = curr.elevation;
+                if (![null, -9999].includes(curr.elevation)) {                
+                    if (curr.elevation < acc.min) acc.min = curr.elevation;
+                    if (curr.elevation > acc.max) acc.max = curr.elevation;
                 }
 
                 return acc;
               }, { min: Infinity, max: -Infinity });
+
+              if (elevationLimits.min === Infinity || elevationLimits.max === -Infinity) {
+                elevationLimits.min = -9999;
+                elevationLimits.max = -9999;
+              }
 
               return elevationLimits;
         }
@@ -571,7 +576,7 @@
         }
 
         /*---------------------------------------------------------------------------------*/
-        static customCircleIcon(color, radius = 21) {
+        static customCircleIcon(color, radius) {
             let htmlContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${2*radius}" height="${2*radius}" viewBox="0 0 ${2*radius} ${2*radius}" aria-hidden="true">
             \t<circle cx="${radius}" cy="${radius}" r="${radius}" fill="${color}"/>
             </svg>`;

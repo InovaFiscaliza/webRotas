@@ -8,7 +8,6 @@ import datetime
 from itertools import permutations
 import time
 import requests
-import math
 import numpy as np
 import polyline
 from shapely.geometry import Point, Polygon, box
@@ -24,9 +23,160 @@ import geraMapa as gm
 import routing_servers_interface as si
 import CacheBoundingBox as cb
 import regions as rg
-import GuiOutput as gi
-from ClRouteDetail import ClRouteDetailList
+from route_request_manager import RouteRequestManager as rrm
 import wlog as wl
+
+
+# -----------------------------------------------------------------------------------#
+def osrm_shortest(current_request, session_id, origin, avoid_zones, waypoints, location_limits=[], location_urban_areas=[], routing_algorithm="OSRM:MultiThread"):
+    """
+        A partir de "origin", "waypoints" e "avoid+zones", identifica-se a área de roteamento,
+        salva em cache local. Posteriormente, prepara-se o servidor OSRM, o qual é executado
+        em container.
+    """
+    routing_area, bounding_box, cache_id = compute_routing_area(origin, waypoints, avoid_zones)
+    osrm_port = si.PreparaServidorRoteamento(routing_area)
+
+    """
+        Obtém-se os "paths" de cada um dos trechos, assim como estimativas de distância e
+        duração.
+        origin >> waypoint[0] >> waypoint[1] >> ... >> waypoint[n-1]
+    """
+    paths, estimated_distance, estimated_time = OrdenarPontos(origin, waypoints, routing_algorithm)
+
+    current_request.update({
+        "session_id": session_id,
+        "cache_id": cache_id,
+        "osrm_port": osrm_port,
+        "routing_area": routing_area,
+        "bounding_box": bounding_box,
+        "avoid_zones": avoid_zones,
+        "location_limits": location_limits,
+        "location_urban_areas": location_urban_areas,
+        "location_urban_communities": get_polyline_comunities(routing_area),
+        "origin": origin,
+        "waypoints": waypoints,
+        "paths": paths,
+        "estimated_distance": estimated_distance,
+        "estimated_time": estimated_time
+    })
+
+# -----------------------------------------------------------------------------------#
+def osrm_circle(current_request, session_id, origin, avoid_zones, center_point, radius_km=10, total_waypoints=12):
+    def generate_waypoints_in_radius(center_point, radius_km, total_waypoints):
+        R = 6371.0
+        waypoints = []
+        
+        lat_rad = math.radians(center_point["lat"])
+        lon_rad = math.radians(center_point["lng"])        
+
+        for ii in range(total_waypoints):
+            angle = 2 * math.pi * ii / total_waypoints
+
+            new_lat_rad = math.asin(math.sin(lat_rad) * math.cos(radius_km / R) + math.cos(lat_rad) * math.sin(radius_km / R) * math.cos(angle))
+            new_lon_rad = lon_rad + math.atan2(math.sin(angle) * math.sin(radius_km / R) * math.cos(lat_rad), math.cos(radius_km / R) - math.sin(lat_rad) * math.sin(new_lat_rad))
+
+            new_lat = math.degrees(new_lat_rad)
+            new_lon = math.degrees(new_lon_rad)
+
+            waypoints.append((new_lat, new_lon))
+
+        return waypoints
+
+    waypoints = generate_waypoints_in_radius(center_point, radius_km, total_waypoints)
+    osrm_shortest(current_request, session_id, origin, avoid_zones, waypoints)
+
+
+# -----------------------------------------------------------------------------------#
+def osrm_grid(current_request, session_id, origin, avoid_zones, city, state, scope, point_distance):
+    location_limits, location_urban_areas = get_areas_urbanas_cache(city, state)
+
+    match scope:
+        case "Location":
+            waypoints = GeneratePointsWithinCity(location_limits,      avoid_zones, point_distance)
+        case "UrbanAreas":
+            waypoints = GeneratePointsWithinCity(location_urban_areas, avoid_zones, point_distance)
+        case _:
+            raise ValueError(f'Invalid scope "{scope}"')
+        
+    osrm_shortest(current_request, session_id, origin, avoid_zones, waypoints, location_limits, location_urban_areas)
+
+
+# -----------------------------------------------------------------------------------#
+def osrm_ordered(current_request, session_id, cache_id, bounding_box, waypoints, needed_paths):
+    (latfI, lonfI) = pontosvisita[0]
+    wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}", level="debug")
+
+    pontosvisita = OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial)
+
+    RouteDetail = GenerateRouteMap(
+        RouteDetail, pontoinicial[0], pontoinicial[1], latfI, lonfI
+    )
+
+    for i in range(len(pontosvisita) - 1):
+        lati, loni = pontosvisita[i]
+        latf, lonf = pontosvisita[i + 1]
+        RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
+
+
+# -----------------------------------------------------------------------------------#
+def compute_routing_area(origin, waypoints, avoid_zones):
+    def compute_bounding_box(origin, waypoints, padding_km=50):
+        points   = waypoints + [origin]
+        lat_min  = min(point[0] for point in points)
+        lat_max  = max(point[0] for point in points)
+        lng_min  = min(point[1] for point in points)
+        lng_max  = max(point[1] for point in points)
+
+        lat_diff = padding_km / 111.0
+        lng_diff = padding_km / (111.0 * math.cos(math.radians((lat_min + lat_max)/2)))
+
+        lat_min -= lat_diff
+        lat_max += lat_diff
+        lng_min -= lng_diff
+        lng_max += lng_diff
+        return lat_min, lat_max, lng_min, lng_max
+
+    lat_min, lat_max, lng_min, lng_max = compute_bounding_box(origin, waypoints)
+    bounding_box = [
+        [lat_max, lng_min],
+        [lat_max, lng_max],
+        [lat_min, lng_max],
+        [lat_min, lng_min],
+    ]
+
+    routing_area = [
+        {
+            "name": "boundingBoxRegion", 
+            "coord": bounding_box
+        }
+    ]
+
+    for avoid_zone in avoid_zones:
+        routing_area.append({
+            "name": avoid_zone["name"].replace(" ", "_"), 
+            "coord": avoid_zone["coord"]
+        })
+
+    cached_routing_area = cb.cCacheBoundingBox.get_cache(routing_area)
+    if cached_routing_area is not None:
+        routing_area = cached_routing_area
+
+    return routing_area, bounding_box
+
+# -----------------------------------------------------------------------------------#
+def OrdenarPontos(origin, waypoints, routing_algorithm):
+    match routing_algorithm:
+        case "OSRM":
+            return OrdenarPontosDistanciaOSMR(origin, waypoints)        
+        case "OSRM:MultiThread":
+            return OrdenarPontosDistanciaOSMRMultiThread(origin, waypoints)        
+        case "Haversine":
+            return OrdenarPontosDistanciaGeodesica(origin, waypoints)
+        case "TravelingSalesman":
+            return OrdenarPontosTSP(origin, waypoints)        
+        case _:
+            return waypoints
 
 
 ###########################################################################################################################
@@ -225,66 +375,6 @@ def AltitudeOpenElevationBatch(batch, batch_size):
         MaxAltitude = int(MaxAltitude)
     return altitudes
 
-
-###########################################################################################################################
-def Gerar_Kml(polyline_rota, pontos_visita_dados, filename="rota.kml"):
-    # Cabeçalho do KML
-    kml_inicio = """<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2">
-    <Document>
-        <name>WebRotas Pontos e Rotas</name>
-        <!-- Definir estilos -->
-        <Style id="lineStyleBlue">
-        <LineStyle>
-            <color>ff00ff00</color> <!-- verde em formato ABGR -->
-            <width>4</width>
-        </LineStyle>
-        </Style>
-"""
-
-    # Footer do KML
-    kml_fim = """
-  </Document>
-</kml>"""
-
-    # Adicionar os pontos de visita
-    kml_pontos = ""
-    for latitude, longitude, id_ponto, tipo, descricao, altitude in pontos_visita_dados:
-        kml_pontos += f"""
-    <Placemark>
-        <name>{id_ponto}</name>
-        <description>{descricao}</description>
-        <Point>
-        <coordinates>{longitude},{latitude},{altitude}</coordinates>
-        </Point>
-    </Placemark>"""
-
-    # Adicionar a polilinha (rota)
-    kml_polyline = ""
-    for ind, polyLineTmp in enumerate(polyline_rota):
-        kml_polyline += f"""
-        <Placemark>
-        <name>Rota{ind}</name>
-        <styleUrl>#lineStyleBlue</styleUrl>
-        <LineString>
-            <coordinates>
-        """
-        for latitude, longitude in polyLineTmp:
-            kml_polyline += f"          {longitude},{latitude},0\n"
-        kml_polyline += """
-            </coordinates>
-        </LineString>
-        </Placemark>"""
-
-    # Combinar todas as partes
-    kml_conteudo = kml_inicio + kml_pontos + kml_polyline + kml_fim
-
-    with open(filename, "w", encoding="utf-8") as file:
-        file.write(kml_conteudo)
-
-    wLog(f"Arquivo KML '{filename}' gerado com sucesso!", level="debug")
-
-
 ###########################################################################################################################
 ServerTec = "OSMR"
 
@@ -299,60 +389,27 @@ def porta_disponivel(host, port):
 
 
 ###########################################################################################################################
-def GetRouteFromServer(start_lat, start_lon, end_lat, end_lon):
-
-    # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
-    # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115)
-
-    cached_response = cb.cCacheBoundingBox.route_cache_get(
-        start_lat, start_lon, end_lat, end_lon
-    )
+def GetRouteFromServer(start, end, osrm_port):
+    cached_response = cb.cCacheBoundingBox.route_cache_get(start["lat"], start["lng"], end["lat"], end["lng"])
     if cached_response is not None:
-        wLog(
-            f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}",
-            level="debug",
-        )
         return cached_response
 
-    # Coordenadas de início e fim
-    start_coords = (start_lat, start_lon)
-    end_coords = (end_lat, end_lon)
-
     if ServerTec == "OSMR":
-        # URL da solicitação ao servidor OSMR
-        url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{start_coords[1]},{start_coords[0]};{end_coords[1]},{end_coords[0]}?overview=full&geometries=polyline&steps=true"
+        URL = f"http://localhost:{osrm_port}/route/v1/driving/{start["lng"]},{start["lat"]};{end["lng"]},{end["lat"]}?overview=full&geometries=polyline&steps=true"
 
-    # http://localhost:50000/route/v1/driving/-51.512533967708904,-29.972345983755194;-51.72406122295204,-30.03608928259163?overview=full&geometries=polyline&steps=true
-
-    wLog(url, level="debug")
-    if porta_disponivel("localhost", UserData.OSMRport):
-        response = requests.get(url)
+    if porta_disponivel("localhost", osrm_port):
+        response = requests.get(URL)
         data = response.json()
-        if (
-            response.status_code == 200
-            and "routes" in data
-            and (route_failure(data) == False)
-        ):
-            cb.cCacheBoundingBox.route_cache_set(
-                start_lat, start_lon, end_lat, end_lon, response
-            )
+
+        if (response.status_code == 200 and "routes" in data and (route_failure(data) == False)):
+            cb.cCacheBoundingBox.route_cache_set(start["lat"], start["lng"], end["lat"], end["lng"], response)
             return response
 
-    wLog(
-        f"GetRouteFromServer erro na solicitacao - rota pedida nao existe ou servidor fora do ar ",
-        level="debug",
-    )
-    # cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
-    # Tenta buscar do cache
-    # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
-    # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115)
-    responseTmp = si.start_or_find_server_for_this_route(
-        start_lat, start_lon, end_lat, end_lon
-    )
+    responseTmp = si.start_or_find_server_for_this_route(start["lat"], start["lng"], end["lat"], end["lng"])
     if responseTmp == False:
         wLog(f"Não temos cache para a rota")
         return None
-    return GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
+    return GetRouteFromServer(start["lat"], start["lng"], end["lat"], end["lng"])
 
     cb.cCacheBoundingBox.route_cache_set(
         start_lat, start_lon, end_lat, end_lon, response
@@ -421,6 +478,7 @@ def GenerateRouteMapOSMR(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon)
 
     response = GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
     data = response.json()
+
     # Verificar se a solicitação foi bem-sucedida
     if response.status_code == 200 and "routes" in data:
         route = data["routes"][0]
@@ -439,51 +497,7 @@ def GenerateRouteMapOSMR(RouteDetailLoc, start_lat, start_lon, end_lat, end_lon)
 
 
 ###########################################################################################################################
-def GeneratePointsAround(latitude, longitude, radius_km=5, num_points=8):
-    """
-    Gera coordenadas de pontos em torno de um ponto central (latitude, longitude) em um raio especificado.
 
-    Args:
-    - latitude (float): Latitude do ponto central.
-    - longitude (float): Longitude do ponto central.
-    - radius_km (float): Raio em quilômetros para gerar os pontos ao redor.
-    - num_points (int): Número de pontos para gerar ao redor do ponto central.
-
-    Returns:
-    - List[Tuple[float, float]]: Lista de coordenadas dos pontos ao redor.
-    """
-    points = []
-
-    # Converter latitude e longitude de graus para radianos
-    lat_rad = math.radians(latitude)
-    lon_rad = math.radians(longitude)
-
-    # Raio da Terra em km
-    R = 6371.0
-
-    for i in range(num_points):
-        # Calcular o ângulo de cada ponto
-        angle = 2 * math.pi * i / num_points
-
-        # Calcular a nova latitude
-        new_lat_rad = math.asin(
-            math.sin(lat_rad) * math.cos(radius_km / R)
-            + math.cos(lat_rad) * math.sin(radius_km / R) * math.cos(angle)
-        )
-
-        # Calcular a nova longitude
-        new_lon_rad = lon_rad + math.atan2(
-            math.sin(angle) * math.sin(radius_km / R) * math.cos(lat_rad),
-            math.cos(radius_km / R) - math.sin(lat_rad) * math.sin(new_lat_rad),
-        )
-
-        # Converter de radianos para graus
-        new_lat = math.degrees(new_lat_rad)
-        new_lon = math.degrees(new_lon_rad)
-
-        points.append((new_lat, new_lon))
-
-    return points
 
 
 ###########################################################################################################################
@@ -493,179 +507,6 @@ def TimeStringTmp():
     # Formata a data e hora em uma string no formato AAAA-MM-DD_HH-MM-SS
     buf = agora.strftime("%Y-%m-%d_%H-%M-%S")
     return buf
-
-
-###########################################################################################################################
-def medir_tempo_execucao(funcao, *args, **kwargs):
-    inicio = time.perf_counter()  # alta resolução
-    resultado = funcao(*args, **kwargs)
-    fim = time.perf_counter()
-    tempo_execucao = fim - inicio
-    return tempo_execucao
-
-
-###########################################################################################################################
-def estimar_tempo_ordenacao(pontosvisita):
-    if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMRMultiThread":
-        tempo_uma_rota = medir_tempo_execucao(
-            DistanciaRota,
-            pontosvisita[0][0],
-            pontosvisita[0][1],
-            pontosvisita[1][0],
-            pontosvisita[1][1],
-        )
-        cpu_count = psutil.cpu_count(
-            logical=True
-        )  # threads lógicas, incluindo hyper-threading
-        if not pontosvisita:
-            return 0  # Nenhum ponto, nenhum tempo
-        num_pontos = len(pontosvisita)
-        tempo_estimado = (0.5 * num_pontos * num_pontos * tempo_uma_rota) / cpu_count
-
-        # wLog(
-        #     f"Depuração: tempo_uma_rota={tempo_uma_rota:.6f}s | cpu_count={cpu_count} | "
-        #     f"num_pontos={num_pontos} | tempo_estimado={tempo_estimado:.6f}s",
-        #     level="debug"
-        # )
-
-        return tempo_estimado
-    if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMR":
-        tempo_uma_rota = medir_tempo_execucao(
-            DistanciaRota,
-            pontosvisita[0][0],
-            pontosvisita[0][1],
-            pontosvisita[1][0],
-            pontosvisita[1][1],
-        )
-        if not pontosvisita:
-            return 0  # Nenhum ponto, nenhum tempo
-        num_pontos = len(pontosvisita)
-        tempo_estimado = 0.5 * num_pontos * num_pontos * tempo_uma_rota
-        return tempo_estimado
-    if UserData.AlgoritmoOrdenacaoPontos == "DistanciaGeodesica":
-        tempo_uma_rota = medir_tempo_execucao(
-            Haversine,
-            pontosvisita[0][0],
-            pontosvisita[0][1],
-            pontosvisita[1][0],
-            pontosvisita[1][1],
-        )
-        if not pontosvisita:
-            return 0  # Nenhum ponto, nenhum tempo
-        num_pontos = len(pontosvisita)
-        tempo_estimado = 0.5 * num_pontos * num_pontos * tempo_uma_rota
-        return tempo_estimado
-    if UserData.AlgoritmoOrdenacaoPontos == "TravelingSalesman":
-        tempo_uma_rota = medir_tempo_execucao(
-            DistanciaRota,
-            pontosvisita[0][0],
-            pontosvisita[0][1],
-            pontosvisita[1][0],
-            pontosvisita[1][1],
-        )
-        if not pontosvisita:
-            return 0  # Nenhum ponto, nenhum tempo
-        num_pontos = len(pontosvisita)
-        tempo_estimado = num_pontos * tempo_uma_rota * math.factorial(num_pontos)
-        return tempo_estimado
-    return 0
-
-
-###########################################################################################################################
-# Função para ordenar os pontos de visita, pelo ultimo mais próximo, segundo a chatgpt, algoritmo ganancioso...
-def OrdenarPontos(pontosvisita, pontoinicial):
-    # BenchmarkRotas(pontosvisita,pontoinicial)
-    tempoestimado = estimar_tempo_ordenacao(pontosvisita)
-    tempoestimado = formatar_tempo_vasto(tempoestimado)
-    wLog(
-        f"OrdenarPontos - Algoritmo rota otima: [{UserData.AlgoritmoOrdenacaoPontos}] - Tempo estimado: {tempoestimado}"
-    )
-
-    if (
-        UserData.AlgoritmoOrdenacaoPontos == "DistanciaGeodesica"
-    ):  # "DistanciaOSMR", "DistanciaGeodesica", "DistanciaOSMRMultiThread"
-        return OrdenarPontosDistanciaGeodesica(pontosvisita, pontoinicial)
-    if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMR":
-        return OrdenarPontosDistanciaOSMR(pontosvisita, pontoinicial)
-    if UserData.AlgoritmoOrdenacaoPontos == "DistanciaOSMRMultiThread":
-        return OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial)
-    if UserData.AlgoritmoOrdenacaoPontos == "TravelingSalesman":
-        return OrdenarPontosTSP(pontosvisita, pontoinicial)
-    return pontosvisita  # Nenhuma seleção, não ordena os pontos
-
-
-################################################################################
-def formatar_tempo_vasto(segundos):
-    # Exemplos de uso
-    # print(formatar_tempo(45))             # 45 segundos
-    # print(formatar_tempo(120))            # 2 minutos
-    # print(formatar_tempo(4000))           # 1.11 horas
-    # print(formatar_tempo(90000))          # 1.04 dias
-    # print(formatar_tempo(10**8))          # 38.58 anos
-    # print(formatar_tempo(10**13))         # 26.43 milhões de anos
-    # print(formatar_tempo(10**17))         # 8.77 bilhões de anos
-    from decimal import Decimal, getcontext
-
-    getcontext().prec = 1000
-
-    unidades = [
-        ("minuto", 60),
-        ("hora", 60),
-        ("dia", 24),
-        ("mês", 30),
-        ("ano", 12),
-        ("milênio", 1000),
-        ("milhão de anos", 1000),
-        ("bilhão de anos", 1000),
-        ("trilhão de anos", 1000),
-        ("quadrilhão de anos", 1000),
-        ("quintilhão de anos", 1000),
-        ("sextilhão de anos", 1000),
-        ("septilhão de anos", 1000),
-        ("octilhão de anos", 1000),
-        ("nonilhão de anos", 1000),
-        ("decilhão de anos", 1000),
-        ("undecilhão de anos", 1000),
-        ("duodecilhão de anos", 1000),
-        ("tredecilhão de anos", 1000),
-        ("quattuordecilhão de anos", 1000),
-        ("quindecilhão de anos", 1000),
-        ("sexdecilhão de anos", 1000),
-        ("septendecilhão de anos", 1000),
-        ("octodecilhão de anos", 1000),
-        ("novemdecilhão de anos", 1000),
-        ("vigesilhão de anos", 1000),
-        ("centilhão de anos", 1000),
-        ("ducentilhão de anos", 1000),
-        ("trecentilhão de anos", 1000),
-        ("quadringentilhão de anos", 1000),
-        ("quingentilhão de anos", 1000),
-        ("sescentilhão de anos", 1000),
-        ("septingentilhão de anos", 1000),
-        ("octingentilhão de anos", 1000),
-        ("nongentilhão de anos", 1000),
-        ("milhêsilhão de anos", 1000),
-        (
-            "googol de anos",
-            Decimal("1e100"),
-        ),  # apena decorativo o valor verdadeiro faz o python falhar  ("googol de anos", 10**100)
-        (
-            "googolplex de anos",
-            Decimal("1e10000"),
-        ),  # apena decorativo o valor verdadeiro faz o python falhar ("googolplex de anos", 10**(10**100)),
-    ]
-    valor = segundos
-    nome = "segundo"
-    for nome_unidade, fator in unidades:
-        if valor < fator:
-            break
-        valor /= fator
-        nome = nome_unidade
-
-    valor_formatado = f"{valor:.2f}".rstrip("0").rstrip(".")
-    return f"{valor_formatado} {nome}" + (
-        "s" if float(valor_formatado) != 1 and not nome.endswith("s") else ""
-    )
 
 
 ################################################################################
@@ -774,6 +615,7 @@ def formatar_duracao_osrm(duracao_em_segundos):
 def DistanciaRota(start_lat, start_lon, end_lat, end_lon):
     response = GetRouteFromServer(start_lat, start_lon, end_lat, end_lon)
     data = response.json()
+
     # Verificar se a solicitação foi bem-sucedida
     if response.status_code == 200 and "routes" in data:
         dist, temp = calcular_distancia_totalOSMR(data)
@@ -1021,99 +863,6 @@ def VerificarServidorAtivo(url, reposta, tentativas=10, intervalo=1):
 
 
 ################################################################################
-def DesenhaRegioes(RouteDetail, regioes):
-    # Processa as regiões
-    wLog("Plotando Regiões de mapeamento e exclusões")
-
-    RegiaoExclusão = False
-    for regiao in regioes:
-        nome = regiao.get("nome", "Sem Nome").replace(" ", "")
-        if "!" in nome:
-            nome = nome.replace("!", "")
-            RegiaoExclusão = True
-        else:
-            RegiaoExclusão = False
-
-        RouteDetail.append_mapcode(f"    regiao{nome} = [")
-        coordenadas = regiao.get("coord", [])
-        wLog(f"  Região: {nome}", level="debug")
-        i = 0
-        for coord in coordenadas:
-            latitude, longitude = coord
-            if i == len(coordenadas) - 1:  # Verifica se é o último elemento
-                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}]")
-            else:
-                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}],")
-
-            i = i + 1
-        RouteDetail.append_mapcode(f"    ];")
-        if RegiaoExclusão:
-            RouteDetail.append_mapcode(
-                f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'red',fillColor: 'lightred',fillOpacity: 0.2, weight: 1}}).addTo(map);"
-            )
-        else:
-            RouteDetail.append_mapcode(
-                f"var polygon{nome} = L.polygon(regiao{nome}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);"
-            )
-    return RouteDetail
-
-
-################################################################################
-def DesenhaMunicipio(RouteDetail, nome, polMunicipio):
-    indPol = 0
-    nome = wl.SubstAcentos(nome).replace(" ", "_")
-    for poligons in polMunicipio:
-        i = 0
-        # RouteDetail.mapcode += f"    municipio{nome}Pol{indPol} = [\n"
-        RouteDetail.append_mapcode(f"    municipio{nome}Pol{indPol} = [")
-
-        for coordenada in poligons:
-            # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
-            longitude, latitude = coordenada
-            if i == len(poligons) - 1:  # Verifica se é o último elemento
-                # RouteDetail.mapcode += f"       [{latitude}, {longitude}]]\n"
-                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}]]")
-            else:
-                # RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
-                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}],")
-            i = i + 1
-        # RouteDetail.mapcode += f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);\n"
-        RouteDetail.append_mapcode(
-            f"var polygonMun{nome}{indPol} = L.polygon(municipio{nome}Pol{indPol}, {{ color: 'green',fillColor: 'lightgreen',fillOpacity: 0.0, weight: 1}}).addTo(map);"
-        )
-        indPol = indPol + 1
-    return RouteDetail
-
-
-################################################################################
-def DesenhaMunicipioAreasUrbanizadas(RouteDetail, nome, polMunicipioAreas):
-    indPol = 0
-    nome = wl.SubstAcentos(nome).replace(" ", "_")
-    for poligons in polMunicipioAreas:
-        i = 0
-        # RouteDetail.mapcode += f"    municipioAreasUrbanizadas{nome}Pol{indPol} = [\n"
-        RouteDetail.append_mapcode(
-            f"    municipioAreasUrbanizadas{nome}Pol{indPol} = ["
-        )
-        for coordenada in poligons:
-            # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
-            longitude, latitude = coordenada
-            if i == len(poligons) - 1:  # Verifica se é o último elemento
-                # RouteDetail.mapcode += f"       [{latitude}, {longitude}]]\n"
-                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}]]")
-            else:
-                # RouteDetail.mapcode += f"       [{latitude}, {longitude}],"
-                RouteDetail.append_mapcode(f"       [{latitude}, {longitude}],")
-            i = i + 1
-        # RouteDetail.mapcode += f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);\n"
-        RouteDetail.append_mapcode(
-            f"var polygonMunAreasUrbanizadas{nome}{indPol} = L.polygon(municipioAreasUrbanizadas{nome}Pol{indPol}, {{ color: 'rgb(74, 73, 73)',fillColor: 'lightblue',fillOpacity: 0.0, weight: 1, dashArray: '4, 4'}}).addTo(map);"
-        )
-        indPol = indPol + 1
-    return RouteDetail
-
-
-################################################################################
 def GeneratePointsWithinCity(city_boundary: list, regioes: list, distance: int) -> list:
     """
     Gera uma lista de pontos (lat, lon) distribuídos dentro da área delimitada por um polígono.
@@ -1195,20 +944,6 @@ def GeneratePointsWithinCity(city_boundary: list, regioes: list, distance: int) 
 
 
 ################################################################################
-def ServerSetupJavaScript(RouteDetail):
-    if ServerTec == "OSMR":
-        # RouteDetail.mapcode += f"    const ServerTec = 'OSMR';\n"
-        # RouteDetail.mapcode += f"    const UserName = '{UserData.nome}';\n"
-        # RouteDetail.mapcode += f"    const OSRMPort = {UserData.OSMRport};\n"
-
-        RouteDetail.append_mapcode(f"    const ServerTec = 'OSMR';")
-        RouteDetail.append_mapcode(f"    const UserName = '{UserData.ssid}';")
-        RouteDetail.append_mapcode(f"    const OSRMPort = {UserData.OSMRport};")
-
-    return RouteDetail
-
-
-################################################################################
 def calc_km2_regiao(regioes: list, nome_alvo: str = "boundingBoxRegion") -> float:
     """
     Calcula a área em km² da região nomeada dentro da lista de regiões.
@@ -1249,40 +984,8 @@ def get_polyline_comunities(regioes):
         cb.cCacheBoundingBox.comunidades_cache.add_polyline(
             regioes, polylinesComunidades
         )
-    gi.cGuiOutput.json_comunities_create(polylinesComunidades)
+    rrm.cGuiOutput.json_comunities_create(polylinesComunidades)
     return polylinesComunidades
-
-
-################################################################################
-def DesenhaComunidadesOLD(RouteDetail, polylinesComunidades):
-
-    RouteDetail.mapcode += f"listComunidades = [\n"
-    indPol = 0
-    for polyline in polylinesComunidades:
-        i = 0
-        RouteDetail.mapcode += f"[\n"
-        for coordenada in polyline:
-            # wLog(f"Latitude: {coordenada[1]}, Longitude: {coordenada[0]}")  # Imprime (lat, lon)
-            lat, lon = coordenada
-            if i == len(polyline) - 1:  # Verifica se é o último elemento
-                RouteDetail.mapcode += f"[{lat}, {lon}]\n"
-            else:
-                RouteDetail.mapcode += f"[{lat}, {lon}],"
-            i = i + 1
-        if indPol == len(polylinesComunidades) - 1:  # Verifica se é o último elemento
-            RouteDetail.mapcode += f"]\n"
-        else:
-            RouteDetail.mapcode += f"],\n"
-        indPol = indPol + 1
-    RouteDetail.mapcode += f"];\n"
-
-    RouteDetail.mapcode += f"let polyComunidades = [];"
-    i = 0
-    for polyline in polylinesComunidades:
-        RouteDetail.mapcode += f"polyTmp = L.polygon(listComunidades[{i}], {{ color: 'rgb(102,0,204)',fillColor: 'rgb(102,0,204)',fillOpacity: 0.3, weight: 1}}).addTo(map);\n"
-        RouteDetail.mapcode += f"polyComunidades.push(polyTmp);\n"
-        i = i + 1
-    return RouteDetail
 
 
 ################################################################################
@@ -1330,79 +1033,7 @@ def RouteCompAbrangencia(
         tuple: Arquivos de saída (mapa, mapa estático, KML).
     """
 
-    UserData.ssid = user
-    UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
-    UserData.RaioDaEstacao = data["RaioDaEstacao"]
-    UserData.GpsProximoPonto = data["GpsProximoPonto"]
-
-    # wLog("GetBoundMunicipio e FiltrarAreasUrbanizadasPorMunicipio")
-
-    polMunicipio, polMunicipioAreasUrbanizadas = get_areas_urbanas_cache(cidade, uf)
-
-    gi.cGuiOutput.limits = polMunicipio
-    gi.cGuiOutput.urbanAreas = polMunicipioAreasUrbanizadas
-
-    match escopo:
-        case "AreasUrbanizadas":
-            pontosvisita = GeneratePointsWithinCity(
-                polMunicipioAreasUrbanizadas, regioes, distanciaPontos
-            )
-        case "Municipio":
-            pontosvisita = GeneratePointsWithinCity(
-                polMunicipio, regioes, distanciaPontos
-            )
-        case _:
-            raise ValueError(f"Escopo '{escopo}' não é válido.")
-
-    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita)
-    si.PreparaServidorRoteamento(regioes)
-    RouteDetail = ClRouteDetailList()
-    RouteDetail.pontoinicial = pontoinicial
-
-    wLog("Desenhando Comunidades, Areas Urbanizadas e Município:")
-    RouteDetail = ServerSetupJavaScript(RouteDetail)
-
-    RouteDetail.append_mapcode("    const TipoRoute = 'CompAbrangencia';")
-
-    polylinesComunidades = get_polyline_comunities(regioes)
-    RouteDetail.DesenhaComunidades(polylinesComunidades)
-
-    RouteDetail = DesenhaMunicipioAreasUrbanizadas(
-        RouteDetail, cidade, polMunicipioAreasUrbanizadas
-    )
-    RouteDetail = DesenhaMunicipio(RouteDetail, cidade, polMunicipio)
-
-    wLog("Ordenando e processando Pontos de Visita:")
-
-    pontosvisita = OrdenarPontos(pontosvisita, pontoinicial)
-    RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
-
-    RouteDetail = DesenhaRegioes(RouteDetail, regioes)
-    # cWrJsOut.DesenhaRegioes(RouteDetail, regioes)
-
-    RouteDetail.GeraMapPolylineCaminho()
-
-    fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "CompAbrangencia")
-    return fileMap, fileNameStatic, fileKml
-
-
-################################################################################
-def GeraArquivosSaida(RouteDetail, tipoServico):
-    buf = TimeStringTmp()
-    fileMap = f"WebRotas{tipoServico}{buf}.html"
-    fileName = f"templates/{fileMap}"
-    gm.GeraMapaLeaflet(fileName, RouteDetail)
-
-    fileMapStatic = f"WebRotas{tipoServico}Static{buf}.html"
-    fileNameStaticF = f"templates/{fileMapStatic}"
-    gm.GeraMapaLeaflet(fileNameStaticF, RouteDetail, static=True)
-
-    fileKml = f"WebRotas{tipoServico}{buf}.kml"
-    fileKmlF = f"templates/{fileKml}"
-    # GerarKml(pontosvisita,fileKmlF)
-    Gerar_Kml(RouteDetail.coordinates, RouteDetail.pontosvisitaDados, filename=fileKmlF)
-
-    return fileMap, fileMapStatic, fileKml
+    
 
 
 ################################################################################
@@ -1431,41 +1062,6 @@ def FileToDataUrlBase64(file_path):
         return data_url
     except Exception as e:
         raise ValueError(f"Erro ao processar o arquivo: {e}")
-
-
-################################################################################
-# Exemplo de uso
-# file_path = "caminho_para_o_arquivo.png"
-# data_url = file_to_data_url(file_path)
-# print(data_url)
-
-
-################################################################################
-def DeclaracaopontosvisitaDadosJS(pontosvisitaDados):
-    """
-    Gera uma declaração em JavaScript para uma lista de pontos.
-
-    Args:
-        dados (list): Lista de pontos no formato [lat, lon, tipo, descrição].
-
-    Returns:
-        str: String contendo a declaração JavaScript.
-    """
-    # Gerar o array formatado
-    i = 0
-    # [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"],
-    js_array = "[\n"
-    for ponto in pontosvisitaDados:
-        js_array += f'    [{ponto[0]}, {ponto[1]},"{ponto[2]}","{ponto[3]}", "{ponto[4]}","{ponto[5]}","Ativo"],\n'
-        i = i + 1
-    js_array = (
-        js_array.rstrip(",\n") + "\n]"
-    )  # Remover a última vírgula e adicionar fechamento
-
-    # Criar a declaração completa
-    js_code = '// Formato pontosvisitaDados - [-22.88169706392197, -43.10262976730735,"P0","Local", "Descrição","Altitude","Ativo"]\n'
-    js_code = js_code + f"var pontosvisitaDados = {js_array};\n"
-    return js_code
 
 
 ################################################################################
@@ -1584,9 +1180,7 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
             pontosvisitaDados
         )  # Batch faz chamadas em lote para o OpenElevation
 
-    RouteDetail.append_mapcode(DeclaracaopontosvisitaDadosJS(pontosvisitaDados))
-
-    gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
+    rrm.cGuiOutput.pontosvisitaDados = pontosvisitaDados
     RouteDetail.pontosvisitaDados = pontosvisitaDados
 
     RouteDetail.append_mapcode(
@@ -1642,9 +1236,9 @@ def PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados):
             RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
         i = i + 1
     # ----------------------------------------------------------------------
-    gi.cGuiOutput.waypoints_route = RouteDetail.coordinates
-    gi.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
-    gi.cGuiOutput.estimated_time = RouteDetail.tempo_total
+    rrm.cGuiOutput.waypoints_route = RouteDetail.coordinates
+    rrm.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
+    rrm.cGuiOutput.estimated_time = RouteDetail.tempo_total
     # ----------------------------------------------------------------------
     RouteDetail.DeclaraArrayRotas()
     RouteDetail.append_mapcode(
@@ -1678,7 +1272,7 @@ def adjust_pontosvisitadados(pontosvisita, pontosvisitaDados):
 def PlotaPontosVisitaNoJS(RouteDetail, pontosvisita, pontosvisitaDados):
     # ----------------------------------------------------------------------
     pontosvisitaDados = adjust_pontosvisitadados(pontosvisita, pontosvisitaDados)
-    gi.cGuiOutput.pontosvisitaDados = pontosvisitaDados
+    rrm.cGuiOutput.pontosvisitaDados = pontosvisitaDados
     # ----------------------------------------------------------------------
     RouteDetail.pontosvisitaDados = pontosvisitaDados
     lat = RouteDetail.pontoinicial[0]
@@ -1706,18 +1300,11 @@ def PlotaPontosVisitaNoJS(RouteDetail, pontosvisita, pontosvisitaDados):
             RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
         i = i + 1
     # ----------------------------------------------------------------------
-    gi.cGuiOutput.waypoints_route = RouteDetail.coordinates
-    gi.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
-    gi.cGuiOutput.estimated_time = RouteDetail.tempo_total
+    rrm.cGuiOutput.waypoints_route = RouteDetail.coordinates
+    rrm.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
+    rrm.cGuiOutput.estimated_time = RouteDetail.tempo_total
     # ----------------------------------------------------------------------
     return RouteDetail
-
-
-################################################################################
-def PegaPontosVisita(pontosvisitaDados):
-    pontosvisita = []
-    pontosvisita = [[ponto[0], ponto[1]] for ponto in pontosvisitaDados]
-    return pontosvisita
 
 
 ################################################################################
@@ -1734,111 +1321,6 @@ def AltitudePontoVisita(pontosvisitaDados, lat, lon):
         if ponto[0] == lat and ponto[1] == lon:
             return ponto[5]  # Retorna o campo de altitude (5º elemento)
     return "Endereço não encontrado para a latitude e longitude fornecidas."
-
-
-################################################################################
-def RoteamentoOSMR(username, porta, pontosvisita, pontoinicial, recalcularrota):
-    UserData.ssid = username
-    UserData.OSMRport = porta
-    RouteDetail = ClRouteDetailList()
-
-    # Calcula trecho de roto do pontoinicial ao primeiro ponto de visita
-    (latfI, lonfI) = pontosvisita[0]
-    wLog(f"RoteamentoOSMR - pontosvisita[0] {latfI},{lonfI}", level="debug")
-
-    if recalcularrota == 1:
-        wLog(f"Reordenando pontos de visita", level="debug")
-        pontosvisita = OrdenarPontosDistanciaOSMRMultiThread(pontosvisita, pontoinicial)
-
-    RouteDetail = GenerateRouteMap(
-        RouteDetail, pontoinicial[0], pontoinicial[1], latfI, lonfI
-    )
-
-    for i in range(len(pontosvisita) - 1):
-        lati, loni = pontosvisita[i]
-        latf, lonf = pontosvisita[i + 1]
-        wLog(f"GenerateRouteMap - {lati},{loni} - {latf},{lonf}")
-        RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
-
-    return (
-        RouteDetail.coordinates,
-        RouteDetail.DistanceTotal,
-        RouteDetail.tempo_total,
-        pontosvisita,
-    )
-
-################################################################################
-def osrm_custom_route(data):
-    """
-    Trata-se de função que suporta a criação da rota customizada, decorrente da troca
-    do ponto inicial (origin) ou da ordem dos pontos a visitar (waypoints).
-
-    Deve retornar os paths:
-     paths[0]  = origin        → waypoints[0]
-     paths[1]  = waypoints[0]  → waypoints[1] 
-     ... 
-     paths[-1] = waypoints[-2] → waypoints[-1]
-
-    Para tanto, deve-se interrogar o servidor OSRM (Open Source Routing Machine) sempre
-    que o path específico seja desconhecido. Se não há troca no paths[0], por exemplo, 
-    mantém-se o path já conhecido, evitando nova requisição ao servidor.
-
-    Caso o servidor OSRM apresente instabilidade, retorna-se os próprios pontos
-    como path. O efeito disso é que, na visualização de mapa (no Leaflet), ficará 
-    uma linha conectando os pontos.
-
-    No front-end, cria-se um flag para controlar a qualidade da informação, que é o 
-    trigger para envio de outras requisições ao servidor para sanar pendências, 
-    como:
-    - Elevação de um ponto (origin ou waypoints);
-    - path entre dois pontos (paths).
-    """
-
-    UserData.ssid = username
-    UserData.OSMRport = osrm_port
-    RouteDetail = ClRouteDetailList()
-
-    ## Waypoints ##
-    waypoints = PegaPontosVisita(waypoints) # Converte pontos de visita para formato (lat, lon), eliminando eventual descrição
-
-    ## Bounding Box ##
-    # AtualizaRegioesBoudingBoxPontosVisita(avoid_zones, origin, waypoints) # boundingBox
-    # gi.cGuiOutput.pontoinicial = pontoinicial
-    # gi.cGuiOutput.bounding_box = box
-    gi.cGuiOutput.pontoinicial = origin
-    gi.cGuiOutput.pontoinicial = boundingBox
-
-    # si.PreparaServidorRoteamento(avoid_zones)
-
-    ## Location Urban Communities ##
-    get_polyline_comunities(avoid_zones)
-    # gi.cGuiOutput.json_comunities_create(polylinesComunidades)
-
-    ## Location Limits and Location Urban Areas ##
-    if initial_request == "CompAbrangencia":
-        cidade = data["cidade"]
-        uf = data["uf"]
-        polMunicipio, polMunicipioAreasUrbanizadas = get_areas_urbanas_cache(cidade, uf)
-        gi.cGuiOutput.limits = polMunicipio
-        gi.cGuiOutput.urbanAreas = polMunicipioAreasUrbanizadas
-    
-    ## RoutePath ##
-    if refresh_route == 1:
-        waypoints = OrdenarPontosDistanciaOSMRMultiThread(waypoints, origin)
-
-    (latfI, lonfI) = waypoints[0]
-    RouteDetail = GenerateRouteMap(
-        RouteDetail, origin[0], origin[1], latfI, lonfI
-    )
-
-    for ii in range(len(waypoints) - 1):
-        lati, loni = waypoints[ii]
-        latf, lonf = waypoints[ii + 1]
-        RouteDetail = GenerateRouteMap(RouteDetail, lati, loni, latf, lonf)
-
-    gi.cGuiOutput.waypoints_route    = RouteDetail.coordinates
-    gi.cGuiOutput.estimated_distance = RouteDetail.DistanceTotal
-    gi.cGuiOutput.estimated_time     = RouteDetail.tempo_total
 
 ################################################################################
 def create_standard_cache(data):
@@ -1909,183 +1391,6 @@ def update_regions_bounding_box(bbox, regioes):
         NewRegioes = cb.cCacheBoundingBox.get_cache(NewRegioes)
 
     return NewRegioes
-
-
-################################################################################
-def RoutePontosVisita(data, user, pontoinicial, pontosvisitaDados, regioes):
-    UserData.ssid = user
-    UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
-    UserData.RaioDaEstacao = data["RaioDaEstacao"]
-    UserData.GpsProximoPonto = data["GpsProximoPonto"]
-
-    pontosvisita = PegaPontosVisita(pontosvisitaDados)
-    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita)
-    si.PreparaServidorRoteamento(regioes)
-
-    # GetRouteFromServer(-29.972345983755194, -51.512533967708904,-30.03608928259163, -51.72406122295204)
-
-    RouteDetail = ClRouteDetailList()
-    RouteDetail.pontoinicial = pontoinicial
-
-    wLog("Desenhando Comunidades:")
-    RouteDetail = ServerSetupJavaScript(RouteDetail)
-    RouteDetail.append_mapcode(f"    const TipoRoute = 'PontosVisita';")
-
-    polylinesComunidades = get_polyline_comunities(regioes)
-    RouteDetail.DesenhaComunidades(polylinesComunidades)
-
-    # Processa Pontos de Visita
-    wLog(f"Ordenando e processando Pontos de Visita: ")
-    pontosvisita = OrdenarPontos(pontosvisita, pontoinicial)
-
-    RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, pontosvisitaDados)
-    RouteDetail = DesenhaRegioes(RouteDetail, regioes)
-    RouteDetail.GeraMapPolylineCaminho()
-
-    fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "PontosVisita")
-    return fileMap, fileNameStatic, fileKml
-
-
-###########################################################################################################################
-def AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita):
-
-    lat_min, lat_max, lon_min, lon_max = calcula_bounding_box_pontos(
-        pontoinicial, pontosvisita, margem_km=50
-    )
-    NewRegioes = []
-
-    box = [
-        [lat_max, lon_min],
-        [lat_max, lon_max],
-        [lat_min, lon_max],
-        [lat_min, lon_min],
-    ]
-    regioesglobal = {"name": "boundingBoxRegion", "coord": box}
-
-    gi.cGuiOutput.pontoinicial = pontoinicial
-    gi.cGuiOutput.bounding_box = box
-
-    NewRegioes.append(regioesglobal)
-    for regiao in regioes:
-        nome = regiao.get("nome", "SemNome").replace(" ", "_")
-        coordenadas = regiao.get("coord", [])
-        regiaook = {"name": nome, "coord": coordenadas}
-        NewRegioes.append(regiaook)
-
-    if cb.cCacheBoundingBox.get_cache(NewRegioes) is not None:
-        NewRegioes = cb.cCacheBoundingBox.get_cache(NewRegioes)
-
-    return NewRegioes
-
-
-###########################################################################################################################
-def calcula_bounding_box_pontos(pontoinicial, pontos, margem_km=50):
-    """
-    Calcula um bounding box expandido em torno de um grupo de pontos, incluindo um ponto inicial.
-
-    Args:
-        pontoinicial (tuple): Coordenadas do ponto inicial (lat, lon).
-        pontos (list): Lista de coordenadas [(lat, lon), ...].
-        margem_km (float): Margem adicional em km ao redor do grupo de pontos.
-
-    Returns:
-        dict: Limites do bounding box (lat_min, lat_max, lon_min, lon_max).
-    """
-    if not pontos:
-        raise ValueError("A lista de pontos não pode estar vazia.")
-
-    # Inclui o ponto inicial na lista de pontos
-    todos_pontos = pontos + [pontoinicial]
-
-    # Determina os limites mínimos e máximos de latitude e longitude
-    lat_min = min(p[0] for p in todos_pontos)
-    lat_max = max(p[0] for p in todos_pontos)
-    lon_min = min(p[1] for p in todos_pontos)
-    lon_max = max(p[1] for p in todos_pontos)
-
-    # Latitude média para ajustar a conversão de longitude
-    lat_media = (lat_min + lat_max) / 2
-
-    # 1 grau de latitude é aproximadamente 111 km
-    desloc_lat = margem_km / 111.0
-
-    # 1 grau de longitude varia com o cosseno da latitude
-    desloc_lon = margem_km / (111.0 * math.cos(math.radians(lat_media)))
-
-    # Adiciona a margem
-    lat_min -= desloc_lat
-    lat_max += desloc_lat
-    lon_min -= desloc_lon
-    lon_max += desloc_lon
-
-    return lat_min, lat_max, lon_min, lon_max
-
-
-###########################################################################################################################
-def RouteContorno(
-    data, user, pontoinicial, central_point, regioes, radius_km=5, num_points=8
-):
-    UserData.ssid = user
-    UserData.AlgoritmoOrdenacaoPontos = data["AlgoritmoOrdenacaoPontos"]
-    UserData.RaioDaEstacao = data["RaioDaEstacao"]
-    UserData.GpsProximoPonto = data["GpsProximoPonto"]
-
-    # Coordenadas da rota (exemplo de uma rota circular simples)
-
-    pontosvisita = GeneratePointsAround(
-        latitude=central_point[0],
-        longitude=central_point[1],
-        radius_km=radius_km,
-        num_points=num_points,
-    )
-
-    regioes = AtualizaRegioesBoudingBoxPontosVisita(regioes, pontoinicial, pontosvisita)
-
-    si.PreparaServidorRoteamento(regioes)
-
-    RouteDetail = ClRouteDetailList()
-    RouteDetail.pontoinicial = pontoinicial
-
-    wLog("Desenhando Comunidades:")
-    RouteDetail = ServerSetupJavaScript(RouteDetail)
-
-    RouteDetail.append_mapcode(f"    const TipoRoute = 'DriveTest';\n")
-
-    polylinesComunidades = get_polyline_comunities(regioes)
-    RouteDetail.DesenhaComunidades(polylinesComunidades)
-
-    # Criar um mapa centrado no ponto central
-    # RouteDetail.mapcode += f"    const map = L.map('map').setView([{central_point[0]}, {central_point[1]}], 13);\n"
-    RouteDetail.append_mapcode(
-        f"     map.setView([{central_point[0]}, {central_point[1]}], 13);\n"
-    )
-
-    # Adicionar uma marca no ponto central
-    RouteDetail.append_mapcode(
-        f"    var markerCentral = L.marker([{central_point[0]}, {central_point[1]}]).addTo(map); \n"
-    )
-    RouteDetail.append_mapcode(
-        f"    markerCentral.bindTooltip('Ponto Central', {{permanent: false,direction: 'top',offset: [0, -60],className:'custom-tooltip'}});\n"
-    )
-    RouteDetail.append_mapcode("     markerCentral.setIcon(iMarquerVerde);\n")
-
-    pontosvisita = OrdenarPontos(pontosvisita, pontoinicial)
-
-    # ---------------------
-    # Parei aqui
-
-    # RouteDetail = PlotaPontosVisitaNoJS(RouteDetail, pontosvisita, [])
-    RouteDetail = PlotaPontosVisita(RouteDetail, pontosvisita, [])
-
-    RouteDetail.DesenhaRegioes(regioes)
-
-    RouteDetail.GeraMapPolylineCaminho()
-    # GerarKml(coordenadasrota, filename="rota.kml")
-
-    # servidor temp     python3 -m http.server 8080
-    #
-    fileMap, fileNameStatic, fileKml = GeraArquivosSaida(RouteDetail, "Contorno")
-    return fileMap, fileNameStatic, fileKml
 
 
 ###########################################################################################################################

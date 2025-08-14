@@ -55,11 +55,11 @@ import project_folders as pf
 import CacheBoundingBox as cb
 import regions as rg
 import shapeFiles as sf
-import GuiOutput as gi
+from route_request_manager import RouteRequestManager as rrm
 
 import wlog as wl
 
-CONFIG_FILE = pf.PROJECT_PATH / "src" / "backend" / "webdir" / "containers_config.json"
+CONFIG_FILE = pf.PROJECT_PATH / "src" / "backend" / "webdir" / "config" / "containers.json"
 
 
 ################################################################################
@@ -550,7 +550,8 @@ def load_config_numcontainers():
     try:
         with open(CONFIG_FILE, "r") as f:
             config = json.load(f)
-            return int(config.get("numcontainersmax", 5))
+            return int(config.get("max_active_containers", 3))
+        
     except Exception as e:
         wr.wLog(f"Erro ao carregar {CONFIG_FILE}: {e}")
         return 4
@@ -905,7 +906,10 @@ def limpar_cache_files_osmr(regioes):
 ################################################################################
 def PreparaServidorRoteamento(regioes):
     roteamento_ok = False
-    gi.cGuiOutput.cache_id = cb.cCacheBoundingBox.chave(regioes)
+    
+    # Precisa identificar a instância correta da lista de requisições em andamento
+    rrm.cGuiOutput.cache_id = cb.cCacheBoundingBox.chave(regioes)
+    
     while not roteamento_ok:
         if cb.cCacheBoundingBox.get_cache(regioes) == None:  # servidor não tem cache ID
             wr.GeraArquivoExclusoes(
