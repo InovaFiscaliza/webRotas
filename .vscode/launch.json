@@ -37,37 +37,6 @@
             "args": ["argument_error"]
         },
         {
-            "name": "client -h",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/ucli/webrota_client.py",
-            "console": "integratedTerminal",
-            "args": ["-h"]
-        },
-        {
-            "name": "client exemplo_visita_rj.json",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/ucli/webrota_client.py",
-            "console": "integratedTerminal",
-            "args": ["${workspaceFolder}/tests/exemplo_visita_rj.json"]
-        },
-        {
-            "name": "client exemplo_abrangencia_rj_niteroi_geodesica.json",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/ucli/webrota_client.py",
-            "console": "integratedTerminal",
-            "args": ["${workspaceFolder}/tests/exemplo_abrangencia_rj_niteroi_geodesica.json"]
-        },        
-        {
-            "name": "client no args",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/ucli/webrota_client.py",
-            "console": "integratedTerminal"
-        },
-        {
             "name": "Current file",
             "type": "debugpy",
             "request": "launch",

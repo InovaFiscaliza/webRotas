@@ -15,13 +15,13 @@ Dependências:
 - `webRota` (importado como `wr`) deve fornecer `UserData.nome`.
 - `datetime` e `os` da biblioteca padrão.
 """
-import webRota as wr
+import web_rotas as wr
 import datetime
 import os
 
 # ---------------------------------------------------------------------------------------------
 WARNING_LEVEL = "info"
-_log_filename = "WebRotasServer.log"  # Agora com underline → uso interno
+_log_filename = "webRotasServer.log"  # Agora com underline → uso interno
 
 
 # ---------------------------------------------------------------------------------------------
@@ -36,32 +36,8 @@ def get_log_filename():
 
 
 # ---------------------------------------------------------------------------------------------
-def wLog(
-    log_string, level="info"
-):  # Levels "info","debug", "warning", "error", "critical"
-    levels = {"info": 1, "debug": 2, "warning": 3, "error": 4, "critical": 5}
-    current_level = levels.get(level.lower(), 0)
-
-    log_file = f"{_log_filename}.{wr.UserData.ssid}"  # Nome do arquivo de log
-
-    timStp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_string = SubstAcentos(log_string)
-    log_string = timStp + "  " + level.ljust(7) + " : " + log_string
-    try:
-        # Verifica se o arquivo existe
-        if not os.path.exists(log_file):
-            with open(log_file, "w") as file:
-                file.write(
-                    timStp + "  " + level.ljust(7) + " : " + "### Inicio do Log ###\n"
-                )  # Opcional: cabeçalho inicial
-        # Abre o arquivo no modo append (adicionar)
-        with open(log_file, "a") as file:
-            file.write(log_string + "\n")  # Escreve a mensagem com uma nova linha
-        if levels.get(WARNING_LEVEL.lower(), 0) >= current_level:
-            print(log_string)  # Também exibe a mensagem no console
-
-    except Exception as e:
-        print(f"Erro ao escrever no log: {e}")
+def wLog(log_string, level="info"):
+    print(log_string)
 
 
 # ---------------------------------------------------------------------------------------------

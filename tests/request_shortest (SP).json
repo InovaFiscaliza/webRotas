@@ -1,0 +1,49 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -23.587504,
+        "lng": -46.633257,
+        "description": "Anatel-SP"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -23.217560,
+                "lng": -45.897522,
+                "description": "São José dos Campos"
+            },
+            {
+                "lat": -21.166360,
+                "lng": -47.810019,
+                "description": "Ribeirão Preto"
+            },
+            {
+                "lat": -20.529933,
+                "lng": -48.603516,
+                "description": "Barretos"
+            },
+            {
+                "lat": -20.412195,
+                "lng": -49.977353,
+                "description": "Votuporanga"
+            },
+            {
+                "lat": -22.303742,
+                "lng": -49.077351,
+                "description": "Bauru"
+            },
+            {
+                "lat": -23.463595,
+                "lng": -47.484847,
+                "description": "Sorocaba"
+            },
+            {
+                "lat": -23.589475,
+                "lng": -46.693954,
+                "description": "Anatel-SP"
+            }
+        ]
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

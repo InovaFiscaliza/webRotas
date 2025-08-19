@@ -37,7 +37,6 @@
                     window.app.mapContext.settings.colormap.range = window.app.modules.Utils.Elevation.range(route);
                     window.app.modules.Components.updateColorbar();
                   //window.app.modules.Utils.GeoLocation.routeMidPoint(route);
-                    window.app.mapContext.layers.toolbarPositionSlider.mergedPaths = route.paths.flat();
 
                     switch (type) {
                         case 'draw': {
@@ -55,7 +54,7 @@
                             this.create('locationUrbanAreas',       routing.response.location.urbanAreas);
                             this.create('locationUrbanCommunities', routing.response.location.urbanCommunities);
                             this.create('routePath',                route.paths);
-                            this.create('toolbarPositionSlider',   [window.app.mapContext.layers.toolbarPositionSlider.mergedPaths[0]]);
+                            this.create('toolbarPositionSlider',   [route.paths[0]]);
                             break;
                         }
 

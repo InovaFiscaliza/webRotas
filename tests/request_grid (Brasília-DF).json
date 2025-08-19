@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -15.805380,
+        "lng": -47.882478,
+        "description": "Anatel-DF"
+    },
+    "parameters": {
+        "city": "Brasília",
+        "state": "DF",
+        "scope": "Location",
+        "pointDistance": 10000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

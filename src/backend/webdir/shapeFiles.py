@@ -34,28 +34,46 @@ Uso típico:
 """
 
 ###########################################################################################################################
-import webRota as wr
-import uf_code as uf
-
 from shapely.ops import unary_union
 import geopandas as gpd
 from shapely.geometry import box, Polygon, MultiPolygon
-import uf_code as uf
 import pyproj
 import math
+from pathlib import Path
+import time
 
-SHAPEFILE_MUNICIPIO_PATH = "../../resources/BR_Municipios/BR_Municipios_2023.shp"
-SHAPEFILE_FAVELA_PATH = "../../resources/Comunidades/qg_2022_670_fcu_agregPolygon.shp"
-SHAPEFILE_AREA_URBANIZADA_PATH = (
-    "../../resources/Urbanizacao/AU_2022_AreasUrbanizadas2019_Brasil.shp"
-)
+import web_rotas as wr
+import uf_code as uf
 
+#-----------------------------------------------------------------------------------#
+PATH_MODULE = Path(__file__).resolve().parent.parent.parent
+FILES = {
+    "locationLimits":           PATH_MODULE / "resources" / "BR_Municipios_2023.shp.parquet",                  # "BR_Municipios" / "BR_Municipios_2023.shp"
+    "locationUrbanAreas":       PATH_MODULE / "resources" / "AU_2022_AreasUrbanizadas2019_Brasil.shp.parquet", # "Urbanizacao" / "AU_2022_AreasUrbanizadas2019_Brasil.shp"
+    "locationUrbanCommunities": PATH_MODULE / "resources" / "qg_2022_670_fcu_agregPolygon.shp.parquet"         # "Comunidades" / "qg_2022_670_fcu_agregPolygon.shp"
+}
+CACHE = {}
 
-###########################################################################################################################
-# https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2023/Brasil/BR_Municipios_2023.zip
-##########################################################################################################################
+#-----------------------------------------------------------------------------------#
+def read_file(type: str):
+    if type not in FILES:
+        raise ValueError(f'Invalid geofile type "{type}"')
+    if type not in CACHE:
+        CACHE[type] = gpd.read_parquet(FILES[type])
+      # CACHE[type] = gpd.read_file(FILES[type])
+      # CACHE[type].to_parquet(f"{FILES[type]}.parquet")
+    return CACHE[type]
 
-##############################################################################################################
+#-----------------------------------------------------------------------------------#
+# TESTE DE PRE-CARREGAMENTO
+#-----------------------------------------------------------------------------------#
+for f in FILES:
+    start = time.perf_counter()
+    read_file(f)
+    end = time.perf_counter()
+    print(f"[webRotas] {f} loaded in {end - start:.2f} seconds")
+
+#-----------------------------------------------------------------------------------#
 def expand_bounding_box(box, margin_km):
     """
     Expande o bounding box em uma margem de distância ao redor (em km).
@@ -146,7 +164,7 @@ def uf_sigla_para_codigo_ibge(sigla):
 ##############################################################################################################
 def get_bounding_box_for_municipalities(lista_municipios):
     # Carrega o shapefile dos municípios
-    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+    gdf = read_file("locationLimits")
 
     entrada = {
         (
@@ -207,7 +225,7 @@ def get_bounding_box_from_states(estados_siglas: list) -> list:
     :return: Lista com as 4 coordenadas do bounding box combinado
     """
     # Carrega o shapefile completo de municípios
-    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+    gdf = read_file("locationLimits")
 
     # Obtém os códigos dos estados a partir das siglas
     codigos_uf = [uf.SIGLAS_UF[sigla]["CD_UF"] for sigla in estados_siglas]
@@ -243,11 +261,7 @@ def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
 
     :return: Lista de coordenadas [(lat, lon), ...] representando o limite do município.
     """
-    wr.wLog(f"GetBoundMunicipio - {nome_municipio},  {estado_sigla}")
-
-    # Carregar o arquivo Shapefile BR_Municipios_2023.shp
-
-    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+    gdf = read_file("locationLimits")
 
     # Filtrar município e estado
     municipio = gdf[
@@ -256,10 +270,7 @@ def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     ]
 
     if municipio.empty:
-        wr.wLog(
-            f"Município '{nome_municipio}' no estado '{estado_sigla}' não encontrado.",
-            level="debug",
-        )
+        print(f"Município '{nome_municipio}' no estado '{estado_sigla}' não encontrado.")
         return None
 
     # Obter a geometria do município
@@ -269,11 +280,6 @@ def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     # Extrair coordenadas como Polyline
     polyline = []
     if geometria.geom_type == "MultiPolygon":
-        # Se for MultiPolygon, concatenar coordenadas de todos os polígonos
-        wr.wLog(
-            "Foi multipoligon - Cidade possui ilhas ou áreas isoladas", level="debug"
-        )
-
         for polygon in geometria.geoms:
             polyline.append(list(polygon.exterior.coords))
     else:
@@ -292,22 +298,14 @@ def FiltrarComunidadesBoundingBox(bounding_box: tuple) -> list:
     :param bounding_box: Tupla contendo os limites do bounding box (minx, miny, maxx, maxy)
     """
     # Carregar o arquivo Shapefile
-    data = gpd.read_file(SHAPEFILE_FAVELA_PATH)
-
-    # Inspecionar os dados (opcional)
-    # print("Primeiras linhas do shapefile:")
-    # print(data.head())
-    # print("\nSistema de Coordenadas:")
-    # print(data.crs)
-    # print("\nColunas da tabela de atributos:")
-    # print(data.columns)
+    gdf = read_file("locationUrbanCommunities")
 
     # Criar um polígono representando o bounding box
     minx, miny, maxx, maxy = bounding_box
     bbox_polygon = box(minx, miny, maxx, maxy)
 
     # Filtrar os dados que estão dentro do bounding box
-    data_filtrada = data[data.geometry.intersects(bbox_polygon)]
+    data_filtrada = gdf[gdf.geometry.intersects(bbox_polygon)]
 
     polylines = []
 
@@ -324,10 +322,6 @@ def FiltrarComunidadesBoundingBox(bounding_box: tuple) -> list:
             for poly in geom.geoms:  # Acessar os polígonos do MultiPolygon
                 polylines.append([(lat, lon) for lon, lat in poly.exterior.coords])
 
-    # Imprimir a lista de polylines
-    # for i, polyline in enumerate(polylines):
-    #    print(f"Polyline {i+1}: {polyline}")
-
     return polylines
 
 
@@ -341,12 +335,9 @@ def FiltrarAreasUrbanizadasPorMunicipio(municipio_nome: str, estado_sigla: str) 
 
     :return: Lista de polylines representando as áreas urbanizadas do município.
     """
-
-    wr.wLog(f"FiltrarAreasUrbanizadasPorMunicipio - {municipio_nome} - {estado_sigla}")
-
     # Carregar os shapefiles
-    gdf_areas = gpd.read_file(SHAPEFILE_AREA_URBANIZADA_PATH)
-    gdf_municipios = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+    gdf_areas = read_file("locationUrbanAreas")
+    gdf_municipios = read_file("locationLimits")
 
     # Filtrar o município pelo nome e estado
     municipio_filtrado = gdf_municipios[
@@ -367,17 +358,12 @@ def FiltrarAreasUrbanizadasPorMunicipio(municipio_nome: str, estado_sigla: str) 
     # Cortar as áreas urbanizadas que extrapolam o município
     gdf_areas["geometry"] = gdf_areas["geometry"].intersection(municipio_poligono)
 
-    # print(gdf_areas['geometry'].is_empty.sum())  # Conta quantas geometrias vazias existem
-
     # Remover geometrias vazias (áreas que ficaram totalmente fora do município)
     gdf_areas = gdf_areas[~gdf_areas["geometry"].is_empty]
 
     # Filtrar pelas categorias de densidade
     densidades = ["Densa", "Pouco densa", "Loteamento vazio"]
     gdf_areas = gdf_areas[gdf_areas["densidade"].isin(densidades)]
-
-    # print(gdf_areas[gdf_areas.intersects(municipio_poligono)])
-    # print(gdf_areas['geometry'].geom_type.value_counts())
 
     # Converter os polígonos em polylines (listas de coordenadas)
     polylines = []
@@ -403,12 +389,8 @@ def ObterMunicipiosNoBoundingBox(bounding_box: tuple) -> list:
     :param bounding_box: Tupla (minx, miny, maxx, maxy)
     :return: Lista de strings no formato "Cidade-UF"
     """
-    import geopandas as gpd
-    from shapely.geometry import box
-    import uf_code as uf  # Certifique-se de que esse módulo está acessível
-
     # Carrega o shapefile de municípios
-    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+    gdf = read_file("locationLimits")
 
     # Cria polígono do bounding box
     minx, miny, maxx, maxy = bounding_box
@@ -448,7 +430,7 @@ def ObterMunicipiosNoBoundingBoxOrdenados(bounding_box: tuple) -> list:
              [{"location": "Cidade/UF", "dist": distância_km, "inBoundingBox": True}, ...]
     """
     # Carrega o shapefile de municípios
-    gdf = gpd.read_file(SHAPEFILE_MUNICIPIO_PATH)
+    gdf = read_file("locationLimits")
 
     # Cria polígono do bounding box
     minx, miny, maxx, maxy = bounding_box
@@ -495,6 +477,3 @@ def ObterMunicipiosNoBoundingBoxOrdenados(bounding_box: tuple) -> list:
     resultado.sort(key=lambda x: x["dist"])
 
     return resultado
-
-
-##############################################################################################################

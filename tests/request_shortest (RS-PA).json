@@ -1,0 +1,24 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -30.046765,
+        "lng": -51.205998,
+        "description": "Anatel-RS"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -30.043147,
+                "lng": -51.222966,
+                "description": ""
+            },
+            {
+                "lat": -1.447030,
+                "lng": -48.520011,
+                "description": ""
+            }
+        ]
+    },
+    "avoidZones": [], 
+    "criterion": "duration"
+}

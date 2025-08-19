@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -16.691903,
+        "lng": -49.267822,
+        "description": "Anatel-GO"
+    },
+    "parameters": {
+        "city": "Goiânia",
+        "state": "GO",
+        "scope": "Location",
+        "pointDistance": 3000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

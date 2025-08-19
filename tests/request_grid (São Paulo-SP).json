@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -23.587577,
+        "lng": -46.633261,
+        "description": "Anatel-SP"
+    },
+    "parameters": {
+        "city": "São Paulo",
+        "state": "SP",
+        "scope": "Location",
+        "pointDistance": 10000
+    },
+    "avoidZones": [],
+    "criterion": "distance"
+}

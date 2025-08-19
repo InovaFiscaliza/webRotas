@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -30.046908,
+        "lng": -51.205955,
+        "description": "Anatel-RS"
+    },
+    "parameters": {
+        "city": "Porto Alegre",
+        "state": "RS",
+        "scope": "Location",
+        "pointDistance": 5000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

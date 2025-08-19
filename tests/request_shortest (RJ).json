@@ -1,0 +1,39 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -22.902368,
+        "lng": -43.174200,
+        "description": "Anatel-RJ"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -22.510099,
+                "lng": -43.175840,
+                "description": "Petrópolis"
+            },
+            {
+                "lat": -22.417852,
+                "lng": -42.973280,
+                "description": "Teresópolis"
+            },
+            {
+                "lat": -22.281154,
+                "lng": -42.532454,
+                "description": "Nova Friburgo"
+            },
+            {
+                "lat": -22.462794,
+                "lng": -42.653475,
+                "description": "Cachoeiras de Macacu"
+            },
+            {
+                "lat": -22.412933,
+                "lng": -43.144684,
+                "description": "Itaipaiva"
+            }
+        ]
+    },
+    "avoidZones": [], 
+    "criterion": "duration"
+}

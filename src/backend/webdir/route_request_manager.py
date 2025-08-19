@@ -10,18 +10,12 @@ class RouteRequestManager:
     in_progress_requests = []
 
     def __init__(self, data=None, route_id=None):
-        self.reset()
-        self.request  = data
+        self.request = data
+        self.criterion = None
+        
         self.route_id = route_id        
-
-    def reset(self):
-        self.request = None
-
         self.session_id = None
         self.cache_id = None
-        self.route_id = None
-
-        self.osrm_port = None
 
         self.routing_area = None
         self.bounding_box = None
@@ -43,6 +37,50 @@ class RouteRequestManager:
             if hasattr(self, key):
                 setattr(self, key, value)
 
+    def create_initial_route(self):        
+        initial_route = {
+            "url": f"http://127.0.0.1:{env.port}/",
+            "type": "initialRoute",
+            "routing": [
+                {
+                    "request": self.request,
+                    "response": {
+                        "cacheId": f"{self.cache_id}",
+                        "boundingBox": self.bounding_box,
+                        "location": {
+                            "limits": self.location_limits,
+                            "urbanAreas": self.location_urban_areas,
+                            "urbanCommunities": self.location_urban_communities,
+                        },
+                        "routes": [
+                            self.route_for_gui()
+                        ],
+                    },
+                }
+            ],
+        }
+        return json.dumps(initial_route, indent=4, ensure_ascii=False)
+    
+    def create_custom_route(self):
+        custom_route = {
+            "type": "customRoute",
+            "route": self.route_for_gui()
+        }
+        return json.dumps(custom_route, indent=4, ensure_ascii=False)
+    
+    def route_for_gui(self):
+        route = {
+            "routeId": self.route_id,
+            "automatic": self.criterion != "ordered",
+            "created": f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}",
+            "origin": self.origin,
+            "waypoints": self.waypoints,
+            "paths": self.paths,
+            "estimatedDistance": self.estimated_distance,
+            "estimatedTime": self.estimated_time,
+        }
+        return route
+
     @classmethod
     def process_request(cls, request_type, data):
         match request_type:
@@ -54,7 +92,7 @@ class RouteRequestManager:
                 return new_request, True
 
             case "ordered":
-                route_id    = data["route_id"]
+                route_id    = data["parameters"]["routeId"]
 
                 old_request = cls.find_by_route_id(route_id)
                 if old_request:
@@ -70,97 +108,3 @@ class RouteRequestManager:
     @classmethod
     def find_by_route_id(cls, route_id):
         return next((req for req in cls.in_progress_requests if req.route_id == route_id), None)
-
-    def create_initial_route(self):
-        data = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        waypoints = self.gerar_waypoints(self.pontosvisitaDados)
-        self.estimated_distance = round(self.estimated_distance / 1000, 1)
-
-        # Round coordinates in waypoints_route
-        rounded_paths = []
-        if self.waypoints_route:
-            for path in self.waypoints_route:
-                rounded_path = []
-                for coord in path:
-                    rounded_path.append(self.round_coords(coord))
-                rounded_paths.append(rounded_path)
-
-        # Round coordinates in bounding_box
-        rounded_bounding_box = []
-        if self.bounding_box:
-            for coord in self.bounding_box:
-                rounded_bounding_box.append(self.round_coords(coord))
-
-        # Round coordinates in limits
-        rounded_limits = []
-        if self.limits:
-            for limit_group in self.limits:
-                rounded_group = []
-                for coord in limit_group:
-                    rounded_group.append(self.round_coords(coord))
-                rounded_limits.append(rounded_group)
-
-        # Round coordinates in urbanAreas
-        rounded_urban_areas = []
-        if self.urbanAreas:
-            for area in self.urbanAreas:
-                rounded_area = []
-                for coord in area:
-                    rounded_area.append(self.round_coords(coord))
-                rounded_urban_areas.append(rounded_area)
-
-        routes_buf = [
-            {
-                "routeId": self.route_id if self.route_id is not None else str(uuid.uuid4()),
-                "automatic": True,
-                "created": f"{data}",
-                "origin": {
-                    "lat": round(float(self.pontoinicial[0]), 6),
-                    "lng": round(float(self.pontoinicial[1]), 6),
-                    "elevation": -9999, # Precisa pesquisar essa altitude
-                    "description": f"{self.pontoinicial[2]}",
-                },
-                "waypoints": waypoints,
-                "paths": rounded_paths,
-                "estimatedDistance": self.estimated_distance,
-                "estimatedTime": self.estimated_time,
-            }
-        ]
-
-        estrutura = {
-            "url": f"http://127.0.0.1:{env.port}/",
-            "routing": [
-                {
-                    "request": self.requisition_data,
-                    "response": {
-                        "cacheId": f"{self.cache_id}",
-                        "boundingBox": rounded_bounding_box,
-                        "location": {
-                            "limits": rounded_limits,
-                            "urbanAreas": rounded_urban_areas,
-                            "urbanCommunities": self.jsonComunities,
-                        },
-                        "routes": routes_buf,
-                    },
-                }
-            ],
-        }
-
-        json_formatado = json.dumps(estrutura, indent=4, ensure_ascii=False)
-        return json_formatado
-    
-    def create_custom_route(self):
-        waypoints = self.gerar_waypoints(self.pontosvisitaDados)
-        self.estimated_distance = round(self.estimated_distance / 1000, 1)
-
-        routes_buf = {
-            "routeId": self.route_id,
-            "origin": self.origin,
-            "waypoints": self.waypoints,
-            "neededPaths": [],
-            "estimatedDistance": self.estimated_distance,
-            "estimatedTime": self.estimated_time
-        }
-
-        response = json.dumps(routes_buf, indent=4, ensure_ascii=False)
-        return response

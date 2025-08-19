@@ -2,17 +2,16 @@
     ## webRotas Utils ##      
     - *.*
       ├── projectInventory
-      ├── syncLocalStorage
       ├── consoleLog
       ├── uuid
       ├── hash
       ├── getTimeStamp
       ├── splitObject
       ├── defaultFileName
+      ├── strcmp
       ├── exportAsKML
       ├── exportAsZip
       ├── saveToFile
-      ├── resolvePushType
       ├── GeoLocation (class)
       │   ├── startLocationTracking
       │   ├── stopLocationTracking
@@ -55,25 +54,25 @@
             "images/route_white.svg",          // MENU DE NAVEGAÇÃO (1)
             "images/addFiles_32.png",          // PAINEL "ROTAS" (1)
             "images/Trash_32.png",             // PAINEL "ROTAS" (2)
-            "images/Edit_32.png",              // PAINEL "ROTAS" (3A)
             "images/pin_18.png",               // PAINEL "PONTO INICIAL" (1)
-            "images/arrow-left.png",           // TOOLBAR (1A)
             "images/import.png",               // TOOLBAR (2)
             "images/export.png",               // TOOLBAR (3)
-            "images/gps-off.png",              // TOOLBAR (4A)
-            "images/north.png",                // TOOLBAR (5A)
             "images/restore-initial-zoom.png", // TOOLBAR (6)
             "images/colorbar.svg",             // TOOLBAR (7)
             "images/layers.png"                // TOOLBAR (8)
         ],
         hiddenImagesOnLoad: [
             "images/red-circle-blink.gif",     // MENU DE NAVEGAÇÃO (2)
+            "images/Edit_32.png",              // PAINEL "ROTAS" (3A)
             "images/Edit_32Filled.png",        // PAINEL "ROTAS" (3B)
             "images/Ok_32Green.png",           // PAINEL "ROTAS" (4)
             "images/Delete_32Red.png",         // PAINEL "ROTAS" (5)            
+            "images/arrow-left.png",           // TOOLBAR (1A)
             "images/arrow-right.png",          // TOOLBAR (1B)
+            "images/gps-off.png",              // TOOLBAR (4A)
             "images/gps-on.png",               // TOOLBAR (4B)
-            "images/car-heading.png",          // TOOLBAR (5A)
+            "images/north.png",                // TOOLBAR (5A)
+            "images/car-heading.png",          // TOOLBAR (5B)            
             "images/info.svg",                 // POPUP (1)
             "images/question.svg",             // POPUP (2)
             "images/warning.svg",              // POPUP (3)
@@ -83,45 +82,6 @@
             //"images/pin.png"
         ]
     };
-
-    /*---------------------------------------------------------------------------------*/
-    function syncLocalStorage(type) {
-        switch (type) {
-            case 'startup':
-                /*
-                    Fluxo de inicialização:
-                    - Tenta recupera informação de localStorage (url, sessionId e rotas);
-                    - Cria sessionId, caso necessário; e
-                    - Atualiza url, caso o protocolo de comunicação seja "http" ou "https".
-                */
-                if (!!window.localStorage.getItem('routing') && !!JSON.parse(window.localStorage.getItem('routing')).length) {                    
-                    window.app.server.url       = window.localStorage.getItem('url');
-                    window.app.server.sessionId = window.localStorage.getItem('sessionId');
-                    window.app.routingContext   = JSON.parse(window.localStorage.getItem('routing'));
-                }
-
-                if (!window.app.server.sessionId) {
-                    window.app.server.sessionId = uuid();
-                }
-
-                if (['http:', 'https:'].includes(window.location.protocol)) {
-                    window.app.server.url = window.location.origin;
-                }
-                break;
-
-            case 'update':
-                if (window.app.routingContext.length === 0) {
-                    window.localStorage.clear();
-                    return;
-                }
-                
-                window.localStorage.setItem('appName',   window.app.name);
-                window.localStorage.setItem('sessionId', window.app.server.sessionId);
-                window.localStorage.setItem('url',       window.app.server.url);
-                window.localStorage.setItem('routing',   JSON.stringify(window.app.routingContext));
-                break;
-        }
-    }
 
     /*---------------------------------------------------------------------------------*/
     function consoleLog(msg, type = 'log') {
@@ -197,6 +157,11 @@
     const defaultFileName = (prefix = 'webRotas', extension = 'json') => {
         const timestamp = getTimeStamp('yyyy.mm.dd_THH.MM.SS');
         return `${prefix}_${timestamp}.${extension}`;
+    }
+
+    /*---------------------------------------------------------------------------------*/
+    function strcmp(a, b) {
+        return JSON.stringify(a, Object.keys(a).sort()) === JSON.stringify(b, Object.keys(b).sort());
     }
 
     /*---------------------------------------------------------------------------------*/
@@ -413,43 +378,6 @@
     
         if (revokeNeeded) {
             setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-        }
-    }
-
-    /*---------------------------------------------------------------------------------*/
-    function resolvePushType(returnedData) {
-        const routingContext = window.app.routingContext;
-        let renderUpdate = Array(returnedData.length).fill(true);
-
-        const strcmp = (a, b) => {
-            return JSON.stringify(a, Object.keys(a).sort()) === JSON.stringify(b, Object.keys(b).sort());
-        }
-
-        if (routingContext.length === 0) {
-            routingContext.push(...returnedData);
-        } else {
-            for (let ii = 0; ii < returnedData.length; ii++) {                
-                for (let jj = 0; jj < routingContext.length; jj++) {
-                    if (returnedData[ii].response.cacheId === routingContext[jj].response.cacheId && 
-                        strcmp(returnedData[ii].response.routes, routingContext[jj].response.routes)) {
-                        renderUpdate[ii] = false;
-                        break;
-                    }
-                }
-
-                if (renderUpdate[ii]) {
-                    routingContext.push(returnedData[ii]);
-                }
-            }
-        }
-
-        if (renderUpdate.some(Boolean)) {
-            window.app.modules.Layout.controller('routeLoaded', 0, 0);
-            window.app.modules.Plot.controller('draw', 0, 0);
-            return true;
-        } else {
-            new DialogBox('Route is already in the list');
-            return false;
         }
     }
 
@@ -744,18 +672,17 @@
     }
 
     window.app.modules.Utils = {
-        syncLocalStorage,
         consoleLog,
         uuid,
         hash,
         getTimeStamp,
         splitObject,
         defaultFileName,
+        strcmp,
         exportAsJSON,
         exportAsKML,
         exportAsZip,
         saveToFile,
-        resolvePushType,
         GeoLocation,
         Elevation,
         Image

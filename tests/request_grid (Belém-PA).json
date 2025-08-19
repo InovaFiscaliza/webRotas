@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -1.427402,
+        "lng": -48.485215,
+        "description": "Anatel-PA"
+    },
+    "parameters": {
+        "city": "Belém",
+        "state": "PA",
+        "scope": "Location",
+        "pointDistance": 10000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

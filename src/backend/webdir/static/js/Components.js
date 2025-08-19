@@ -27,8 +27,8 @@
         static createNavBar() {
             const container = window.document.getElementById('app');
             const navbar = this.createElement('nav', {
-                classList: ['grid'],
-                id: 'navbar'
+                id: 'navbar',
+                classList: ['grid']                
             }, container);
 
             Object.assign(navbar.style, { 
@@ -44,8 +44,8 @@
             }, navbar)
 
             this.createElement('button', {
-                classList: ['btn-input'],
                 id: 'serverStatusBtn',
+                classList: ['btn-input'],                
                 style: { 
                     gridArea: '1 / 2 / 2 / 3',
                     display: (window.location.protocol === "file:") ? 'block' : 'none',
@@ -61,8 +61,8 @@
             }, navbar);
 
             this.createElement('button', {
-                classList: ['btn-input'],
                 id: 'appInfoBtn',
+                classList: ['btn-input'],                
                 textContent: '⋮',
                 style: { 
                     gridArea: '1 / 3 / 2 / 4',
@@ -108,13 +108,13 @@
         static createContextMenu() {
             const document = window.document.getElementById('document');
             const context  = this.createElement('div', {
-                classList: ['context-menu'],
-                id: 'contextMenu'
+                id: 'contextMenu',
+                classList: ['context-menu']                
             }, document);
 
             this.createElement('div', {
-                classList: ['context-menu-item'],
                 id: 'contextMenuCoords',
+                classList: ['context-menu-item'],                
                 textContent: 'Coordenadas: -1, -1',
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onContextMenuItemSelected(event)
@@ -122,8 +122,8 @@
             }, context);
 
             this.createElement('div', {
-                classList: ['context-menu-item'],
                 id: 'contextMenuStreetView',
+                classList: ['context-menu-item'],                
                 textContent: 'Visualizar no StreetView',
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onContextMenuItemSelected(event)
@@ -131,8 +131,8 @@
             }, context);
 
             this.createElement('div', {
-                classList: ['context-menu-item'],
                 id: 'contextMenuUpdateVehicle',
+                classList: ['context-menu-item'],                
                 textContent: 'Atualizar posição do veículo (offline)',
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onContextMenuItemSelected(event)
@@ -206,12 +206,12 @@
             const container = window.document.getElementById('app');
             
             const panel = this.createElement('div', {
-                classList: ['grid'],
-                id: 'panel'
+                id: 'panel',
+                classList: ['grid']                
             }, container);
 
             Object.assign(panel.style, { 
-                gridTemplateRows: '17px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 1fr) 22px 52px', 
+                gridTemplateRows: '17px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 0.5fr) 22px 52px', 
                 gridTemplateColumns: 'minmax(0px, 1fr)'
             });
 
@@ -238,8 +238,8 @@
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right'],
                     id: 'routeListAddBtn',
+                    classList: ['btn-top-right'],                    
                     style: { 
                         gridArea: '1 / 2 / 2 / 3', 
                         width: '100%', 
@@ -256,8 +256,8 @@
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right', 'disabled'],
                     id: 'routeListDelBtn',
+                    classList: ['btn-top-right', 'disabled'],                    
                     style: { 
                         gridArea: '1 / 3 / 2 / 4', 
                         width: '18px', 
@@ -275,8 +275,8 @@
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right'],
                     id: 'routeListEditModeBtn',
+                    classList: ['btn-top-right'],                    
                     style: { 
                         gridArea: '1 / 4 / 2 / 5', 
                         width: '18px', 
@@ -294,8 +294,8 @@
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right'],
                     id: 'routeListConfirmBtn',
+                    classList: ['btn-top-right'],                    
                     style: { 
                         gridArea: '1 / 5 / 2 / 6', 
                         display: 'none', 
@@ -313,8 +313,8 @@
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right'],
                     id: 'routeListCancelBtn',
+                    classList: ['btn-top-right'],                    
                     style: { 
                         gridArea: '1 / 6 / 2 / 7', 
                         display: 'none', 
@@ -334,8 +334,8 @@
         
             // ROTAS - ÁRVORE
             this.createElement('ul', {
-                classList: ['text-list'],
                 id: 'routeList',
+                classList: ['text-list'],                
                 style: { 
                     gridArea: '2 / 1 / 3 / 2' 
                 }
@@ -363,8 +363,8 @@
                 }, initialPointTitleGrid);
             
                 this.createElement('button', {
-                    classList: ['btn-top-right', 'disabled'],
                     id: 'initialPointBtn',
+                    classList: ['btn-top-right', 'disabled'],                    
                     style: { 
                         gridArea: '1 / 2 / 2 / 3', 
                         width: '18px', 
@@ -383,8 +383,8 @@
         
             // PONTO INICIAL - LATITUDE, LONGITUDE E DESCRIÇÃO
             const initialPointGrid = this.createElement('div', {
-                classList: ['grid', 'grid-border'],
                 id: 'initialPointGrid',
+                classList: ['grid', 'grid-border'],                
                 style: { 
                     gridArea: '4 / 1 / 5 / 2', 
                     gridTemplateRows: '17px 22px 17px 22px', 
@@ -509,8 +509,8 @@
                 }, pointsToVisitTitleGrid);
             
                 this.createElement('button', {
-                    classList: ['btn-top-right', 'disabled'],
                     id: 'routeListMoveUpBtn',
+                    classList: ['btn-top-right', 'disabled'],                    
                     textContent: '▲',
                     style: { 
                         gridArea: '1 / 2 / 2 / 3' 
@@ -525,8 +525,8 @@
                 }, pointsToVisitTitleGrid);
             
                 this.createElement('button', {
-                    classList: ['btn-top-right', 'disabled'],
                     id: 'routeListMoveDownBtn',
+                    classList: ['btn-top-right', 'disabled'],                    
                     textContent: '▼',
                     style: { 
                         gridArea: '1 / 3 / 2 / 4' 
@@ -542,8 +542,8 @@
                 // </SUB-GRID>
         
             this.createElement('ul', {
-                classList: ['text-list'],
                 id: 'pointsToVisit',
+                classList: ['text-list'],                
                 style: { 
                     gridArea: '6 / 1 / 7 / 2' 
                 }
@@ -558,8 +558,8 @@
             }, panel);
 
             this.createElement('div', {
-                classList: ['text-area'],
                 id: 'routeIds',
+                classList: ['text-area'],                
                 style: { 
                     gridArea: '8 / 1 / 9 / 2' 
                 }
@@ -575,8 +575,8 @@
             const container = window.document.getElementById('app');
             
             const toolbar = this.createElement('footer', {
-                classList: ['grid-toolbar'],
-                id: 'toolbar'
+                id: 'toolbar',
+                classList: ['grid-toolbar']                
             }, container);
 
             Object.assign(toolbar.style, { 
@@ -585,8 +585,8 @@
             });
 
             this.createElement('button', {
-                classList: ['btn-panel-on'],
                 id: 'toolbarPanelVisibilityBtn',
+                classList: ['btn-panel-on'],                
                 style: { 
                     gridArea: '1 / 1 / 2 / 2', 
                     height: '100%'
@@ -600,8 +600,8 @@
             }, toolbar);
 
             const btn = this.createElement('label', {
-                classList: ['btn-input'],
                 id: 'toolbarImportBtn',
+                classList: ['btn-input'],
                 htmlFor: 'toolbarImportInput',
                 style: { 
                     gridArea: '1 / 2 / 2 / 3', 
@@ -653,6 +653,21 @@
                 },
             }, toolbar);
 
+            this.createElement('label', {
+                id: 'toolbarPositionSliderValue',
+                classList: ['no-drag'],
+                textContent: '0%',
+                style: { 
+                    gridArea: '1 / 5 / 2 / 6',
+                    textAlign: 'right',
+                    color: '#4caf50',
+                    transform: 'translateY(-8px)'
+                },
+                eventListeners: {
+                    input: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
+                }
+            }, toolbar);
+
             this.createElement('input', {
                 id: 'toolbarPositionSlider',
                 style: { 
@@ -665,21 +680,6 @@
                 min: 0,
                 max: 100,
                 value: 0
-            }, toolbar);
-
-            this.createElement('label', {
-                id: 'toolbarPositionSliderValue',
-                textContent: '0%',
-                style: { 
-                    gridArea: '1 / 5 / 2 / 6',
-                    textAlign: 'right',
-                    color: '#4caf50',
-                    transform: 'translateY(-8px)',
-                    userSelect: 'none'
-                },
-                eventListeners: {
-                    input: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
-                }
             }, toolbar);
 
             this.createElement('button', {
@@ -947,11 +947,11 @@
                 }
             })
         }
-
+        
         /*---------------------------------------------------------------------------------*/
-        static createExportSelector() {
-            const options  = window.app.mapContext.settings.exportFile.options;
-            const selected = window.app.mapContext.settings.exportFile.selected;
+        static createBasicSelector(type) {
+            const options  = window.app.mapContext.settings[type].options;
+            const selected = window.app.mapContext.settings[type].selected;
 
             let popup = window.document.querySelector('.selector-popup');
             if (popup) popup.remove();

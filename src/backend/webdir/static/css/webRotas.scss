@@ -389,3 +389,12 @@ img {
     height: calc(100% - var(--navbar-height) - var(--toolbar-height) - 11px);
     z-index: map-get($z-indices, 'document');
 }
+
+.no-drag, .no-drag * {
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-app-region: no-drag;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    pointer-events: none;
+}

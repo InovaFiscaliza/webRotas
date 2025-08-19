@@ -106,7 +106,8 @@
             }
         },
 
-        routingContext: [], // list de objetos com campos "request" e "response"
+        routingDB: null,
+        routingContext: [],
 
         map: null,
 
@@ -324,6 +325,10 @@
                 exportFile: {
                     options: (window.location.protocol === "file:") ? ["JSON", "KML"] : ["JSON", "KML", "HTML+JS+CSS"],
                     selected: "JSON"
+                },
+                criterion: {
+                    options: ["distance", "duration", "ordered"],
+                    selected: "distance"
                 }
             }
         }
@@ -341,6 +346,7 @@
             await loadScript('js/Communication.js');
             await loadScript('js/Components.js');
             await loadScript('js/Layout.js');
+            await loadScript('js/Model.js');
             await loadScript('js/Plot.js');
             await loadScript('js/Utils.js');
 

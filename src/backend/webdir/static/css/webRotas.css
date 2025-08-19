@@ -363,4 +363,14 @@ img {
   width: calc(100% - var(--panel-width-on) - 5px);
   height: calc(100% - var(--navbar-height) - var(--toolbar-height) - 11px);
   z-index: 600;
+}
+
+.no-drag, .no-drag * {
+  -webkit-user-select: none;
+          user-select: none;
+  -webkit-user-drag: none;
+  -webkit-app-region: no-drag;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
 }/*# sourceMappingURL=webRotas.css.map */

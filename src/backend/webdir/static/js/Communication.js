@@ -38,8 +38,25 @@
                 return response.json();
             })
             .then(returnedData => {
-                if (window.app.modules.Utils.resolvePushType(returnedData.routing)) {
-                    window.app.modules.Utils.syncLocalStorage('update');
+                switch (returnedData.type) {
+                    case "initialRoute": {
+                        if (window.app.modules.Model.loadRouteFromFileOrServer(returnedData.routing)) {
+                            const index1 = window.app.routingContext.length-1;
+                            const index2 = 0;
+
+                            window.app.modules.Model.syncLocalStorage('update', index1, index2);
+                        }
+                        break;
+                    }
+                    case "customRoute": {
+                        if (window.app.modules.Model.loadCustomRouteFromServer(returnedData.route)) {
+                            const { index1, index2 } = window.app.modules.Layout.findSelectedRoute();
+                            window.app.modules.Model.syncLocalStorage('update', index1, index2);
+                        }
+                        break;
+                    }
+                    default:
+                        throw new Error(`Unexpected request type: ${returnedData.type}`);
                 }
             })
             .catch(ME => {      

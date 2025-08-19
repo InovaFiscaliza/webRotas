@@ -71,8 +71,6 @@ import regions as rg
 # ---------------------------------------------------------------------------------------------------------------
 class CacheBoundingBox:
     def __init__(self):
-        # Instância global do cache de rotas já pedidas ao servidor OSMR
-        # wLog(f"Cache de regioes carregado")
         self.route_cache = rc.RouteCache()
         self.comunidades_cache = pl.PolylineCache()
         self.areas_urbanas = pl.PolylineCache()
@@ -170,6 +168,8 @@ class CacheBoundingBox:
             "inf"
         )  # Initialize with infinity to ensure any real area is smaller
 
+        return regiao_alvo
+
         for data in self.cache.values():  # Iterate through all cached regions
             candidate_region = data.get(
                 "regiaodados"
@@ -196,14 +196,19 @@ class CacheBoundingBox:
     def get_cache(self, regioes):
         chave = self._hash_bbox(regioes)
         self.ultimaregiao = regioes
+
+        return regioes, chave
+
         entry = self.cache.get(chave)
+
         if entry:
             # Atualiza o timestamp de último acesso
             entry["lastrequest"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
             self.gr = entry["gr"]
             self.state = entry["state"]
             self._schedule_save()
-            return entry["regiaodados"]
+            return entry["regiaodados"], chave
+        
         # melhorar verificando as áreas de exclusão
         regtemp = self.find_smallest_containing_region(regioes)
         if regtemp != None:
@@ -211,9 +216,9 @@ class CacheBoundingBox:
             entry = self.cache.get(self._hash_bbox(regtemp))
             self.gr = entry["gr"]
             self.state = entry["state"]
-            return regtemp
+            return regtemp, chave
 
-        return None
+        return None, chave
 
     def lastrequestupdate(self, regioes):
         chave = self._hash_bbox(regioes)

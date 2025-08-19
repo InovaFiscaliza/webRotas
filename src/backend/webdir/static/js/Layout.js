@@ -65,10 +65,14 @@
                             }
 
                             for (let ii = 0; ii < route.waypoints.length; ii++) {
-                                if ([null, -9999].includes(route.waypoints[ii].elevation) || route.paths[ii].length == 0) {
+                                if ([null, -9999].includes(route.waypoints[ii].elevation)) {
                                     isComplete = false;
                                     break;
                                 }
+                            }
+
+                            if (route.paths.length <= 1) {
+                                isComplete = false;
                             }
 
                             const automaticMark = route.automatic 
@@ -79,7 +83,7 @@
 
                             return `<div style="display:flex;">
                                         <div style="min-width:16px;">[${index1},${index2}]:</div>
-                                        <div style="padding-left:5px;">${route.routeId} ${automaticMark} ${isComplete ? '' : ' 🔴'}<br>(${route.estimatedTime || 'unknown'}, ${route.estimatedDistance.toFixed(1)} km)</div>
+                                        <div style="padding-left:5px;">${route.routeId} ${automaticMark} ${isComplete ? '' : ' 🔴'}<br>(${route.estimatedTime || 'unknown'}, ${route.estimatedDistance || 'unknown'})</div>
                                     </div>`
                         },
                         {
@@ -228,9 +232,7 @@
                     let ids = {
                         created: route.created,
                         cacheId: routing.cacheId,
-                        routeId: route.routeId || "n/a",
-                        estimatedTime: route.estimatedTime || 'unknown',
-                        estimatedDistance: `${route.estimatedDistance.toFixed(1)} km`                        
+                        routeId: route.routeId || "n/a"
                     };
                     htmlEl.routeIds.textContent = JSON.stringify(ids, null, 1);
                     break;
@@ -325,8 +327,9 @@
             };
 
             const hasOriginRouteChanged = initialOrigin.lat !== editedOrigin.lat || initialOrigin.lng !== editedOrigin.lng;
+            const hasOriginDescriptionChanged = initialOrigin.description !== editedOrigin.description;
 
-            return { index1, index2, currentRoute, initialPointHtmlElements, initialOrigin, editedOrigin, hasOriginRouteChanged }
+            return { index1, index2, currentRoute, initialPointHtmlElements, initialOrigin, editedOrigin, hasOriginRouteChanged, hasOriginDescriptionChanged }
         }
 
         /*---------------------------------------------------------------------------------*/

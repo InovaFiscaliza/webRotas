@@ -36,9 +36,8 @@
             window.app.modules.Components.createMap();
             window.app.modules.Components.createToolbar();
 
-            window.app.modules.Utils.syncLocalStorage('startup');
-            window.app.modules.Layout.startup();
-
+            window.app.modules.Model.syncLocalStorage('startup');
+            
             window.app.modules.Communication.isServerOnlineController();
             window.app.modules.Utils.Image.loadImagesForCache();
             window.app.modules.Utils.consoleLog('Session started');
@@ -62,8 +61,7 @@
 
             //new DialogBox('Changes detected in another tab. Reloading...', 'info');
             window.app.modules.Utils.consoleLog('Changes detected in another tab. Reloading...')
-            window.app.modules.Utils.syncLocalStorage('startup');
-            window.app.modules.Layout.startup();
+            window.app.modules.Model.syncLocalStorage('startup');
         }
 
         static onWindowMessage(event) {
@@ -76,8 +74,8 @@
                 const expectedToken = urlParameters.get("token");
 
                 if (event.data.type === "handshake" && event.data.token === expectedToken && !!event.data.routing.length) {
-                    if (window.app.modules.Utils.resolvePushType(event.data.routing)) {
-                        window.app.modules.Utils.syncLocalStorage('update');
+                    if (window.app.modules.Model.loadRouteFromFileOrServer(event.data.routing)) {
+                        window.app.modules.Model.syncLocalStorage('update');
                     }
                 }
             }
@@ -125,8 +123,8 @@
                         }
 
                         default: {
-                            const dialogBoxText = `Esta é a versão <i>online</i> do webRotas, executada via <b>${protocol}</b>. Entretanto, o <i>status</i>
-                                atual do servidor é <i>offline</i>.<br><br>Quer tentar reconectar?`;
+                            const dialogBoxText = `Esta é a versão <i>online</i> do webRotas, executada via <b>${protocol}</b>. O <i>status</i>
+                                atual do servidor, contudo, é <i>offline</i>.<br><br>Quer tentar reconectar?`;
 
                             new DialogBox(dialogBoxText, '', [{ 
                                 text: 'Sim', 
@@ -345,8 +343,7 @@
 
                     window.app.routingContext[index1].response.routes.push(currentRouteGhost);
 
-                    window.app.modules.Utils.syncLocalStorage('update');
-                    window.app.modules.Layout.startup(index1, window.app.routingContext[index1].response.routes.length-1);
+                    window.app.modules.Model.syncLocalStorage('update', index1, window.app.routingContext[index1].response.routes.length-1);
                     break;
                 }
 
@@ -359,15 +356,14 @@
                         window.app.routingContext[index1].response.routes.splice(index2, 1);
                     }
 
-                    window.app.modules.Utils.syncLocalStorage('update');
-                    window.app.modules.Layout.startup();
+                    window.app.modules.Model.syncLocalStorage('update');
                     break;
                 }
                 
                 case 'routeListEditModeBtn':
                 case 'routeListCancelBtn': {
                     /*
-                        Avalia-se se foi alterada a origem da rota.
+                        Avalia se a origem da rota foi alterada.
                     */
                     const { index1, index2, hasOriginRouteChanged } = window.app.modules.Layout.checkIfOriginChanged();
                     if (hasOriginRouteChanged) {
@@ -390,7 +386,57 @@
                 }
 
                 case 'routeListConfirmBtn': {
-                    const { index1, currentRoute, editedOrigin, hasOriginRouteChanged } = window.app.modules.Layout.checkIfOriginChanged();
+                    function createCustomRoute(criterion) {
+                        let origin = [];
+                        if (hasOriginRouteChanged) {
+                            origin     = editedOrigin;
+                            origin.lat = parseFloat(origin.lat);
+                            origin.lng = parseFloat(origin.lng);
+                            origin.elevation = null;
+                        } else {
+                            origin     = {...currentRoute.origin};
+                        }                    
+                        
+                        let waypointList = structuredClone(currentRoute.waypoints);
+                        if (hasVisitOrderChanged) {
+                            waypointList = visitOrderIndexes.map(index => waypointList[index]);
+                        }
+
+                        const routeId = window.app.modules.Utils.uuid();
+                        const customRouteRequest = {
+                            type: 'ordered',
+                            origin,
+                            parameters: {
+                                routeId, 
+                                cacheId: currentResponse.cacheId,
+                                boundingBox: currentResponse.boundingBox,
+                                waypoints: waypointList
+                            },
+                            avoidZones: currentRequest.avoidZones,
+                            criterion
+                        };
+                        
+                        const customRouteGhost = {
+                            routeId,
+                            automatic: criterion !== "ordered",
+                            created: window.app.modules.Utils.getTimeStamp(),
+                            origin,
+                            waypoints: waypointList,
+                            paths: [[origin.lat, origin.lng]],
+                            estimatedDistance: "-1",
+                            estimatedTime: "-1"
+                        };
+
+                        window.app.routingContext[index1].response.routes.push(customRouteGhost);
+                        window.app.modules.Model.syncLocalStorage('update', index1, window.app.routingContext[index1].response.routes.length-1);
+                        
+                        window.document.getElementById('routeListEditModeBtn').dataset.value = 'off';
+                        window.app.modules.Layout.controller('editionMode', false);                        
+                        
+                        window.app.modules.Communication.computeRoute(customRouteRequest);
+                    }
+
+                    const { index1, index2, currentRoute, editedOrigin, hasOriginRouteChanged, hasOriginDescriptionChanged } = window.app.modules.Layout.checkIfOriginChanged();
                     const currentRequest  = window.app.routingContext[index1].request;
                     const currentResponse = window.app.routingContext[index1].response;
 
@@ -398,84 +444,35 @@
                     const hasVisitOrderChanged = Array.from({ length: visitOrderIndexes.length }, (_, i) => i).toString() !== visitOrderIndexes.toString();
 
                     if (!hasOriginRouteChanged && !hasVisitOrderChanged) {
-                        new DialogBox('No changes were made to the route.', 'info');
-                        return;
-                    }
+                        if (hasOriginDescriptionChanged) {
+                            currentRoute.origin.description = editedOrigin.description;
+                            window.app.modules.Model.syncLocalStorage('update', index1, index2);
 
-                    let origin = [];
-                    if (hasOriginRouteChanged) {
-                        origin     = editedOrigin;
-                        origin.lat = parseFloat(origin.lat);
-                        origin.lng = parseFloat(origin.lng);
-                        origin.elevation = null;
-                    } else {
-                        origin     = {...currentRoute.origin};
-                    }                    
-                    
-                    let waypointList = structuredClone(currentRoute.waypoints);
-                    if (hasVisitOrderChanged) {
-                        waypointList = visitOrderIndexes.map(index => waypointList[index]);
-                    }
-                    
-                    let preservedPaths = Array(currentRoute.paths.length).fill([]);
-                    for (let ii = 0; ii < visitOrderIndexes.length; ii++) {
-                        if (ii == 0) {
-                            if (!hasOriginRouteChanged && visitOrderIndexes[0] === 0) {
-                                preservedPaths[0] = [...currentRoute.paths[0]];
-                            }
+                            window.document.getElementById('routeListEditModeBtn').dataset.value = 'off';
+                            window.app.modules.Layout.controller('editionMode', false);
                         } else {
-                            const diff = Math.abs(visitOrderIndexes[ii - 1] - visitOrderIndexes[ii]);
-                            if (diff === 1) {
-                                let originalPathIndex = Math.max(visitOrderIndexes[ii-1], visitOrderIndexes[ii]);
-                                preservedPaths[ii] = [...currentRoute.paths[originalPathIndex]];
-                                if (visitOrderIndexes[ii] < visitOrderIndexes[ii - 1]) {
-                                    preservedPaths[ii].reverse();
-                                }
-                            }
+                            new DialogBox('No changes were made to the route.', 'info');
                         }
+                        return;
+                    } 
+                    
+                    let criterion = null;
+                    if (hasOriginRouteChanged && !hasVisitOrderChanged) {
+                        criterion = "distance";
+                    } else if (!hasOriginRouteChanged && hasVisitOrderChanged) {
+                        criterion = "ordered";
                     }
 
-                    let neededPaths = preservedPaths.reduce((acc, path, index) => {
-                        if (!path || path.length === 0) acc.push(index);
-                        return acc;
-                    }, []);
-
-                    const routeId = window.app.modules.Utils.uuid();
-
-                    const currentRequestGhost = {
-                        request: 'ordered',
-                        routeId,
-                        cacheId: currentResponse.cacheId,
-                        boundingBox: currentResponse.boundingBox,
-                        avoidZones: currentRequest.avoidZones,
-                        origin,
-                        waypoints: waypointList,
-                        neededPaths
-                    };
-                    /*
-                        Envia requisição ao servidor
-                        window.app.modules.Communication.computeRoute(request);
-                    */
-                    
-                    const currentRouteGhost = {
-                        routeId,
-                        automatic: false,
-                        created: window.app.modules.Utils.getTimeStamp(),
-                        origin,
-                        waypoints: waypointList,
-                        paths: preservedPaths,
-                        estimatedDistance: -1,
-                        estimatedTime: "-1"
-                    };
-                    
-                    console.log({ currentRequestGhost, currentRouteGhost });                    
-
-                    window.app.routingContext[index1].response.routes.push(currentRouteGhost);
-                    window.app.modules.Utils.syncLocalStorage('update');
-
-                    window.document.getElementById('routeListEditModeBtn').dataset.value = 'off';
-                    window.app.modules.Layout.controller('editionMode', false);
-                    window.app.modules.Layout.startup(index1, window.app.routingContext[index1].response.routes.length-1);
+                    if (criterion) {
+                        createCustomRoute(criterion)
+                    } else {
+                        const criterionButtonGroup = window.app.modules.Components.createBasicSelector('criterion');
+                        new DialogBox(criterionButtonGroup, 'question', [{ text: 'OK', callback: () => {
+                            const popup = window.document.querySelector('.selector-popup');
+                            const selected = popup.querySelector('input[type="radio"]:checked').value;
+                            createCustomRoute(selected)
+                        }, focus: true }]);
+                    }
                     break;
                 }
 
@@ -495,6 +492,7 @@
 
                     const originLat = window.document.getElementById("initialPointLatitude");
                     const originLng = window.document.getElementById("initialPointLongitude");
+                    const originElevation = window.document.getElementById("initialPointElevation");
                     const originDescription = window.document.getElementById("initialPointDescription");
 
                     originGhost.on('drag', (event) => {
@@ -503,6 +501,8 @@
                     });
 
                     originGhost.on('dragend', (event) => {
+                        originElevation.value = '-1';
+                        
                         let { lat, lng } = event.target.getLatLng();
                         lat = Number(lat.toFixed(6));
                         lng = Number(lng.toFixed(6));
@@ -531,9 +531,6 @@
 
                 case 'initialPointLatitude':
                 case 'initialPointLongitude': {
-                    /*
-                        Validação inicial
-                    */
                     const range = args[0];
                     this.onNumericFieldValidation(event, range);
                     
@@ -747,15 +744,15 @@
                                 }
 
                                 const expectedKeys = { 
-                                    request: ["type", "origin", "avoidZones", "parameters" ],
+                                    request: ["type", "origin", "parameters" ],
                                     routing: ["routing"]
                                 }
 
                                 if (expectedKeys.request.every(key => key in returnedData)) {
                                     window.app.modules.Communication.computeRoute(returnedData);
                                 } else if (expectedKeys.routing.every(key => key in returnedData)) {
-                                    if (window.app.modules.Utils.resolvePushType(returnedData.routing)) {
-                                        window.app.modules.Utils.syncLocalStorage('update');
+                                    if (window.app.modules.Model.loadRouteFromFileOrServer(returnedData.routing)) {
+                                        window.app.modules.Model.syncLocalStorage('update');
                                     }                                    
                                 } else {
                                     throw new Error('Unexpected file content');
@@ -771,7 +768,7 @@
                 }
 
                 case 'toolbarExportBtn': {
-                    const exportButtonGroup = window.app.modules.Components.createExportSelector();
+                    const exportButtonGroup = window.app.modules.Components.createBasicSelector('exportFile');
                     new DialogBox(exportButtonGroup, 'question', [{ text: 'OK', callback: () => {
                         const popup = window.document.querySelector('.selector-popup');
                         const selected = popup.querySelector('input[type="radio"]:checked').value;
@@ -811,9 +808,13 @@
 
                     window.document.getElementById("toolbarPositionSliderValue").textContent = `${val}%`;
 
-                    const index  = Math.floor(window.app.mapContext.layers.toolbarPositionSlider.mergedPaths.length * val / 100);
-                    const coords = window.app.mapContext.layers.toolbarPositionSlider.mergedPaths.slice(0, index);
-                    window.app.modules.Plot.update('toolbarPositionSlider', coords)
+                    if (window.app.routingContext.length) {
+                        const { currentRoute } = window.app.modules.Layout.findSelectedRoute();
+                        
+                        const index  = Math.floor(currentRoute.paths.length * val / 100);
+                        const coords = currentRoute.paths.slice(0, index);
+                        window.app.modules.Plot.update('toolbarPositionSlider', coords)
+                    }
                     break;
                 }
 
