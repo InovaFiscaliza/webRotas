@@ -14,13 +14,7 @@
     class Communication {
         /*---------------------------------------------------------------------------------*/
         static computeRoute(request) {
-            if (window.app.server.status === "offline") {
-                const dialogBoxText = `O <i>status</i> atual do servidor é <i>offline</i>.`
-                new DialogBox(dialogBoxText, 'info');
-                return;
-            }
-
-            const { url, sessionId } = window.app.server;
+            const { url, sessionId, status } = window.app.server;
             const serverRoute = `${url}/process?sessionId=${sessionId}`;
 
             return fetch(serverRoute, {
@@ -58,6 +52,10 @@
                     default:
                         throw new Error(`Unexpected request type: ${returnedData.type}`);
                 }
+
+                window.app.server.status !== 'online' && (window.app.server.status = 'online');
+                window.app.server.failureCount > 0    && (window.app.server.statusMonitor.failureCount = 0);
+                this.checkIfUpdateLayoutNeeded(status)
             })
             .catch(ME => {      
                 new DialogBox(`Error: ${ME.message || "Unknown error"}`);
@@ -80,7 +78,6 @@
         static isServerOnline() {
             const { url, sessionId, status } = window.app.server;
             const serverRoute = `${url}/ok?sessionId=${sessionId}`;
-            const initialStatus = status;
 
             return fetch(serverRoute, {
                 method: 'GET'
@@ -93,10 +90,10 @@
                 // console.log(response.statusText);
                 window.app.server.status !== 'online' && (window.app.server.status = 'online');
                 window.app.server.failureCount > 0    && (window.app.server.statusMonitor.failureCount = 0);
-                this.checkIfUpdateLayoutNeeded(initialStatus)
+                this.checkIfUpdateLayoutNeeded(status)
             })
             .catch(ME => {
-                this.handleFailure(initialStatus);
+                this.handleFailure(status);
             });
         }
 

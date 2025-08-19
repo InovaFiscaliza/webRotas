@@ -322,6 +322,13 @@
                         return (direction === "top") ? [0, -41] : [0, 0] 
                     }
                 },
+                importFile: {
+                    format: '.json',
+                    expectedKeys: {
+                        request: ["type", "origin", "parameters" ],
+                        routing: ["routing"]
+                    }
+                },
                 exportFile: {
                     options: (window.location.protocol === "file:") ? ["JSON", "KML"] : ["JSON", "KML", "HTML+JS+CSS"],
                     selected: "JSON"

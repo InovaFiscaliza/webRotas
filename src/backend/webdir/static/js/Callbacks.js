@@ -743,10 +743,7 @@
                                     throw new Error("Invalid JSON structure");
                                 }
 
-                                const expectedKeys = { 
-                                    request: ["type", "origin", "parameters" ],
-                                    routing: ["routing"]
-                                }
+                                const expectedKeys = window.app.mapContext.settings.importFile.expectedKeys;
 
                                 if (expectedKeys.request.every(key => key in returnedData)) {
                                     window.app.modules.Communication.computeRoute(returnedData);

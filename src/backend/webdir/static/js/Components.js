@@ -616,7 +616,7 @@
             const input = this.createElement('input', {
                 id: 'toolbarImportInput',
                 type: 'file',
-                accept: '.json',
+                accept: window.app.mapContext.settings.importFile.format,
                 style: { 
                     display: 'none'
                 },

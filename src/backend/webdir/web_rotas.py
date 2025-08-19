@@ -131,7 +131,7 @@ def osrm_ordered(current_request, session_id, origin, cache_id, bounding_box, wa
     
     routing_area = [] # PENDENTE
 
-    waypoints, paths, estimated_time, estimated_distance = api_routing.controller(origin, waypoints, criterion)
+    origin, waypoints, paths, estimated_time, estimated_distance = api_routing.controller(origin, waypoints, criterion)
     origin, waypoints = api_elevation.controller(origin, waypoints)
 
     current_request.update({
