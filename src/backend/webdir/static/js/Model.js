@@ -27,12 +27,25 @@
                     - Cria sessionId, caso necessário; e
                     - Atualiza url, caso o protocolo de comunicação seja "http" ou "https".
                 */
+                switch (window.location.protocol) {
+                    case 'http:':
+                    case 'https:': {
+                        window.app.server.url = window.location.origin;
+                        break;
+                    }
+
+                    case 'file:': {
+                        try {
+                            await loadScript('data/session.js');
+                        } catch (ME) {
+                            (window.app.modules.Utils) ? window.app.modules.Utils.consoleLog(ME, 'error') : console.error(ME);
+                        }
+                        break;
+                    }
+                }
+
                 const sessionId = window.localStorage.getItem('sessionId');
                 window.app.server.sessionId = sessionId ? sessionId : window.app.modules.Utils.uuid();
-
-                if (['http:', 'https:'].includes(window.location.protocol)) {
-                    window.app.server.url = window.location.origin;
-                }
 
                 loadRoutingFromIndexedDB()
                     .then(routingContext => {
@@ -50,10 +63,11 @@
             }
 
             case 'update':
-                if (!window.app.routingContext.length) {
+                if (window.app.routingContext.length === 0) {
                     window.localStorage.clear();
                     updateRoutingInIndexedDB([])
-                    window.app.modules.Layout.updateControlState('idle');
+
+                    window.app.modules.Layout.startup();
                     return;
                 }
                 

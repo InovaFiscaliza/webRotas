@@ -746,11 +746,18 @@
                                 const expectedKeys = window.app.mapContext.settings.importFile.expectedKeys;
 
                                 if (expectedKeys.request.every(key => key in returnedData)) {
+                                    const protocol = window.location.protocol;
+                                    if (protocol === "file:") {
+                                        throw new Error(`Esta é a versão <i>offline</i> do webRotas, executada via <b>${protocol}</b>.<br><br>
+                                                        Recursos que dependem de comunicação com o servidor foram removidos ou desativados.`);
+                                    }
                                     window.app.modules.Communication.computeRoute(returnedData);
+
                                 } else if (expectedKeys.routing.every(key => key in returnedData)) {
                                     if (window.app.modules.Model.loadRouteFromFileOrServer(returnedData.routing)) {
                                         window.app.modules.Model.syncLocalStorage('update');
-                                    }                                    
+                                    }
+
                                 } else {
                                     throw new Error('Unexpected file content');
                                 }

@@ -77,6 +77,20 @@
     window.localStorage é usado para sincronizar informações essenciais do app, como
     a url do servidor, a sessionId e os detalhes das rotas.
 */
+
+/*---------------------------------------------------------------------------------*/
+async function loadScript(filename) {
+    return new Promise((resolve, reject) => {
+        const script = window.document.createElement('script');
+        script.src = filename;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`Failed to load script: ${filename}`));
+
+        window.document.head.appendChild(script);
+    });
+}
+
+/*---------------------------------------------------------------------------------*/
 (function () {
     window.app = {
         name: 'webRotas',
@@ -331,7 +345,17 @@
                 },
                 exportFile: {
                     options: (window.location.protocol === "file:") ? ["JSON", "KML"] : ["JSON", "KML", "HTML+JS+CSS"],
-                    selected: "JSON"
+                    selected: "JSON",
+                    parameters: {
+                        kml: {
+                            ignoredLayers: [
+                                "basemap",
+                                "toolbarPositionSlider",
+                                "currentPosition",
+                                "currentLeg"
+                            ]
+                        }
+                    }
                 },
                 criterion: {
                     options: ["distance", "duration", "ordered"],
@@ -357,14 +381,6 @@
             await loadScript('js/Plot.js');
             await loadScript('js/Utils.js');
 
-            if (window.location.protocol === "file:") {
-                try {
-                    await loadScript('data/session.js');
-                } catch (ME) {
-                    (window.app.modules.Utils) ? window.app.modules.Utils.consoleLog(ME, 'error') : console.error(ME);
-                }
-            }
-
             window.addEventListener("load",         (event) => window.app.modules.Callbacks.onWindowLoad(event));
             window.addEventListener("beforeunload", (event) => window.app.modules.Callbacks.onWindowBeforeUnload(event));
             window.addEventListener("storage",      (event) => window.app.modules.Callbacks.onLocalStorageUpdate(event));
@@ -373,18 +389,6 @@
         } catch (ME) {
             (window.app.modules.Utils) ? window.app.modules.Utils.consoleLog(ME, 'error') : console.error(ME);
         }
-    }
-
-    /*---------------------------------------------------------------------------------*/
-    async function loadScript(filename) {
-        return new Promise((resolve, reject) => {
-            const script = window.document.createElement('script');
-            script.src = filename;
-            script.onload = resolve;
-            script.onerror = () => reject(new Error(`Failed to load script: ${filename}`));
-
-            window.document.head.appendChild(script);
-        });
     }
 
     /*---------------------------------------------------------------------------------*/

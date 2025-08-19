@@ -44,6 +44,7 @@
             "js/Components.js",
             "js/DialogBox.js",
             "js/Layout.js",
+            "js/Model.js",
             "js/Plot.js",
             "js/Tooltip.js",
             "js/Utils.js",
@@ -167,6 +168,7 @@
     /*---------------------------------------------------------------------------------*/
     async function leafletLayersToKML(documentName) {
         const layers = Object.values(window.app.map._layers);
+        const ignoredLayers = window.app.mapContext.settings.exportFile.parameters.kml.ignoredLayers;
         const features = [];
 
         layers.forEach(layer => {
@@ -174,7 +176,7 @@
                 layer instanceof window.L.Polyline ||
                 layer instanceof window.L.Polygon) {
 
-                if (!layer._tag) {
+                if (!layer._tag || ignoredLayers.includes(layer._tag)) {
                     return;
                 }
 
@@ -313,16 +315,31 @@
         }
 
         // JSON
-        let session = `if (window.location.protocol === "file:" && window.localStorage.getItem("sessionId") !== "${window.localStorage.getItem('sessionId')}") {\n`;
+        let session = `if (window.location.protocol === "file:" && window.localStorage.getItem("sessionId") !== ${JSON.stringify(window.localStorage.getItem("sessionId"))}) {\n`;
+        
+        session += `\twindow.app.server.url = ${JSON.stringify(window.app.server.url)};\n`;
+        session += `\twindow.app.server.sessionId = ${JSON.stringify(window.localStorage.getItem("sessionId"))};\n\n`;
+        
         for (let ii = 0; ii < window.localStorage.length; ii++) {
             const key   = window.localStorage.key(ii);
             const value = window.localStorage.getItem(key);
 
             session += `\twindow.localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});\n`;
+        }        
+
+        if (window.app.routingContext.length !== 0) {
+            const routingStr = JSON.stringify(window.app.routingContext);
+            
+            session += `\n`;
+            session += `\tconst routingContext = JSON.parse(${JSON.stringify(routingStr)});\n\n`;
+            session += `\tif (window.app.modules.Model.loadRouteFromFileOrServer(routingContext)) {\n`;
+            session += `\t\twindow.app.modules.Model.syncLocalStorage('update');\n`;
+            session += `\t}\n`;
         }
+
         session += `}`;
         zip.file("data/session.js", session);
-
+        
         const data = await zip.generateAsync({ type: "blob" });
         saveToFile('zip', fileName, data);
     }
