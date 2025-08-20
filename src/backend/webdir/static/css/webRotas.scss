@@ -1,5 +1,5 @@
 :root {
-    --navbar-height: 0px;
+    --navbar-height: 54px;
     --toolbar-height: 34px;
 
     --panel-width-off: 0px;
@@ -8,8 +8,14 @@
     --font-family-default: Helvetica, Arial, sans-serif;
     --font-size-default: 11px;
 
+    --backgroundColor-navbar: rgb(51, 51, 51); /* #050a30 */
+    --backgroundColor-toolbar: rgb(240, 240, 240);
+
     --backgroundColor-selected: rgba(180, 222, 255, 0.45);
     --backgroundColor-selectedFocus: rgba(50, 102, 208, 1);
+
+    --backgroundColor-slider: rgb(180, 180, 180);
+    --backgroundColor-slider-value: #4caf50;
 }
 
 $z-indices: (
@@ -19,6 +25,7 @@ $z-indices: (
     toolbar: 400,
     document: 600,
     context-menu: 800,
+    colorbar: 800,
     tooltip: 800,
     modal: 1000
 );
@@ -36,7 +43,8 @@ $z-indices: (
 
 body {
     height: 100%;
-    width: 100%;    
+    width: 100%;
+    overflow-x: hidden;
     font-size: var(--font-size-default);
 }
 
@@ -70,7 +78,7 @@ body {
     bottom: 0;
     left: 0;    
     align-items: center;    
-    background-color: rgb(240, 240, 240);
+    background-color: var(--backgroundColor-toolbar);
     
     z-index: map-get($z-indices, 'toolbar');
 }
@@ -97,9 +105,50 @@ input:focus {
     box-shadow: none;
 }
 
-input.spinner-disabled::-webkit-inner-spin-button,
-input.spinner-disabled::-webkit-outer-spin-button {
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  transform: translateY(2px);
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 8px solid #4caf50;
+  transform: translateY(6px);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 8px solid #4caf50;
+  transform: translateY(6px);
+}
+
+input[type="range"].disabled {
+    opacity: 0.35;
+    cursor: default;    
 }
 
 button,
@@ -107,8 +156,10 @@ label.btn-input {
     align-self: center;
     text-align: center;
     background: none;
-    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
     border: none;
+    border-radius: 25%;
     font-size: 12px;
     cursor: pointer;
 }
@@ -125,11 +176,11 @@ button.disabled {
 }
 
 button#toolbarPanelVisibilityBtn.btn-panel-on {
-  background-image: url(../images/ArrowLeft_32.png);
+  background-image: url(../images/arrow-left.png);
 }
 
 button#toolbarPanelVisibilityBtn.btn-panel-off {
-  background-image: url(../images/ArrowRight_32.png);
+  background-image: url(../images/arrow-right.png);
 }
 
 label.label-panel,
@@ -144,15 +195,17 @@ label.label-form-field {
     align-self: end;
 }
 
+img {
+  -webkit-user-drag: none;
+}
+
 
 /*-----------------------------------------------------------------------------------
     ## LISTA DE TEXTOS ##
 -----------------------------------------------------------------------------------*/
 .text-list {
-    display: flex;
-    flex-direction: column;
     height: 100%;
-    overflow: auto;
+    overflow-y: auto;
     list-style: none;
     border: 1px solid #ccc;
 }
@@ -166,10 +219,10 @@ label.label-form-field {
 .text-list li {
     display: flex;
     align-items: center;
+    text-align: justify;
     line-height: 16px;
     min-height: 22px;
-    text-indent: -20px;
-    padding-left: 25px;
+    padding-left: 5px;
     padding-right: 5px;
     border: 1px solid rgb(255,255,255);
     border-bottom: 0;
@@ -182,6 +235,26 @@ label.label-form-field {
 .text-list li.hover {
     background-color: var(--backgroundColor-selectedFocus);
     color: #fff;
+}
+
+.text-list li * {
+  pointer-events: none;
+}
+
+
+/*-----------------------------------------------------------------------------------
+    ## CAMPO DE TEXTO ##
+-----------------------------------------------------------------------------------*/
+.text-area {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: auto;
+    word-break: break-all;
+    user-select: text;
+    padding: 5px;
+    text-align: justify;
+    border: 1px solid #ccc;
 }
 
 
@@ -237,13 +310,50 @@ label.label-form-field {
 
 
 /*-----------------------------------------------------------------------------------
+    ## COLORBAR ##
+-----------------------------------------------------------------------------------*/
+.colorbar {
+    position: absolute;
+    bottom: 66px;
+    right: 0px;
+    width: 100px;
+    height: 500px;
+    z-index: map-get($z-indices, 'colorbar')
+}
+
+
+/*-----------------------------------------------------------------------------------
+    ## SELECTOR POPUP (RADIO BUTTON GROUP) ##
+-----------------------------------------------------------------------------------*/
+.selector-popup {
+    width: 100%;
+    height: 100%;
+    line-height: 1.5;
+}
+
+
+/*-----------------------------------------------------------------------------------
     ## OUTRAS COISAS AINDA NÃO REVISADAS ##
 -----------------------------------------------------------------------------------*/
-#panel {
+#navbar {
     position: absolute;
     top: 0;
     left: 0;
-    height: calc(100% - var(--toolbar-height));
+    height: var(--navbar-height);
+    width: 100%;
+    background-color: var(--backgroundColor-navbar);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    z-index: map-get($z-indices, 'navbar');
+}
+
+#panel {
+    position: absolute;
+    top: var(--navbar-height);
+    left: 0;
+    height: calc(100% - var(--navbar-height) - var(--toolbar-height));
     width: calc(var(--panel-width-on) - 10px);
     flex-direction: column;
     align-items: flex-start;
@@ -273,9 +383,18 @@ label.label-form-field {
 
 #document {
     position: absolute;
-    top: 6px;
+    top: calc(var(--navbar-height) + 6px);
     left: var(--panel-width-on);
     width: calc(100% - var(--panel-width-on) - 5px);
-    height: calc(100% - var(--toolbar-height) - 11px);
+    height: calc(100% - var(--navbar-height) - var(--toolbar-height) - 11px);
     z-index: map-get($z-indices, 'document');
+}
+
+.no-drag, .no-drag * {
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-app-region: no-drag;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    pointer-events: none;
 }

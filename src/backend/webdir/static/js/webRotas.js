@@ -1,7 +1,10 @@
 /*
     ## webRotas ##
-    No contexto global do "window", o webRotas cria os objetos:
-    - L (Leaflet)
+    O projeto é escrito em JavaScript, sem frameworks, mas faz uso das bibliotecas 
+    Leaflet, JSZip e toKML. No contexto global do "window", o webRotas cria os objetos:
+    - L
+    - JSZip
+    - tokml
     - DialogBox
     - Tooltip
     - app
@@ -15,7 +18,7 @@
       │   ├── Tooltip         (new Tooltip)
       │   └── Utils           ('js/Utils.js')
       ├── server
-      │   ├── url             ('http://127.0.0.1:5000')
+      │   ├── url             ('http://127.0.0.1:5001')
       │   ├── sessionId
       │   ├── status
       │   └── statusMonitor
@@ -37,9 +40,10 @@
       │           ├── automatic
       |           ├── created
       │           ├── origin
-      │           ├── waypoints
+      │           ├── waypoints[]
       │           ├── paths
-      │           └── estimatedDistance
+      │           ├── estimatedDistance
+      │           └── estimatedTime
       ├── map                 (L.map)
       └── mapContext
           ├── layers
@@ -49,7 +53,7 @@
           │   ├── locationLimits
           │   ├── locationUrbanAreas
           │   ├── locationUrbanCommunities
-          │   ├── waypoints
+          │   ├── waypoints[]
           │   ├── routeMidpoint
           │   ├── routeOrigin
           │   ├── routePath
@@ -63,7 +67,8 @@
               ├── orientation
               ├── position
               ├── streetview
-              └── tooltip
+              ├── tooltip
+              └── exportFile
 
     window.app organiza informações geradas pelo servidor, referências para classes 
     declaradas em arquivos auxiliares ("js/Communication.js", "js/Components.js" 
@@ -71,26 +76,27 @@
     
     window.localStorage é usado para sincronizar informações essenciais do app, como
     a url do servidor, a sessionId e os detalhes das rotas.
-
-    ToDo:
-    (1) Editar elemento "menu-context" que suporta o mapa, de forma que ele possa ser
-        dragado por meio do ponto de ancoragem.
-    (2) Criar possibilidade de abrir o streeview no próprio webRotas, encapsulando-o em
-        um iframe, ou abrindo uma nova aba controlável (evitando bloqueio do navegador).
-    (3) Implementar "ping" a cada 10s, de forma que o servidor possa registrar as sessões
-        ativas no seu controle de sessões.
-    (4) Implementar leitura múltipla de arquivos (tanto de "request" quando de "routing").
-    (5) Ajustar estrutura de "request.json". Ao invés de "pontosvisita", usar "waypoints",
-        ao invés de lista de listas, usar lista de objetos etc.
-    (6) Ao adicionar uma routa à routingContext, validar se rota já se encontra por meio
-        de análise de cacheId e routeId. E inicializar "avoidZones" e "midPoint" p/ possibilitar
-        plot.
-    (7) inserir dataset=index na árvore.
-    ...
 */
+
+/*---------------------------------------------------------------------------------*/
+async function loadScript(filename) {
+    return new Promise((resolve, reject) => {
+        const script = window.document.createElement('script');
+        script.src = filename;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`Failed to load script: ${filename}`));
+
+        window.document.head.appendChild(script);
+    });
+}
+
+/*---------------------------------------------------------------------------------*/
 (function () {
     window.app = {
         name: 'webRotas',
+        version: '0.90.0',
+        released: 'R2025b (01/09/2025)',
+        sharepoint: 'https://anatel365.sharepoint.com/sites/InovaFiscaliza/SitePages/webRotas.aspx',
 
         modules: {
             Callbacks: null,
@@ -105,7 +111,7 @@
         server: { 
             url: null,
             sessionId: '',
-            status: 'offline', 
+            status: (window.location.protocol === "file:") ? 'offline' : 'online',
             statusMonitor: {
                 intervalId: null, 
                 intervalMs: 10000,
@@ -114,7 +120,8 @@
             }
         },
 
-        routingContext: [], // list de objetos com campos "request" e "response"
+        routingDB: null,
+        routingContext: [],
 
         map: null,
 
@@ -197,7 +204,12 @@
                         iconType: 'customPinIcon',
                         iconTooltip: {
                             status: true,
-                            textResolver: ({ lat, lng, elevation, description }) => { return `${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
+                            textResolver: ({ lat, lng, elevation, description }) => {
+                                const descriptionText = description.length ? `${description}<br>` : '';
+                                const elevationText   = ![null, -9999].includes(elevation) ? `, ${elevation.toFixed(1)}m` : '';
+
+                                return `${descriptionText}(${lat.toFixed(6)}º, ${lng.toFixed(6)}º${elevationText})`
+                            },
                             offsetResolver: 'default'
                         }
                     }
@@ -206,13 +218,19 @@
                     handle: null,
                     type: 'marker',
                     options: {
-                        iconType: 'defaultIcon',
+                        iconType: 'customPinIcon:Circle',
                         iconTooltip: {
                             status: true,
-                            textResolver: ({ lat, lng }) => { return `Ponto central<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º)` },
+                            textResolver: ({ lat, lng }) => { 
+                                return `Ponto central<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º)` 
+                            },
                             offsetResolver: () => { return [0, 0] }
                         },
-                        iconSize: [25, 41]
+                        iconSize: [25, 41],
+                        iconOptions: {
+                            color: 'rgb(51, 51, 51)',
+                            radius: 10
+                        }
                     }
                 },
                 routeOrigin: {
@@ -222,7 +240,12 @@
                         iconType: 'customPinIcon:Home',
                         iconTooltip: {
                             status: true,
-                            textResolver: ({ lat, lng, elevation, description }) => { return `Ponto inicial: ${description}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º, ${elevation}m)` },
+                            textResolver: ({ lat, lng, elevation, description }) => { 
+                                const descriptionText = description.length ? `: ${description}` : '';
+                                const elevationText   = ![null, -9999].includes(elevation) ? `, ${elevation.toFixed(1)}m` : '';
+
+                                return `Ponto inicial${descriptionText}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º${elevationText})`
+                            },
                             offsetResolver: 'default'
                         }
                     }
@@ -232,9 +255,19 @@
                     type: 'polyline',
                     options: {
                         weight: 3,
-                        color: 'rgba(0,0,255,0.75)',
+                        color: 'rgb(180, 180, 180)',
                         interactive: false
                     }
+                },
+                toolbarPositionSlider: {
+                    handle: null,
+                    type: 'polyline',
+                    options: {
+                        weight: 2,
+                        color: 'rgb(76, 175, 80)',
+                        interactive: false
+                    },
+                    mergedPaths: []
                 },
                 currentPosition: {
                     handle: null,
@@ -302,6 +335,31 @@
                     offsetResolver: (direction) => { 
                         return (direction === "top") ? [0, -41] : [0, 0] 
                     }
+                },
+                importFile: {
+                    format: '.json',
+                    expectedKeys: {
+                        request: ["type", "origin", "parameters" ],
+                        routing: ["routing"]
+                    }
+                },
+                exportFile: {
+                    options: (window.location.protocol === "file:") ? ["JSON", "KML"] : ["JSON", "KML", "HTML+JS+CSS"],
+                    selected: "JSON",
+                    parameters: {
+                        kml: {
+                            ignoredLayers: [
+                                "basemap",
+                                "toolbarPositionSlider",
+                                "currentPosition",
+                                "currentLeg"
+                            ]
+                        }
+                    }
+                },
+                criterion: {
+                    options: ["distance", "duration", "ordered"],
+                    selected: "distance"
                 }
             }
         }
@@ -309,33 +367,28 @@
 
     /*---------------------------------------------------------------------------------*/
     async function appStartup() {
+        /*
+            Inicialmente, carregam-se os scripts auxiliares (Callbacks, Communication, 
+            Components, Layout, Plot e Utils). Além disso, caso o protocolo seja "file:", 
+            carrega-se o script da sessão (session.js).
+        */
         try {
             await loadScript('js/Callbacks.js');
             await loadScript('js/Communication.js');
             await loadScript('js/Components.js');
             await loadScript('js/Layout.js');
+            await loadScript('js/Model.js');
             await loadScript('js/Plot.js');
             await loadScript('js/Utils.js');
 
-            window.addEventListener("load",         (event) => window.app.modules.Callbacks.onWindowLoad(event));            
+            window.addEventListener("load",         (event) => window.app.modules.Callbacks.onWindowLoad(event));
             window.addEventListener("beforeunload", (event) => window.app.modules.Callbacks.onWindowBeforeUnload(event));
             window.addEventListener("storage",      (event) => window.app.modules.Callbacks.onLocalStorageUpdate(event));
+            window.addEventListener("message",      (event) => window.app.modules.Callbacks.onWindowMessage(event));
 
         } catch (ME) {
             (window.app.modules.Utils) ? window.app.modules.Utils.consoleLog(ME, 'error') : console.error(ME);
         }
-    }
-
-    /*---------------------------------------------------------------------------------*/
-    async function loadScript(filename) {
-        return new Promise((resolve, reject) => {
-            const script = window.document.createElement('script');
-            script.src = filename;
-            script.onload = resolve;
-            script.onerror = () => reject(new Error(`Failed to load script: ${filename}`));
-
-            window.document.head.appendChild(script);
-        });
     }
 
     /*---------------------------------------------------------------------------------*/

@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -22.902368,
+        "lng": -43.174200,
+        "description": "Anatel-RJ"
+    },
+    "parameters": {
+        "city": "Campos dos Goytacazes",
+        "state": "RJ",
+        "scope": "Location",
+        "pointDistance": 3000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

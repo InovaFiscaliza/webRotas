@@ -1,10 +1,16 @@
+:root {
+    --tooltip-backgroundColor: rgb(51, 51, 51);
+    --tooltip-borderColor: rgba(255, 255, 255, 0.25);
+    --tooltip-fontColor: rgb(255, 255, 255);
+}
+
 .tooltip-container {
     position: absolute;
-    background: rgb(51,51,51);
-    opacity: 0.9;
-    border: 1px solid rgb(51,51,51);
+    background: var(--tooltip-backgroundColor);
+    opacity: 0.95;
+    border: 1px solid var(--tooltip-borderColor);
     box-shadow: none;
-    color: rgb(255,255,255);
+    color: var(--tooltip-fontColor);
     padding: 6px 10px;
     border-radius: 3px;
     font-size: 12px;
@@ -26,17 +32,17 @@
 }
 
 .leaflet-tooltip-left:before {
-    border-left-color: #333 !important;
+    border-left-color: var(--tooltip-backgroundColor) !important;
 }
 
 .leaflet-tooltip-right:before {
-    border-right-color: #333 !important;
+    border-right-color: var(--tooltip-backgroundColor) !important;
 }
 
 .leaflet-tooltip-top:before {
-    border-top-color: #333 !important;
+    border-top-color: var(--tooltip-backgroundColor) !important;
 }
 
 .leaflet-tooltip-bottom:before {
-    border-bottom-color: #333 !important;
+    border-bottom-color: var(--tooltip-backgroundColor) !important;
 }

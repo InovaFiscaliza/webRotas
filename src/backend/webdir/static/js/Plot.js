@@ -1,83 +1,90 @@
 /*
-    ToDo:
-    - Organizar window.app.routeList, de forma que sejam registrados, de forma consistente, 
-      os "waypoints" e o "routeMidpoint" com a mesma informação (id, descrição, coordenadas,
-      altitude etc). Atualmente, ListaRotasCalculadas[0].pontoinicial é bem diferente de 
-      ListaRotasCalculadas[0].pontosvisitaDados. E, por fim, ao invés de fazer um array de array,
-      organizar a informação em objetos, de forma que tenhamos um array de objetos, evitando 
-      coisas como "coord[5]".
-
-    - Limitar a atualização dos waypointsA atualização dos waypoints parece algo complicado porque
-      demandaria alterar não apenas as suas coordenadas, mas também
-      o tooltip. Neste momento, por simplicidade, os marcadores serão
-      recriados.
+    ## webRotas Plot ##      
+    - Plot
+      ├── controller
+      ├── create
+      ├── update
+      ├── remove
+      ├── removeTooltip
+      ├── changeVisibility
+      ├── checkPlotType
+      └── setView
 */
 
 (function () {
     class Plot {
         /*---------------------------------------------------------------------------------*/
         static controller(type, ...args) {
-            let routing, route, returnedData;
-            let index1, index2;
-
             switch (type) {
-                case 'clearAll':
+                case 'clearAll': {
                     this.remove('allLayers');
                     break;
+                }
 
-                case 'clearForUpdate':
+                case 'clearForUpdate': {
                     this.remove('specificLayers', 'routeMidpoint', 'routeOrigin', 'waypoints');
                     break;
+                }
 
-                case 'draw':
-                    index1 = args[0];
-                    index2 = args[1];
+                case 'draw': 
+                case 'update': {
+                    const index1 = args[0];
+                    const index2 = args[1];
 
-                    routing = window.app.routingContext[index1];
-                    route = routing.response.routes[index2];
+                    const routing = window.app.routingContext[index1];
+                    const route = routing.response.routes[index2];
             
                     window.app.mapContext.settings.colormap.range = window.app.modules.Utils.Elevation.range(route);
+                    window.app.modules.Components.updateColorbar();
                   //window.app.modules.Utils.GeoLocation.routeMidPoint(route);
 
-                    this.controller('clearAll');
-                    this.create('boundingBox',              routing.response.boundingBox);
-                  //this.create('avoidZones',               routing.response.avoidZones);
-                    this.create('locationLimits',           routing.response.location.limits);
-                    this.create('locationUrbanAreas',       routing.response.location.urbanAreas);
-                    this.create('locationUrbanCommunities', routing.response.location.urbanCommunities);
+                    switch (type) {
+                        case 'draw': {
+                            this.controller('clearAll');
 
-                    this.create('routePath',                route.paths);
+                            const avoidZonesRaw = routing.request.avoidZones;
+                            let avoidZones = [];
+                            if (avoidZonesRaw) {
+                                avoidZones = avoidZonesRaw.map(el => el.coord);
+                                this.create('avoidZones',           avoidZones);
+                            }
+
+                            this.create('boundingBox',              routing.response.boundingBox);
+                            this.create('locationLimits',           routing.response.location.limits);
+                            this.create('locationUrbanAreas',       routing.response.location.urbanAreas);
+                            this.create('locationUrbanCommunities', routing.response.location.urbanCommunities);
+                            this.create('routePath',                route.paths);
+                            this.create('toolbarPositionSlider',   [route.paths[0]]);
+                            break;
+                        }
+
+                        case 'update': {
+                            this.controller('clearForUpdate');
+
+                            this.update('routePath',                route.paths);
+                            break;
+                        }
+                    }
+
+                    const routePositionSlider = window.document.getElementById("toolbarPositionSlider");
+                    routePositionSlider.value = 0;
+                    window.app.modules.Callbacks.onToolbarButtonClicked({ target: routePositionSlider })
+
                   //this.create('routeMidpoint',            route.midpoint);
                     this.create('routeOrigin',              route.origin);
                     this.create('waypoints',                route.waypoints);
-                    this.setView('zoom',                    [...route.waypoints, route.origin])
+                    this.setView('zoom',                    [...route.waypoints, route.origin])                    
                     break;
+                }
 
-                case 'update':
-                    index1 = args[0];
-                    index2 = args[1];
-
-                    routing = window.app.routingContext[index1];
-                    route = routing.response.routes[index2];
-
-                    window.app.mapContext.settings.colormap.range = window.app.modules.Utils.Elevation.range(route);
-                  //window.app.modules.Utils.GeoLocation.routeMidPoint(route);
-
-                    this.controller('clearForUpdate');
-                    this.update('routePath',                route.paths);
-                  //this.create('routeMidpoint',            route.midpoint);
-                    this.create('routeOrigin',              route.origin);
-                    this.create('waypoints',                route.waypoints);
-                    this.setView('zoom',                    [...route.waypoints, route.origin])
-                    break;
-
-                case 'updateCurrentLeg':
-                    returnedData = args[0];
+                case 'updateCurrentLeg': {
+                    const returnedData = args[0];
 
                     this.update('currentLeg',               returnedData);
                     this.update('currentPosition',          returnedData);
                     this.setView('center',                  returnedData)
                     break;
+                }
             }
         }
 
@@ -94,6 +101,10 @@
                 geoData = [geoData];
             }
 
+            if (!geoData.length) {
+                return;
+            }
+
             const type    = window.app.mapContext.layers[tag].type;
             const options = window.app.mapContext.layers[tag].options;
             let handle, coords;
@@ -105,10 +116,15 @@
                     geoData.forEach((element, index) => {
                         let marker;
                         let lat, lng, elevation;
-                        let icon, color;
+                        let icon, color, radius;
 
-                        ( { lat, lng, elevation } = element);
+                        if (Array.isArray(element)) {
+                            ( [ lat, lng, elevation ] = element);
+                        } else {
+                            ( { lat, lng, elevation } = element)
+                        }
                         coords = [lat, lng];
+                        elevation = ![null, -9999].includes(elevation) ? elevation : -9999;
 
                         switch (options.iconType) {
                             case 'file':
@@ -129,6 +145,12 @@
                                 icon   = window.app.modules.Utils.Image.customPinIcon('🏠', color);
                                 break;
 
+                            case 'customPinIcon:Circle':
+                                color  = options.iconOptions.color;
+                                radius = options.iconOptions.radius;
+                                icon   = window.app.modules.Utils.Image.customCircleIcon(color, radius);
+                                break;
+
                             default:
                                 icon = new L.Icon.Default({
                                     iconSize: options.iconSize,
@@ -137,6 +159,9 @@
                         }
 
                         marker = window.L.marker(coords, { icon }).addTo(map);
+                        if (color) {
+                            marker.options.color = color.pin;
+                        }
 
                         /*
                             Caso tooltip esteja habilitado, o marker estará relacionado a três 
@@ -163,20 +188,20 @@
                             const direction = window.app.mapContext.settings.tooltip.direction;
                             
                             window.app.modules.Tooltip.bindLeafletTooltip(map, marker, coords, text, direction, offsetResolver);
-                        } 
+                        }
                         
                         handle.push(marker);
                     })
                     break;
 
                 case 'polyline':
-                    coords = geoData;
+                    coords = geoData.filter(el => el.length > 0);
                     handle = window.L.polyline(coords, options).addTo(map);
                     break;
 
                 case 'polygon':
                     coords = geoData;
-                    handle = window.L.polygon(coords,  options).addTo(map);
+                    handle = window.L.polygon(coords, options).addTo(map);
                     break;
 
                 default:
@@ -185,6 +210,15 @@
             }
 
             window.app.mapContext.layers[tag].handle = handle;
+            
+            const handles = Array.isArray(handle) ? handle : [handle];
+            handles.forEach((h, index) => {
+                if (tag === "waypoints") {
+                    h._tag = `${index}`;
+                } else {
+                    h._tag = tag;
+                }
+            });
         }        
         
         /*---------------------------------------------------------------------------------*/
@@ -229,8 +263,12 @@
                 case 'specificLayers':
                     const tags = args;
                     tags.forEach(tag => {
-                        const handle = window.app.mapContext.layers[tag].handle;
+                        let handle = window.app.mapContext.layers[tag].handle;
                         if (!handle) return;
+
+                        if (!Array.isArray(handle)) {
+                            handle = [handle];
+                        }
 
                         handle.forEach(el => {
                             this.removeTooltip(map, el);

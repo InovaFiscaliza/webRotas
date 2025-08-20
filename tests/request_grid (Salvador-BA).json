@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -12.982210,
+        "lng": -38.453133,
+        "description": "Anatel-BA"
+    },
+    "parameters": {
+        "city": "Salvador",
+        "state": "BA",
+        "scope": "UrbanAreas",
+        "pointDistance": 1500
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

@@ -14,7 +14,7 @@ import logging
 SCHEMAS = {
     "PontosVisita": {
         "type": "object",
-        "required": ["User", "TipoRequisicao", "PontoInicial" , "pontosvisita"],
+        "required": ["ssid", "TipoRequisicao", "PontoInicial" , "pontosvisita"],
         "properties": {
             "User": {"type": "string"},
             "TipoRequisicao": {"type": "string"},
@@ -31,7 +31,7 @@ SCHEMAS = {
     },
     "Abrangencia": {
         "type": "object", 
-        "required": ["User", "TipoRequisicao",  "PontoInicial", "cidade", "uf", "distancia_pontos"],
+        "required": ["ssid", "TipoRequisicao",  "PontoInicial", "cidade", "uf", "distancia_pontos"],
         "properties": {
             "User": {"type": "string"},
             "TipoRequisicao": {"type": "string"},
@@ -50,7 +50,7 @@ SCHEMAS = {
     },
     "Contorno": {
         "type": "object",
-        "required": ["User", "TipoRequisicao", "PontoInicial", "latitude", "longitude", "raio"],
+        "required": ["ssid", "TipoRequisicao", "PontoInicial", "latitude", "longitude", "raio"],
         "properties": {
             "User": {"type": "string"},
             "TipoRequisicao": {"type": "string"},
@@ -67,6 +67,48 @@ SCHEMAS = {
             "AlgoritmoOrdenacaoPontos": {"type": "string", "default": "DistanciaGeodesica"},
             "regioes": {"type": "array", "default": []}
         }
+    },
+    "StandardCache": {
+        "type": "object",
+        "properties": {
+            "TipoRequisicao": {
+                "type": "string",
+                "enum": ["StandardCache"]
+            },
+            "RegioesCache": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "GR": {"type": "string"},
+                        "SiglaEstado": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        },
+                        "UO": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        },
+                        "ListaMunicipios": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "municipio": {"type": "string"},
+                                    "siglaEstado": {"type": "string"}
+                                },
+                                "required": ["municipio", "siglaEstado"]
+                            }
+                        },
+                        "regioes": {
+                            "type": "array"
+                        }
+                    },
+                    "required": ["GR", "SiglaEstado", "UO", "ListaMunicipios", "regioes"]
+                }
+            }
+        },
+        "required": ["TipoRequisicao", "RegioesCache"]
     }
 }
 

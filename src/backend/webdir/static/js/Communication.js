@@ -1,30 +1,20 @@
 /*
-    ToDo:
-    - Substituir termo em português "porta" por "port" para manter consistência.
-      Demanda refatoração do servidor, no parseamento da URL.
-    - Se o servidor estiver fora do ar, criar uma linha apontando da posição corrente
-      para o próximo waypoint.
+    ## webRotas Communication ##
+    - COMMUNICATION
+      ├── computeRoute
+      ├── isServerOnlineController
+      ├── isServerOnline
+      ├── handleFailure
+      ├── checkIfUpdateLayoutNeeded
+      ├── updateMissingInfo                   (!! ToDo: PENDENTE !!)
+      └── updateCurrentLeg                    (!! ToDo: PENDENTE !!)
 */
 
 (function () {
     class Communication {
-        static checkProtocolOrigin() {
-            const isValid = ['http:', 'https:'].includes(window.location.protocol);
-            return {
-                isValid: isValid,
-                message: (isValid) ? '' : `Unexpected protocol "${window.location.protocol}".`
-            };
-        }
-
         /*---------------------------------------------------------------------------------*/
         static computeRoute(request) {
-            const { isValid, message } = this.checkProtocolOrigin();
-            if (!isValid) {
-                new DialogBox(message, 'error');
-                return;
-            }
-
-            const { url, sessionId } = window.app.server;
+            const { url, sessionId, status } = window.app.server;
             const serverRoute = `${url}/process?sessionId=${sessionId}`;
 
             return fetch(serverRoute, {
@@ -32,26 +22,53 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(request)
+                body: JSON.stringify(request) 
             })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`${response.status}`);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`${response.status}`);
+                }
+
+                return response.json();
+            })
+            .then(returnedData => {
+                switch (returnedData.type) {
+                    case "initialRoute": {
+                        if (window.app.modules.Model.loadRouteFromFileOrServer(returnedData.routing)) {
+                            const index1 = window.app.routingContext.length-1;
+                            const index2 = 0;
+
+                            window.app.modules.Model.syncLocalStorage('update', index1, index2);
+                        }
+                        break;
                     }
-                    return response.json();
-                })
-                .then(returnedData => {
-                    if (window.app.modules.Utils.resolvePushType(returnedData.routing)) {
-                        window.app.modules.Utils.syncLocalStorage('update');
+                    case "customRoute": {
+                        if (window.app.modules.Model.loadCustomRouteFromServer(returnedData.route)) {
+                            const { index1, index2 } = window.app.modules.Layout.findSelectedRoute();
+                            window.app.modules.Model.syncLocalStorage('update', index1, index2);
+                        }
+                        break;
                     }
-                })
-                .catch(ME => {                    
-                    new DialogBox(`Error: ${ME.message || "Unknown error"}`);
-                });
+                    default:
+                        throw new Error(`Unexpected request type: ${returnedData.type}`);
+                }
+
+                window.app.server.status !== 'online' && (window.app.server.status = 'online');
+                window.app.server.failureCount > 0    && (window.app.server.statusMonitor.failureCount = 0);
+                this.checkIfUpdateLayoutNeeded(status)
+            })
+            .catch(ME => {      
+                new DialogBox(`Error: ${ME.message || "Unknown error"}`);
+                this.handleFailure("online");                    
+            });
         }
 
         /*---------------------------------------------------------------------------------*/
         static isServerOnlineController() {
+            if (window.location.protocol === "file:") {
+                return;
+            }
+
             window.app.server.statusMonitor.intervalId = setInterval(() => {
                 this.isServerOnline();
             }, window.app.server.statusMonitor.intervalMs);
@@ -59,24 +76,25 @@
 
         /*---------------------------------------------------------------------------------*/
         static isServerOnline() {
-            const { url, osrmPort, sessionId, status } = window.app.server;
-            const serverRoute   = `${url}/health?porta=${osrmPort}`;
-            //const serverRoute = `${url}/health?sessionId=${sessionId}`;
-            const initialStatus = status;
+            const { url, sessionId, status } = window.app.server;
+            const serverRoute = `${url}/ok?sessionId=${sessionId}`;
 
-            return fetch(serverRoute)
-                .then(response => {
-                    if (!response.ok) {
-                        this.handleFailure(initialStatus);
-                    }
+            return fetch(serverRoute, {
+                method: 'GET'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`${response.status}`);
+                }
 
-                    window.app.server.status = 'online';
-                    window.app.server.statusMonitor.failureCount = 0;
-                    this.checkIfUpdateLayoutNeeded(initialStatus)
-                })
-                .catch(() => {
-                    this.handleFailure(initialStatus);
-                });
+                // console.log(response.statusText);
+                window.app.server.status !== 'online' && (window.app.server.status = 'online');
+                window.app.server.failureCount > 0    && (window.app.server.statusMonitor.failureCount = 0);
+                this.checkIfUpdateLayoutNeeded(status)
+            })
+            .catch(ME => {
+                this.handleFailure(status);
+            });
         }
 
         /*---------------------------------------------------------------------------------*/
@@ -86,9 +104,11 @@
             this.checkIfUpdateLayoutNeeded(initialStatus)
         
             if (window.app.server.statusMonitor.failureCount >= window.app.server.statusMonitor.failureThreshold) {
-              clearInterval(window.app.server.statusMonitor.intervalId);
-              window.app.server.statusMonitor.intervalId = null;
-              window.app.modules.Utils.consoleLog(`Server unreachable after ${window.app.server.statusMonitor.failureThreshold} retries. Stopping checks.`, 'warn');
+                clearInterval(window.app.server.statusMonitor.intervalId);
+                window.app.modules.Utils.consoleLog(`Server unreachable after ${window.app.server.statusMonitor.failureThreshold} retries. Stopping checks.`, 'warn');
+
+                window.app.server.statusMonitor.intervalId   = null;
+                window.app.server.statusMonitor.failureCount = 0;
             }            
         }
 
@@ -100,7 +120,18 @@
         }
 
         /*---------------------------------------------------------------------------------*/
+        static updateMissingInfo() {
+            // PENDENTE
+            if (window.app.server.status === 'offline') {
+                return;
+            }
+
+            // ...            
+        }
+
+        /*---------------------------------------------------------------------------------*/
         static updateCurrentLeg(currentPosition, nextWaypointPosition) {
+            // PENDENTE
             if (window.app.server.status === 'offline') {
                 return;
             }

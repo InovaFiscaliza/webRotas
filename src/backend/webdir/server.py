@@ -1,451 +1,250 @@
-#!/usr/bin/env python3
-"""
-Provê servidor web para cálculo de rotas.
-
-:args:
-    --port: Porta para o servidor Flask (default: 5001)
-    --debug: Ativa modo de debug (default: False)
-"""
-
 import sys
-import json
 import requests
 import argparse
-from unidecode import unidecode
 
 from flask import (
     Flask,
     Response,
-    render_template,
     jsonify,
-    send_file,
     send_from_directory,
     request,
-    redirect
-) 
-from flask_compress import Compress
+    redirect,
+)
 from flask_cors import CORS
-from concurrent.futures import ThreadPoolExecutor
+from flask_compress import Compress
 
-import webRota as wr
-import server_env as se
+import web_rotas
+from server_env import env
 import routing_servers_interface as rsi
-import CacheBoundingBox as cb
+from route_request_manager import RouteRequestManager as rrm
 
-################################################################################
-""" Variáveis globais """
-
-REQUIRED_KEYS = {
-    "Contorno":       { "latitude", "longitude", "raio" },
-    "PontosVisita":   { "pontosvisita" },
-    "Abrangencia":    { "cidade", "uf", "Escopo", "distancia_pontos" },
-    "RoteamentoOSMR": { "PortaOSRMServer"}
+#-----------------------------------------------------------------------------------#
+# ESTRUTURA DA REQUISIÇÃO JSON
+# - "type"         : "shortest" | "circle" | "grid" | "ordered"
+# - "origin"       : objeto com campos "lat" (float), "lng" (float), "description" 
+#                    (string) e "elevation" (float, opcional)
+# - "parameters"   : objeto com campos dependentes do "type" (ver KEYS_PARAMETERS)
+# - "avoidZones" **: lista de objetos, cada um contendo "name"  (string) e "coord" 
+#                    (lista de [lat, lng])
+# - "criterion"  **: "distance" | "duration" | "ordered"
+#
+# ** Campos opcionais, cujos valores padrão são [] e "distance", respectivamente.
+#-----------------------------------------------------------------------------------#
+KEYS_ROOT = {
+    "required": { "type", "origin", "parameters" },
+    "optional": { "avoidZones", "criterion" } 
 }
 
-env = se.ServerEnv()
-
-################################################################################
-# TODO #4 Use standard paths defined in a configuration section or file. May use ProgramData/Anatel/WebRotas, as other applications from E!, where ProgramData folder should use system variables.
-
-wr.log_filename = env.log_file
-wr.wLog(f"Arquivo de log: {env.log_file}")
-
-app = Flask(__name__, static_folder="static", static_url_path="/webRotas")
-CORS(app)  # Habilita CORS para todas as rotas
-Compress(app)
-# Configuração para forçar a recarga de arquivos estáticos
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
-app.config["TEMPLATES_AUTO_RELOAD"] = True  # Ativa o auto-reload dos templates
+KEYS_PARAMETERS = {
+    "shortest": { "waypoints" },
+    "circle":   { "centerPoint", "radius", "totalWaypoints" },    
+    "grid":     { "city", "state", "scope", "pointDistance" },
+    "ordered":  { "routeId", "cacheId", "boundingBox", "waypoints" }
+}
 
 #-----------------------------------------------------------------------------------#
-# INICIALIZAÇÃO
+# SERVIDOR
+# Utilizado "FLASK" nesta versão; em produção deverá ser migrado para outro framework
+# (FastAPI, NodeJS etc).
+# - "/" ou "/webRotas" :
+#       Redireciona para "/webRotas/index.html", servindo arquivo estático.
+# - "/<path:filepath>" :
+#       Serve arquivos estáticos a partir da pasta "static".
+# - "/process" :
+#       Processa requisições HTTP onde:
+#           • A URL deve conter o parâmetro "sessionId".
+#           • O body deve conter campos listados em KEYS_ROOT e KEYS_PARAMETERS.
+# - "/ok" :
+#       Endpoint de verificação ("ping") entre servidor e clientes.
+#-----------------------------------------------------------------------------------#
+app = Flask(__name__, static_folder="static", static_url_path="/webRotas")
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+app.config["TEMPLATES_AUTO_RELOAD"] = False
+CORS(app)
+Compress(app)
+
 #-----------------------------------------------------------------------------------#
 @app.route("/", methods=["GET"])
+@app.route("/webRotas", methods=["GET"])
 def _root():
     return redirect("/webRotas/index.html")
 
+#-----------------------------------------------------------------------------------#
 @app.route("/<path:filepath>", methods=["GET"])
 def _static_files(filepath):
     return send_from_directory("static", filepath)
 
 #-----------------------------------------------------------------------------------#
-# PROCESSA REQUISIÇÃO, RETORNANDO ROTA AUTOMÁTICA
-#-----------------------------------------------------------------------------------#
-@app.route('/process', methods=['POST'])
+@app.route("/process", methods=["POST"])
 def _process():
     session_id = request.args.get("sessionId")
     if not session_id:
         return jsonify({"error": "Invalid or missing sessionId"}), 400
 
     data = request.get_json()
-    if not data:
-        return jsonify({"error": "Invalid or missing JSON"}), 400
-    
-    with open("../../../tests/routing3.json", "r") as f:
-        json_string = f.read()
-    return Response(json_string, mimetype='application/json')
+    if not data or not KEYS_ROOT['required'].issubset(data.keys()):
+        return jsonify({"error": f"Invalid or missing JSON payload. Required fields: {list(KEYS_ROOT['required'])}"}), 400
 
-#-----------------------------------------------------------------------------------#
-# REPROCESSA REQUISIÇÃO, RETORNANDO ROTA CUSTOMIZADA
-#-----------------------------------------------------------------------------------#
-@app.route('/reprocess', methods=['POST'])
-def _reprocess():
-    session_id = request.args.get("sessionId")
-    if not session_id:
-        return jsonify({"error": "Invalid or missing sessionId"}), 400
+    request_type = data.get("type")
+    if not request_type or request_type not in KEYS_PARAMETERS:
+        return jsonify({"error": "Invalid or missing request type"}), 400
 
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "Invalid or missing JSON"}), 400
-    
-    return jsonify({ "error": "Mensagem erro de teste" }), 500
+    parameters = data.get("parameters")
+    if not isinstance(parameters, dict):
+        return jsonify({"error": "Parameters field must be a JSON object"}), 400
 
-#-----------------------------------------------------------------------------------#
-# OUTRAS ROTAS
+    missing_params = KEYS_PARAMETERS[request_type] - parameters.keys()
+    if missing_params:
+        return jsonify({"error": f"Missing required parameters for type '{request_type}': {list(missing_params)}"}), 400
+
+    return controller(data, session_id)
+
 #-----------------------------------------------------------------------------------#
 @app.route("/ok", methods=["GET"])
 def _ok():
+    session_id = request.args.get("sessionId")
+    if not session_id:
+        return jsonify({"error": "Invalid or missing sessionId"}), 400
+    
     return "ok"
 
 #-----------------------------------------------------------------------------------#
-@app.route("/map/<filename>")
-def mapa_leaflet(filename):
-    template_file = filename
+def controller(data: dict, session_id: str):
     try:
-        # Renderiza o template com o nome do arquivo fornecido
-        return render_template(template_file)
-    except Exception as e:
-        # Retorna uma mensagem de erro caso o template não seja encontrado
-        return f"Erro: {e}", 404
+        request_type = data["type"]
+        origin       = data["origin"]        
+        parameters   = data["parameters"]
+        avoid_zones  = data.get("avoidZones", [])
+        criterion    = data.get("criterion", "distance")
 
-
-#-----------------------------------------------------------------------------------#
-# URL do servidor OSRM
-@app.route("/route", methods=["GET"])
-def get_route():
-    """
-    Rota Flask que envia requisições para o servidor OSRM e retorna a resposta.
-       curl "http://127.0.0.1:5001/route?porta=5001&start=-46.6388,-23.5489&end=-46.6253,-23.5339"
-    """
-    # Parâmetros da requisição (origem e destino)
-    start = request.args.get("start")  # Formato esperado: "lon,lat"
-    end = request.args.get("end")  # Formato esperado: "lon,lat"
-    porta = request.args.get("porta")
-    OSRM_SERVER_URL = f"http://127.0.0.1:{porta}"  # Exemplo local
-
-    if not start or not end or not porta:
-        return jsonify({"error": "Os parâmetros 'start' e 'end' são obrigatórios"}), 400
-
-    try:
-        # Construir a URL para a requisição ao OSRM
-        osrm_url = f"{OSRM_SERVER_URL}/route/v1/driving/{start};{end}?overview=full&geometries=polyline&steps=true"
-
-        # Requisição ao servidor OSRM
-        osrm_response = requests.get(osrm_url)
-        osrm_response.raise_for_status()  # Verifica se houve erro na requisição
-
-        # Retorna a resposta JSON do OSRM para o cliente Flask
-        return jsonify(osrm_response.json())
-
-    except requests.RequestException as e:
-        return jsonify(
-            {"error": f"Falha na comunicação com o servidor OSRM: {str(e)}"}
-        ), 500
-
-
-#-----------------------------------------------------------------------------------#
-@app.route("/health", methods=["GET"])
-def get_health():
-    # Parâmetros da requisição (origem e destino)
-    porta = request.args.get("porta")
-    # http://localhost:50002/route/v1/driving/0,0;1,1?overview=false
-    OSRM_SERVER_URL = f"http://127.0.0.1:{porta}"  # Exemplo local
-
-    try:
-        # Construir a URL para a requisição ao OSRM
-        osrm_url = f"{OSRM_SERVER_URL}/route/v1/driving/0,0;1,1?overview=false"
-
-        # Requisição ao servidor OSRM
-        osrm_response = requests.get(osrm_url)
-        osrm_response.raise_for_status()  # Verifica se houve erro na requisição
-
-        # Retorna a resposta JSON do OSRM para o cliente Flask
-        return jsonify(osrm_response.json())
-
-    except requests.RequestException as e:
-        return jsonify(
-            {"error": f"Falha na comunicação com o servidor OSRM: {str(e)}"}
-        ), 500
-
-#-----------------------------------------------------------------------------------#
-@app.route("/download/<filename>")
-def download_file(filename):
-    # Caminho absoluto ou relativo para o arquivo
-    caminho_arquivo = f"templates/{filename}"
-    try:
-        return send_file(caminho_arquivo, as_attachment=True)
-    except Exception as e:
-        return f"Erro ao enviar o arquivo: {e}"
-
-#-----------------------------------------------------------------------------------#
-@app.route("/webrotas", methods=["POST"])
-def process_location():
-    # Obtém o JSON da requisição
-    data = request.get_json()
-    return ProcessaRequisicoesAoServidor(data)
-
-################################################################################
-def SalvaDataArq(data):
-    # Salva os dados em um arquivo com o nome do usuário
-    user = data["User"]
-    try:
-        file_name = f"{user}.json"
-        with open(file_name, "w", encoding="utf-8") as file:
-            json.dump(data, file, indent=4, ensure_ascii=False)
-
-        wr.wLog(f"Dados salvos com sucesso no arquivo: {file_name}")
-    except Exception as e:
-        wr.wLog(f"Erro ao salvar os dados: {e}")
-        return jsonify({"error": "Erro ao salvar os dados"}), 500
-
-###9
-
-def default_points(radi:int) -> int:
-    """Calcula o número de pontos padrão para a rota de contorno à partir do raio
+        current_request, new_request_flag = rrm.process_request(request_type, data)
+        status = "[webRotas] Created new request" if new_request_flag else "Using existing request"
+        print(f'{status} routeId="{current_request.route_id}" (type="{request_type}", criterion="{criterion}", sessionId="{session_id}")')
     
-    :param radi: Raio em metros
-    :return: Número de pontos padrão
-    """
-    MIN_POINTS = 9
-    POINTS_PER_KM = 2
-    TWO_PI = 6.28318530718
-    
-    return max(MIN_POINTS, int(TWO_PI * radi * POINTS_PER_KM /1000))
-
-
-################################################################################
-# pyinstaller --onefile --add-data "C:\\Users\\andre\\miniconda3\\envs\\webrotas/Lib/site-packages/flask;flask" Server.py
-################################################################################
-def ProcessaRequisicoesAoServidor(data: dict) -> tuple:
-    """Processa as requisições ao servidor WebRotas.
-    
-    :param data: Dicionário com os dados da requisição.
-    :return: Tupla com a resposta da requisição e o código HTTP.
-    """
-    with app.app_context():
-        try:
-            request_type = data["TipoRequisicao"]
-        except KeyError as e:
-            return jsonify({"error": f"Campo TipoRequisicao não encontrado: {e}"}), 400
-        
-        if not REQUIRED_KEYS[request_type].issubset(data.keys()):
-            return jsonify({"error": f"Campos necessários: {REQUIRED_KEYS[request_type]}"}), 400
-        
-        # set variables to arguments used in all types of requests
-        user = unidecode(data.get("User", "Anatel"))
-        regioes = data.get("regioes", [])
-        pontoinicial = data.get("PontoInicial", [])
-        # Nome do usuário para o log trancorrer com o nome correto o quanto antes sem o "none"
-        wr.UserData.nome = user
-        # Process the request according to the request type
         match request_type:
-            case "Contorno":
-                wr.wLog("#############################################################################################")
-                wr.wLog("Recebida solicitação de contorno em torno de ponto de interesse (e.g. emissor, aeroporto)")
-
-                # mandatory arguments
-                latitude = data["latitude"]
-                longitude = data["longitude"]
-                raio = data["raio"]
-
-                # optional arguments (with defaults)
-                numeropontos = data.get("numeropontos", default_points(raio))
-
-                # Present used arguments
-                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
-                wr.wLog(f"Latitude: {latitude}, Longitude: {longitude}, Raio: {raio}m, Número de Pontos: {numeropontos}",level="debug")
-                wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
-                
-                # Process the received data
-                central_point = [latitude, longitude]
-                fileName,fileNameStatic,fileKml=wr.RouteContorno(   data,
-                                                                    user,
-                                                                    pontoinicial,
-                                                                    central_point,
-                                                                    regioes,radius_km=raio,
-                                                                    num_points=numeropontos)
-                wr.wLog("#############################################################################################")
-
-            case "PontosVisita":
-                wr.wLog("#############################################################################################")
-                wr.wLog("Recebida solicitação pontos de visita")
-
-                # mandatory arguments
-                pontosvisita = data["pontosvisita"]
-                
-                # Present used arguments
-                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
-                wr.wLog(f"Pontos de Visita: {pontosvisita}",level="debug")
-                wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
-                
-                # Process the received data
-                fileName, fileNameStatic, fileKml = wr.RoutePontosVisita(   data,
-                                                                            user,
-                                                                            pontoinicial,
-                                                                            pontosvisita,
-                                                                            regioes)
-                wr.wLog("#############################################################################################")
-            
-            case "Abrangencia":
-                wr.wLog("#############################################################################################")
-                wr.wLog("Recebida solicitação de compromisso de abrangência")
-
-                # mandatory arguments
-                cidade = data["cidade"]
-                uf = data["uf"]
-                escopo = data["Escopo"]
-                distanciaPontos = data["distancia_pontos"]
-                
-                # Present used arguments
-                wr.wLog(f"Usuário: {user}, Ponto Inicial: {pontoinicial}",level="debug")
-                wr.wLog(f"Cidade: {cidade},Uf: {uf}, Escopo: {escopo}, Distância entre Pontos: {distanciaPontos}m",level="debug")
-                wr.wLog(f"Regiões Evitar: {regioes}",level="debug")
-
-                # Process the received data
-                fileName,fileNameStatic,fileKml=wr.RouteCompAbrangencia(data,
-                                                                        user,
-                                                                        pontoinicial,
-                                                                        cidade,
-                                                                        uf,
-                                                                        escopo,
-                                                                        distanciaPontos,
-                                                                        regioes)
-                wr.wLog("#############################################################################################")
-
-            case "RoteamentoOSMR":
-                wr.wLog("#############################################################################################")
-                wr.wLog("Recebida solicitação de RoteamentoOSMR")
-                
-                # mandatory arguments
-                porta = data["PortaOSRMServer"]
-                
-                # optional arguments
-                pontosvisita = data.get("pontosvisita", [])
-                pontoinicial = data.get("pontoinicial", [])
-                recalcularrota = data.get("recalcularrota",1)
-                username =  data["UserName"]
-            
-                # Processa a requisição
-                polylineRota, DistanceTotal, pontosvisita = wr.RoteamentoOSMR(  username,
-                                                                                porta,
-                                                                                pontosvisita,
-                                                                                pontoinicial,
-                                                                                recalcularrota)
-                cb.cCacheBoundingBox._schedule_save()
-                # Retorna uma resposta de confirmação
-                wr.wLog(
-                    json.dumps(
-                        {
-                            "polylineRota": polylineRota,
-                            "DistanceTotal": DistanceTotal,
-                            "RotaRecalculada": recalcularrota,
-                            "pontosVisita": pontosvisita,
-                        }
-                    ),level="debug"
+            case "shortest":
+                web_rotas.osrm_shortest(
+                    current_request,
+                    session_id,
+                    origin,
+                    parameters["waypoints"],
+                    avoid_zones,
+                    criterion
                 )
-                wr.wLog("#############################################################################################")
-                return jsonify(
-                    {
-                        "polylineRota": polylineRota,
-                        "DistanceTotal": DistanceTotal,
-                        "RotaRecalculada": recalcularrota,
-                        "pontosVisita": pontosvisita,
-                    }
-                ), 200
+            case "circle":
+                web_rotas.osrm_circle(
+                    current_request,
+                    session_id,
+                    origin,
+                    parameters["centerPoint"],
+                    parameters["radius"],
+                    parameters["totalWaypoints"],
+                    avoid_zones,
+                    criterion
+                )
+            case "grid":
+                web_rotas.osrm_grid(
+                    current_request,
+                    session_id,
+                    origin,
+                    parameters["city"],
+                    parameters["state"],
+                    parameters["scope"],
+                    parameters["pointDistance"],
+                    avoid_zones,
+                    criterion
+                )
+            case "ordered":
+                web_rotas.osrm_ordered(
+                    current_request,
+                    session_id,
+                    origin,
+                    parameters["cacheId"],
+                    parameters["boundingBox"],
+                    parameters["waypoints"],
+                    avoid_zones,
+                    criterion
+                )
 
-            case _:
-                return jsonify({"error": f"Tipo de requisição parcialmente definido. Favor atualizar webrota para processamento da requisição `{request_type}`"}), 400
-        
-        cb.cCacheBoundingBox._schedule_save()
-        # Retorna uma resposta de confirmação
-        return jsonify(
-            {
-                "MapaOk": fileName,
-                "Url": f"http://127.0.0.1:{env.port}/map/{fileName}",
-                "HtmlStatic": f"http://127.0.0.1:{env.port}/download/{fileNameStatic}",
-                "Kml": f"http://127.0.0.1:{env.port}/download/{fileKml}",
-            }
-        ), 200
+        if request_type in { "shortest", "circle", "grid" }:
+            response = current_request.create_initial_route()
+        else:
+            response = current_request.create_custom_route()
 
-################################################################################
-executor = ThreadPoolExecutor(max_workers=40)
-ListaTarefas = []
+        return Response(response, mimetype="application/json")
 
-################################################################################
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
+
+#-----------------------------------------------------------------------------------#
 def parse_args() -> argparse.Namespace:
-    """Parse command line arguments.
-    
-    :return: Parsed arguments.
-    """
-
     parser = argparse.ArgumentParser(description="WebRotas Server")
+
     parser.add_argument(
         "--port",
         type=int,
         default=env.port,
         help="Porta para o servidor Flask (default: %(default)s)",
     )
+
     parser.add_argument(
         "--debug",
         type=bool,
         default=env.debug_mode,
         help="Ativa modo de debug (default: %(default)s)",
     )
-    
+
     try:
         args, unknown = parser.parse_known_args()
         if unknown:
-            wr.wLog(f"Warning: Unknown arguments ignored: {unknown}")
-            wr.wLog(f"Using default values: port={env.port}, debug={env.debug_mode}")
+            print(f"[webRotas] Warning: Unknown arguments ignored: {unknown}")
+            print(f"[webRotas] Using default values: port={env.port}, debug={env.debug_mode}")
         return args
+    
     except Exception as e:
-        wr.wLog(f"Error parsing arguments: {e}")
-        wr.wLog(f"Using default values: port={env.port}, debug={env.debug_mode}")
+        print(f"[webRotas] Error parsing arguments: {e}")
+        print(f"[webRotas] Using default values: port={env.port}, debug={env.debug_mode}")
         # Return a Namespace with default values
         return argparse.Namespace(port=env.port, debug=env.debug_mode)
 
-
-################################################################################
+#-----------------------------------------------------------------------------------#
 def main():
-    """Main function to initialize and run the WebRotas server."""
     try:
-        # Parse command line arguments
         args = parse_args()
-        
-        # Get an available port for the server
+
+        ## Server Port ##
         env.get_port(args.port)
         env.save_server_data()
-        wr.server_port = env.port
 
-        wr.wLog(f"Starting WebRotas Server on port {env.port}...")
+        """
+        ## Podman check ##
         rsi.init_and_load_podman_images()
+        status, message = rsi.is_podman_running_health()
+        if status:
+            print("[webRotas] Podman is healthy and operational.")
+        else:
+            print(f"[webRotas] Podman is not healthy {message}")  
+        
         rsi.manutencao_arquivos_antigos()
-        app.run(debug=args.debug, port=env.port, host='0.0.0.0')
+        """
+
+        ## Flask app ##
+        app.run(debug=False, port=env.port, host="0.0.0.0")
         return 0
+    
     except Exception as e:
-        wr.wLog(f"Server error: {e}")
+        print(f"[webRotas] Server error: {e}")
         return 1
+    
     finally:
-        # Ensure cleanup happens exactly once
         try:
             env.clean_server_data()
-            wr.wLog("Exiting WebRotas Server")
+            print("[webRotas] Exiting server")
         except Exception as e:
-            wr.wLog(f"Cleanup error: {e}")
+            print(f"[webRotas] Cleanup error: {e}")
 
-
+#-----------------------------------------------------------------------------------#
+# DEBUG
+#-----------------------------------------------------------------------------------#
 if __name__ == "__main__":
     sys.exit(main())
-
-
-################################################################################

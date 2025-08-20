@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -7.124323,
+        "lng": -34.838705,
+        "description": "Anatel-PB"
+    },
+    "parameters": {
+        "city": "João Pessoa",
+        "state": "PB",
+        "scope": "Location",
+        "pointDistance": 5000
+    },
+    "avoidZones": [],
+    "criterion": "distance"
+}

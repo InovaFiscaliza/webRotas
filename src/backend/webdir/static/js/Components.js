@@ -1,9 +1,13 @@
 /*
     ## webRotas Components ##
+    - BARRA DE NAVEGAÇÃO
+      └── createNavBar
     - MAPA
       ├── createMap
       ├── createContextMenu
-      └── createColorbar
+      ├── createColorbar
+      ├── createSvgElement
+      └── updateColorbar
     - PAINEL À ESQUERDA DO MAPA
       └── createPanel
     - TOOLBAR
@@ -18,6 +22,61 @@
 (function() {
     class Components {
         /*-----------------------------------------------------------------------------------
+            ## BARRA DE NAVEGAÇÃO ##
+        -----------------------------------------------------------------------------------*/
+        static createNavBar() {
+            const container = window.document.getElementById('app');
+            const navbar = this.createElement('nav', {
+                id: 'navbar',
+                classList: ['grid']                
+            }, container);
+
+            Object.assign(navbar.style, { 
+                gridTemplateRows: 'minmax(0px, 1fr)',
+                gridTemplateColumns: 'minmax(0px, 1fr) 22px 22px'
+            });
+
+            // TÍTULO
+            this.createTitle('icon+text', {
+                gridArea: '1 / 1 / 2 / 2',
+                iconPath: 'images/route_white.svg', 
+                innerHTML: `${window.app.name} v. ${window.app.version}<br><font style="font-size: 9px;">${window.app.released}</font>`
+            }, navbar)
+
+            this.createElement('button', {
+                id: 'serverStatusBtn',
+                classList: ['btn-input'],                
+                style: { 
+                    gridArea: '1 / 2 / 2 / 3',
+                    display: (window.location.protocol === "file:") ? 'block' : 'none',
+                    width: '18px', 
+                    height: '18px', 
+                    backgroundImage: 'url(images/red-circle-blink.gif)',
+                    backgroundSize: 'contain'
+                },
+                eventListeners: {
+                    click: (event) => window.app.modules.Callbacks.onNavBarButtonClicked(event)
+                },
+                dataset: { tooltip: 'Servidor offline', tooltipDefaultPosition: 'bottom' }
+            }, navbar);
+
+            this.createElement('button', {
+                id: 'appInfoBtn',
+                classList: ['btn-input'],                
+                textContent: '⋮',
+                style: { 
+                    gridArea: '1 / 3 / 2 / 4',
+                    color: 'rgb(255, 255, 255)',
+                    fontSize: '19px'
+                },
+                eventListeners: {
+                    click: (event) => window.app.modules.Callbacks.onNavBarButtonClicked(event)
+                },
+                dataset: { tooltip: 'Informações gerais', tooltipDefaultPosition: 'bottom' }
+            }, navbar);
+        }
+
+        /*-----------------------------------------------------------------------------------
             ## MAPA ##
             O mapa estará relacionado a alguns eventos: mousemove e mouseup (ambos definidos 
             em "Tooltip.js"), além de contextmenu (definido em "Callback.js"). Além disso, 
@@ -25,6 +84,11 @@
             zoomstart, que removem o menu caso exista interação com o mapa.
         -----------------------------------------------------------------------------------*/
         static createMap() {
+            const container = window.document.getElementById('app');
+            this.createElement('div', {
+                id: 'document'
+            }, container);
+
             const { center, zoom } = window.app.mapContext.settings.position;
             const basemapList      = window.app.mapContext.layers.basemap;
             const basemapSelection = window.app.mapContext.settings.basemap;
@@ -44,13 +108,13 @@
         static createContextMenu() {
             const document = window.document.getElementById('document');
             const context  = this.createElement('div', {
-                classList: ['context-menu'],
-                id: 'contextMenu'
+                id: 'contextMenu',
+                classList: ['context-menu']                
             }, document);
 
             this.createElement('div', {
-                classList: ['context-menu-item'],
                 id: 'contextMenuCoords',
+                classList: ['context-menu-item'],                
                 textContent: 'Coordenadas: -1, -1',
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onContextMenuItemSelected(event)
@@ -58,8 +122,8 @@
             }, context);
 
             this.createElement('div', {
-                classList: ['context-menu-item'],
                 id: 'contextMenuStreetView',
+                classList: ['context-menu-item'],                
                 textContent: 'Visualizar no StreetView',
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onContextMenuItemSelected(event)
@@ -67,8 +131,8 @@
             }, context);
 
             this.createElement('div', {
-                classList: ['context-menu-item'],
                 id: 'contextMenuUpdateVehicle',
+                classList: ['context-menu-item'],                
                 textContent: 'Atualizar posição do veículo (offline)',
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onContextMenuItemSelected(event)
@@ -79,17 +143,53 @@
         }
 
         /*---------------------------------------------------------------------------------*/
-        static colorbar() {
-            const svgContainer = window.document.getElementById("colorbar");
-            if (!svgContainer) return;
-        
-            // Limpa o conteúdo anterior
-            svgContainer.innerHTML = "";
-            
-            // Insere o novo SVG
-            svgContainer.appendChild(generateScaleSVG(globalMinElevation, globalMaxElevation));
+        static createColorbar() {
+            let mainContainer = window.document.querySelector('.colorbar');
+            if (mainContainer) {
+                mainContainer.remove();
+            }
+
+            window.app.mapContext.settings.colorbar = (window.app.mapContext.settings.colorbar === "hidden") ? "visible" : "hidden";
+            if (window.app.mapContext.settings.colorbar === "hidden") {
+                return;
+            }
+
+            mainContainer = document.createElement("div");
+            mainContainer.className = "colorbar";
+
+            const svgContainer = document.createElement("div");
+            svgContainer.id = "svgContainer";
+            Object.assign(svgContainer.style, {
+                width: "100%",
+                height: "100%",
+                position: "absolute",
+                top: "0",
+                left: "0"
+            });
+
+            mainContainer.appendChild(svgContainer);
+            window.document.body.appendChild(mainContainer);
+
+            this.updateColorbar();
         }
 
+        /*---------------------------------------------------------------------------------*/
+        static createSvgElement(tagName, attributes = {}) {
+            const el = document.createElementNS("http://www.w3.org/2000/svg", tagName);
+            Object.entries(attributes).forEach(([k, v]) => el.setAttribute(k, v));
+            return el;
+        }
+
+
+        /*---------------------------------------------------------------------------------*/
+        static updateColorbar() {
+            const svgContainer = window.document.getElementById("svgContainer");
+            if (!svgContainer) return;
+            svgContainer.innerHTML = "";
+
+            const svg = window.app.modules.Utils.Image.colorbar();
+            svgContainer.appendChild(svg);
+        }
 
         /*-----------------------------------------------------------------------------------
             ## PAINEL À ESQUERDA DO MAPA ##
@@ -103,122 +203,194 @@
         -----------------------------------------------------------------------------------*/
         static createPanel() {
             // <GRID PRINCIPAL>
-            const panel = window.document.getElementById('panel');
-            ['panel-on', 'grid'].forEach(className => {
-                panel.classList.add(className);
-            });
-            Object.assign(panel.style, { gridTemplateRows: '26px 22px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 1fr)', gridTemplateColumns: 'minmax(0px, 1fr)'
-            });
+            const container = window.document.getElementById('app');
+            
+            const panel = this.createElement('div', {
+                id: 'panel',
+                classList: ['grid']                
+            }, container);
 
-            // TÍTULO
-            this.createTitle('icon+text+line', {
-                gridArea: '1 / 1 / 2 / 2',
-                iconPath: 'images/route.svg', 
-                textContent: 'webRotas'                
-            }, panel)
+            Object.assign(panel.style, { 
+                gridTemplateRows: '17px minmax(0px, 1fr) 22px 115px 22px minmax(0px, 0.5fr) 22px 52px', 
+                gridTemplateColumns: 'minmax(0px, 1fr)'
+            });
 
             // ROTAS - LABEL E CONTROLES
             const routeListTitleGrid = this.createElement('div', {
                 classList: ['grid'],
-                style: { gridArea: '2 / 1 / 3 / 2', gridTemplateRows: '22px', gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px 18px', padding: '0px', columnGap: '5px', overflow: 'visible' }
+                style: { 
+                    gridArea: '1 / 1 / 2 / 2', 
+                    gridTemplateRows: '17px', 
+                    gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px 18px', 
+                    padding: '0px', 
+                    columnGap: '5px', 
+                    overflow: 'visible' 
+                }
             }, panel);
 
                 // <SUB-GRID>
                 this.createElement('label', {
                     classList: ['label-text-list'],
-                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    style: { 
+                        gridArea: '1 / 1 / 2 / 2' 
+                    },
                     textContent: 'Rotas:'
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right'],
                     id: 'routeListAddBtn',
-                    style: { gridArea: '1 / 2 / 2 / 3', width: '18px', height: '18px', backgroundImage: 'url(images/addFiles_32.png)' },
+                    classList: ['btn-top-right'],                    
+                    style: { 
+                        gridArea: '1 / 2 / 2 / 3', 
+                        width: '100%', 
+                        height: '100%', 
+                        backgroundImage: 'url(images/addFiles_32.png)',
+                        backgroundSize: 'contain'
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    dataset: { tooltip: 'Duplica rota' }
+                    dataset: { 
+                        tooltip: 'Duplica rota' 
+                    }
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right', 'disabled'],
                     id: 'routeListDelBtn',
-                    style: { gridArea: '1 / 3 / 2 / 4', width: '18px', height: '18px', backgroundImage: 'url(images/Trash_32.png)' },
+                    classList: ['btn-top-right', 'disabled'],                    
+                    style: { 
+                        gridArea: '1 / 3 / 2 / 4', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/Trash_32.png)' ,
+                        backgroundSize: 'contain'
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Exclui rota' }
+                    dataset: { 
+                        tooltip: 'Exclui rota' 
+                    }
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right'],
                     id: 'routeListEditModeBtn',
-                    style: { gridArea: '1 / 4 / 2 / 5', width: '18px', height: '18px', backgroundImage: 'url(images/Edit_32.png)' },
+                    classList: ['btn-top-right'],                    
+                    style: { 
+                        gridArea: '1 / 4 / 2 / 5', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/Edit_32.png)',
+                        backgroundSize: 'contain'
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    dataset: { tooltip: 'Habilita modo de edição da rota', value: 'off' }
+                    dataset: { 
+                        tooltip: 'Habilita modo de edição da rota', 
+                        value: 'off' 
+                    }
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right'],
                     id: 'routeListConfirmBtn',
-                    style: { gridArea: '1 / 5 / 2 / 6', display: 'none', width: '18px', height: '18px', backgroundImage: 'url(images/Ok_32Green.png)' },
+                    classList: ['btn-top-right'],                    
+                    style: { 
+                        gridArea: '1 / 5 / 2 / 6', 
+                        display: 'none', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/Ok_32Green.png)',
+                        backgroundSize: 'contain'
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    dataset: { tooltip: 'Confirma edição' }
+                    dataset: { 
+                        tooltip: 'Confirma edição' 
+                    }
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    classList: ['btn-top-right'],
                     id: 'routeListCancelBtn',
-                    style: { gridArea: '1 / 6 / 2 / 7', display: 'none', width: '18px', height: '18px', backgroundImage: 'url(images/Delete_32Red.png)' },
+                    classList: ['btn-top-right'],                    
+                    style: { 
+                        gridArea: '1 / 6 / 2 / 7', 
+                        display: 'none', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/Delete_32Red.png)',
+                        backgroundSize: 'contain'
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    dataset: { tooltip: 'Cancela edição' }
+                    dataset: { 
+                        tooltip: 'Cancela edição' 
+                    }
                 }, routeListTitleGrid);
                 // </SUB-GRID>
         
             // ROTAS - ÁRVORE
             this.createElement('ul', {
-                classList: ['text-list'],
                 id: 'routeList',
-                style: { gridArea: '3 / 1 / 4 / 2' }
+                classList: ['text-list'],                
+                style: { 
+                    gridArea: '2 / 1 / 3 / 2' 
+                }
             }, panel);
         
             // PONTO INICIAL - LABEL E CONTROLES
             const initialPointTitleGrid = this.createElement('div', {
                 classList: ['grid'],
-                style: { gridArea: '4 / 1 / 5 / 2', gridTemplateRows: '22px', gridTemplateColumns: 'minmax(0px, 1fr) 18px', padding: '0px', overflow: 'visible' }
+                style: { 
+                    gridArea: '3 / 1 / 4 / 2', 
+                    gridTemplateRows: '22px', 
+                    gridTemplateColumns: 'minmax(0px, 1fr) 18px', 
+                    padding: '0px', 
+                    overflow: 'visible' 
+                }
             }, panel);
 
                 // <SUB-GRID>
                 this.createElement('label', {
                     classList: ['label-panel'],
-                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    style: { 
+                        gridArea: '1 / 1 / 2 / 2' 
+                    },
                     textContent: 'Ponto inicial:'
                 }, initialPointTitleGrid);
             
                 this.createElement('button', {
-                    classList: ['btn-top-right', 'disabled'],
                     id: 'initialPointBtn',
-                    style: { gridArea: '1 / 2 / 2 / 3', width: '18px', height: '18px', backgroundImage: 'url(images/pin_18.png)' },
+                    classList: ['btn-top-right', 'disabled'],                    
+                    style: { 
+                        gridArea: '1 / 2 / 2 / 3', 
+                        width: '18px', 
+                        height: '18px', 
+                        backgroundImage: 'url(images/pin_18.png)' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Captura posição do mouse' }
+                    dataset: { 
+                        tooltip: 'Altera ponto inicial diretamente no mapa' 
+                    }
                 }, initialPointTitleGrid);
                 // </SUB-GRID>
         
             // PONTO INICIAL - LATITUDE, LONGITUDE E DESCRIÇÃO
             const initialPointGrid = this.createElement('div', {
-                classList: ['grid', 'grid-border'],
                 id: 'initialPointGrid',
-                style: { gridArea: '5 / 1 / 6 / 2', gridTemplateRows: '17px 22px 17px 22px', gridTemplateColumns: 'minmax(0px, 1fr) minmax(0px, 1fr)', padding: '10px' }
+                classList: ['grid', 'grid-border'],                
+                style: { 
+                    gridArea: '4 / 1 / 5 / 2', 
+                    gridTemplateRows: '17px 22px 17px 22px', 
+                    gridTemplateColumns: 'minmax(0px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr)', 
+                    padding: '10px' 
+                }
             });
             panel.appendChild(initialPointGrid);
 
@@ -226,54 +398,89 @@
                 this.createElement('label', {
                     classList: ['label-form-field'],
                     htmlFor: 'initialPointLatitude',
-                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    style: { 
+                        gridArea: '1 / 1 / 2 / 2' 
+                    },
                     textContent: 'Latitude:'
                 }, initialPointGrid);
             
                 this.createElement('input', {
-                    classList: ['spinner-disabled'],
                     id: 'initialPointLatitude',
                     type: 'number',
                     step: 'any',
-                    style: { gridArea: '2 / 1 / 3 / 2' },
+                    style: { 
+                        gridArea: '2 / 1 / 3 / 2' 
+                    },
                     eventListeners: {
-                        change: (event) => window.app.modules.Callbacks.onNumericFieldValidation(event, { min: -90, max: 90 })
+                        change: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event, { min: -90, max: 90 })
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Limites: [-90, 90]', tooltipDefaultPosition: 'bottom' }
+                    dataset: { 
+                        tooltip: 'Limites: [-90, 90]', 
+                        tooltipDefaultPosition: 'bottom' 
+                    }
                 }, initialPointGrid);
             
                 this.createElement('label', {
                     classList: ['label-form-field'],
                     htmlFor: 'initialPointLongitude',
-                    style: { gridArea: '1 / 2 / 2 / 3' },
+                    style: { 
+                        gridArea: '1 / 2 / 2 / 3' 
+                    },
                     textContent: 'Longitude:'
                 }, initialPointGrid);
             
                 this.createElement('input', {
-                    classList: ['spinner-disabled'],
                     id: 'initialPointLongitude',
                     type: 'number',
                     step: 'any',
-                    style: { gridArea: '2 / 2 / 3 / 3' },
+                    style: { 
+                        gridArea: '2 / 2 / 3 / 3' 
+                    },
                     eventListeners: {
-                        change: (event) => window.app.modules.Callbacks.onNumericFieldValidation(event, { min: -180, max: 180 })
+                        change: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event, { min: -180, max: 180 })
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Limites: [-180, 180]', tooltipDefaultPosition: 'bottom' }
+                    dataset: { 
+                        tooltip: 'Limites: [-180, 180]', 
+                        tooltipDefaultPosition: 'bottom' 
+                    }
+                }, initialPointGrid);
+
+                this.createElement('label', {
+                    classList: ['label-form-field'],
+                    htmlFor: 'initialPointElevation',
+                    style: { 
+                        gridArea: '1 / 3 / 2 / 4' 
+                    },
+                    textContent: 'Elevação:'
+                }, initialPointGrid);
+            
+                this.createElement('input', {
+                    id: 'initialPointElevation',
+                    type: 'number',
+                    step: 'any',
+                    style: { 
+                        gridArea: '2 / 3 / 3 / 4' 
+                    },
+                    disabled: true,
                 }, initialPointGrid);
             
                 this.createElement('label', {
                     classList: ['label-form-field'],
                     htmlFor: 'initialPointDescription',
-                    style: { gridArea: '3 / 1 / 4 / 2' },
+                    style: { 
+                        gridArea: '3 / 1 / 4 / 4' 
+                    },
                     textContent: 'Descrição:'
                 }, initialPointGrid);
             
                 this.createElement('input', {
                     id: 'initialPointDescription',
                     type: 'text',
-                    style: { gridArea: '4 / 1 / 5 / 3' },
+                    style: { 
+                        gridArea: '4 / 1 / 5 / 4' 
+                    },
                     disabled: true
                 }, initialPointGrid);
                 // </SUB-GRID>
@@ -281,45 +488,81 @@
             // PONTO A VISITAR - LABEL E CONTROLES
             const pointsToVisitTitleGrid = this.createElement('div', {
                 classList: ['grid'],
-                style: { gridArea: '6 / 1 / 7 / 2', display: 'grid', gridTemplateRows: '22px', gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px', padding: '0px', columnGap: '5px', overflow: 'visible' }
+                style: { 
+                    gridArea: '5 / 1 / 6 / 2', 
+                    display: 'grid', 
+                    gridTemplateRows: '22px', 
+                    gridTemplateColumns: 'minmax(0px, 1fr) 18px 18px', 
+                    padding: '0px', 
+                    columnGap: '5px', 
+                    overflow: 'visible' 
+                }
             }, panel);
 
                 // <SUB-GRID>        
                 this.createElement('label', {
                     classList: ['label-text-list'],
-                    style: { gridArea: '1 / 1 / 2 / 2' },
+                    style: { 
+                        gridArea: '1 / 1 / 2 / 2' 
+                    },
                     textContent: 'Pontos a visitar:'
                 }, pointsToVisitTitleGrid);
             
                 this.createElement('button', {
-                    classList: ['btn-top-right', 'disabled'],
                     id: 'routeListMoveUpBtn',
+                    classList: ['btn-top-right', 'disabled'],                    
                     textContent: '▲',
-                    style: { gridArea: '1 / 2 / 2 / 3' },
+                    style: { 
+                        gridArea: '1 / 2 / 2 / 3' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Altera ordem do ponto selecionado' }
+                    dataset: { 
+                        tooltip: 'Altera ordem do ponto selecionado' 
+                    }
                 }, pointsToVisitTitleGrid);
             
                 this.createElement('button', {
-                    classList: ['btn-top-right', 'disabled'],
                     id: 'routeListMoveDownBtn',
+                    classList: ['btn-top-right', 'disabled'],                    
                     textContent: '▼',
-                    style: { gridArea: '1 / 3 / 2 / 4' },
+                    style: { 
+                        gridArea: '1 / 3 / 2 / 4' 
+                    },
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
                     disabled: true,
-                    dataset: { tooltip: 'Altera ordem do ponto selecionado' }
+                    dataset: { 
+                        tooltip: 'Altera ordem do ponto selecionado' 
+                    }
                 }, pointsToVisitTitleGrid);
                 // </SUB-GRID>
         
             this.createElement('ul', {
-                classList: ['text-list'],
                 id: 'pointsToVisit',
-                style: { gridArea: '7 / 1 / 8 / 2' }
+                classList: ['text-list'],                
+                style: { 
+                    gridArea: '6 / 1 / 7 / 2' 
+                }
+            }, panel);
+
+            this.createElement('label', {
+                classList: ['label-text-list'],
+                style: { 
+                    gridArea: '7 / 1 / 8 / 2' 
+                },
+                textContent: 'Outras informações:'
+            }, panel);
+
+            this.createElement('div', {
+                id: 'routeIds',
+                classList: ['text-area'],                
+                style: { 
+                    gridArea: '8 / 1 / 9 / 2' 
+                }
             }, panel);
             // </GRID PRINCIPAL>
         }
@@ -329,35 +572,54 @@
             ## TOOLBAR ##
         -----------------------------------------------------------------------------------*/
         static createToolbar() {
-            let container = window.document.getElementById('toolbar');
-            ['grid-toolbar'].forEach(className => {
-                container.classList.add(className);
+            const container = window.document.getElementById('app');
+            
+            const toolbar = this.createElement('footer', {
+                id: 'toolbar',
+                classList: ['grid-toolbar']                
+            }, container);
+
+            Object.assign(toolbar.style, { 
+                gridTemplateRows: '1fr', 
+                gridTemplateColumns: '22px 22px 22px 5px 218px minmax(0px, 1fr) 22px 22px 22px 22px 22px' 
             });
-            Object.assign(container.style, { gridTemplateRows: '1fr', gridTemplateColumns: '22px 22px 22px minmax(0, 1fr) 22px 22px 22px 22px' });
 
             this.createElement('button', {
-                classList: ['btn-panel-on'],
                 id: 'toolbarPanelVisibilityBtn',
-                style: { gridArea: '1 / 1 / 2 / 2', width: '18px', height: '18px' },
+                classList: ['btn-panel-on'],                
+                style: { 
+                    gridArea: '1 / 1 / 2 / 2', 
+                    height: '100%'
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Visibilidade do painel de controle' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Visibilidade do painel de controle' 
+                }
+            }, toolbar);
 
             const btn = this.createElement('label', {
-                classList: ['btn-input'],
                 id: 'toolbarImportBtn',
+                classList: ['btn-input'],
                 htmlFor: 'toolbarImportInput',
-                style: { gridArea: '1 / 2 / 2 / 3', width: '16px', height: '16px', backgroundImage: 'url(images/import.png)' },
-                dataset: { tooltip: 'Importa arquivo de configuração (.json)' },
-            }, container);
+                style: { 
+                    gridArea: '1 / 2 / 2 / 3', 
+                    height: '100%', 
+                    backgroundImage: 'url(images/import.png)'
+                },
+                dataset: { 
+                    tooltip: 'Importa arquivo de configuração (.json)' 
+                },
+            }, toolbar);
 
             const input = this.createElement('input', {
                 id: 'toolbarImportInput',
                 type: 'file',
-                accept: '.json',
-                style: { display: 'none' },
+                accept: window.app.mapContext.settings.importFile.format,
+                style: { 
+                    display: 'none'
+                },
                 eventListeners: {
                     change: (event) => {
                         window.app.modules.Callbacks.onToolbarButtonClicked(event);
@@ -369,48 +631,131 @@
 
             this.createElement('button', {
                 id: 'toolbarExportBtn',
-                style: { gridArea: '1 / 3 / 2 / 4', width: '16px', height: '16px', backgroundImage: 'url(images/export.png)' },
+                style: { 
+                    gridArea: '1 / 3 / 2 / 4', 
+                    height: '100%', 
+                    backgroundImage: 'url(images/export.png)'
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Exporta arquivos (.html | .kml)' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Exporta arquivos (.json | .kml | .html)' 
+                }
+            }, toolbar);
+
+            this.createElement('separator', {
+                style: { 
+                    gridArea: '1 / 4 / 2 / 5',
+                    borderLeft: '1px solid #7d7d7d',
+                    height: '85%',
+                    transform: 'translateX(2px)'
+                },
+            }, toolbar);
+
+            this.createElement('label', {
+                id: 'toolbarPositionSliderValue',
+                classList: ['no-drag'],
+                textContent: '0%',
+                style: { 
+                    gridArea: '1 / 5 / 2 / 6',
+                    textAlign: 'right',
+                    color: '#4caf50',
+                    transform: 'translateY(-8px)'
+                },
+                eventListeners: {
+                    input: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
+                }
+            }, toolbar);
+
+            this.createElement('input', {
+                id: 'toolbarPositionSlider',
+                style: { 
+                    gridArea: '1 / 5 / 2 / 6'
+                },
+                eventListeners: {
+                    input: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
+                },
+                type: 'range',
+                min: 0,
+                max: 100,
+                value: 0
+            }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarLocationBtn',
-                style: { gridArea: '1 / 5 / 2 / 6', width: '18px', height: '18px', backgroundImage: 'url(images/gps-off.png)' },
+                style: { 
+                    gridArea: '1 / 7 / 2 / 8', 
+                    height: '100%', 
+                    backgroundImage: 'url(images/gps-off.png)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Compartilhar localização' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Compartilhar localização' 
+                }
+            }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarOrientationBtn',
-                style: { gridArea: '1 / 6 / 2 / 7', width: '18px', height: '18px', backgroundImage: 'url(images/north.png)' },
+                style: { 
+                    gridArea: '1 / 8 / 2 / 9', 
+                    height: '100%', 
+                    backgroundImage: 'url(images/north.png)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Orientação do mapa' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Orientação do mapa' 
+                }
+            }, toolbar);
+
+            this.createElement('button', {
+                id: 'toolbarInitialZoomBtn',
+                style: { 
+                    gridArea: '1 / 9 / 2 / 10', 
+                    height: '100%', 
+                    backgroundImage: 'url(images/restore-initial-zoom.png)' 
+                },
+                eventListeners: {
+                    click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
+                },
+                dataset: { 
+                    tooltip: 'Zoom inicial' 
+                }
+            }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarColorbarBtn',
-                style: { gridArea: '1 / 7 / 2 / 8', width: '18px', height: '18px', backgroundImage: 'url(images/colorbar.svg)' },
+                style: { 
+                    gridArea: '1 / 10 / 2 / 11', 
+                    height: '100%', 
+                    backgroundImage: 'url(images/colorbar.svg)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Barra de cores' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Barra de cores' 
+                }
+            }, toolbar);
 
             this.createElement('button', {
                 id: 'toolbarBasemapsBtn',
-                style: { gridArea: '1 / 8 / 2 / 9', width: '18px', height: '18px', backgroundImage: 'url(images/layers.png)' },
+                style: { 
+                    gridArea: '1 / 11 / 2 / 12', 
+                    height: '100%', 
+                    backgroundImage: 'url(images/layers.png)' 
+                },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
                 },
-                dataset: { tooltip: 'Basemap' }
-            }, container);
+                dataset: { 
+                    tooltip: 'Basemap' 
+                }
+            }, toolbar);
         }
 
 
@@ -478,16 +823,66 @@
         /*---------------------------------------------------------------------------------*/
         static createTitle(style, options, parentElement = null) {
             switch (style) {
-                case 'icon+text+line':
+                case 'icon+text': {
+                    const { gridArea, iconPath, innerHTML } = options;
+                    
+                    const title = this.createElement('div',  { 
+                        classList: ['topdiv-container'], 
+                        style: { 
+                            gridArea: gridArea, 
+                            display: 'flex', 
+                            margin: '0', 
+                            padding: '0', 
+                            color: 'white' 
+                        } 
+                    }, parentElement);
+
+                    const content = this.createElement('div',  { 
+                        style: { 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            paddingLeft: '4px', 
+                            gap: '12px' 
+                        } 
+                    }, title);
+
+                    const img = this.createElement('img',  { 
+                        width: 18, 
+                        height: 18, 
+                        src: iconPath
+                    }, content);
+
+                    const txt = this.createElement('span', { 
+                        innerHTML: innerHTML 
+                    }, content);
+
+                    return title;
+                }
+
+                case 'icon+text+line': {
                     const { gridArea, iconPath, textContent } = options;
                     
                     const title = this.createElement('div',  { 
                         classList: ['topdiv-container'], 
-                        style: { gridArea: gridArea, display: 'flex', flexDirection: 'column', height: '26px', margin: '0', padding: '0', backgroundColor: 'rgb(191, 191, 191)' } 
+                        style: { 
+                            gridArea: gridArea, 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            height: '26px', 
+                            margin: '0', 
+                            padding: '0', 
+                            backgroundColor: 'rgb(191, 191, 191)' 
+                        } 
                     }, parentElement);
 
                     const content = this.createElement('div',  { 
-                        style: { display: 'flex', alignItems: 'center', height: '23px', paddingLeft: '4px', gap: '6px' } 
+                        style: { 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            height: '23px', 
+                            paddingLeft: '4px', 
+                            gap: '6px' 
+                        } 
                     }, title);
 
                     const img = this.createElement('img',  { 
@@ -501,10 +896,15 @@
                     }, content);
 
                     const line = this.createElement('div',  { 
-                        style: { height: '3px', width: '100%', backgroundColor: 'rgb(0,0,0)' } 
+                        style: { 
+                            height: '3px', 
+                            width: '100%', 
+                            backgroundColor: 'rgb(0,0,0)' 
+                        } 
                     }, title);
 
                     return title;
+                }
 
                 default:
                     // IMPLEMENTAR OUTROS ESTILOS À MEDIDA QUE FOR NECESSÁRIO
@@ -519,7 +919,7 @@
             routing.forEach((routingEl, index1) => {
                 routingEl.response.routes.forEach((routeEl, index2) => {
                     const htmlEl = this.createElement('li', {
-                        textContent: textResolver(routeEl, index1, index2),
+                        innerHTML: textResolver(routeEl, index1, index2),
                         eventListeners: eventListeners,
                         dataset: { index: JSON.stringify([index1, index2]) }
                     }, parentElement);
@@ -537,7 +937,8 @@
 
             textList.forEach((element, index) => {
                 const el = this.createElement('li', {
-                    textContent: textResolver(element, index),
+                    innerHTML: textResolver(element, index),
+                    value: index,
                     eventListeners: eventListeners
                 }, parentElement);
 
@@ -546,70 +947,92 @@
                 }
             })
         }
+        
+        /*---------------------------------------------------------------------------------*/
+        static createBasicSelector(type) {
+            const options  = window.app.mapContext.settings[type].options;
+            const selected = window.app.mapContext.settings[type].selected;
+
+            let popup = window.document.querySelector('.selector-popup');
+            if (popup) popup.remove();
+
+            popup = window.document.createElement('div');
+            popup.className = 'selector-popup';
+    
+            // Rádios
+            options.forEach((option) => {
+                const label = window.document.createElement('label');
+                Object.assign(label.style, {
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                });
+    
+                const radio = window.document.createElement('input');
+                Object.assign(radio, {
+                    type: 'radio',
+                    name: 'exportFile',
+                    value: option,
+                    checked: option === selected
+                });
+                radio.style.marginRight = '5px';
+
+                radio.addEventListener('change', () => {
+                    window.app.mapContext.settings.exportFile.selected = option;
+                });
+    
+                label.appendChild(radio);
+                label.appendChild(window.document.createTextNode(option));
+                popup.appendChild(label);
+            });
+
+            return popup;
+        }
 
         /*---------------------------------------------------------------------------------*/
         static createBasemapSelector() {
-            let tooltip = document.querySelector('.tooltip');
-            if (tooltip) {
-                tooltip.remove();
-                tooltip = null;
-            }
+            const options  = window.app.mapContext.layers.basemap;
+            const selected = window.app.mapContext.settings.basemap;
 
-            let popup = document.querySelector('.basemap-popup');
+            let popup = window.document.querySelector('.selector-popup');
+            if (popup) popup.remove();
 
-            if (popup) {
-                popup.remove();
-                popup = null;
-            } else {
-                const map = window.app.map;
-                const basemaps = window.L.dataSet.Basemap.items;
-        
-                popup = document.createElement('div');
-                popup.className = 'basemap-popup';
-        
-                Object.assign(popup.style, {
-                    position: 'fixed',
-                    right: '10px',
-                    bottom: '56px',
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    padding: '10px 10px 10px 5px',
-                    borderRadius: '3px',
-                    fontFamily: 'Helvetica, Arial, sans-serif',
-                    fontSize: '11px',
-                    color: '#333',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                    transition: 'opacity 0.2s ease',
+            popup = window.document.createElement('div');
+            popup.className = 'selector-popup';
+    
+            // Rádios
+            Object.entries(options).forEach(([key, layer]) => {
+                const label = window.document.createElement('label');
+                Object.assign(label.style, {
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
                 });
-        
-                // Rádios
-                const current = window.L.dataSet.Basemap.value;
-                Object.entries(basemaps).forEach(([key, layer]) => {
-                    const label = document.createElement('label');
-                    label.style.display = 'flex';
-                    label.style.alignItems = 'center';
-                    label.style.cursor = 'pointer';
-        
-                    const radio = document.createElement('input');
-                    radio.type = 'radio';
-                    radio.name = 'basemap';
-                    radio.value = key;
-                    radio.checked = (key === current);
-                    radio.style.marginRight = '5px';
-        
-                    radio.addEventListener('change', () => {
-                        const oldKey = window.L.dataSet.Basemap.value;
-                        map.removeLayer(basemaps[oldKey]);
-                        window.L.dataSet.Basemap.value = key;
-                        map.addLayer(basemaps[key]);
-                    });
-        
-                    label.appendChild(radio);
-                    label.appendChild(document.createTextNode(key));
-                    popup.appendChild(label);
-                });    
-                document.body.appendChild(popup);
-            }
+    
+                const radio = window.document.createElement('input');
+                Object.assign(radio, {
+                    type: 'radio',
+                    name: 'basemap',
+                    value: key,
+                    checked: key === selected
+                });
+                radio.style.marginRight = '5px';
+    
+                radio.addEventListener('change', () => {
+                    const { map } = window.app;
+                    const oldKey  = window.app.mapContext.settings.basemap;
+                    map.removeLayer(options[oldKey]);
+                    
+                    window.app.mapContext.settings.basemap = key;
+                    map.addLayer(layer);
+                });
+    
+                label.appendChild(radio);
+                label.appendChild(window.document.createTextNode(key));
+                popup.appendChild(label);
+            });
+
+            return popup;
         }
     }
 

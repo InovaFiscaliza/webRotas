@@ -1,10 +1,25 @@
+/*
+    ## webRotas Layout ##      
+    - Layout
+      ├── startup
+      ├── controller
+      ├── updateControlState
+      ├── getDOMElements
+      ├── findSelectedRoute
+      ├── checkIfOriginChanged
+      ├── routeListSelectionChanged
+      ├── updateEditableField
+      ├── toggleEnabled
+      └── toggleVisibility
+*/
+
 (function() {
     class Layout {
         /*---------------------------------------------------------------------------------*/
         static startup(...args) {
-            const routing = window.app.routingContext;
+            const routingContext = window.app.routingContext;
 
-            if (routing.length == 0) {
+            if (routingContext.length == 0) {
                 this.controller('idle');
                 window.app.modules.Plot.controller('clearAll');
             } else {
@@ -17,30 +32,59 @@
 
         /*---------------------------------------------------------------------------------*/
         static controller(type, ...args) {
-            const routing = window.app.routingContext;
-            let index1, index2;
+            const routingContext = window.app.routingContext;
 
-            if (routing.length === 0) {
+            if (routingContext.length === 0) {
                 type = 'idle';
             }
 
             switch (type) {
-                case 'idle':
+                case 'idle': {
                     this.updateControlState(type);
                     break;
+                }
 
-                case 'routeLoaded':
-                    index1 = args[0];
-                    index2 = args[1];
-                    const htmlRouteEl = this.getDOMElements(['routeList']).routeList;
+                case 'routeLoaded': {
+                    const index1 = args[0];
+                    const index2 = args[1];
+                    const htmlRouteEl = window.document.getElementById('routeList');
 
                     this.updateControlState(type);
 
                     window.app.modules.Components.createRouteList(
                         htmlRouteEl,
-                        routing,
-                        (routeEl, index1, index2) => {
-                            return `[${index1},${index2}]: ${routeEl.estimatedDistance} km${routeEl.automatic ? ' (AUTOMÁTICA)' : ''}`
+                        routingContext,
+                        (route, index1, index2) => {
+                            /*
+                                isComplete registra a qualidade dos dados. Posteriormente, criar uma chamada p/
+                                que servidor possa sanar as pendências (elevação, ou paths).
+                            */
+                            let isComplete = true;
+                            if ([null, -9999].includes(route.origin.elevation)) {
+                                isComplete = false;
+                            }
+
+                            for (let ii = 0; ii < route.waypoints.length; ii++) {
+                                if ([null, -9999].includes(route.waypoints[ii].elevation)) {
+                                    isComplete = false;
+                                    break;
+                                }
+                            }
+
+                            if (route.paths.length <= 1) {
+                                isComplete = false;
+                            }
+
+                            const automaticMark = route.automatic 
+                                ? '<span style="color: #4caf50; font-size: 8px;">AUTO</span>' 
+                                : '<span style="color: rgb(180, 180, 180); font-size: 8px;">MANUAL</span>';
+
+                            // ⌛📐
+
+                            return `<div style="display:flex;">
+                                        <div style="min-width:16px;">[${index1},${index2}]:</div>
+                                        <div style="padding-left:5px;">${route.routeId} ${automaticMark} ${isComplete ? '' : ' 🔴'}<br>(${route.estimatedTime || 'unknown'}, ${route.estimatedDistance || 'unknown'})</div>
+                                    </div>`
                         },
                         {
                             click:      (event) => window.app.modules.Callbacks.onRouteListSelectionChanged(event),
@@ -52,21 +96,29 @@
 
                     this.controller('routeSelected', index1, index2);
                     break;
+                }
 
-                case 'routeSelected':
-                    index1 = args[0];
-                    index2 = args[1];                    
-                    const route = routing[index1].response.routes[index2];
-                    const htmlPointsEl = this.getDOMElements(['pointsToVisit']).pointsToVisit;
+                case 'routeSelected': {
+                    const index1 = args[0];
+                    const index2 = args[1];
 
-                    this.updateControlState(type, route);
+                    const routing = routingContext[index1].response;
+                    const route = routing.routes[index2];
+                    const htmlPointsEl = window.document.getElementById('pointsToVisit');
+
+                    this.updateControlState(type, routing, route);
                     
                     window.app.modules.Components.createTextList(
                         htmlPointsEl,
                         route.waypoints,
-                        (routeEl, index) => {
-                            const routeElDescription = routeEl.description.length ? ` ${routeEl.description}` : '';
-                            return `${index}: (${routeEl.lat}, ${routeEl.lng}, ${routeEl.elevation}m)${routeElDescription}`;
+                        (waypoint, index) => {
+                            const descriptionText = waypoint.description.length ? `${waypoint.description}<br>` : '';
+                            const elevationText   = [null, -9999].includes(waypoint.elevation) ? '' : `, ${waypoint.elevation.toFixed(1)}m`;
+                            
+                            return `<div style="display:flex;">
+                                        <div style="min-width:16px;">${index}:</div>
+                                        <div style="padding-left:5px;">${descriptionText}(${waypoint.lat.toFixed(6)}, ${waypoint.lng.toFixed(6)}${elevationText})</div>
+                                    </div>`;
                         },
                         {
                             click:      (event) => window.app.modules.Callbacks.onPointListSelectionChanged(event, htmlPointsEl),
@@ -75,14 +127,18 @@
                         }
                     );                    
                     break;
+                }
 
-                case 'editionMode':
+                case 'editionMode': {
                     const editionMode = args[0]; // true | false
-                    ({ index1, index2 } = this.findSelectedRoute());
+                    const { index1, index2 } = this.findSelectedRoute();
                     this.updateControlState(type, editionMode);
 
-                    this.controller('routeSelected', index1, index2);
+                    if (!editionMode) {
+                        this.controller('routeSelected', index1, index2);
+                    }
                     break;
+                }
 
                 default: 
                     throw Error('Unexpected type')
@@ -91,11 +147,9 @@
 
         /*---------------------------------------------------------------------------------*/
         static updateControlState(type, ...args) {
-            let htmlEl, htmlElArray, htmlRouteEl, htmlPointsEl;
-
             switch (type) {
-                case 'idle':
-                    htmlEl = this.getDOMElements([
+                case 'idle': {
+                    const htmlEl = this.getDOMElements([
                         'routeListAddBtn',
                         'routeListDelBtn',
                         'routeListEditModeBtn',
@@ -104,64 +158,90 @@
                         'initialPointBtn',
                         'initialPointLatitude',
                         'initialPointLongitude',
+                        'initialPointElevation',
                         'initialPointDescription',
                         'routeListMoveUpBtn',
                         'routeListMoveDownBtn',
+                        'routeIds',
                         'toolbarExportBtn',
+                        'toolbarPositionSlider',
                         'toolbarLocationBtn',
                         'toolbarOrientationBtn',
-                        'toolbarColorbarBtn'
+                        'toolbarColorbarBtn',
+                        'toolbarInitialZoomBtn'
                     ]);
-                    htmlElArray = Object.values(htmlEl);
+                    const htmlElArray = Object.values(htmlEl);
                     this.toggleEnabled(htmlElArray, false);
 
-                    htmlRouteEl = this.getDOMElements(['routeList']).routeList;
+                    const htmlRouteEl = window.document.getElementById('routeList');
                     htmlRouteEl.innerHTML = '';
 
                     this.updateEditableField(htmlEl.initialPointLatitude,    '');
                     this.updateEditableField(htmlEl.initialPointLongitude,   '');
+                    this.updateEditableField(htmlEl.initialPointElevation,   '');
                     this.updateEditableField(htmlEl.initialPointDescription, '');
 
-                    htmlPointsEl = this.getDOMElements(['pointsToVisit']).pointsToVisit;
+                    const htmlPointsEl = window.document.getElementById('pointsToVisit');
                     htmlPointsEl.innerHTML = '';
-                    break;
 
-                case 'routeLoaded':
-                    htmlEl = this.getDOMElements([
+                    htmlEl.routeIds.textContent = '';
+                    htmlEl.toolbarPositionSlider.value = 0;
+                    window.app.modules.Callbacks.onToolbarButtonClicked({ target: htmlEl.toolbarPositionSlider });
+                    break;
+                }
+
+                case 'routeLoaded': {
+                    const htmlEl = this.getDOMElements([
                         'routeListAddBtn',
                         'routeListDelBtn',
-                        'routeListEditModeBtn',
                         'toolbarExportBtn',
+                        'toolbarPositionSlider',
                         'toolbarLocationBtn',
                         'toolbarOrientationBtn',
                         'toolbarColorbarBtn',
-                        'toolbarBasemapsBtn'
+                        'toolbarInitialZoomBtn'
                     ]);
-                    htmlElArray = Object.values(htmlEl);                    
+                    const htmlElArray = Object.values(htmlEl);                    
                     this.toggleEnabled(htmlElArray, true);
 
-                    htmlRouteEl = this.getDOMElements(['routeList']).routeList;
+                    const htmlEditModeBtnElArray = [window.document.getElementById('routeListEditModeBtn')];
+                    this.toggleEnabled(htmlEditModeBtnElArray, (window.location.protocol === "file:") ? false : true);
+
+                    const htmlRouteEl = window.document.getElementById('routeList');
                     htmlRouteEl.innerHTML = '';
                     break;
+                }
 
-                case 'routeSelected':
-                    const route = args[0];
+                case 'routeSelected': {
+                    const routing = args[0];
+                    const route   = args[1];
 
-                    htmlEl = this.getDOMElements([
+                    const htmlEl = this.getDOMElements([
                         'initialPointLatitude',
                         'initialPointLongitude',
-                        'initialPointDescription'
+                        'initialPointElevation',
+                        'initialPointDescription',
+                        'routeIds'
                     ]);
 
-                    this.updateEditableField(htmlEl.initialPointLatitude,    route.origin.lat);
-                    this.updateEditableField(htmlEl.initialPointLongitude,   route.origin.lng);
-                    this.updateEditableField(htmlEl.initialPointDescription, route.origin.description);                    
-                    break;
+                    this.updateEditableField(htmlEl.initialPointLatitude,    route.origin.lat.toFixed(6));
+                    this.updateEditableField(htmlEl.initialPointLongitude,   route.origin.lng.toFixed(6));
+                    this.updateEditableField(htmlEl.initialPointElevation,   route.origin.elevation ? route.origin.elevation.toFixed(1) : -9999);
+                    this.updateEditableField(htmlEl.initialPointDescription, route.origin.description);
 
-                case 'editionMode':
+                    let ids = {
+                        created: route.created,
+                        cacheId: routing.cacheId,
+                        routeId: route.routeId || "n/a"
+                    };
+                    htmlEl.routeIds.textContent = JSON.stringify(ids, null, 1);
+                    break;
+                }
+
+                case 'editionMode': {
                     const editionMode = args[0]
 
-                    htmlEl = this.getDOMElements([
+                    const htmlEl = this.getDOMElements([
                         'routeListAddBtn',
                         'routeListDelBtn',
                         'routeListEditModeBtn',
@@ -188,11 +268,15 @@
                     [htmlEl.initialPointLatitude, htmlEl.initialPointLongitude, htmlEl.initialPointDescription].forEach(item => { 
                         item.disabled = !editionMode; 
                     });
+                }
             }
         }
 
         /*---------------------------------------------------------------------------------*/
         static getDOMElements(ids) {
+            /*
+                Retorna-sa um objeto cujas chaves correspondem aos ids dos elementos HTML.
+            */
             const elements = {};
             ids.forEach(id => {
                 elements[id] = window.document.getElementById(id);
@@ -203,7 +287,7 @@
 
         /*---------------------------------------------------------------------------------*/
         static findSelectedRoute() {
-            const htmlRouteEl = this.getDOMElements(['routeList']).routeList;
+            const htmlRouteEl = window.document.getElementById('routeList');
             const htmlRouteElChildren = Array.from(htmlRouteEl.children);
 
             const currentSelection = htmlRouteElChildren.find(item => item.classList.contains('selected'));
@@ -211,6 +295,41 @@
             const currentRoute     = window.app.routingContext[index1].response.routes[index2];
 
             return { htmlRouteEl, htmlRouteElChildren, currentSelection, index1, index2, currentRoute };
+        }
+
+        /*---------------------------------------------------------------------------------*/
+        static checkIfOriginChanged() {
+            const { index1, index2, currentRoute } = this.findSelectedRoute();
+
+            const initialPointHtmlElements = this.getDOMElements([
+                'initialPointLatitude',
+                'initialPointLongitude',
+                'initialPointElevation',
+                'initialPointDescription'
+            ]);
+
+            /*
+                ⚠️ Cuidado no uso de initialOrigin e editedOrigin fora desta função porque
+                as informações de "lat" e "lng" originalmente são numéricas. Aqui, pra fins
+                de comparação do seu conteúdo, trunca-se e converte-se em string.
+            */
+
+            const initialOrigin = {...currentRoute.origin};
+            initialOrigin.lat = initialOrigin.lat.toFixed(6);
+            initialOrigin.lng = initialOrigin.lng.toFixed(6);
+            initialOrigin.description = initialOrigin.description.trim();
+
+            const editedOrigin = {
+                lat: parseFloat(initialPointHtmlElements.initialPointLatitude.value).toFixed(6),
+                lng: parseFloat(initialPointHtmlElements.initialPointLongitude.value).toFixed(6),
+                elevation: parseFloat(initialPointHtmlElements.initialPointElevation.value),
+                description: initialPointHtmlElements.initialPointDescription.value.trim()
+            };
+
+            const hasOriginRouteChanged = initialOrigin.lat !== editedOrigin.lat || initialOrigin.lng !== editedOrigin.lng;
+            const hasOriginDescriptionChanged = initialOrigin.description !== editedOrigin.description;
+
+            return { index1, index2, currentRoute, initialPointHtmlElements, initialOrigin, editedOrigin, hasOriginRouteChanged, hasOriginDescriptionChanged }
         }
 
         /*---------------------------------------------------------------------------------*/
