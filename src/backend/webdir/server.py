@@ -228,6 +228,17 @@ def main():
         rsi.manutencao_arquivos_antigos()
         """
 
+        ## Podman check ##
+        rsi.init_and_load_podman_images()
+        status, message = rsi.is_podman_running_health()
+        if status:
+            print("[webRotas] Podman is healthy and operational.")
+        else:
+            print(f"[webRotas] Podman is not healthy {message}")  
+        
+        rsi.manutencao_arquivos_antigos()
+        
+
         ## Flask app ##
         app.run(debug=False, port=env.port, host="0.0.0.0")
         return 0
