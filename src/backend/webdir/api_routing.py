@@ -1,16 +1,31 @@
 import requests
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+import numpy as np
 
+MAX_OSRM_POINTS = 100  # limite do servidor OSRM (ajuste se seu container suportar mais)
+OSRM_URL = "http://router.project-osrm.org/"
 TIMEOUT = 10
 URL = {
     "table":  lambda coord_str: f"http://router.project-osrm.org/table/v1/driving/{coord_str}?annotations=distance,duration",
     "route":  lambda coord_str: f"http://router.project-osrm.org/route/v1/driving/{coord_str}?overview=full&geometries=geojson"
 }
 
+
 #-----------------------------------------------------------------------------------#
 def controller(origin, waypoints, criterion="distance"):
     coords = [origin] + waypoints
-    distances, durations = get_osrm_matrix(coords)
+    
+    n_points = len(coords)
+    # verifica se ultrapassa o limite de pontos
+    if n_points > MAX_OSRM_POINTS:
+        raise ValueError(f"{n_points} pontos recebidos, maior que {MAX_OSRM_POINTS}.")  
+    else:
+        status, _ = check_osrm_status()
+        if status:
+            distances, durations = get_osrm_matrix(coords)
+        else:
+            distances, durations = get_osrm_matrix_podman(coords)
+    
 
     if criterion in ["distance", "duration"]:
         matrix = distances if criterion == "distance" else durations
@@ -31,7 +46,26 @@ def controller(origin, waypoints, criterion="distance"):
         seconds_to_hms(estimated_sec), 
         f"{round(estimated_m / 1000, 1)} km"
     )
+#-----------------------------------------------------------------------------------#
+def check_osrm_status():
+    """Faz uma chamada de teste ao OSRM e verifica se está operacional."""
+    try:
+        # Chamando a API de status simples (table com 2 pontos de teste)
+        test_coords = "-43.12,-22.91;-43.13,-22.92"  # pontos em Niterói, RJ
+        url = f"{OSRM_URL}table/v1/driving/{test_coords}?annotations=distance,duration"
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        data = response.json()
 
+        # Verifica se a resposta tem as chaves esperadas
+        if "distances" in data and "durations" in data:
+            return True, "OSRM está online e operacional."
+        else:
+            return False, "OSRM respondeu, mas dados esperados não encontrados."
+
+    except requests.exceptions.RequestException as e:
+        return False, f"Erro ao acessar OSRM: {e}"
+    
 #-----------------------------------------------------------------------------------#
 def get_osrm_matrix(coords):
     coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
@@ -43,7 +77,14 @@ def get_osrm_matrix(coords):
     return data["distances"], data["durations"]
 
 #-----------------------------------------------------------------------------------#
+def get_osrm_matrix_podman(coords):
+    
+    return
+#-----------------------------------------------------------------------------------#
 def get_osrm_route(coords, order):
+    
+    # momento de testar se a chamada da API retorna ok ou preciso lançar um container
+    
     ordered   = [coords[ii] for ii in order]
     coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
 
@@ -57,7 +98,7 @@ def get_osrm_route(coords, order):
 
     return data, ordered
 
-#-----------------------------------------------------------------------------------#
+# -----------------------------------------------------------------------------#
 def solve_open_tsp_from_matrix(distance_matrix):
     """
     Usa o 'truque do retorno grátis': zera custo para voltar ao depósito (coluna 0).
