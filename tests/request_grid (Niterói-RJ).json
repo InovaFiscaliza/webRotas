@@ -9,7 +9,7 @@
         "city": "Niterói",
         "state": "RJ",
         "scope": "Location",
-        "pointDistance": 1500
+        "pointDistance": 500
     },
     "avoidZones": [
         {
