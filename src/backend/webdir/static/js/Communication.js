@@ -26,7 +26,8 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`${response.status}`);
+                    // throw new Error(`${response.status}`);
+                    throw new Error(`<b>${response.status}</b><br>${response.statusText}`);
                 }
 
                 return response.json();
@@ -58,7 +59,8 @@
                 this.checkIfUpdateLayoutNeeded(status)
             })
             .catch(ME => {      
-                new DialogBox(`Error: ${ME.message || "Unknown error"}`);
+                // new DialogBox(`Error: ${ME.message || "Unknown error"}`);
+                new DialogBox(`Error: ${ME.message || "Unknown error"}`, 'error');
                 this.handleFailure("online");                    
             });
         }

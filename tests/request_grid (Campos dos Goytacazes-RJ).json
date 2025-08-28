@@ -9,7 +9,7 @@
         "city": "Campos dos Goytacazes",
         "state": "RJ",
         "scope": "Location",
-        "pointDistance": 1000
+        "pointDistance": 5000
     },
     "avoidZones": [],
     "criterion": "duration"

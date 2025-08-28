@@ -1,52 +1,57 @@
 import requests
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 import numpy as np
+import polyline
+from geopy.distance import geodesic
 
 MAX_OSRM_POINTS = 100  # limite do servidor OSRM (ajuste se seu container suportar mais)
 OSRM_URL = "http://router.project-osrm.org/"
 TIMEOUT = 10
 URL = {
-    "table":  lambda coord_str: f"http://router.project-osrm.org/table/v1/driving/{coord_str}?annotations=distance,duration",
-    "route":  lambda coord_str: f"http://router.project-osrm.org/route/v1/driving/{coord_str}?overview=full&geometries=geojson"
+    "table": lambda coord_str: f"http://router.project-osrm.org/table/v1/driving/{coord_str}?annotations=distance,duration",
+    "route": lambda coord_str: f"http://router.project-osrm.org/route/v1/driving/{coord_str}?overview=full&geometries=geojson",
 }
 
 
-#-----------------------------------------------------------------------------------#
+# -----------------------------------------------------------------------------------#
 def controller(origin, waypoints, criterion="distance"):
     coords = [origin] + waypoints
-    
+
     n_points = len(coords)
     # verifica se ultrapassa o limite de pontos
     if n_points > MAX_OSRM_POINTS:
-        raise ValueError(f"{n_points} pontos recebidos, maior que {MAX_OSRM_POINTS}.")  
+        distances, durations = get_geodesic_matrix(coords)
     else:
-        status, _ = check_osrm_status()
-        if status:
+        try:
             distances, durations = get_osrm_matrix(coords)
-        else:
+        except Exception as e:
             distances, durations = get_osrm_matrix_podman(coords)
-    
 
     if criterion in ["distance", "duration"]:
         matrix = distances if criterion == "distance" else durations
-        order  = solve_open_tsp_from_matrix(matrix)
+        order = solve_open_tsp_from_matrix(matrix)
     else:
         order = list(range(len(coords)))
 
     route_json, ordered_coords = get_osrm_route(coords, order)
-    paths = [list(reversed(path)) for path in route_json["routes"][0]["geometry"]["coordinates"]]
+    paths = [
+        list(reversed(path))
+        for path in route_json["routes"][0]["geometry"]["coordinates"]
+    ]
 
     estimated_sec = route_json["routes"][0]["duration"]
-    estimated_m   = route_json["routes"][0]["distance"]
+    estimated_m = route_json["routes"][0]["distance"]
 
     return (
         ordered_coords[0],
-        ordered_coords[1:], 
-        paths, 
-        seconds_to_hms(estimated_sec), 
-        f"{round(estimated_m / 1000, 1)} km"
+        ordered_coords[1:],
+        paths,
+        seconds_to_hms(estimated_sec),
+        f"{round(estimated_m / 1000, 1)} km",
     )
-#-----------------------------------------------------------------------------------#
+
+
+# -----------------------------------------------------------------------------------#
 def check_osrm_status():
     """Faz uma chamada de teste ao OSRM e verifica se está operacional."""
     try:
@@ -65,27 +70,63 @@ def check_osrm_status():
 
     except requests.exceptions.RequestException as e:
         return False, f"Erro ao acessar OSRM: {e}"
-    
-#-----------------------------------------------------------------------------------#
-def get_osrm_matrix(coords):
-    coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
 
+
+# -----------------------------------------------------------------------------------#
+def get_osrm_matrix_old(coords):
+    coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
     req = requests.get(URL["table"](coord_str), timeout=10)
     req.raise_for_status()
-    data = req.json()        
+    data = req.json()
 
     return data["distances"], data["durations"]
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
+def get_osrm_matrix(coords):
+    """Gera matriz de distâncias e durações via OSRM, usando polyline."""
+    coords_latlng = [(c["lat"], c["lng"]) for c in coords]
+    encoded = polyline.encode(coords_latlng, precision=5)
+    coord_str = f"polyline({encoded})"
+
+    req = requests.get(URL["table"](coord_str), timeout=10)
+    req.raise_for_status()
+    data = req.json()
+
+    return data["distances"], data["durations"]
+
+
+# -----------------------------------------------------------------------------------#
+def get_geodesic_matrix(coords):
+    """
+    Gera matriz de distâncias geodésicas (em km) entre os pontos.
+    coords: lista de dicts {'lat': float, 'lng': float}
+    """
+    n = len(coords)
+    distances = [[0.0] * n for _ in range(n)]
+
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                p1 = (coords[i]["lat"], coords[i]["lng"])
+                p2 = (coords[j]["lat"], coords[j]["lng"])
+                distances[i][j] = geodesic(p1, p2).km
+
+    return distances, distances  # retorna distâncias em km como durações fictícias
+
+
+# -----------------------------------------------------------------------------------#
 def get_osrm_matrix_podman(coords):
-    
+    raise NotImplementedError("Função não implementada. get_osrm_matrix_podman")
     return
-#-----------------------------------------------------------------------------------#
-def get_osrm_route(coords, order):
-    
+
+
+# -----------------------------------------------------------------------------------#
+def get_osrm_route_old(coords, order):
+
     # momento de testar se a chamada da API retorna ok ou preciso lançar um container
-    
-    ordered   = [coords[ii] for ii in order]
+
+    ordered = [coords[ii] for ii in order]
     coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
 
     req = requests.get(URL["route"](coord_str), timeout=10)
@@ -97,6 +138,28 @@ def get_osrm_route(coords, order):
             waypoint["description"] = data["waypoints"][ii].get("name", "")
 
     return data, ordered
+
+
+# -----------------------------------------------------------------------------------#
+def get_osrm_route(coords, order):
+    """Calcula rota com polyline, preservando as descrições."""
+    ordered = [coords[ii] for ii in order]
+    coords_latlng = [(c["lat"], c["lng"]) for c in ordered]
+
+    encoded = polyline.encode(coords_latlng, precision=5)
+    coord_str = f"polyline({encoded})"
+
+    print(URL["route"](coord_str))
+    req = requests.get(URL["route"](coord_str), timeout=10)
+    req.raise_for_status()
+    data = req.json()
+
+    for ii, waypoint in enumerate(ordered):
+        if not waypoint.get("description"):
+            waypoint["description"] = data["waypoints"][ii].get("name", "")
+
+    return data, ordered
+
 
 # -----------------------------------------------------------------------------#
 def solve_open_tsp_from_matrix(distance_matrix):
@@ -124,7 +187,9 @@ def solve_open_tsp_from_matrix(distance_matrix):
 
     # Estratégia inicial simples
     params = pywrapcp.DefaultRoutingSearchParameters()
-    params.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+    params.first_solution_strategy = (
+        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+    )
 
     solution = routing.SolveWithParameters(params)
     if not solution:
@@ -148,18 +213,20 @@ def solve_open_tsp_from_matrix(distance_matrix):
 
     return order
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 def seconds_to_hms(seconds):
     h = int(seconds // 3600)
     m = int((seconds % 3600) // 60)
     s = int(seconds % 60)
     return f"{h:02d}:{m:02d}:{s:02d}"
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 # DEBUG
-#-----------------------------------------------------------------------------------#
+# -----------------------------------------------------------------------------------#
 if __name__ == "__main__":
-    origin    = {"lat": -23.55052, "lng": -46.57421}
+    origin = {"lat": -23.55052, "lng": -46.57421}
     waypoints = [
         {"lat": -23.54785, "lng": -46.58325},
         {"lat": -23.55130, "lng": -46.57944},
