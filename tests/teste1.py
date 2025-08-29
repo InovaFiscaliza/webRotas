@@ -90,6 +90,7 @@ def get_osrm_route(coords, order):
 
     return data, ordered
 
+
 # -----------------------------------------------------------------------------#
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 def solve_open_tsp_from_matrix(distance_matrix):
@@ -221,7 +222,7 @@ def save_route_leaflet(route_data, ordered, filename="mapa.html"):
 
 # -----------------------------------------------------------------------------------#
 if __name__ == "__main__":
-    N = 500  # número de pontos para gerar
+    N = 450  # número de pontos para gerar
     coords = random_points_in_bbox(N, BBOX_NITEROI)
 
     print(f"Gerados {N} pontos aleatórios em Niterói:")
