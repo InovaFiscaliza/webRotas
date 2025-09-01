@@ -4,7 +4,8 @@ import numpy as np
 import polyline
 from geopy.distance import geodesic
 
-MAX_OSRM_POINTS = 100  # limite do servidor OSRM (ajuste se seu container suportar mais)
+MAX_OSRM_MATRIX_POINTS = 100  # limite do servidor OSRM (ajuste se seu container suportar mais)
+MAX_OSRM_POINTS = 450  # limite do servidor OSRM (ajuste se seu container suportar mais)
 OSRM_URL = "http://router.project-osrm.org/"
 TIMEOUT = 10
 URL = {
@@ -19,7 +20,7 @@ def controller(origin, waypoints, criterion="distance"):
 
     n_points = len(coords)
     # verifica se ultrapassa o limite de pontos
-    if n_points > MAX_OSRM_POINTS:
+    if n_points > MAX_OSRM_MATRIX_POINTS:
         distances, durations = get_geodesic_matrix(coords)
     else:
         try:
@@ -33,7 +34,17 @@ def controller(origin, waypoints, criterion="distance"):
     else:
         order = list(range(len(coords)))
 
-    route_json, ordered_coords = get_osrm_route(coords, order)
+    
+
+    if n_points > MAX_OSRM_POINTS:
+       route_json, ordered_coords = get_osrm_route_podman(coords, order)
+    else:
+        try:
+            route_json, ordered_coords = get_osrm_route(coords, order)
+        except Exception as e:
+            route_json, ordered_coords = get_osrm_route_podman(coords, order)
+    
+    
     paths = [
         list(reversed(path))
         for path in route_json["routes"][0]["geometry"]["coordinates"]
@@ -71,17 +82,6 @@ def check_osrm_status():
     except requests.exceptions.RequestException as e:
         return False, f"Erro ao acessar OSRM: {e}"
 
-
-# -----------------------------------------------------------------------------------#
-def get_osrm_matrix_old(coords):
-    coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
-    req = requests.get(URL["table"](coord_str), timeout=10)
-    req.raise_for_status()
-    data = req.json()
-
-    return data["distances"], data["durations"]
-
-
 # -----------------------------------------------------------------------------------#
 def get_osrm_matrix(coords):
     """Gera matriz de distâncias e durações via OSRM, usando polyline."""
@@ -94,7 +94,6 @@ def get_osrm_matrix(coords):
     data = req.json()
 
     return data["distances"], data["durations"]
-
 
 # -----------------------------------------------------------------------------------#
 def get_geodesic_matrix(coords):
@@ -139,7 +138,10 @@ def get_osrm_route(coords, order):
             waypoint["description"] = data["waypoints"][ii].get("name", "")
 
     return data, ordered
-
+# -----------------------------------------------------------------------------------#
+def get_osrm_route_podman(coords, order):
+    raise NotImplementedError("Função não implementada. get_osrm_route_podman")
+    return
 
 # -----------------------------------------------------------------------------#
 def solve_open_tsp_from_matrix(distance_matrix):
