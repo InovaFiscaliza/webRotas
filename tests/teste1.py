@@ -240,6 +240,17 @@ if __name__ == "__main__":
     matrix = distances
     order = solve_open_tsp_from_matrix(matrix)
     # order = list(range(N))  # ordem sequencial
+    
+    # Ponto fixo em São Paulo
+    sp_point = {"lat": -23.55052, "lng": -46.633308, "description": "São Paulo - Marco Zero"}
+
+    # Insere no início da lista
+    coords.insert(0, sp_point)
+    
+    # Garante que São Paulo (índice 0) fique como inicial
+    idx = order.index(0)
+    order = order[idx:] + order[:idx]
+    
     t0 = time.time()
     route_data, ordered = get_osrm_route(coords, order)
     t1 = time.time()
