@@ -114,30 +114,10 @@ def get_geodesic_matrix(coords):
 
     return distances, distances  # retorna distâncias em km como durações fictícias
 
-
 # -----------------------------------------------------------------------------------#
 def get_osrm_matrix_podman(coords):
     raise NotImplementedError("Função não implementada. get_osrm_matrix_podman")
     return
-
-
-# -----------------------------------------------------------------------------------#
-def get_osrm_route_old(coords, order):
-
-    # momento de testar se a chamada da API retorna ok ou preciso lançar um container
-
-    ordered = [coords[ii] for ii in order]
-    coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
-
-    req = requests.get(URL["route"](coord_str), timeout=10)
-    req.raise_for_status()
-    data = req.json()
-
-    for ii, waypoint in enumerate(ordered):
-        if not waypoint.get("description"):
-            waypoint["description"] = data["waypoints"][ii].get("name", "")
-
-    return data, ordered
 
 
 # -----------------------------------------------------------------------------------#
