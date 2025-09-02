@@ -84,7 +84,10 @@ def check_osrm_status():
 
 # -----------------------------------------------------------------------------------#
 def get_osrm_matrix(coords):
-    """Gera matriz de distâncias e durações via OSRM, usando polyline."""
+    """Gera matriz de distâncias e durações via OSRM, usando polyline.
+    
+    Levanta exceção se as primeiras distâncias vierem zeradas (indicando erro).
+    """
     coords_latlng = [(c["lat"], c["lng"]) for c in coords]
     encoded = polyline.encode(coords_latlng, precision=5)
     coord_str = f"polyline({encoded})"
@@ -93,7 +96,28 @@ def get_osrm_matrix(coords):
     req.raise_for_status()
     data = req.json()
 
-    return data["distances"], data["durations"]
+    distances = data.get("distances")
+    durations = data.get("durations")
+
+    if not distances:
+        raise ValueError("OSRM não retornou matriz de distâncias.")
+
+    # Limita checagem às 10 primeiras linhas/colunas
+    n_check = min(10, len(distances))
+    all_zero = True
+    for i in range(n_check):
+        for j in range(n_check):
+            if i != j and distances[i][j] > 0:
+                all_zero = False
+                break
+        if not all_zero:
+            break
+
+    if all_zero:
+        raise ValueError("As primeiras 10 distâncias retornaram zeradas. Verifique coordenadas ou OSRM.")
+
+    return distances, durations
+
 
 # -----------------------------------------------------------------------------------#
 def get_geodesic_matrix(coords):
