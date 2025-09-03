@@ -15,7 +15,7 @@ URL = {
 
 
 # -----------------------------------------------------------------------------------#
-def controller(origin, waypoints, criterion="distance"):
+def controller(origin, waypoints, criterion="distance", bounding_box=[], avoid_zones=[]):
     coords = [origin] + waypoints
 
     n_points = len(coords)
@@ -26,7 +26,7 @@ def controller(origin, waypoints, criterion="distance"):
         try:
             distances, durations = get_osrm_matrix(coords)
         except Exception as e:
-            distances, durations = get_osrm_matrix_podman(coords)
+            distances, durations = get_osrm_matrix_podman(coords, bounding_box, avoid_zones)
 
     if criterion in ["distance", "duration"]:
         matrix = distances if criterion == "distance" else durations
@@ -37,12 +37,12 @@ def controller(origin, waypoints, criterion="distance"):
     
 
     if n_points > MAX_OSRM_POINTS:
-       route_json, ordered_coords = get_osrm_route_podman(coords, order)
+       route_json, ordered_coords = get_osrm_route_podman(coords, order, bounding_box, avoid_zones)
     else:
         try:
             route_json, ordered_coords = get_osrm_route(coords, order)
         except Exception as e:
-            route_json, ordered_coords = get_osrm_route_podman(coords, order)
+            route_json, ordered_coords = get_osrm_route_podman(coords, order, bounding_box, avoid_zones)
     
     
     paths = [
@@ -84,15 +84,14 @@ def check_osrm_status():
 
 # -----------------------------------------------------------------------------------#
 def get_osrm_matrix(coords):
-    """Gera matriz de distâncias e durações via OSRM, usando polyline.
+    """Gera matriz de distâncias e durações via OSRM, sem usar polyline.
     
     Levanta exceção se as primeiras distâncias vierem zeradas (indicando erro).
     """
-    coords_latlng = [(c["lat"], c["lng"]) for c in coords]
-    encoded = polyline.encode(coords_latlng, precision=5)
-    coord_str = f"polyline({encoded})"
-
-    req = requests.get(URL["table"](coord_str), timeout=10)
+    # OSRM espera no formato lng,lat (atenção à ordem!)
+    coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in coords])
+    url = URL["table"](coord_str)
+    req = requests.get(url, timeout=10)
     req.raise_for_status()
     data = req.json()
 
@@ -118,7 +117,6 @@ def get_osrm_matrix(coords):
 
     return distances, durations
 
-
 # -----------------------------------------------------------------------------------#
 def get_geodesic_matrix(coords):
     """
@@ -138,32 +136,33 @@ def get_geodesic_matrix(coords):
     return distances, distances  # retorna distâncias em km como durações fictícias
 
 # -----------------------------------------------------------------------------------#
-def get_osrm_matrix_podman(coords):
+def get_osrm_matrix_podman(coords, bounding_box, avoid_zones):
     raise NotImplementedError("Função não implementada. get_osrm_matrix_podman")
     return
 
 
 # -----------------------------------------------------------------------------------#
 def get_osrm_route(coords, order):
-    """Calcula rota com polyline, preservando as descrições."""
+    """Calcula rota no OSRM sem usar polyline, preservando as descrições."""
+    # Reordena os pontos conforme 'order'
     ordered = [coords[ii] for ii in order]
-    coords_latlng = [(c["lat"], c["lng"]) for c in ordered]
 
-    encoded = polyline.encode(coords_latlng, precision=5)
-    coord_str = f"polyline({encoded})"
-
-    print(URL["route"](coord_str))
-    req = requests.get(URL["route"](coord_str), timeout=10)
+    # Monta string no formato lng,lat;lng,lat;...
+    coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
+    url = URL["route"](coord_str)
+    req = requests.get(url, timeout=10)
     req.raise_for_status()
     data = req.json()
 
+    # Preenche descrições ausentes
     for ii, waypoint in enumerate(ordered):
         if not waypoint.get("description"):
             waypoint["description"] = data["waypoints"][ii].get("name", "")
 
     return data, ordered
+
 # -----------------------------------------------------------------------------------#
-def get_osrm_route_podman(coords, order):
+def get_osrm_route_podman(coords, order, bounding_box, avoid_zones):
     raise NotImplementedError("Função não implementada. get_osrm_route_podman")
     return
 

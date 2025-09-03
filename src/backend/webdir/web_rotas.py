@@ -24,7 +24,7 @@ def osrm_shortest(current_request, session_id, origin, waypoints, avoid_zones, c
     routing_area, bounding_box, cache_id = compute_routing_area(avoid_zones, origin, waypoints)
     # si.PreparaServidorRoteamento(routing_area)
 
-    origin, waypoints, paths, estimated_time, estimated_distance = api_routing.controller(origin, waypoints, criterion)
+    origin, waypoints, paths, estimated_time, estimated_distance = api_routing.controller(origin, waypoints, criterion, bounding_box, avoid_zones)
     origin, waypoints = api_elevation.controller(origin, waypoints)
 
     current_request.update({
@@ -131,7 +131,7 @@ def osrm_ordered(current_request, session_id, origin, cache_id, bounding_box, wa
     
     routing_area = [] # PENDENTE
 
-    origin, waypoints, paths, estimated_time, estimated_distance = api_routing.controller(origin, waypoints, criterion)
+    origin, waypoints, paths, estimated_time, estimated_distance = api_routing.controller(origin, waypoints, criterion, bounding_box, avoid_zones)
     origin, waypoints = api_elevation.controller(origin, waypoints)
 
     current_request.update({

@@ -17,12 +17,26 @@ URL = {
     "route": lambda coord_str: f"http://router.project-osrm.org/route/v1/driving/{coord_str}?overview=full&geometries=geojson",
 }
 
+# URLs do OSRM demo server
+URL = {
+    "table": lambda coord_str: f"http://localhost:50000/table/v1/driving/{coord_str}?annotations=distance,duration",
+    "route": lambda coord_str: f"http://localhost:50000/route/v1/driving/{coord_str}?overview=full&geometries=geojson",
+}
+
 # Bounding Box de Niterói (aproximado)
 BBOX_NITEROI = {
     "min_lat": -22.933,
     "max_lat": -22.830,
     "min_lng": -43.150,
     "max_lng": -43.030,
+}
+
+# Bounding Box de Salvador (aproximado)
+BBOX_SALVADOR = {
+    "min_lat": -13.050,
+    "max_lat": -12.850,
+    "min_lng": -38.600,
+    "max_lng": -38.400,
 }
 
 
@@ -56,11 +70,16 @@ def random_points_in_bbox(n_points, bbox):
     return coords
 
 
+# Polyline Salvador para testar no OSRM
+# http://router.project-osrm.org/table/v1/driving/polyline(xqfnA`kuiFldCnbL?suA?uuA?suA?suAosApyI?suA?uuA?suA?suA?suAmsApyI?uuA?suA?suA?suA?uuA?suAmsAzfO?uuA?suA?suA?suA?uuA?glDosAxfO?suA?suA?suA?uuA?qyI?suA?suAmsA`x\\?uuA?suA?suA?suA?uuA?suA?suA?suA?uuA?suA?glDosAtn_@?ilD?suA?suA?uuA?suA?suAmsAdpL?suA?suA?uuA?suA?glD?ilD?suA?suA?suAmsA~w\\?suA?suA?uuA?suA?suA?suA?ilD?suAosAvjW?}bG?suA?suA?suA?uuAmsAzfO?}bG?qyImsAn}Q?ilD?yfOosAbtT?{fO?suA?suAmsAvjW)?annotations=distance,duration
+
+
 # -----------------------------------------------------------------------------------#
 def get_osrm_matrix(coords):
     """Gera matriz de distâncias e durações via OSRM, usando polyline."""
     coords_latlng = [(c["lat"], c["lng"]) for c in coords]
     encoded = polyline.encode(coords_latlng, precision=5)
+    encoded =  quote(encoded, safe="")  # safe="" garante que tudo será codificado
     coord_str = f"polyline({encoded})"
 
     req = requests.get(URL["table"](coord_str), timeout=10)
@@ -71,12 +90,15 @@ def get_osrm_matrix(coords):
 
 
 # -----------------------------------------------------------------------------------#
+from urllib.parse import quote
 def get_osrm_route(coords, order):
     """Calcula rota com polyline, preservando as descrições."""
     ordered = [coords[ii] for ii in order]
     coords_latlng = [(c["lat"], c["lng"]) for c in ordered]
 
     encoded = polyline.encode(coords_latlng, precision=5)
+    encoded =  quote(encoded, safe="")  # safe="" garante que tudo será codificado
+    
     coord_str = f"polyline({encoded})"
 
     print(URL["route"](coord_str))
@@ -93,6 +115,8 @@ def get_osrm_route(coords, order):
 
 # -----------------------------------------------------------------------------#
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+
+
 def solve_open_tsp_from_matrix(distance_matrix):
     """
     Usa o 'truque do retorno grátis': zera custo para voltar ao depósito (coluna 0).
@@ -143,6 +167,7 @@ def solve_open_tsp_from_matrix(distance_matrix):
         pass
 
     return order
+
 
 import json
 
@@ -223,9 +248,10 @@ def save_route_leaflet(route_data, ordered, filename="mapa.html"):
 # -----------------------------------------------------------------------------------#
 if __name__ == "__main__":
     N = 450  # número de pontos para gerar
-    coords = random_points_in_bbox(N, BBOX_NITEROI)
+    # coords = random_points_in_bbox(N, BBOX_NITEROI)
+    coords = random_points_in_bbox(N, BBOX_SALVADOR)
 
-    print(f"Gerados {N} pontos aleatórios em Niterói:")
+    print(f"Gerados {N} pontos aleatórios em Salvador:")
 
     # Testa matriz
     # t0 = time.time()
@@ -240,17 +266,21 @@ if __name__ == "__main__":
     matrix = distances
     order = solve_open_tsp_from_matrix(matrix)
     # order = list(range(N))  # ordem sequencial
-    
+
     # Ponto fixo em São Paulo
-    sp_point = {"lat": -23.55052, "lng": -46.633308, "description": "São Paulo - Marco Zero"}
+    sp_point = {
+        "lat": -23.55052,
+        "lng": -46.633308,
+        "description": "São Paulo - Marco Zero",
+    }
 
     # Insere no início da lista
     coords.insert(0, sp_point)
-    
+
     # Garante que São Paulo (índice 0) fique como inicial
     idx = order.index(0)
     order = order[idx:] + order[:idx]
-    
+
     t0 = time.time()
     route_data, ordered = get_osrm_route(coords, order)
     t1 = time.time()
