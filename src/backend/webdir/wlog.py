@@ -36,7 +36,7 @@ def get_log_filename():
 
 
 # ---------------------------------------------------------------------------------------------
-def wLog(log_string, level="info"):
+def wlog(log_string, level="info"):
     print(log_string)
 
 

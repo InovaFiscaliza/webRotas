@@ -6,7 +6,7 @@ from geopy.distance import geodesic
 
 import shapeFiles as sf
 import routing_servers_interface as si
-import CacheBoundingBox as cb
+import backend.webdir.cache_bounding_box as cb
 import regions as rg
 import api_routing
 import api_elevation

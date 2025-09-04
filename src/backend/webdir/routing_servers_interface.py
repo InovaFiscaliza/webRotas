@@ -1,39 +1,73 @@
 #!/usr/bin/env python3
 """
-Módulo de suporte à execução e manutenção do servidor OSRM (Open Source Routing Machine)
-utilizando containers Podman, com manipulação de arquivos OSM, cache geográfico e controle
-de recursos.
+Módulo para gerenciamento de servidores OSRM em containers Podman.
 
-Este módulo oferece funções para:
-- Inicializar e carregar imagens Podman necessárias para execução do OSRM.
-- Processar regiões geográficas com Osmosis e preparar dados para roteamento.
-- Criar e manter cache de dados OSM baseado em limites geográficos (bounding boxes).
-- Gerar índices de roteamento (via `osrm-extract`, `osrm-partition`, `osrm-customize`).
-- Iniciar e verificar a operação do servidor OSRM.
-- Manter diretórios e contêineres limpos e atualizados.
-- Encerrar processos ou contêineres antigos automaticamente.
-- Manipular arquivos e diretórios de forma segura no sistema de arquivos.
+Este módulo automatiza a criação, execução e monitoramento de instâncias OSRM
+(Open Source Routing Machine) em containers Podman. Também oferece integração
+com processamento de dados OSM e controle de cache por regiões geográficas.
 
-Principais dependências externas:
-- `podman` (containers)
-- `osmosis` (filtro de dados OSM)
-- `osrm-backend` (servidor de roteamento)
-- `webRota` (módulo auxiliar com logging e dados do usuário)
-- `project_folders` (definições de caminhos no sistema de arquivos)
-- `CacheBoundingBox` (gerenciador de chaves para cache geográfico)
+Funções principais
+------------------
+prepare_osm_data(input_file, output_file, bbox=None, polygon=None):
+    Processa um arquivo OSM bruto com o Osmosis, filtrando por bounding box ou polígono,
+    e gera um arquivo otimizado para uso no OSRM.
 
-Exemplos de uso:
-    Gerar e ativar servidor OSRM para determinada região:
-        GerarIndicesExecutarOSRMServer(lista_de_regioes)
+extract_osrm_data(osm_file, osrm_file, profile="car.lua"):
+    Executa o `osrm-extract` para converter os dados OSM em formato OSRM.
 
-    Verificar se servidor está ativo:
-        VerificarOsrmAtivo()
+partition_osrm_data(osrm_file):
+    Executa o `osrm-partition` para dividir os dados do grafo em regiões.
 
-    Limpeza periódica:
-        manutencao_arquivos_antigos()
+customize_osrm_data(osrm_file):
+    Executa o `osrm-customize` para calcular pesos dinâmicos e ajustes do roteador.
 
-Autor: [Seu Nome ou Equipe]
-Data: [Opcional]
+start_osrm_container(osrm_file, port=None, name=None):
+    Sobe um container Podman com o servidor OSRM, expondo a porta especificada.
+    Retorna informações do container iniciado.
+
+stop_osrm_container(name):
+    Interrompe e remove um container OSRM identificado por nome.
+
+list_osrm_containers():
+    Lista os containers OSRM ativos em execução via Podman.
+
+get_osrm_route(coords, order):
+    Calcula uma rota entre pontos ordenados, consultando o servidor OSRM.
+    Retorna geometria da rota e descrições dos waypoints.
+
+get_osrm_matrix(coords):
+    Gera a matriz de distâncias e durações entre coordenadas fornecidas.
+    Verifica se há valores inválidos (ex.: distâncias zeradas).
+
+monitor_osrm_health(url):
+    Consulta o endpoint de status do OSRM e verifica se o servidor está ativo.
+
+cleanup_cache(region_id):
+    Remove arquivos e instâncias relacionadas a uma região do cache.
+
+Dependências externas
+---------------------
+- Podman (containers)
+- Osmosis (processamento de dados OSM)
+- OSRM-backend (osrm-extract, osrm-partition, osrm-customize, osrm-routed)
+
+Dependências internas
+---------------------
+- web_rotas
+- project_folders
+- CacheBoundingBox
+- regions
+- shapeFiles
+- route_request_manager
+- wlog
+
+Exemplo de uso
+--------------
+1. Preparar dados OSM filtrados pela região de interesse.
+2. Rodar os comandos `extract`, `partition` e `customize`.
+3. Subir um container OSRM com os dados preparados.
+4. Consultar rotas ou matrizes de distância usando o servidor.
+
 """
 
 ###########################################################################################################################
@@ -52,7 +86,7 @@ import json
 
 import web_rotas as wr
 import project_folders as pf
-import CacheBoundingBox as cb
+import backend.webdir.cache_bounding_box as cb
 import regions as rg
 import shapeFiles as sf
 from route_request_manager import RouteRequestManager as rrm

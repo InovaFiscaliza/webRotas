@@ -3,6 +3,9 @@ from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 import numpy as np
 import polyline
 from geopy.distance import geodesic
+import wlog as wl
+import cache_bounding_box as cb
+
 
 MAX_OSRM_MATRIX_POINTS = 100  # limite do servidor OSRM (ajuste se seu container suportar mais)
 MAX_OSRM_POINTS = 450  # limite do servidor OSRM (ajuste se seu container suportar mais)
@@ -137,6 +140,61 @@ def get_geodesic_matrix(coords):
 
 # -----------------------------------------------------------------------------------#
 def get_osrm_matrix_podman(coords, bounding_box, avoid_zones):
+
+    # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
+    # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115)
+    
+    start_lat, start_lon, end_lat, end_lon = bounding_box   
+    cached_response = cb.cCacheBoundingBox.route_cache_get(
+        start_lat, start_lon, end_lat, end_lon
+    )
+    if cached_response is not None:
+        wl.wlog(
+            f"Usando rota do cache para: {start_lat},{start_lon},{end_lat},{end_lon}",
+            level="debug",
+        )
+        return cached_response
+
+    # Coordenadas de início e fim
+    start_coords = (start_lat, start_lon)
+    end_coords = (end_lat, end_lon)
+
+    if ServerTec == "OSMR":
+        # URL da solicitação ao servidor OSMR
+        url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{start_coords[1]},{start_coords[0]};{end_coords[1]},{end_coords[0]}?overview=full&geometries=polyline&steps=true"
+
+    # http://localhost:50000/route/v1/driving/-51.512533967708904,-29.972345983755194;-51.72406122295204,-30.03608928259163?overview=full&geometries=polyline&steps=true
+
+    wl.wlog(url, level="debug")
+    if porta_disponivel("localhost", UserData.OSMRport):
+        response = requests.get(url)
+        data = response.json()
+        if (
+            response.status_code == 200
+            and "routes" in data
+            and (route_failure(data) == False)
+        ):
+            cb.cCacheBoundingBox.route_cache_set(
+                start_lat, start_lon, end_lat, end_lon, response
+            )
+            return response
+
+    wl.wlog(
+        f"GetRouteFromServer erro na solicitacao - rota pedida nao existe ou servidor fora do ar ",
+        level="debug",
+    )
+    # cb.cCacheBoundingBox.find_server_for_this_route(start_lat, start_lon, end_lat, end_lon)
+    # Tenta buscar do cache
+    # region = cb.cCacheBoundingBox.find_server_for_this_route(32.324276, -100.546875, 31.802893, -95.625000)
+    # region2 = cb.cCacheBoundingBox.find_server_for_this_route(-29.747937866768677, -52.23053107185985,-29.795851462719526, -50.850979532029115)
+    responseTmp = si.start_or_find_server_for_this_route(
+        start_lat, start_lon, end_lat, end_lon
+    )
+    if responseTmp == False:
+        wl.wlog(f"Não temos cache para a rota")
+        return None
+    return get_osrm_matrix_podman(coords, bounding_box, avoid_zones)   
+    
     raise NotImplementedError("Função não implementada. get_osrm_matrix_podman")
     return
 
