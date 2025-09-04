@@ -141,7 +141,7 @@ def get_geodesic_matrix(coords):
 # -----------------------------------------------------------------------------------#
 def get_osrm_matrix_podman(coords, bounding_box, avoid_zones):
 
-
+    # Descobrir servidor que atenda ao bounding_box + avoid_zones
 
     # Coordenadas de início e fim
     start_coords = (start_lat, start_lon)
