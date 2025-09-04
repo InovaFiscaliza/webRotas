@@ -66,7 +66,7 @@ import regions as rg
 # ---------------------------------------------------------------------------------------------------------------
 class CacheBoundingBox: 
     def __init__(self):
-        # Instância global do cache de rotas já pedidas ao servidor OSMR
+        # Instância global do cache de rotas já pedidas ao servidor OSMR 
         
         self.cache = {}
         self.ultimaregiao = None
