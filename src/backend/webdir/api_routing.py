@@ -147,6 +147,24 @@ def get_osrm_matrix_podman(coords, bounding_box, avoid_zones):
        # verificar em um boundinbox que atenda se avoid_zones=[]
        # calcular dados do novo servidor com osmosis e o ativar
 
+    def create_regions(bounding_box, avoid_zones):
+        
+        regions = [
+            {
+                "name": "boundingBoxRegion", 
+                "coord": bounding_box
+            }
+        ]
+
+        for avoid_zone in avoid_zones:
+            regions.append({
+                "name": avoid_zone["name"].replace(" ", "_"), 
+                "coord": avoid_zone["coord"]
+            })
+        return regions
+    regions = create_regions(bounding_box, avoid_zones)
+    cache=cb.cCacheBoundingBox.get_cache(regions)
+
     # Coordenadas de início e fim
     start_coords = (start_lat, start_lon)
     end_coords = (end_lat, end_lon)
