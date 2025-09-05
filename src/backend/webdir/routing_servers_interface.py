@@ -261,7 +261,7 @@ def AtivaServidorOSMR(regioes):
 
     if porta:
         wr.UserData.OSMRport = porta
-        return
+        return porta
     
     # -------------------------------------------------
     wr.UserData.OSMRport = find_available_port(start_port=50000, max_port=65535)
@@ -893,7 +893,7 @@ def limpar_cache_files_osmr(regioes):
 
 
 ################################################################################
-def PreparaServidorRoteamento(routing_area):
+def create_region_container(routing_area):
     roteamento_ok = False
     
     # Precisa identificar a instância correta da lista de requisições em andamento

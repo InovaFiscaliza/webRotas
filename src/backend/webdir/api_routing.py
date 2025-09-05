@@ -5,7 +5,7 @@ import polyline
 from geopy.distance import geodesic
 import wlog as wl
 import cache_bounding_box as cb
-
+import routing_servers_interface as rsi
 
 MAX_OSRM_MATRIX_POINTS = 100  # limite do servidor OSRM (ajuste se seu container suportar mais)
 MAX_OSRM_POINTS = 450  # limite do servidor OSRM (ajuste se seu container suportar mais)
@@ -156,7 +156,13 @@ def find_server_for_this_route(coords, bounding_box, avoid_zones):
             })
         return regions
     regions = create_regions(bounding_box, avoid_zones)
-    cache=cb.cCacheBoundingBox.get_cache(regions)    
+    cacheid=cb.cCacheBoundingBox.get_cache(regions) 
+    # procura podman ativo que atenda a rota
+    port = rsi.region_container_alive(cacheid) 
+    if port==None:
+        # cria novo podman
+        port = rsi.create_region_container(regions, cacheid)  
+        prepara_servidor_roteamento(routing_area)
     
 # -----------------------------------------------------------------------------------#
 def get_osrm_matrix_podman(coords, bounding_box, avoid_zones):
