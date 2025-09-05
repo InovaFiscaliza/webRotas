@@ -139,14 +139,7 @@ def get_geodesic_matrix(coords):
     return distances, distances  # retorna distâncias em km como durações fictícias
 
 # -----------------------------------------------------------------------------------#
-def get_osrm_matrix_podman(coords, bounding_box, avoid_zones):
-
-    # Descobrir servidor que atenda ao bounding_box + avoid_zones
-       # verifificar no cache
-       # verificar se está online
-       # verificar em um boundinbox que atenda se avoid_zones=[]
-       # calcular dados do novo servidor com osmosis e o ativar
-
+def find_server_for_this_route(coords, bounding_box, avoid_zones):
     def create_regions(bounding_box, avoid_zones):
         
         regions = [
@@ -163,8 +156,20 @@ def get_osrm_matrix_podman(coords, bounding_box, avoid_zones):
             })
         return regions
     regions = create_regions(bounding_box, avoid_zones)
-    cache=cb.cCacheBoundingBox.get_cache(regions)
+    cache=cb.cCacheBoundingBox.get_cache(regions)    
+    
+# -----------------------------------------------------------------------------------#
+def get_osrm_matrix_podman(coords, bounding_box, avoid_zones):
 
+    # Descobrir servidor que atenda ao bounding_box + avoid_zones
+       # verifificar no cache
+       # verificar se está online
+       # verificar em um boundinbox que atenda se avoid_zones=[]
+       # calcular dados do novo servidor com osmosis e o ativar
+
+
+    server_port = find_server_for_this_route(coords, bounding_box, avoid_zones)
+    
     # Coordenadas de início e fim
     start_coords = (start_lat, start_lon)
     end_coords = (end_lat, end_lon)
