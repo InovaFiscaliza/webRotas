@@ -9,6 +9,9 @@
       ├── splitObject
       ├── defaultFileName
       ├── strcmp
+      ├── isMobile
+      ├── leafletLayersToKML
+      ├── exportAsJSON
       ├── exportAsKML
       ├── exportAsZip
       ├── saveToFile
@@ -163,6 +166,12 @@
     /*---------------------------------------------------------------------------------*/
     function strcmp(a, b) {
         return JSON.stringify(a, Object.keys(a).sort()) === JSON.stringify(b, Object.keys(b).sort());
+    }
+
+    /*---------------------------------------------------------------------------------*/
+    function isMobile() {
+        const userAgent = navigator.userAgent || "";
+        return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
     }
 
     /*---------------------------------------------------------------------------------*/
@@ -538,8 +547,8 @@
         static colorbar() {
             let minValue, maxValue, step;
 
-            minValue = window.app.mapContext.settings.colormap.range.min;
-            maxValue = window.app.mapContext.settings.colormap.range.max;
+            minValue = window.app.mapContext.settings.colormap.range.current.min;
+            maxValue = window.app.mapContext.settings.colormap.range.current.max;
             if (maxValue === minValue) {
                 maxValue++;
             }
@@ -634,8 +643,8 @@
                     throw new Error('Unexpected colomap');
             }
 
-            minElevation = window.app.mapContext.settings.colormap.range.min;
-            maxElevation = window.app.mapContext.settings.colormap.range.max;
+            minElevation = window.app.mapContext.settings.colormap.range.current.min;
+            maxElevation = window.app.mapContext.settings.colormap.range.current.max;
             if (maxElevation === minElevation) {
                 maxElevation++;
             }
@@ -696,6 +705,7 @@
         splitObject,
         defaultFileName,
         strcmp,
+        isMobile,
         exportAsJSON,
         exportAsKML,
         exportAsZip,

@@ -166,9 +166,7 @@
                         'toolbarExportBtn',
                         'toolbarPositionSlider',
                         'toolbarLocationBtn',
-                        'toolbarOrientationBtn',
-                        'toolbarColorbarBtn',
-                        'toolbarInitialZoomBtn'
+                        'toolbarOrientationBtn'
                     ]);
                     const htmlElArray = Object.values(htmlEl);
                     this.toggleEnabled(htmlElArray, false);
@@ -187,6 +185,11 @@
                     htmlEl.routeIds.textContent = '';
                     htmlEl.toolbarPositionSlider.value = 0;
                     window.app.modules.Callbacks.onToolbarButtonClicked({ target: htmlEl.toolbarPositionSlider });
+
+                    window.app.mapContext.settings.colormap.range.current = structuredClone(window.app.mapContext.settings.colormap.range.default);
+                    window.app.modules.Components.updateColorbar();
+
+                    window.app.modules.Plot.setView('center', window.app.mapContext.settings.position.default.center, window.app.mapContext.settings.position.default.zoom);
                     break;
                 }
 
@@ -197,9 +200,7 @@
                         'toolbarExportBtn',
                         'toolbarPositionSlider',
                         'toolbarLocationBtn',
-                        'toolbarOrientationBtn',
-                        'toolbarColorbarBtn',
-                        'toolbarInitialZoomBtn'
+                        'toolbarOrientationBtn'
                     ]);
                     const htmlElArray = Object.values(htmlEl);                    
                     this.toggleEnabled(htmlElArray, true);
@@ -290,9 +291,15 @@
             const htmlRouteEl = window.document.getElementById('routeList');
             const htmlRouteElChildren = Array.from(htmlRouteEl.children);
 
-            const currentSelection = htmlRouteElChildren.find(item => item.classList.contains('selected'));
-            const [index1, index2] = JSON.parse(currentSelection.dataset.index);            
-            const currentRoute     = window.app.routingContext[index1].response.routes[index2];
+            let currentSelection = null;
+            let [index1, index2] = [-1, -1];
+            let currentRoute = null;
+
+            currentSelection = htmlRouteElChildren.find(item => item.classList.contains('selected'));
+            if (currentSelection) {
+                [index1, index2] = JSON.parse(currentSelection.dataset.index);            
+                currentRoute = window.app.routingContext[index1].response.routes[index2];
+            }
 
             return { htmlRouteEl, htmlRouteElChildren, currentSelection, index1, index2, currentRoute };
         }

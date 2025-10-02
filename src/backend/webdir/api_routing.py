@@ -1,5 +1,6 @@
 import requests
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+from geopy.distance import geodesic
 
 TIMEOUT = 10
 URL = {
@@ -10,7 +11,14 @@ URL = {
 #-----------------------------------------------------------------------------------#
 def controller(origin, waypoints, criterion="distance"):
     coords = [origin] + waypoints
-    distances, durations = get_osrm_matrix(coords)
+
+    try:
+        distances, durations = get_osrm_matrix(coords)
+    except (requests.exceptions.RequestException, ValueError, KeyError):
+        distances, durations = get_osrm_matrix_from_local_container(coords)
+
+    if not check_matrix_validity(coords, distances, durations):
+        distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
 
     if criterion in ["distance", "duration"]:
         matrix = distances if criterion == "distance" else durations
@@ -41,6 +49,62 @@ def get_osrm_matrix(coords):
     data = req.json()        
 
     return data["distances"], data["durations"]
+
+#-----------------------------------------------------------------------------------#
+def get_osrm_matrix_from_local_container(coords):
+    # ToDo:
+    # Estimar bounding box que atende a rota, verificar se há container
+    # local ativo para essa área. Caso contrário, abre-se um novo container.
+    # O erro não pode vazar para o cliente porque a chamada desse método se
+    # deu no except do método principal.
+
+    data = {
+        "distances": [],
+        "durations": []
+    }    
+
+    return data["distances"], data["durations"]
+
+# -----------------------------------------------------------------------------------#
+def get_geodesic_matrix(coords, speed_kmh=40):
+    num_points = len(coords)
+    distances = [[0.0] * num_points for _ in range(num_points)]
+
+    for ii in range(num_points):
+        for jj in range(num_points):
+            if ii != jj:
+                p1 = (coords[ii]["lat"], coords[ii]["lng"])
+                p2 = (coords[jj]["lat"], coords[jj]["lng"])
+                distances[ii][jj] = geodesic(p1, p2).meters
+    
+    durations = [[(dist / speed_kmh) * 3600 for dist in row] for row in distances]
+
+    return distances, durations
+
+#-----------------------------------------------------------------------------------#
+def check_matrix_validity(coords, distances, durations):
+    num_points = len(coords)
+    if distances is None or durations is None:
+        return False
+    
+    if not (len(distances) == len(durations) == num_points):
+        return False
+
+    for ii in range(num_points):
+        if not (len(distances[ii]) == len(durations[ii]) == num_points):
+            return False
+        
+    for ii in range(num_points):
+        for jj in range(num_points):
+            d, t = distances[ii][jj], durations[ii][jj]
+            if ii == jj:
+                if not (d == 0 and t == 0):
+                    return False
+            else:
+                if d <= 0 or t <= 0:
+                    return False
+
+    return True
 
 #-----------------------------------------------------------------------------------#
 def get_osrm_route(coords, order):
