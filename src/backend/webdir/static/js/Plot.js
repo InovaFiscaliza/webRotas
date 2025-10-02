@@ -34,7 +34,7 @@
                     const routing = window.app.routingContext[index1];
                     const route = routing.response.routes[index2];
             
-                    window.app.mapContext.settings.colormap.range = window.app.modules.Utils.Elevation.range(route);
+                    window.app.mapContext.settings.colormap.range.current = window.app.modules.Utils.Elevation.range(route);
                     window.app.modules.Components.updateColorbar();
                   //window.app.modules.Utils.GeoLocation.routeMidPoint(route);
 
@@ -326,7 +326,7 @@
         }
 
         /*---------------------------------------------------------------------------------*/
-        static setView(operationType, geoData) {
+        static setView(operationType, geoData, ...args) {
             const map = window.app.map;
 
             switch (operationType) {
@@ -339,12 +339,12 @@
                     geoData.forEach(element => coords.push([element.lat, element.lng]));
 
                     map.fitBounds(coords);
-                    window.app.mapContext.settings.position.center = map.getCenter();
-                    window.app.mapContext.settings.position.zoom   = map.getZoom();
+                    window.app.mapContext.settings.position.current.center = map.getCenter();
+                    window.app.mapContext.settings.position.current.zoom   = map.getZoom();
                     break;
 
                 case 'center':
-                    map.setView(geoData);
+                    map.setView(geoData, args[0]);
                     break;
             }
         }

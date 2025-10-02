@@ -142,8 +142,12 @@
 
                 case 'appInfoBtn': {
                     const { name, version, released, sharepoint } = window.app;
-                    const { userAgent, platform, vendor, deviceMemory, hardwareConcurrency } = window.navigator;
-                    const { href, protocol } = window.location;
+                    const { href, protocol } = window.top.location;
+                    const { userAgent, vendor, deviceMemory, hardwareConcurrency } = window.navigator;
+                    const platform = navigator.userAgentData?.platform || navigator.platform;
+                    
+                    let mobile = navigator.userAgentData?.mobile ?? window.app.modules.Utils.isMobile();
+                    mobile = mobile ? '1' : '0';
 
                     const keyStyle = (key, value) => `<br>•&thinsp;<span style="color: gray; font-size: 10px;">${key}:</span> ${!!value ? value : 'n/a'}`;
                     const appInfo  = `
@@ -155,14 +159,16 @@
                     ${keyStyle('hardwareConcurrency', hardwareConcurrency)}
 
                     <br><br><span style="font-size:10px;">NAVEGADOR</span>
+                    ${keyStyle('url', href)}
+                    ${keyStyle('protocol', protocol)}
+                    ${keyStyle('mobile', mobile)}
                     ${keyStyle('userAgent', userAgent)}
                     ${keyStyle('vendor', vendor)}
 
-                    <br><br><span style="font-size:10px;">${name.toUpperCase()}</span>
+                    <br><br><span style="font-size:10px;">APLICATIVO</span>
+                    ${keyStyle('version', name)}
                     ${keyStyle('version', version)}
                     ${keyStyle('released', released)}
-                    ${keyStyle('href', href)}
-                    ${keyStyle('protocol', protocol)}
                     </p>
                     `;
 
@@ -899,9 +905,9 @@
 
                 case 'toolbarInitialZoomBtn': {
                     const { currentRoute } = window.app.modules.Layout.findSelectedRoute();
-                    if (currentRoute) {
-                        window.app.modules.Plot.setView('zoom', [...currentRoute.waypoints, currentRoute.origin])
-                    }
+                    currentRoute 
+                    ? window.app.modules.Plot.setView('zoom', [...currentRoute.waypoints, currentRoute.origin])
+                    : window.app.modules.Plot.setView('center', window.app.mapContext.settings.position.default.center, window.app.mapContext.settings.position.default.zoom);
                     break;
                 }
 

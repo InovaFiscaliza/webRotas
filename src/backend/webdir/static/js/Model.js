@@ -46,7 +46,7 @@
 
                 const sessionId = window.localStorage.getItem('sessionId');
                 window.app.server.sessionId = sessionId ? sessionId : window.app.modules.Utils.uuid();
-
+                
                 loadRoutingFromIndexedDB()
                     .then(routingContext => {
                         routingContext = routingContext || [];

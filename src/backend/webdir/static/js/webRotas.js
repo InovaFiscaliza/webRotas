@@ -299,8 +299,14 @@ async function loadScript(filename) {
                 colormap: {
                     scale: 'parula', // 'parula'
                     range: {
-                        min: 0, 
-                        max: 100
+                        default: { 
+                            min: 0, 
+                            max: 100 
+                        },
+                        current: {
+                            min: 0, 
+                            max: 100
+                        }
                     }
                 },
                 geolocation: { 
@@ -315,11 +321,20 @@ async function loadScript(filename) {
                     lastHeading: 0 
                 },
                 position: {
-                    center: { 
-                        lat: -10.3, 
-                        lng: -53.2 
+                    default: { 
+                        center: { 
+                            lat: -10.3,
+                            lng: -53.2
+                        },
+                        zoom: 4
                     },
-                    zoom: 4
+                    current: {
+                        center: { 
+                            lat: -10.3, 
+                            lng: -53.2
+                        },
+                        zoom: 4
+                    }
                 },
                 streetview: {
                     handle: null,

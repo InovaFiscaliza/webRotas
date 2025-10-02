@@ -89,7 +89,7 @@
                 id: 'document'
             }, container);
 
-            const { center, zoom } = window.app.mapContext.settings.position;
+            const { center, zoom } = window.app.mapContext.settings.position.default;
             const basemapList      = window.app.mapContext.layers.basemap;
             const basemapSelection = window.app.mapContext.settings.basemap;
 
@@ -238,8 +238,8 @@
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    id: 'routeListAddBtn',
-                    classList: ['btn-top-right'],                    
+                    id: 'routeListAddBtn',        
+                    classList: ['btn-top-right', 'disabled'],
                     style: { 
                         gridArea: '1 / 2 / 2 / 3', 
                         width: '100%', 
@@ -257,7 +257,7 @@
 
                 this.createElement('button', {
                     id: 'routeListDelBtn',
-                    classList: ['btn-top-right', 'disabled'],                    
+                    classList: ['btn-top-right', 'disabled'],
                     style: { 
                         gridArea: '1 / 3 / 2 / 4', 
                         width: '18px', 
@@ -276,7 +276,7 @@
 
                 this.createElement('button', {
                     id: 'routeListEditModeBtn',
-                    classList: ['btn-top-right'],                    
+                    classList: ['btn-top-right', 'disabled'],
                     style: { 
                         gridArea: '1 / 4 / 2 / 5', 
                         width: '18px', 
@@ -295,7 +295,7 @@
 
                 this.createElement('button', {
                     id: 'routeListConfirmBtn',
-                    classList: ['btn-top-right'],                    
+                    classList: ['btn-top-right'],
                     style: { 
                         gridArea: '1 / 5 / 2 / 6', 
                         display: 'none', 
@@ -314,7 +314,7 @@
 
                 this.createElement('button', {
                     id: 'routeListCancelBtn',
-                    classList: ['btn-top-right'],                    
+                    classList: ['btn-top-right'],
                     style: { 
                         gridArea: '1 / 6 / 2 / 7', 
                         display: 'none', 
@@ -335,7 +335,7 @@
             // ROTAS - ÁRVORE
             this.createElement('ul', {
                 id: 'routeList',
-                classList: ['text-list'],                
+                classList: ['text-list'],
                 style: { 
                     gridArea: '2 / 1 / 3 / 2' 
                 }
@@ -364,7 +364,7 @@
             
                 this.createElement('button', {
                     id: 'initialPointBtn',
-                    classList: ['btn-top-right', 'disabled'],                    
+                    classList: ['btn-top-right', 'disabled'],
                     style: { 
                         gridArea: '1 / 2 / 2 / 3', 
                         width: '18px', 
@@ -384,12 +384,13 @@
             // PONTO INICIAL - LATITUDE, LONGITUDE E DESCRIÇÃO
             const initialPointGrid = this.createElement('div', {
                 id: 'initialPointGrid',
-                classList: ['grid', 'grid-border'],                
+                classList: ['grid', 'grid-border'],
                 style: { 
                     gridArea: '4 / 1 / 5 / 2', 
                     gridTemplateRows: '17px 22px 17px 22px', 
                     gridTemplateColumns: 'minmax(0px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr)', 
-                    padding: '10px' 
+                    padding: '10px',
+                    borderRadius: '0px'
                 }
             });
             panel.appendChild(initialPointGrid);
@@ -510,7 +511,7 @@
             
                 this.createElement('button', {
                     id: 'routeListMoveUpBtn',
-                    classList: ['btn-top-right', 'disabled'],                    
+                    classList: ['btn-top-right', 'disabled'],
                     textContent: '▲',
                     style: { 
                         gridArea: '1 / 2 / 2 / 3' 
@@ -526,7 +527,7 @@
             
                 this.createElement('button', {
                     id: 'routeListMoveDownBtn',
-                    classList: ['btn-top-right', 'disabled'],                    
+                    classList: ['btn-top-right', 'disabled'],
                     textContent: '▼',
                     style: { 
                         gridArea: '1 / 3 / 2 / 4' 
@@ -589,7 +590,8 @@
                 classList: ['btn-panel-on'],                
                 style: { 
                     gridArea: '1 / 1 / 2 / 2', 
-                    height: '100%'
+                    height: '100%',
+                    backgroundSize: '17px'
                 },
                 eventListeners: {
                     click: (event) => window.app.modules.Callbacks.onToolbarButtonClicked(event)
@@ -631,6 +633,7 @@
 
             this.createElement('button', {
                 id: 'toolbarExportBtn',
+                classList: ['disabled'],
                 style: { 
                     gridArea: '1 / 3 / 2 / 4', 
                     height: '100%', 
@@ -670,6 +673,7 @@
 
             this.createElement('input', {
                 id: 'toolbarPositionSlider',
+                classList: ['disabled'],
                 style: { 
                     gridArea: '1 / 5 / 2 / 6'
                 },
@@ -684,6 +688,7 @@
 
             this.createElement('button', {
                 id: 'toolbarLocationBtn',
+                classList: ['disabled'],
                 style: { 
                     gridArea: '1 / 7 / 2 / 8', 
                     height: '100%', 
@@ -699,6 +704,7 @@
 
             this.createElement('button', {
                 id: 'toolbarOrientationBtn',
+                classList: ['disabled'],
                 style: { 
                     gridArea: '1 / 8 / 2 / 9', 
                     height: '100%', 
