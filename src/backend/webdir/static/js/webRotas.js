@@ -94,8 +94,8 @@ async function loadScript(filename) {
 (function () {
     window.app = {
         name: 'webRotas',
-        version: '0.90.0',
-        released: 'R2025b (01/09/2025)',
+        version: '0.91.0',
+        released: 'R2025b (15/10/2025)',
         sharepoint: 'https://anatel365.sharepoint.com/sites/InovaFiscaliza/SitePages/webRotas.aspx',
 
         modules: {
@@ -311,13 +311,13 @@ async function loadScript(filename) {
                 },
                 geolocation: { 
                     status: 'off', // 'on' | 'off'
-                    icon: { on: 'images/gps-on.png', off: 'images/gps-off.png' }, 
+                    icon: { on: 'url(images/gps-on.png)', off: 'url(images/gps-off.png)' }, 
                     navWatch: null, 
                     lastPosition: null 
                 },
                 orientation: { 
                     status: 'north', // 'north' | 'car-heading'  
-                    icon: { on: 'images/north.png',  off: 'images/car-heading.png' }, 
+                    icon: { on: 'url(images/north.png)',  off: 'url(images/car-heading.png)' }, 
                     lastHeading: 0 
                 },
                 position: {

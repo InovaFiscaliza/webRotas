@@ -59,6 +59,10 @@
                         }
                     })
                     .catch(ME => console.error(ME) /*new DialogBox(ME.message, "error")*/);
+
+                if (window.app.routingContext.length === 0) {
+                    window.app.modules.Layout.startup();
+                }
                 break;
             }
 

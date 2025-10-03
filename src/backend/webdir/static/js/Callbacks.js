@@ -829,21 +829,17 @@
                 }
 
                 case 'toolbarLocationBtn': {
-                    // ...
-
-                    /*
                     const currentGeolocationStatus = window.app.mapContext.settings.geolocation.status;
 
                     if (currentGeolocationStatus === 'on') {
                         window.app.mapContext.settings.geolocation.status = 'off';
-                        event.target.src = window.app.mapContext.settings.geolocation.icon.off;
+                        event.target.style.backgroundImage = window.app.mapContext.settings.geolocation.icon.off;
                     } else {
                         window.app.mapContext.settings.geolocation.status = 'on';
-                        event.target.src = window.app.mapContext.settings.geolocation.icon.on;
+                        event.target.style.backgroundImage = window.app.mapContext.settings.geolocation.icon.on;
                     }
     
-                    new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'warning'); 
-                    */
+                    new DialogBox('Ainda pendente de implementação...', 'warning'); 
 
                     /*
                     try {
@@ -856,19 +852,17 @@
                 }
 
                 case 'toolbarOrientationBtn': {
-                    // ...
                     const currentOrientationStatus = window.app.mapContext.settings.orientation.status;
 
                     if (currentOrientationStatus === 'north') {
                         window.app.mapContext.settings.orientation.status = 'car-heading';
-                        event.target.src = window.app.mapContext.settings.orientation.icon.off;
+                        event.target.style.backgroundImage = window.app.mapContext.settings.orientation.icon.off;
                     } else {
                         window.app.mapContext.settings.orientation.status = 'north';
-                        event.target.src = window.app.mapContext.settings.orientation.icon.on;
+                        event.target.style.backgroundImage = window.app.mapContext.settings.orientation.icon.on;
                     }
-    
-                    new DialogBox('<h1>Título</h1><p>Parágrafo</p>', 'error', [], 800); 
-                    new DialogBox('Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...  Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer... Uma informação qualquer...', '', [{ text: 'OK', callback: () => console.log('OK'), focus: true }, { text: 'Cancel', callback: () => console.error('Cancel'), focus: false }]);
+
+                    new DialogBox('Ainda pendente de implementação...</p>', 'warning'); 
 
                     /*
                     window.app.mapContext.settings.orientation.status = !window.app.mapContext.settings.orientation.status;
