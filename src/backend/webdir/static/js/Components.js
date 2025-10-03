@@ -238,8 +238,8 @@
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    id: 'routeListAddBtn',        
-                    classList: ['btn-top-right', 'disabled'],
+                    id: 'routeListAddBtn',
+                    classList: ['btn-top-right'],
                     style: { 
                         gridArea: '1 / 2 / 2 / 3', 
                         width: '100%', 
@@ -257,7 +257,7 @@
 
                 this.createElement('button', {
                     id: 'routeListDelBtn',
-                    classList: ['btn-top-right', 'disabled'],
+                    classList: ['btn-top-right'],
                     style: { 
                         gridArea: '1 / 3 / 2 / 4', 
                         width: '18px', 
@@ -268,7 +268,6 @@
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    disabled: true,
                     dataset: { 
                         tooltip: 'Exclui rota' 
                     }
@@ -276,7 +275,7 @@
 
                 this.createElement('button', {
                     id: 'routeListEditModeBtn',
-                    classList: ['btn-top-right', 'disabled'],
+                    classList: ['btn-top-right'],
                     style: { 
                         gridArea: '1 / 4 / 2 / 5', 
                         width: '18px', 
@@ -364,7 +363,7 @@
             
                 this.createElement('button', {
                     id: 'initialPointBtn',
-                    classList: ['btn-top-right', 'disabled'],
+                    classList: ['btn-top-right'],
                     style: { 
                         gridArea: '1 / 2 / 2 / 3', 
                         width: '18px', 
@@ -374,7 +373,6 @@
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    disabled: true,
                     dataset: { 
                         tooltip: 'Altera ponto inicial diretamente no mapa' 
                     }
@@ -415,7 +413,6 @@
                     eventListeners: {
                         change: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event, { min: -90, max: 90 })
                     },
-                    disabled: true,
                     dataset: { 
                         tooltip: 'Limites: [-90, 90]', 
                         tooltipDefaultPosition: 'bottom' 
@@ -441,7 +438,6 @@
                     eventListeners: {
                         change: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event, { min: -180, max: 180 })
                     },
-                    disabled: true,
                     dataset: { 
                         tooltip: 'Limites: [-180, 180]', 
                         tooltipDefaultPosition: 'bottom' 
@@ -464,7 +460,6 @@
                     style: { 
                         gridArea: '2 / 3 / 3 / 4' 
                     },
-                    disabled: true,
                 }, initialPointGrid);
             
                 this.createElement('label', {
@@ -482,7 +477,6 @@
                     style: { 
                         gridArea: '4 / 1 / 5 / 4' 
                     },
-                    disabled: true
                 }, initialPointGrid);
                 // </SUB-GRID>
 
@@ -511,7 +505,7 @@
             
                 this.createElement('button', {
                     id: 'routeListMoveUpBtn',
-                    classList: ['btn-top-right', 'disabled'],
+                    classList: ['btn-top-right'],
                     textContent: '▲',
                     style: { 
                         gridArea: '1 / 2 / 2 / 3' 
@@ -519,7 +513,6 @@
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    disabled: true,
                     dataset: { 
                         tooltip: 'Altera ordem do ponto selecionado' 
                     }
@@ -527,7 +520,7 @@
             
                 this.createElement('button', {
                     id: 'routeListMoveDownBtn',
-                    classList: ['btn-top-right', 'disabled'],
+                    classList: ['btn-top-right'],
                     textContent: '▼',
                     style: { 
                         gridArea: '1 / 3 / 2 / 4' 
@@ -535,7 +528,6 @@
                     eventListeners: {
                         click: (event) => window.app.modules.Callbacks.onPanelButtonClicked(event)
                     },
-                    disabled: true,
                     dataset: { 
                         tooltip: 'Altera ordem do ponto selecionado' 
                     }
@@ -582,7 +574,7 @@
 
             Object.assign(toolbar.style, { 
                 gridTemplateRows: '1fr', 
-                gridTemplateColumns: '22px 22px 22px 5px 218px minmax(0px, 1fr) 22px 22px 22px 22px 22px' 
+                gridTemplateColumns: '22px 22px 22px 5px 212px minmax(0px, 1fr) 22px 22px 22px 22px 22px' 
             });
 
             this.createElement('button', {

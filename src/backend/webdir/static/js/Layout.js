@@ -171,18 +171,14 @@
                     const htmlElArray = Object.values(htmlEl);
                     this.toggleEnabled(htmlElArray, false);
 
-                    const htmlRouteEl = window.document.getElementById('routeList');
-                    htmlRouteEl.innerHTML = '';
-
+                    window.document.getElementById('routeList').innerHTML = '';
                     this.updateEditableField(htmlEl.initialPointLatitude,    '');
                     this.updateEditableField(htmlEl.initialPointLongitude,   '');
                     this.updateEditableField(htmlEl.initialPointElevation,   '');
                     this.updateEditableField(htmlEl.initialPointDescription, '');
-
-                    const htmlPointsEl = window.document.getElementById('pointsToVisit');
-                    htmlPointsEl.innerHTML = '';
-
+                    window.document.getElementById('pointsToVisit').innerHTML = '';
                     htmlEl.routeIds.textContent = '';
+
                     htmlEl.toolbarPositionSlider.value = 0;
                     window.app.modules.Callbacks.onToolbarButtonClicked({ target: htmlEl.toolbarPositionSlider });
 
