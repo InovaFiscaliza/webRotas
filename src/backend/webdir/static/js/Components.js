@@ -238,7 +238,7 @@
                 }, routeListTitleGrid);
 
                 this.createElement('button', {
-                    id: 'routeListAddBtn',        
+                    id: 'routeListAddBtn',
                     classList: ['btn-top-right'],
                     style: { 
                         gridArea: '1 / 2 / 2 / 3', 
@@ -625,6 +625,7 @@
 
             this.createElement('button', {
                 id: 'toolbarExportBtn',
+                classList: ['disabled'],
                 style: { 
                     gridArea: '1 / 3 / 2 / 4', 
                     height: '100%', 
@@ -664,6 +665,7 @@
 
             this.createElement('input', {
                 id: 'toolbarPositionSlider',
+                classList: ['disabled'],
                 style: { 
                     gridArea: '1 / 5 / 2 / 6'
                 },
@@ -678,6 +680,7 @@
 
             this.createElement('button', {
                 id: 'toolbarLocationBtn',
+                classList: ['disabled'],
                 style: { 
                     gridArea: '1 / 7 / 2 / 8', 
                     height: '100%', 
@@ -693,6 +696,7 @@
 
             this.createElement('button', {
                 id: 'toolbarOrientationBtn',
+                classList: ['disabled'],
                 style: { 
                     gridArea: '1 / 8 / 2 / 9', 
                     height: '100%', 
