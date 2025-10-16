@@ -1,4 +1,6 @@
 import requests
+import logging
+import math
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 from geopy.distance import geodesic
 
@@ -12,13 +14,46 @@ URL = {
 # -----------------------------------------------------------------------------------#
 def controller(origin, waypoints, criterion="distance", avoid_zones=None):
     coords = [origin] + waypoints
+    use_container = False
 
-    try:
-        distances, durations = get_osrm_matrix(coords)
-    except (requests.exceptions.RequestException, ValueError, KeyError):
-        distances, durations = get_osrm_matrix_from_local_container(coords)
+    # Check if we should use local container due to limitations
+    if len(coords) > 100:
+        logging.debug(f"Too many points ({len(coords)}), using local container")
+        use_container = True
+
+    if avoid_zones and len(avoid_zones) > 0:
+        logging.debug(
+            f"Exclusion zones present ({len(avoid_zones)}), using local container"
+        )
+        use_container = True
+
+    if use_container:
+        # Use local container directly
+        try:
+            distances, durations = get_osrm_matrix_from_local_container(coords)
+        except Exception as e:
+            logging.warning(
+                f"Local container failed: {e}. Falling back to geodesic calculation"
+            )
+            distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
+    else:
+        # Try public API first
+        try:
+            distances, durations = get_osrm_matrix(coords)
+        except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+            logging.warning(f"Public API failed: {e}. Trying local container")
+            try:
+                distances, durations = get_osrm_matrix_from_local_container(coords)
+            except Exception as container_e:
+                logging.warning(
+                    f"Local container also failed: {container_e}. Using geodesic calculation"
+                )
+                distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
 
     if not check_matrix_validity(coords, distances, durations):
+        logging.warning(
+            "Matrix validation failed, falling back to geodesic calculation"
+        )
         distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
 
     if criterion in ["distance", "duration"]:
