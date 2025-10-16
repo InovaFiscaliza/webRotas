@@ -129,22 +129,27 @@ def check_matrix_validity(coords, distances, durations):
     if distances is None or durations is None:
         return False
 
+    # quick shape checks
     if not (len(distances) == len(durations) == num_points):
         return False
+    if any(len(row) != num_points for row in distances) or any(
+        len(row) != num_points for row in durations
+    ):
+        return False
 
-    for ii in range(num_points):
-        if not (len(distances[ii]) == len(durations[ii]) == num_points):
+    # validate diagonal zeros and positive off-diagonals for both matrices
+    for mat in (distances, durations):
+        # diagonal must be exactly zero
+        if any(mat[i][i] != 0 for i in range(num_points)):
             return False
-        
-    for ii in range(num_points):
-        for jj in range(num_points):
-            d, t = distances[ii][jj], durations[ii][jj]
-            if ii == jj:
-                if not (d == 0 and t == 0):
-                    return False
-            else:
-                if d <= 0 or t <= 0:
-                    return False
+        # all off-diagonal entries must be positive
+        if any(
+            mat[i][j] <= 0
+            for i in range(num_points)
+            for j in range(num_points)
+            if i != j
+        ):
+            return False
 
     return True
 
