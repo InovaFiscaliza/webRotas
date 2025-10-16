@@ -59,7 +59,10 @@ from route_request_manager import RouteRequestManager as rrm
 
 import wlog as wl
 
-CONFIG_FILE = pf.PROJECT_PATH / "src" / "backend" / "webdir" / "config" / "containers.json"
+CONFIG_FILE = (
+    pf.PROJECT_PATH / "src" / "backend" / "webdir" / "config" / "containers.json"
+)
+
 
 # -----------------------------------------------------------------------------------#
 def find_available_port(start_port=50000, max_port=65535):
@@ -89,31 +92,34 @@ def find_available_port(start_port=50000, max_port=65535):
         f"Nenhuma porta livre encontrada no intervalo {start_port}-{max_port}."
     )
 
+
 # -----------------------------------------------------------------------------------#
 def delete_temp_folder(filtro: str) -> bool:
     try:
         if os.path.exists(filtro):
             shutil.rmtree(filtro)
-            return True        
+            return True
         else:
-            return False        
+            return False
     except Exception as e:
         return False
+
 
 # -----------------------------------------------------------------------------------#
 def create_temp_folder(caminho: str) -> bool:
     try:
         os.makedirs(caminho, exist_ok=True)
-        return True    
+        return True
     except Exception as e:
         return False
+
 
 # -----------------------------------------------------------------------------------#
 def move_files(origem: str, destino: str) -> bool:
     try:
         os.makedirs(destino, exist_ok=True)
         shutil.move(origem, destino)
-        return True    
+        return True
     except Exception as e:
         return False
 
@@ -220,6 +226,7 @@ def region_container_alive(cacheid):
 
 ################################################################################
 def AtivaServidorOSMR(regioes):
+    return  # TODO: remover esta linha quando for usar
     # startserver filtro 8001 osmr_server8001
     chave = cb.cCacheBoundingBox.chave(regioes)
     # -------------------------------------------------
@@ -228,7 +235,7 @@ def AtivaServidorOSMR(regioes):
     if porta:
         wr.UserData.OSMRport = porta
         return
-    
+
     # -------------------------------------------------
     wr.UserData.OSMRport = find_available_port(start_port=50000, max_port=65535)
     wl.wLog(
@@ -259,7 +266,6 @@ def AtivaServidorOSMR(regioes):
 
 ################################################################################
 def GerarIndicesExecutarOSRMServer(regioes):
-
     # os.chdir("../../resources/OSMR/data")
     chave = cb.cCacheBoundingBox.chave(regioes)
     log_filename = wl.get_log_filename()
@@ -341,6 +347,7 @@ def manutencao_arquivos_antigos():
     DeleteOldFilesAndFolders(pf.OSMOSIS_TEMPDATA_PATH, days=365)
     StopOldContainers(days=30)
 
+
 ################################################################################
 def is_podman_running_health():
     """
@@ -356,19 +363,26 @@ def is_podman_running_health():
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            check=True
+            check=True,
         )
         return True, "Podman is running and operational."
 
     except FileNotFoundError:
-        return False, "The 'podman' command was not found. Please ensure it is installed and in your PATH."
+        return (
+            False,
+            "The 'podman' command was not found. Please ensure it is installed and in your PATH.",
+        )
 
     except subprocess.CalledProcessError as e:
-        return False, f"Podman returned an error.\nSTDOUT:\n{e.stdout}\nSTDERR:\n{e.stderr}"
+        return (
+            False,
+            f"Podman returned an error.\nSTDOUT:\n{e.stdout}\nSTDERR:\n{e.stderr}",
+        )
 
     except Exception as e:
         return False, f"Unexpected error: {str(e)}"
-    
+
+
 ################################################################################
 def get_containers():
     """
@@ -498,6 +512,7 @@ def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon):
                 )
                 return True
 
+
 ################################################################################
 def get_max_active_containers():
     """
@@ -507,7 +522,7 @@ def get_max_active_containers():
     try:
         with open(CONFIG_FILE, "r") as f:
             config = json.load(f)
-            return int(config.get("max_active_containers", 5))        
+            return int(config.get("max_active_containers", 5))
     except Exception as e:
         return 5
 
@@ -604,7 +619,7 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
     Returns:
     - bool: True se o servidor estiver no ar, False caso contrário.
     """
-    url = f"http://localhost:{wr.UserData.OSMRport}/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
+    url = "http://localhost:5000/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
 
     for tentativa in range(tentativas):
         try:
@@ -861,12 +876,14 @@ def limpar_cache_files_osmr(regioes):
 ################################################################################
 def PreparaServidorRoteamento(routing_area):
     roteamento_ok = False
-    
-    # Precisa identificar a instância correta da lista de requisições em andamento
-    rrm.cGuiOutput.cache_id = cb.cCacheBoundingBox.chave(routing_area)
-    
+
+    # Get cache ID for this routing area
+    cache_id = cb.cCacheBoundingBox.chave(routing_area)
+
     while not roteamento_ok:
-        if cb.cCacheBoundingBox.get_cache(routing_area) == None:  # servidor não tem cache ID
+        if (
+            cb.cCacheBoundingBox.get_cache(routing_area) == None
+        ):  # servidor não tem cache ID
             wr.GeraArquivoExclusoes(
                 routing_area,
                 arquivo_saida=Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")
@@ -881,7 +898,7 @@ def PreparaServidorRoteamento(routing_area):
                 wl.wLog(
                     "Dados de roteamento encontrados no diretorio filtro OSMR cache, ativando o servidor OSMR"
                 )
-                AtivaServidorOSMR(routing_area)
+                AtivaServidorOSMR(routing_area)  # TODO: Remover isso
             info_regiao = sf.ObterMunicipiosNoBoundingBoxOrdenados(
                 rg.extrair_bounding_box_de_regioes(routing_area)
             )
