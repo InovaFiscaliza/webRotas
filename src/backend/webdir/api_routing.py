@@ -5,8 +5,7 @@ from typing import List, Tuple
 import requests
 from geopy.distance import geodesic
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
-from routing_servers_interface import PreparaServidorRoteamento
-from web_rotas import UserData
+from routing_servers_interface import PreparaServidorRoteamento, UserData
 
 TIMEOUT = 10
 URL = {
@@ -54,11 +53,24 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
                 )
                 distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
 
-    if (mat := validate_matrix(coords, distances, durations)) is None:
+    mat = validate_matrix(coords, distances, durations)
+    
+    if mat is None:
         logging.warning(
             "Matrix validation failed, falling back to geodesic calculation"
         )
         distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
+    elif len(mat) == 3:
+        # Invalid pairs found, only calculate geodesic for those
+        distances, durations, invalid_pairs = mat
+        logging.debug(f"Found {len(invalid_pairs)} invalid pairs, calculating geodesic only for those")
+        
+        geodesic_distances, geodesic_durations = get_geodesic_matrix(coords, speed_kmh=40, invalid_pairs=invalid_pairs)
+        
+        # Merge geodesic values into the existing matrices
+        for ii, jj in invalid_pairs:
+            distances[ii][jj] = geodesic_distances[ii][jj]
+            durations[ii][jj] = geodesic_durations[ii][jj]
     else:
         distances, durations = mat
 
@@ -194,16 +206,37 @@ def get_osrm_matrix_from_local_container(coords):
 
 
 # -----------------------------------------------------------------------------------#
-def get_geodesic_matrix(coords, speed_kmh=40):
+def get_geodesic_matrix(coords, speed_kmh=40, invalid_pairs=None):
+    """
+    Calculate geodesic distances between coordinates.
+    
+    Args:
+        coords: List of coordinate dicts with 'lat' and 'lng' keys
+        speed_kmh: Speed in km/h for duration calculation (default: 40)
+        invalid_pairs: Optional list of (i, j) tuples for pairs that need geodesic calculation.
+                       If None, calculates for all pairs.
+    
+    Returns:
+        tuple: (distances, durations) matrices
+    """
     num_points = len(coords)
-    distances = [[0.0] * num_points] * num_points
+    distances = [[0.0] * num_points for _ in range(num_points)]
 
-    for ii in range(num_points):
-        for jj in range(num_points):
+    # If invalid_pairs provided, only calculate geodesic for those pairs
+    if invalid_pairs:
+        for ii, jj in invalid_pairs:
             if ii != jj:
                 p1 = (coords[ii]["lat"], coords[ii]["lng"])
                 p2 = (coords[jj]["lat"], coords[jj]["lng"])
                 distances[ii][jj] = geodesic(p1, p2).meters
+    else:
+        # Calculate for all pairs (fallback for full matrix)
+        for ii in range(num_points):
+            for jj in range(num_points):
+                if ii != jj:
+                    p1 = (coords[ii]["lat"], coords[ii]["lng"])
+                    p2 = (coords[jj]["lat"], coords[jj]["lng"])
+                    distances[ii][jj] = geodesic(p1, p2).meters
 
     durations = [[(dist / speed_kmh) * 3600 for dist in row] for row in distances]
 
@@ -226,6 +259,9 @@ def validate_matrix(
     ):
         return None
 
+    # Track invalid pairs for potential geodesic calculation
+    invalid_pairs = []
+    
     # validate diagonal zeros and positive off-diagonals for both matrices
     for mat in (distances, durations):
         # diagonal must be exactly zero
@@ -240,7 +276,14 @@ def validate_matrix(
                         if mat[j][i] > 0:
                             mat[i][j] = mat[j][i]
                         else:
-                            return None
+                            # Record this as an invalid pair if not already recorded
+                            if (i, j) not in invalid_pairs:
+                                invalid_pairs.append((i, j))
+    
+    # If there are invalid pairs, return them along with the matrices
+    if invalid_pairs:
+        return distances, durations, invalid_pairs
+    
     return distances, durations
 
 

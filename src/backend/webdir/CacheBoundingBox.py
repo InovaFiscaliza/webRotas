@@ -41,7 +41,6 @@ Exemplos de uso:
     c.exportar_cache_para_xlsx_zip(Path("/tmp/cache.zip"))
 """
 
-
 import hashlib
 import json
 import os
@@ -52,20 +51,17 @@ import threading
 from pathlib import Path
 import project_folders as pf
 import pickle
-from datetime import datetime, timedelta
+from datetime import timedelta
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 import zipfile
-import os
 import route_cache as rc
 import PolylineCache as pl
 import atexit
 import signal
-import threading
 import time
 
 import regions as rg
-
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -111,10 +107,10 @@ class CacheBoundingBox:
                 shutil.rmtree(caminho)
                 # wr.wLog(f"Remoção bem-sucedida: {caminho}", level="debug")
                 return
-            except PermissionError as e:
+            except PermissionError:
                 # wr.wLog(f"Tentativa {tentativa}: Permissão negada ao remover {caminho} - {e}", level="warning")
                 time.sleep(espera)
-            except Exception as e:
+            except Exception:
                 #  wr.wLog(f"Tentativa {tentativa}: Erro ao remover {caminho} - {e}", level="error")
                 time.sleep(espera)
         # print(f"Falha final ao remover diretório após {tentativas} tentativas: {caminho}")
@@ -208,10 +204,10 @@ class CacheBoundingBox:
             self.state = entry["state"]
             self._schedule_save()
             return entry["regiaodados"], chave
-        
+
         # melhorar verificando as áreas de exclusão
         regtemp = self.find_smallest_containing_region(regioes)
-        if regtemp != None:
+        if regtemp is not None:
             self.ultimaregiao = regtemp
             entry = self.cache.get(self._hash_bbox(regtemp))
             self.gr = entry["gr"]
@@ -307,7 +303,7 @@ class CacheBoundingBox:
                 pickle.dump(route_data, f)
             caminho_old.unlink(missing_ok=True)
             # print(f"[OK] Route cache salvo para '{chave}' em '{caminho_arquivo}'")
-        except Exception as e:
+        except Exception:
             pass
             # wLog(f"Cache ralha ao salvar route_cache para '{chave}': {e}", level="debug")
 
@@ -325,7 +321,7 @@ class CacheBoundingBox:
             except KeyError:
                 # wr.wLog(f"[AVISO] Chave '{chave}' não encontrada no cache. Nenhum dado salvo para esta região.", level="warning")
                 pass
-            except Exception as e:
+            except Exception:
                 # wr.wLog(f"[ERRO] Falha ao salvar cache da chave '{chave}': {e}", level="error")
                 pass
             return
@@ -333,7 +329,7 @@ class CacheBoundingBox:
         for chave, dados in self.cache.items():
             try:
                 self.salvar_route_cache_item(chave, dados)
-            except Exception as e:
+            except Exception:
                 # wr.wLog(f"[ERRO] Falha ao salvar item do cache chave='{chave}': {e}", level="error")
                 pass
 
@@ -363,7 +359,7 @@ class CacheBoundingBox:
                     route_data = pickle.load(f)
                     self.route_cache.cache[chave] = route_data
                 # print(f"[OK] Route cache carregado para '{chave}' de '{caminho_arquivo}'")
-            except Exception as e:
+            except Exception:
                 # wLog(f"Cache falha ao carregar '{caminho_arquivo}': {e}", level="debug")
                 if caminho_old.exists():
                     try:
@@ -412,7 +408,7 @@ class CacheBoundingBox:
             if backup_file.exists():
                 backup_file.unlink()
 
-        except Exception as e:
+        except Exception:
             # print(f"[ERRO] Falha ao salvar cache: {e}")
 
             # Se falhou e o backup existe, tenta restaurar
@@ -436,7 +432,7 @@ class CacheBoundingBox:
         try:
             with gzip.open(self.cache_file, "rb") as f:
                 data = pickle.load(f)
-        except Exception as e:
+        except Exception:
             # print(f"[ERRO] Falha ao carregar cache principal: {e}")
             # Tenta o backup
             backup_file = self.cache_file.with_suffix(".bin.gz.bkp")
@@ -449,7 +445,7 @@ class CacheBoundingBox:
                     if self.cache_file.exists():
                         self.cache_file.unlink()
                     backup_file.rename(self.cache_file)
-                except Exception as e2:
+                except Exception:
                     # print(f"[ERRO] Falha ao carregar cache do backup: {e2}")
                     limpar_todos()
                     return
@@ -602,12 +598,11 @@ class CacheBoundingBox:
             end_lat = float(end_lat)
             end_lon = float(end_lon)
         except ValueError:
-            return None,None  # coordenadas inválidas
+            return None, None  # coordenadas inválidas
 
         for chave, dados in self.cache.items():
             chaveBuf = chave
             locregiao = dados.get("regiaodados", "")
-
 
             regioes = locregiao
 
@@ -640,12 +635,11 @@ class CacheBoundingBox:
             ):
                 return chaveBuf, locregiao
 
-        return None,None
+        return None, None
 
     # ------------------------------------------------------------------------------------------------
 
     def list_servers_online(self):
-
         return
 
 

@@ -49,15 +49,21 @@ import socket
 import glob
 from pathlib import Path
 import json
-
+from dataclasses import dataclass
 import web_rotas as wr
 import project_folders as pf
 import CacheBoundingBox as cb
 import regions as rg
 import shapeFiles as sf
-from web_rotas import UserData
 
 import wlog as wl
+
+
+@dataclass
+class UserData:
+    OSMRport: int = 5000
+    ssid: str = None
+
 
 CONFIG_FILE = (
     pf.PROJECT_PATH / "src" / "backend" / "webdir" / "config" / "containers.json"
