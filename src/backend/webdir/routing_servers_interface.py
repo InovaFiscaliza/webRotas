@@ -55,7 +55,7 @@ import project_folders as pf
 import CacheBoundingBox as cb
 import regions as rg
 import shapeFiles as sf
-from route_request_manager import RouteRequestManager as rrm
+from web_rotas import UserData
 
 import wlog as wl
 
@@ -101,7 +101,7 @@ def delete_temp_folder(filtro: str) -> bool:
             return True
         else:
             return False
-    except Exception as e:
+    except Exception:
         return False
 
 
@@ -110,7 +110,7 @@ def create_temp_folder(caminho: str) -> bool:
     try:
         os.makedirs(caminho, exist_ok=True)
         return True
-    except Exception as e:
+    except Exception:
         return False
 
 
@@ -120,13 +120,13 @@ def move_files(origem: str, destino: str) -> bool:
         os.makedirs(destino, exist_ok=True)
         shutil.move(origem, destino)
         return True
-    except Exception as e:
+    except Exception:
         return False
 
 
 ################################################################################
 def init_and_load_podman_images():
-    print(f"init_and_load_podman_images")
+    print("init_and_load_podman_images")
 
     log_filename = wl.get_log_filename()
     logok = f"{log_filename}.{wr.UserData.ssid}.OSMR"
@@ -243,7 +243,7 @@ def AtivaServidorOSMR(regioes):
     )
     log_filename = wl.get_log_filename()
     logok_osmr = f"{log_filename}.{wr.UserData.ssid}.OSMR"
-    wl.wLog(f"Ativando Servidor OSMR", level="debug")
+    wl.wLog("Ativando Servidor OSMR", level="debug")
     subprocess.run(
         ["podman", "stop", f"osmr_{wr.UserData.ssid}_{chave}"],
         stdout=open(logok_osmr, "a"),
@@ -358,7 +358,7 @@ def is_podman_running_health():
                      and the second element provides a descriptive status message.
     """
     try:
-        result = subprocess.run(
+        subprocess.run(
             ["podman", "ps"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -486,31 +486,31 @@ def check_osrm_server(host: str, port: int, timeout: int = 3) -> bool:
 
 
 ###########################################################################################################################
-def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon):
-    cache, regioes = cb.cCacheBoundingBox.find_server_for_this_route(
-        start_lat, start_lon, end_lat, end_lon
-    )
-    if cache == None:
-        wl.wLog(
-            f"Não encontrada região no cache para essa rota - id: {cache}",
-            level="debug",
-        )
-        return False
-    wl.wLog(f"Ativando região para essa rota: {cache}", level="debug")
-    AtivaServidorOSMR(regioes)
+# def start_or_find_server_for_this_route(start_lat, start_lon, end_lat, end_lon):
+#     cache, regioes = cb.cCacheBoundingBox.find_server_for_this_route(
+#         start_lat, start_lon, end_lat, end_lon
+#     )
+#     if cache == None:
+#         wl.wLog(
+#             f"Não encontrada região no cache para essa rota - id: {cache}",
+#             level="debug",
+#         )
+#         return False
+#     wl.wLog(f"Ativando região para essa rota: {cache}", level="debug")
+#     AtivaServidorOSMR(regioes)
 
-    osrm_port = None
-    while osrm_port == None:
-        time.sleep(1)
-        osrm_port = region_container_alive(cache)
+#     osrm_port = None
+#     while osrm_port == None:
+#         time.sleep(1)
+#         osrm_port = region_container_alive(cache)
 
-        if osrm_port:
-            wr.UserData.OSMRport = porta
-            if check_osrm_server("localhost", porta, 3):
-                wl.wLog(
-                    f"Servidor iniciado - id: {cache} -  ({start_lat}, {start_lon}), ({end_lat}, {end_lon})"
-                )
-                return True
+#         if osrm_port:
+#             wr.UserData.OSMRport = porta
+#             if check_osrm_server("localhost", porta, 3):
+#                 wl.wLog(
+#                     f"Servidor iniciado - id: {cache} -  ({start_lat}, {start_lon}), ({end_lat}, {end_lon})"
+#                 )
+#                 return True
 
 
 ################################################################################
@@ -523,7 +523,7 @@ def get_max_active_containers():
         with open(CONFIG_FILE, "r") as f:
             config = json.load(f)
             return int(config.get("max_active_containers", 5))
-    except Exception as e:
+    except Exception:
         return 5
 
 
@@ -607,6 +607,7 @@ def StopOldContainers(days=30):
 
 
 ################################################################################
+# TODO: Parametrizar a porta
 def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
     """
     Verifica se o servidor OSRM está ativo.
@@ -619,7 +620,7 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
     Returns:
     - bool: True se o servidor estiver no ar, False caso contrário.
     """
-    url = "http://localhost:5000/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
+    url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
 
     for tentativa in range(tentativas):
         try:
@@ -843,34 +844,34 @@ def esperar_container_parar(nome_usuario, timeout=30):
 
 
 ################################################################################
-def limpar_cache_files_osmr(regioes):
-    try:
-        wl.wLog(
-            f"Parando todos os containers osmr do usário {wr.UserData.ssid}",
-            level="debug",
-        )
-        parar_containers_osmr(wr.UserData.ssid)
-        esperar_container_parar(wr.UserData.ssid)
-        wl.wLog("Apagando arquivo de log...", level="debug")
-        log_filename = wl.get_log_filename()
-        log_file = f"{log_filename}.{wr.UserData.ssid}.OSMR"
-        backup_file = log_file + ".LastError"
-        try:
-            if os.path.exists(log_file):
-                shutil.copy(log_file, backup_file)
-                wl.wLog(f"Cópia de segurança criada: {backup_file}", level="debug")
-            os.remove(log_file)
-            wl.wLog(f"Removido: {log_file}", level="debug")
-        except FileNotFoundError:
-            wl.wLog(f"Arquivo não encontrado: {log_file}")
-        except Exception as e:
-            wl.wLog(f"Erro ao remover {log_file}: {e}")
-        remover_arquivos_osmr()
-        wl.wLog("Limpeza concluída com sucesso.", level="debug")
-    except Exception as e:
-        wl.wLog(f"Erro durante a limpeza dos caches : {e}")
+# def limpar_cache_files_osmr(regioes):
+#     try:
+#         wl.wLog(
+#             f"Parando todos os containers osmr do usário {wr.UserData.ssid}",
+#             level="debug",
+#         )
+#         parar_containers_osmr(wr.UserData.ssid)
+#         esperar_container_parar(wr.UserData.ssid)
+#         wl.wLog("Apagando arquivo de log...", level="debug")
+#         log_filename = wl.get_log_filename()
+#         log_file = f"{log_filename}.{wr.UserData.ssid}.OSMR"
+#         backup_file = log_file + ".LastError"
+#         try:
+#             if os.path.exists(log_file):
+#                 shutil.copy(log_file, backup_file)
+#                 wl.wLog(f"Cópia de segurança criada: {backup_file}", level="debug")
+#             os.remove(log_file)
+#             wl.wLog(f"Removido: {log_file}", level="debug")
+#         except FileNotFoundError:
+#             wl.wLog(f"Arquivo não encontrado: {log_file}")
+#         except Exception as e:
+#             wl.wLog(f"Erro ao remover {log_file}: {e}")
+#         remover_arquivos_osmr()
+#         wl.wLog("Limpeza concluída com sucesso.", level="debug")
+#     except Exception as e:
+#         wl.wLog(f"Erro durante a limpeza dos caches : {e}")
 
-    cb.cCacheBoundingBox.delete(regioes)
+#     cb.cCacheBoundingBox.delete(regioes)
 
 
 ################################################################################
@@ -882,7 +883,7 @@ def PreparaServidorRoteamento(routing_area):
 
     while not roteamento_ok:
         if (
-            cb.cCacheBoundingBox.get_cache(routing_area) == None
+            cb.cCacheBoundingBox.get_cache(routing_area) is None
         ):  # servidor não tem cache ID
             wr.GeraArquivoExclusoes(
                 routing_area,
@@ -898,7 +899,7 @@ def PreparaServidorRoteamento(routing_area):
                 wl.wLog(
                     "Dados de roteamento encontrados no diretorio filtro OSMR cache, ativando o servidor OSMR"
                 )
-                AtivaServidorOSMR(routing_area)  # TODO: Remover isso
+                # AtivaServidorOSMR(routing_area)  # TODO: Remover isso
             info_regiao = sf.ObterMunicipiosNoBoundingBoxOrdenados(
                 rg.extrair_bounding_box_de_regioes(routing_area)
             )
@@ -913,7 +914,7 @@ def PreparaServidorRoteamento(routing_area):
             wl.wLog(
                 "Dados de roteamento encontrados no cache, nao e necessario executar osmosis"
             )
-            AtivaServidorOSMR(routing_area)
+            # AtivaServidorOSMR(routing_area)
         if VerificarOsrmAtivo():
             roteamento_ok = True
         else:
@@ -921,4 +922,4 @@ def PreparaServidorRoteamento(routing_area):
             wl.wLog(
                 f"Erro de cache encontrado reiniciando geração dos mapas - id: {cache_id}"
             )
-            limpar_cache_files_osmr(routing_area)
+            # limpar_cache_files_osmr(routing_area)

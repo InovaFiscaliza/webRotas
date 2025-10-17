@@ -1,25 +1,19 @@
 import math
+from collections import namedtuple
+
+import api_elevation
+import api_routing
+import CacheBoundingBox as cb
 import numpy as np
+import regions as rg
+import shapeFiles as sf
 from shapely.geometry import Point, Polygon
 from shapely.ops import unary_union
-from geopy.distance import geodesic
-
-import shapeFiles as sf
-import routing_servers_interface as si
-import CacheBoundingBox as cb
-import regions as rg
-import api_routing
-import api_elevation
-
 
 # -----------------------------------------------------------------------------------#
 ## <Compatibilidade com "routing_servers_interface.py">
-class UserDataClass:
-    OSMRport = 5000
-    ssid = None
-
-
-UserData = UserDataClass()
+UserDataType = namedtuple("UserData", ["OSMRport", "ssid"])
+UserData = UserDataType(OSMRport=5000, ssid=None)
 ## </Compatibilidade com "routing_servers_interface.py">
 
 

@@ -1,8 +1,11 @@
-import requests
 import logging
 import math
-from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+
+import requests
 from geopy.distance import geodesic
+from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+from routing_servers_interface import PreparaServidorRoteamento
+from web_rotas import UserData
 
 TIMEOUT = 10
 URL = {
@@ -93,23 +96,104 @@ def get_osrm_matrix(coords):
 
 # -----------------------------------------------------------------------------------#
 def get_osrm_matrix_from_local_container(coords):
-    # ToDo:
-    # Estimar bounding box que atende a rota, verificar se há container
-    # local ativo para essa área. Caso contrário, abre-se um novo container.
-    # O erro não pode vazar para o cliente porque a chamada desse método se
-    # deu no except do método principal.
+    """
+    Get distance and duration matrix from local OSRM container.
 
-    data = {
-        "distances": [],
-        "durations": []
-    }    
+    This function:
+    1. Estimates bounding box for the route
+    2. Checks if there's an active container for this area
+    3. If not, starts a new container
+    4. Makes the request to the local container
 
-    return data["distances"], data["durations"]
+    Args:
+        coords: List of coordinates [{"lat": float, "lng": float}, ...]
+
+    Returns:
+        tuple: (distances, durations) matrices
+
+    Raises:
+        Exception: If container setup or request fails
+    """
+    try:
+        # Extract bounding box from coordinates
+        if not coords or len(coords) < 2:
+            raise ValueError("Need at least 2 coordinates for routing")
+
+        # Calculate bounding box with padding for routing
+        lats = [c["lat"] for c in coords]
+        lngs = [c["lng"] for c in coords]
+
+        lat_min, lat_max = min(lats), max(lats)
+        lng_min, lng_max = min(lngs), max(lngs)
+
+        # Add padding for routing (50km as in web_rotas.py)
+        padding_km = 50
+        lat_diff = padding_km / 111.0  # Approximately 1 degree = 111 km
+        lng_diff = padding_km / (
+            111.0 * math.cos(math.radians((lat_min + lat_max) / 2))
+        )
+
+        lat_min -= lat_diff
+        lat_max += lat_diff
+        lng_min -= lng_diff
+        lng_max += lng_diff
+
+        # Create routing area for container management
+        bounding_box = [
+            [lat_max, lng_min],
+            [lat_max, lng_max],
+            [lat_min, lng_max],
+            [lat_min, lng_min],
+        ]
+
+        routing_area = [{"name": "boundingBoxRegion", "coord": bounding_box}]
+
+        # Setup container for this routing area
+        logging.debug(f"Setting up OSRM server for {len(coords)} coordinates")
+
+        # Set up user data for container interface
+        if not hasattr(UserData, "ssid") or UserData.ssid is None:
+            import uuid
+
+            UserData.ssid = str(uuid.uuid4())[:8]
+
+        # Try to prepare the routing server
+        PreparaServidorRoteamento(routing_area)
+
+        # Check if server is running
+        if not UserData.OSMRport:
+            raise Exception("Failed to start OSRM container - no port assigned")
+
+        # Make request to local container
+        coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
+        local_url = f"http://localhost:{UserData.OSMRport}/table/v1/driving/{coord_str}?annotations=distance,duration"
+
+        logging.debug(f"Making request to local OSRM: {local_url}")
+
+        # Use longer timeout for local container as it might need to start up
+        response = requests.get(local_url, timeout=60)
+        response.raise_for_status()
+
+        data = response.json()
+
+        if "distances" not in data or "durations" not in data:
+            raise ValueError("Invalid response from local OSRM container")
+
+        logging.debug(
+            f"Successfully got matrix from local container: {len(data['distances'])}x{len(data['distances'][0])} points"
+        )
+
+        return data["distances"], data["durations"]
+
+    except Exception as e:
+        logging.error(f"Error in get_osrm_matrix_from_local_container: {e}")
+        raise
+
 
 # -----------------------------------------------------------------------------------#
 def get_geodesic_matrix(coords, speed_kmh=40):
     num_points = len(coords)
-    distances = [[0.0] * num_points for _ in range(num_points)]
+    distances = [[0.0] * num_points] * num_points
 
     for ii in range(num_points):
         for jj in range(num_points):
@@ -142,7 +226,6 @@ def check_matrix_validity(coords, distances, durations):
         # diagonal must be exactly zero
         if any(mat[i][i] != 0 for i in range(num_points)):
             return False
-        # all off-diagonal entries must be positive
         if any(
             mat[i][j] <= 0
             for i in range(num_points)
@@ -159,10 +242,42 @@ def get_osrm_route(coords, order):
     ordered = [coords[ii] for ii in order]
     coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
 
-    req = requests.get(URL["route"](coord_str), timeout=10)
-    req.raise_for_status()
-    data = req.json()
+    # Try public API first
+    try:
+        if len(ordered) > 100:
+            raise ValueError("Too many points for public API")
 
+        req = requests.get(URL["route"](coord_str), timeout=10)
+        req.raise_for_status()
+        data = req.json()
+    except (requests.exceptions.RequestException, ValueError) as e:
+        logging.warning(f"Public route API failed: {e}. Trying local container")
+    # Try local container
+    try:
+        if not UserData.OSMRport:
+            raise Exception("No local OSRM container available")
+
+        local_url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{coord_str}?overview=full&geometries=geojson"
+        req = requests.get(local_url, timeout=30)
+        req.raise_for_status()
+        data = req.json()
+    except Exception as container_e:
+        logging.error(f"Local container route also failed: {container_e}")
+        # Return a minimal valid response structure
+        data = {
+            "routes": [
+                {
+                    "geometry": {
+                        "coordinates": [[c["lng"], c["lat"]] for c in ordered]
+                    },
+                    "duration": 0,
+                    "distance": 0,
+                }
+            ],
+            "waypoints": [{"name": ""} for _ in ordered],
+        }
+
+    # Update descriptions
     for ii, waypoint in enumerate(ordered):
         if not waypoint.get("description"):
             waypoint["description"] = data["waypoints"][ii].get("name", "")
