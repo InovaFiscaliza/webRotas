@@ -1,5 +1,6 @@
 import logging
 import math
+from typing import List, Tuple
 
 import requests
 from geopy.distance import geodesic
@@ -53,11 +54,13 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
                 )
                 distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
 
-    if not check_matrix_validity(coords, distances, durations):
+    if (mat := validate_matrix(coords, distances, durations)) is None:
         logging.warning(
             "Matrix validation failed, falling back to geodesic calculation"
         )
         distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
+    else:
+        distances, durations = mat
 
     if criterion in ["distance", "duration"]:
         matrix = distances if criterion == "distance" else durations
@@ -208,7 +211,9 @@ def get_geodesic_matrix(coords, speed_kmh=40):
 
 
 # -----------------------------------------------------------------------------------#
-def check_matrix_validity(coords, distances, durations):
+def validate_matrix(
+    coords, distances, durations
+) -> Tuple[List[float], List[float]] | None:
     num_points = len(coords)
     if distances is None or durations is None:
         return False
@@ -219,22 +224,24 @@ def check_matrix_validity(coords, distances, durations):
     if any(len(row) != num_points for row in distances) or any(
         len(row) != num_points for row in durations
     ):
-        return False
+        return None
 
     # validate diagonal zeros and positive off-diagonals for both matrices
     for mat in (distances, durations):
         # diagonal must be exactly zero
         if any(mat[i][i] != 0 for i in range(num_points)):
             return False
-        if any(
-            mat[i][j] <= 0
-            for i in range(num_points)
-            for j in range(num_points)
-            if i != j
-        ):
-            return False
 
-    return True
+        for i in range(num_points):
+            for j in range(num_points):
+                if i != j:
+                    # off-diagonal must be positive
+                    if mat[i][j] <= 0:
+                        if mat[j][i] > 0:
+                            mat[i][j] = mat[j][i]
+                        else:
+                            return None
+    return distances, durations
 
 
 # -----------------------------------------------------------------------------------#
