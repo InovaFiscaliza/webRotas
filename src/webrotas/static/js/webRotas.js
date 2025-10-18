@@ -94,7 +94,7 @@ async function loadScript(filename) {
 (function () {
     window.app = {
         name: 'webRotas',
-        version: '0.91.0',
+        version: '0.93.0',
         released: 'R2025b (15/10/2025)',
         sharepoint: 'https://anatel365.sharepoint.com/sites/InovaFiscaliza/SitePages/webRotas.aspx',
 
@@ -108,12 +108,12 @@ async function loadScript(filename) {
             Utils: null
         },
 
-        server: { 
+        server: {
             url: null,
             sessionId: '',
             status: (window.location.protocol === "file:") ? 'offline' : 'online',
             statusMonitor: {
-                intervalId: null, 
+                intervalId: null,
                 intervalMs: 10000,
                 failureCount: 0,
                 failureThreshold: 3
@@ -125,7 +125,7 @@ async function loadScript(filename) {
 
         map: null,
 
-        mapContext: {        
+        mapContext: {
             layers: {
                 basemap: {
                     "street-light": window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -206,7 +206,7 @@ async function loadScript(filename) {
                             status: true,
                             textResolver: ({ lat, lng, elevation, description }) => {
                                 const descriptionText = description.length ? `${description}<br>` : '';
-                                const elevationText   = ![null, -9999].includes(elevation) ? `, ${elevation.toFixed(1)}m` : '';
+                                const elevationText = ![null, -9999].includes(elevation) ? `, ${elevation.toFixed(1)}m` : '';
 
                                 return `${descriptionText}(${lat.toFixed(6)}º, ${lng.toFixed(6)}º${elevationText})`
                             },
@@ -221,8 +221,8 @@ async function loadScript(filename) {
                         iconType: 'customPinIcon:Circle',
                         iconTooltip: {
                             status: true,
-                            textResolver: ({ lat, lng }) => { 
-                                return `Ponto central<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º)` 
+                            textResolver: ({ lat, lng }) => {
+                                return `Ponto central<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º)`
                             },
                             offsetResolver: () => { return [0, 0] }
                         },
@@ -240,9 +240,9 @@ async function loadScript(filename) {
                         iconType: 'customPinIcon:Home',
                         iconTooltip: {
                             status: true,
-                            textResolver: ({ lat, lng, elevation, description }) => { 
+                            textResolver: ({ lat, lng, elevation, description }) => {
                                 const descriptionText = description.length ? `: ${description}` : '';
-                                const elevationText   = ![null, -9999].includes(elevation) ? `, ${elevation.toFixed(1)}m` : '';
+                                const elevationText = ![null, -9999].includes(elevation) ? `, ${elevation.toFixed(1)}m` : '';
 
                                 return `Ponto inicial${descriptionText}<br>(${lat.toFixed(6)}º, ${lng.toFixed(6)}º${elevationText})`
                             },
@@ -293,44 +293,44 @@ async function loadScript(filename) {
                     }
                 }
             },
-            settings: { 
+            settings: {
                 basemap: 'street-light', // 'street-light' | 'street-dark' | 'open-street' | 'satellite'
                 colorbar: 'hidden', // 'hidden' | 'visible'
                 colormap: {
                     scale: 'parula', // 'parula'
                     range: {
-                        default: { 
-                            min: 0, 
-                            max: 100 
+                        default: {
+                            min: 0,
+                            max: 100
                         },
                         current: {
-                            min: 0, 
+                            min: 0,
                             max: 100
                         }
                     }
                 },
-                geolocation: { 
+                geolocation: {
                     status: 'off', // 'on' | 'off'
-                    icon: { on: 'url(images/gps-on.png)', off: 'url(images/gps-off.png)' }, 
-                    navWatch: null, 
-                    lastPosition: null 
+                    icon: { on: 'url(images/gps-on.png)', off: 'url(images/gps-off.png)' },
+                    navWatch: null,
+                    lastPosition: null
                 },
-                orientation: { 
+                orientation: {
                     status: 'north', // 'north' | 'car-heading'  
-                    icon: { on: 'url(images/north.png)',  off: 'url(images/car-heading.png)' }, 
-                    lastHeading: 0 
+                    icon: { on: 'url(images/north.png)', off: 'url(images/car-heading.png)' },
+                    lastHeading: 0
                 },
                 position: {
-                    default: { 
-                        center: { 
+                    default: {
+                        center: {
                             lat: -10.3,
                             lng: -53.2
                         },
                         zoom: 4
                     },
                     current: {
-                        center: { 
-                            lat: -10.3, 
+                        center: {
+                            lat: -10.3,
                             lng: -53.2
                         },
                         zoom: 4
@@ -347,14 +347,14 @@ async function loadScript(filename) {
                     textResolver: ({ lat, lng }) => {
                         return `Latitude: ${lat.toFixed(6)}º<br>Longitude: ${lng.toFixed(6)}º`
                     },
-                    offsetResolver: (direction) => { 
-                        return (direction === "top") ? [0, -41] : [0, 0] 
+                    offsetResolver: (direction) => {
+                        return (direction === "top") ? [0, -41] : [0, 0]
                     }
                 },
                 importFile: {
                     format: '.json',
                     expectedKeys: {
-                        request: ["type", "origin", "parameters" ],
+                        request: ["type", "origin", "parameters"],
                         routing: ["routing"]
                     }
                 },
@@ -396,10 +396,10 @@ async function loadScript(filename) {
             await loadScript('js/Plot.js');
             await loadScript('js/Utils.js');
 
-            window.addEventListener("load",         (event) => window.app.modules.Callbacks.onWindowLoad(event));
+            window.addEventListener("load", (event) => window.app.modules.Callbacks.onWindowLoad(event));
             window.addEventListener("beforeunload", (event) => window.app.modules.Callbacks.onWindowBeforeUnload(event));
-            window.addEventListener("storage",      (event) => window.app.modules.Callbacks.onLocalStorageUpdate(event));
-            window.addEventListener("message",      (event) => window.app.modules.Callbacks.onWindowMessage(event));
+            window.addEventListener("storage", (event) => window.app.modules.Callbacks.onLocalStorageUpdate(event));
+            window.addEventListener("message", (event) => window.app.modules.Callbacks.onWindowMessage(event));
 
         } catch (ME) {
             (window.app.modules.Utils) ? window.app.modules.Utils.consoleLog(ME, 'error') : console.error(ME);

@@ -1,6 +1,6 @@
 [project]
 name = "webrotas"
-version = "0.1.0"
+version = "0.93.0"
 description = "Kit de ferramentas para gerenciamento de rotas de veículos, para atividades de inspeção da Agência Nacional de Telecomunicações do Brasil, Anatel."
 readme = "README.md"
 requires-python = "==3.11.*"
