@@ -49,6 +49,7 @@ import gzip
 from datetime import datetime
 import threading
 from pathlib import Path
+import logging
 import webrotas.project_folders as pf
 import pickle
 from datetime import timedelta
@@ -62,6 +63,9 @@ import signal
 import time
 
 import webrotas.regions as rg
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------------------------------------------
