@@ -6,6 +6,11 @@ import requests
 from geopy.distance import geodesic
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 from webrotas.routing_servers_interface import PreparaServidorRoteamento, UserData
+from webrotas.config.logging_config import get_logger
+
+# Initialize logging at module level
+logger = get_logger(__name__)
+
 
 TIMEOUT = 10
 URL = {
@@ -18,15 +23,14 @@ URL = {
 def controller(origin, waypoints, criterion="distance", avoid_zones=None):
     coords = [origin] + waypoints
     use_container = False
-    logging.warning(f"Number of coordinates: {len(coords)}")
 
     # Check if we should use local container due to limitations
     if len(coords) > 100:
-        logging.debug(f"Too many points ({len(coords)}), using local container")
+        logger.info(f"Too many points ({len(coords)}), using local container")
         use_container = True
 
     if avoid_zones and len(avoid_zones) > 0:
-        logging.debug(
+        logger.info(
             f"Exclusion zones present ({len(avoid_zones)}), using local container"
         )
         use_container = True
@@ -36,8 +40,9 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
         try:
             distances, durations = get_osrm_matrix_from_local_container(coords)
         except Exception as e:
-            logging.warning(
-                f"Local container failed: {e}. Falling back to geodesic calculation"
+            logger.error(
+                f"Local container failed: {e}. Falling back to geodesic calculation",
+                exc_info=True,
             )
             distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
     else:
@@ -45,11 +50,13 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
         try:
             distances, durations = get_osrm_matrix(coords)
         except (requests.exceptions.RequestException, ValueError, KeyError) as e:
-            logging.warning(f"Public API failed: {e}. Trying local container")
+            logger.error(
+                f"Public API failed: {e}. Trying local container", exc_info=True
+            )
             try:
                 distances, durations = get_osrm_matrix_from_local_container(coords)
             except Exception as container_e:
-                logging.warning(
+                logger.warning(
                     f"Local container also failed: {container_e}. Using geodesic calculation"
                 )
                 distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
@@ -57,14 +64,12 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
     mat = validate_matrix(coords, distances, durations)
 
     if mat is None:
-        logging.warning(
-            "Matrix validation failed, falling back to geodesic calculation"
-        )
+        logger.error("Matrix validation failed, falling back to geodesic calculation")
         distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
     elif len(mat) == 3:
         # Invalid pairs found, only calculate geodesic for those
         distances, durations, invalid_pairs = mat
-        logging.debug(
+        logger.warning(
             f"Found {len(invalid_pairs)} invalid pairs, calculating geodesic only for those"
         )
 
@@ -168,9 +173,6 @@ def get_osrm_matrix_from_local_container(coords):
 
         routing_area = [{"name": "boundingBoxRegion", "coord": bounding_box}]
 
-        # Setup container for this routing area
-        logging.debug(f"Setting up OSRM server for {len(coords)} coordinates")
-
         # Set up user data for container interface
         if not hasattr(UserData, "ssid") or UserData.ssid is None:
             import uuid
@@ -188,7 +190,7 @@ def get_osrm_matrix_from_local_container(coords):
         coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
         local_url = f"http://localhost:{UserData.OSMRport}/table/v1/driving/{coord_str}?annotations=distance,duration"
 
-        logging.debug(f"Making request to local OSRM: {local_url}")
+        logger.debug(f"Making request to local OSRM: {local_url}")
 
         # Use longer timeout for local container as it might need to start up
         response = requests.get(local_url, timeout=60)
@@ -199,14 +201,14 @@ def get_osrm_matrix_from_local_container(coords):
         if "distances" not in data or "durations" not in data:
             raise ValueError("Invalid response from local OSRM container")
 
-        logging.debug(
+        logger.info(
             f"Successfully got matrix from local container: {len(data['distances'])}x{len(data['distances'][0])} points"
         )
 
         return data["distances"], data["durations"]
 
     except Exception as e:
-        logging.error(f"Error in get_osrm_matrix_from_local_container: {e}")
+        logger.error(f"Error in get_osrm_matrix_from_local_container: {e}")
         raise
 
 
@@ -306,7 +308,7 @@ def get_osrm_route(coords, order):
         req.raise_for_status()
         data = req.json()
     except (requests.exceptions.RequestException, ValueError) as e:
-        logging.warning(f"Public route API failed: {e}. Trying local container")
+        logger.warning(f"Public route API failed: {e}. Trying local container")
     # Try local container
     try:
         if not UserData.OSMRport:
@@ -317,7 +319,7 @@ def get_osrm_route(coords, order):
         req.raise_for_status()
         data = req.json()
     except Exception as container_e:
-        logging.error(f"Local container route also failed: {container_e}")
+        logger.error(f"Local container route also failed: {container_e}")
         # Return a minimal valid response structure
         data = {
             "routes": [
