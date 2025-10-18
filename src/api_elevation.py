@@ -2,6 +2,7 @@ import math
 import requests
 
 TIMEOUT = 10
+BATCH_SIZE = 100  # Maximum points per request
 URL = [
     "https://api.open-elevation.com/api/v1/lookup",
     "http://rhfisnspdex02.anatel.gov.br/api/v1/lookup"
@@ -41,6 +42,27 @@ def needs_elevation(points):
 
 #-----------------------------------------------------------------------------------#
 def get_elevation(url, points):
+    """Fetch elevation data in batches to avoid API rejection on large requests."""
+    if not points:
+        return [], True
+    
+    all_elevations = []
+    
+    # Process points in batches
+    for i in range(0, len(points), BATCH_SIZE):
+        batch = points[i:i + BATCH_SIZE]
+        batch_elevations, success = _fetch_elevation_batch(url, batch)
+        
+        if not success:
+            return [-9999] * len(points), False
+        
+        all_elevations.extend(batch_elevations)
+    
+    return all_elevations, True
+
+#-----------------------------------------------------------------------------------#
+def _fetch_elevation_batch(url, points):
+    """Fetch elevation for a single batch of points."""
     coord_str  = "|".join(f"{c['lat']},{c['lng']}" for c in points)
     parameters = {"locations": coord_str}
 
