@@ -27,4 +27,4 @@ src/resources/Urbanizacao/Mapa_*.*
 /src/resources/Estados/BR_UF_2024.shx
 
 .ruff_cache
-uv.lock
+*.lock
