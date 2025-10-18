@@ -5,7 +5,7 @@ from typing import List, Tuple
 import requests
 from geopy.distance import geodesic
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
-from routing_servers_interface import PreparaServidorRoteamento, UserData
+from webrotas.routing_servers_interface import PreparaServidorRoteamento, UserData
 
 TIMEOUT = 10
 URL = {
@@ -54,7 +54,7 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
                 distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
 
     mat = validate_matrix(coords, distances, durations)
-    
+
     if mat is None:
         logging.warning(
             "Matrix validation failed, falling back to geodesic calculation"
@@ -63,10 +63,14 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
     elif len(mat) == 3:
         # Invalid pairs found, only calculate geodesic for those
         distances, durations, invalid_pairs = mat
-        logging.debug(f"Found {len(invalid_pairs)} invalid pairs, calculating geodesic only for those")
-        
-        geodesic_distances, geodesic_durations = get_geodesic_matrix(coords, speed_kmh=40, invalid_pairs=invalid_pairs)
-        
+        logging.debug(
+            f"Found {len(invalid_pairs)} invalid pairs, calculating geodesic only for those"
+        )
+
+        geodesic_distances, geodesic_durations = get_geodesic_matrix(
+            coords, speed_kmh=40, invalid_pairs=invalid_pairs
+        )
+
         # Merge geodesic values into the existing matrices
         for ii, jj in invalid_pairs:
             distances[ii][jj] = geodesic_distances[ii][jj]
@@ -209,13 +213,13 @@ def get_osrm_matrix_from_local_container(coords):
 def get_geodesic_matrix(coords, speed_kmh=40, invalid_pairs=None):
     """
     Calculate geodesic distances between coordinates.
-    
+
     Args:
         coords: List of coordinate dicts with 'lat' and 'lng' keys
         speed_kmh: Speed in km/h for duration calculation (default: 40)
         invalid_pairs: Optional list of (i, j) tuples for pairs that need geodesic calculation.
                        If None, calculates for all pairs.
-    
+
     Returns:
         tuple: (distances, durations) matrices
     """
@@ -261,7 +265,7 @@ def validate_matrix(
 
     # Track invalid pairs for potential geodesic calculation
     invalid_pairs = []
-    
+
     # validate diagonal zeros and positive off-diagonals for both matrices
     for mat in (distances, durations):
         # diagonal must be exactly zero
@@ -279,11 +283,11 @@ def validate_matrix(
                             # Record this as an invalid pair if not already recorded
                             if (i, j) not in invalid_pairs:
                                 invalid_pairs.append((i, j))
-    
+
     # If there are invalid pairs, return them along with the matrices
     if invalid_pairs:
         return distances, durations, invalid_pairs
-    
+
     return distances, durations
 
 

@@ -1,9 +1,9 @@
 """Route processing service - extracted controller logic"""
 
 from typing import Dict, Any
-import web_rotas
-from route_request_manager import RouteRequestManager as rrm
-from core.exceptions import ProcessingError
+import webrotas.web_rotas as web_rotas
+from webrotas.route_request_manager import RouteRequestManager as rrm
+from webrotas.core.exceptions import ProcessingError
 
 
 class RouteService:

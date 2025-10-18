@@ -23,6 +23,6 @@ async def health_check(session_id: str = Query(..., alias="sessionId", descripti
     """
     # Validate session_id
     if not session_id:
-        from core.exceptions import MissingSessionIdError
+        from webrotas.core.exceptions import MissingSessionIdError
         raise MissingSessionIdError()
     return "ok"

@@ -5,14 +5,17 @@ import argparse
 from pathlib import Path
 from contextlib import asynccontextmanager
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from api.routes import process, health
-from server_env import env
+from webrotas.api.routes.process import router as process_router
+from webrotas.api.routes.health import router as health_router
+from webrotas.server_env import env
 
 
 @asynccontextmanager
@@ -62,15 +65,19 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include routers FIRST (so they have priority over static mount)
-app.include_router(process.router, prefix="", tags=["routing"])
-app.include_router(health.router, prefix="", tags=["health"])
+app.include_router(process_router, prefix="", tags=["routing"])
+app.include_router(health_router, prefix="", tags=["health"])
 
 # Mount static files AFTER routers (so API endpoints take precedence)
 static_path = Path(__file__).parent / "static"
 if static_path.exists():
     try:
         # Mount at root to serve index.html and other assets
-        app.mount("/", StaticFiles(directory=str(static_path), html=True), name="webRotas_static")
+        app.mount(
+            "/",
+            StaticFiles(directory=str(static_path), html=True),
+            name="webRotas_static",
+        )
         print(f"[webRotas] Static files mounted at / from {static_path}")
     except Exception as e:
         print(f"[webRotas] Warning: Could not mount static files: {e}")
@@ -82,7 +89,7 @@ else:
     "/",
     summary="Root endpoint",
     description="Serve webRotas interface",
-    include_in_schema=False
+    include_in_schema=False,
 )
 async def root():
     """Serve root - return index.html"""
@@ -96,7 +103,7 @@ async def root():
     "/index.html",
     summary="Index page",
     description="Serve index.html directly",
-    include_in_schema=False
+    include_in_schema=False,
 )
 async def index():
     """Serve index.html"""
@@ -149,7 +156,9 @@ def main():
         args = parse_args()
 
         print(f"[webRotas] Starting FastAPI server on port {args.port}")
-        print(f"[webRotas] API documentation available at http://0.0.0.0:{args.port}/docs")
+        print(
+            f"[webRotas] API documentation available at http://0.0.0.0:{args.port}/docs"
+        )
 
         uvicorn.run(
             "main:app",

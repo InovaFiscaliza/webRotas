@@ -41,11 +41,13 @@ import pyproj
 import math
 from pathlib import Path
 import time
+import urllib.request
+import urllib.error
 
-import uf_code as uf
+import webrotas.uf_code as uf
 
 # -----------------------------------------------------------------------------------#
-PATH_MODULE = Path(__file__).resolve().parent
+PATH_MODULE = Path(__file__).parents[2]
 FILES = {
     "locationLimits": PATH_MODULE
     / "resources"
@@ -58,6 +60,110 @@ FILES = {
     / "qg_2022_670_fcu_agregPolygon.shp.parquet",  # "Comunidades" / "qg_2022_670_fcu_agregPolygon.shp"
 }
 CACHE = {}
+
+# GitHub release base URL for resources
+GITHUB_RELEASE_URL = "https://github.com/InovaFiscaliza/webRotas/releases/download/resources"
+
+
+def _ensure_resources_dir():
+    """
+    Ensures that the resources directory exists.
+    
+    :return: Path to the resources directory
+    """
+    resources_dir = PATH_MODULE / "resources"
+    resources_dir.mkdir(parents=True, exist_ok=True)
+    return resources_dir
+
+
+def _download_file(url: str, destination: Path, chunk_size: int = 8192) -> bool:
+    """
+    Downloads a file from a URL to a destination path with progress reporting.
+    
+    :param url: URL to download from
+    :param destination: Path where the file will be saved
+    :param chunk_size: Size of chunks to download at a time
+    :return: True if successful, False otherwise
+    """
+    try:
+        print(f"[webRotas] Downloading {url}...")
+        with urllib.request.urlopen(url) as response:
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded = 0
+            
+            with open(destination, 'wb') as out_file:
+                while True:
+                    chunk = response.read(chunk_size)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
+                    downloaded += len(chunk)
+                    
+                    if total_size > 0:
+                        progress = (downloaded / total_size) * 100
+                        print(f"[webRotas] Progress: {progress:.1f}%", end='\r')
+            
+            if total_size > 0:
+                print()  # New line after progress
+        print(f"[webRotas] Successfully downloaded {destination.name}")
+        return True
+    except urllib.error.URLError as e:
+        print(f"[webRotas] Error downloading {url}: {e}")
+        return False
+    except Exception as e:
+        print(f"[webRotas] Unexpected error downloading file: {e}")
+        return False
+
+
+def ensure_shapefile_exists(file_type: str) -> bool:
+    """
+    Ensures that a shapefile exists, downloading it if necessary.
+    
+    :param file_type: Type of file (must be a key in FILES dict)
+    :return: True if file exists after this call, False if download failed
+    :raises ValueError: If file_type is invalid
+    """
+    if file_type not in FILES:
+        raise ValueError(f'Invalid geofile type "{file_type}"')
+    
+    file_path = FILES[file_type]
+    
+    # If file already exists, we're done
+    if file_path.exists():
+        print(f"[webRotas] {file_type} already exists at {file_path}")
+        return True
+    
+    # Ensure resources directory exists
+    _ensure_resources_dir()
+    
+    # Construct download URL
+    filename = file_path.name
+    download_url = f"{GITHUB_RELEASE_URL}/{filename}"
+    
+    # Download the file
+    success = _download_file(download_url, file_path)
+    
+    if success and file_path.exists():
+        return True
+    else:
+        print(f"[webRotas] Warning: Could not download {file_type}")
+        return False
+
+
+def ensure_all_shapefiles() -> bool:
+    """
+    Ensures that all required shapefiles exist, downloading any missing ones.
+    
+    :return: True if all files exist, False if any download failed
+    """
+    print("[webRotas] Checking shapefile availability...")
+    all_exist = True
+    
+    for file_type in FILES:
+        if not ensure_shapefile_exists(file_type):
+            all_exist = False
+    
+    return all_exist
 
 
 # -----------------------------------------------------------------------------------#
@@ -74,11 +180,20 @@ def read_file(type: str):
 # -----------------------------------------------------------------------------------#
 # TESTE DE PRE-CARREGAMENTO
 # -----------------------------------------------------------------------------------#
-for f in FILES:
-    start = time.perf_counter()
-    read_file(f)
-    end = time.perf_counter()
-    print(f"[webRotas] {f} loaded in {end - start:.2f} seconds")
+try:
+    # Ensure all shapefiles exist (download if necessary)
+    if not ensure_all_shapefiles():
+        print(f"[webRotas] Warning: Some shapefiles could not be downloaded")
+    
+    # Preload the shapefiles
+    for f in FILES:
+        start = time.perf_counter()
+        read_file(f)
+        end = time.perf_counter()
+        print(f"[webRotas] {f} loaded in {end - start:.2f} seconds")
+except FileNotFoundError as e:
+    print(f"[webRotas] Warning: Could not preload shapefiles: {e}")
+    print(f"[webRotas] Shapefiles will be loaded on-demand")
 
 
 # -----------------------------------------------------------------------------------#

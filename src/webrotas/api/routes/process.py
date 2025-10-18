@@ -3,12 +3,12 @@
 from fastapi import APIRouter, Query, Body
 from fastapi.responses import JSONResponse
 
-from core.dependencies import (
+from webrotas.core.dependencies import (
     validate_request_structure,
     validate_request_type,
     validate_parameters,
 )
-from services.route_service import RouteService
+from webrotas.services.route_service import RouteService
 
 router = APIRouter(tags=["routing"])
 
@@ -43,7 +43,7 @@ async def process(
     """
     # Validate session_id
     if not session_id:
-        from core.exceptions import MissingSessionIdError
+        from webrotas.core.exceptions import MissingSessionIdError
         raise MissingSessionIdError()
     
     # Validate request structure

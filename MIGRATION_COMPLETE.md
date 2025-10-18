@@ -116,19 +116,19 @@ src/backend/webdir/
 
 ### Development Mode
 ```bash
-cd src/backend/webdir
-uv run uvicorn main:app --reload --port 5002
+cd src
+uv run uvicorn webrotas.main:app --reload --port 5002
 ```
 
 ### Production Mode
 ```bash
-cd src/backend/webdir
-uv run uvicorn main:app --host 0.0.0.0 --port 5002 --workers 4
+cd src
+uv run uvicorn webrotas.main:app --host 0.0.0.0 --port 5002 --workers 4
 ```
 
 ### Using main.py directly
 ```bash
-cd src/backend/webdir
+cd src/webrotas
 uv run python main.py --port 5002
 ```
 
@@ -146,7 +146,7 @@ Once the server is running:
 ## Remaining Tasks
 
 ### 1. **Path Imports** 
-The application currently works best when run from `src/backend/webdir/`. If you need to run from the project root, update imports in `main.py` to use absolute imports or adjust `sys.path`.
+The application currently works best when run from `src/`. If you need to run from the project root, update imports in `main.py` to use absolute imports or adjust `sys.path`.
 
 ### 2. **Static File Serving**
 The `/webRotas/index.html` static file serving needs to be tested with actual files to ensure routing works correctly.

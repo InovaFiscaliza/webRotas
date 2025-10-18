@@ -49,19 +49,19 @@ import gzip
 from datetime import datetime
 import threading
 from pathlib import Path
-import project_folders as pf
+import webrotas.project_folders as pf
 import pickle
 from datetime import timedelta
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 import zipfile
-import route_cache as rc
-import PolylineCache as pl
+from . import routes as rc
+from . import polylines as pl
 import atexit
 import signal
 import time
 
-import regions as rg
+import webrotas.regions as rg
 
 
 # ---------------------------------------------------------------------------------------------------------------

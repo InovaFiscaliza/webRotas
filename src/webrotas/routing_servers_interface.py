@@ -50,13 +50,11 @@ import glob
 from pathlib import Path
 import json
 from dataclasses import dataclass
-import web_rotas as wr
-import project_folders as pf
-import CacheBoundingBox as cb
-import regions as rg
-import shapeFiles as sf
-
-import wlog as wl
+import webrotas.rotas as wr
+import webrotas.project_folders as pf
+import webrotas.cache.bounding_boxes as cb
+import webrotas.regions as rg
+import webrotas.shape_files as sf
 
 
 @dataclass

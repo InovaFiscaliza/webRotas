@@ -3,8 +3,8 @@
 from typing import Any, Dict
 from fastapi import Query
 
-from config.constants import KEYS_ROOT, KEYS_PARAMETERS, VALID_REQUEST_TYPES
-from core.exceptions import (
+from webrotas.config.constants import KEYS_ROOT, KEYS_PARAMETERS, VALID_REQUEST_TYPES
+from webrotas.core.exceptions import (
     MissingSessionIdError,
     MissingRequiredFieldsError,
     InvalidRequestTypeError,
