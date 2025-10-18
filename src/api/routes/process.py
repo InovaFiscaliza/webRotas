@@ -3,9 +3,7 @@
 from fastapi import APIRouter, Query, Body
 from fastapi.responses import JSONResponse
 
-from api.models.requests import RouteRequest
 from core.dependencies import (
-    validate_session_id,
     validate_request_structure,
     validate_request_type,
     validate_parameters,

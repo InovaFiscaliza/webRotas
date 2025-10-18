@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, Query
 
-from core.dependencies import validate_session_id
 
 router = APIRouter(tags=["health"])
 

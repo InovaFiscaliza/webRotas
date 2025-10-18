@@ -1,6 +1,5 @@
 import sys
 import argparse
-import os
 from pathlib import Path
 
 from flask import (
@@ -16,7 +15,6 @@ from flask_compress import Compress
 
 import web_rotas
 from server_env import env
-import routing_servers_interface as rsi
 from route_request_manager import RouteRequestManager as rrm
 
 # Get the directory where server.py is located

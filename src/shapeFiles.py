@@ -42,7 +42,6 @@ import math
 from pathlib import Path
 import time
 
-import web_rotas as wr
 import uf_code as uf
 
 # -----------------------------------------------------------------------------------#

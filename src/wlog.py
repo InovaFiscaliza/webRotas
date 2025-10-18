@@ -15,9 +15,6 @@ Dependências:
 - `webRota` (importado como `wr`) deve fornecer `UserData.nome`.
 - `datetime` e `os` da biblioteca padrão.
 """
-import web_rotas as wr
-import datetime
-import os
 
 # ---------------------------------------------------------------------------------------------
 WARNING_LEVEL = "info"

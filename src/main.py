@@ -11,10 +11,8 @@ from starlette.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from config.constants import KEYS_ROOT, KEYS_PARAMETERS
 from api.routes import process, health
 from server_env import env
-import routing_servers_interface as rsi
 
 
 @asynccontextmanager
