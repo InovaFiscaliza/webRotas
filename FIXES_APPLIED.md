@@ -221,17 +221,17 @@ session_id: str = Query(..., alias="sessionId")
 
 ## Files Status
 
-| File | Status | Changes |
-|------|--------|---------|
-| `main.py` | ✅ Fixed | Route ordering, static mount, explicit handlers |
-| `api/routes/health.py` | ✅ Fixed | Query alias added |
-| `api/routes/process.py` | ✅ Fixed | Query alias added |
-| `config/constants.py` | ✅ OK | No changes needed |
-| `core/exceptions.py` | ✅ OK | No changes needed |
-| `core/dependencies.py` | ✅ OK | No changes needed |
-| `api/models/requests.py` | ✅ OK | No changes needed |
-| `services/route_service.py` | ✅ OK | No changes needed |
-| `pyproject.toml` | ✅ OK | No changes needed |
+| File                        | Status  | Changes                                         |
+| --------------------------- | ------- | ----------------------------------------------- |
+| `main.py`                   | ✅ Fixed | Route ordering, static mount, explicit handlers |
+| `api/routes/health.py`      | ✅ Fixed | Query alias added                               |
+| `api/routes/process.py`     | ✅ Fixed | Query alias added                               |
+| `config/constants.py`       | ✅ OK    | No changes needed                               |
+| `core/exceptions.py`        | ✅ OK    | No changes needed                               |
+| `core/dependencies.py`      | ✅ OK    | No changes needed                               |
+| `api/models/requests.py`    | ✅ OK    | No changes needed                               |
+| `services/route_service.py` | ✅ OK    | No changes needed                               |
+| `pyproject.toml`            | ✅ OK    | No changes needed                               |
 
 ---
 
@@ -241,7 +241,7 @@ Run this verification script:
 
 ```bash
 #!/bin/bash
-cd src/backend/webdir
+cd src/
 uv run python main.py --port 5002 &
 SERVER_PID=$!
 sleep 3

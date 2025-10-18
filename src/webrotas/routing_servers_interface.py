@@ -50,15 +50,15 @@ import glob
 from pathlib import Path
 import json
 from dataclasses import dataclass
-import logging
 import webrotas.rotas as wr
 import webrotas.project_folders as pf
 import webrotas.cache.bounding_boxes as cb
 import webrotas.regions as rg
 import webrotas.shape_files as sf
+from webrotas.config.logging_config import get_logger
 
 # Configure logging
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass

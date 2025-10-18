@@ -15,19 +15,19 @@ uv sync
 
 ### Option 1: Using main.py (Recommended)
 ```bash
-cd src/backend/webdir
+cd src/
 uv run python main.py --port 5002
 ```
 
 ### Option 2: Using Uvicorn directly (Development)
 ```bash
-cd src/backend/webdir
+cd src/
 uv run uvicorn main:app --reload --port 5002
 ```
 
 ### Option 3: Using Uvicorn (Production)
 ```bash
-cd src/backend/webdir
+cd src/
 uv run uvicorn main:app --host 0.0.0.0 --port 5002 --workers 4
 ```
 
@@ -118,7 +118,7 @@ Raw OpenAPI 3.0 schema for use with API clients and tools.
 ## Code Organization
 
 ```
-src/backend/webdir/
+src//
 ├── main.py                          # FastAPI app entry point
 ├── config/constants.py              # Validation rules
 ├── core/
@@ -207,7 +207,7 @@ Status: 500
 
 ### Server won't start
 - Check if port is already in use: `lsof -i :5002`
-- Ensure you're running from `src/backend/webdir` directory
+- Ensure you're running from `src/` directory
 - Check for Python import errors in console output
 
 ### Endpoint returns 422 error
@@ -215,7 +215,7 @@ Status: 500
 - Check JSON request body is valid
 
 ### Static files not loading
-- Verify `static/` directory exists in `src/backend/webdir/`
+- Verify `static/` directory exists in `src//`
 - Check file permissions on static directory
 
 ### Slower than expected
@@ -227,15 +227,15 @@ Status: 500
 
 ## Comparison: Flask vs FastAPI
 
-| Feature | Flask | FastAPI |
-|---------|-------|---------|
-| Auto Documentation | ❌ No | ✅ Yes (`/docs`, `/redoc`) |
-| Type Validation | ❌ Manual | ✅ Automatic (Pydantic) |
-| Async Support | ⚠️ Limited | ✅ Full |
-| Error Messages | ⚠️ Generic | ✅ Detailed |
-| Performance | Good | ✅ Excellent |
-| Development | ✅ Simple | ✅ More structured |
-| CORS/Compression | Manual | ✅ Built-in |
+| Feature            | Flask     | FastAPI                   |
+| ------------------ | --------- | ------------------------- |
+| Auto Documentation | ❌ No      | ✅ Yes (`/docs`, `/redoc`) |
+| Type Validation    | ❌ Manual  | ✅ Automatic (Pydantic)    |
+| Async Support      | ⚠️ Limited | ✅ Full                    |
+| Error Messages     | ⚠️ Generic | ✅ Detailed                |
+| Performance        | Good      | ✅ Excellent               |
+| Development        | ✅ Simple  | ✅ More structured         |
+| CORS/Compression   | Manual    | ✅ Built-in                |
 
 ---
 

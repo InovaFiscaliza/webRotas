@@ -1,0 +1,4 @@
+2025-10-18 02:38:30 - webrotas.main - DEBUG - [test_logging.py:30] - This is a DEBUG message from main module
+2025-10-18 02:38:30 - webrotas.main - INFO - [test_logging.py:31] - This is an INFO message from main module
+2025-10-18 02:38:30 - webrotas.main - WARNING - [test_logging.py:32] - This is a WARNING message from main module
+2025-10-18 02:38:30 - webrotas.main - ERROR - [test_logging.py:33] - This is an ERROR message from main module

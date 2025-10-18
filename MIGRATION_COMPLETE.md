@@ -12,7 +12,7 @@ The Flask application has been successfully migrated to FastAPI. All core files 
 
 ### 2. **Directory Structure Created** ✓
 ```
-src/backend/webdir/
+src//
 ├── api/
 │   ├── routes/
 │   │   ├── __init__.py

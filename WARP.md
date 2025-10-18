@@ -16,7 +16,7 @@ The application processes geospatial data, calculates optimal routes using OSRM 
 
 ### Core Components
 
-- **Backend Server** (`src/backend/webdir/`): Flask-based REST API server
+- **Backend Server** (`src//`): Flask-based REST API server
   - `server.py`: Main Flask application with route endpoints
   - `web_rotas.py`: Core routing logic for different route types
   - `route_request_manager.py`: Manages route request lifecycle
@@ -28,7 +28,7 @@ The application processes geospatial data, calculates optimal routes using OSRM 
   - `server_interface.py`: Server communication abstraction
   - `json_validate.py`: Request validation logic
 
-- **Static Assets** (`src/backend/webdir/static/`): Web frontend (HTML/CSS/JS)
+- **Static Assets** (`src//static/`): Web frontend (HTML/CSS/JS)
 
 - **Data Resources** (`src/resources/`): Geospatial reference data
   - Brazilian municipal boundaries, urban areas, street networks (OSM data)
@@ -57,10 +57,10 @@ uv sync --dev
 ### Running the Application
 ```powershell
 # Start the Flask development server
-uv run src/backend/webdir/server.py
+uv run src//server.py
 
 # Start server with custom port
-uv run src/backend/webdir/server.py --port 5003
+uv run src//server.py --port 5003
 
 # Run client with example payload
 uv run src/ucli/webrota_client.py tests/request_shortest\ \(RJ\).json

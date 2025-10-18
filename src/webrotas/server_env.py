@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Define and manage the server environment
 """

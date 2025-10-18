@@ -49,8 +49,6 @@ import gzip
 from datetime import datetime
 import threading
 from pathlib import Path
-import logging
-import webrotas.project_folders as pf
 import pickle
 from datetime import timedelta
 from openpyxl import Workbook
@@ -62,10 +60,12 @@ import atexit
 import signal
 import time
 
+import webrotas.project_folders as pf
 import webrotas.regions as rg
+from webrotas.config.logging_config import get_logger
 
 # Configure logging
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # ---------------------------------------------------------------------------------------------------------------

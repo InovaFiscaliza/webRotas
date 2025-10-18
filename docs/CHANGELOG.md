@@ -42,6 +42,6 @@ A migração do Flask para FastAPI foi completada com sucesso! Aqui está o que 
 
 🚀 Como usar:
 ```
-cd src/backend/webdir
+cd src/
 uv run python main.py --port 5002
 ```

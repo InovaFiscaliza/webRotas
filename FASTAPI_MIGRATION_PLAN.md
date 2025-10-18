@@ -32,13 +32,13 @@ GET  /ok?sessionId=*      → Health check endpoint
 - SessionId requirement validation
 
 ### 1.2 Dependencies to Replace/Update
-| Flask Dependency | FastAPI Equivalent | Status |
-|---|---|---|
-| flask | fastapi | **Direct replacement** |
-| flask-cors | fastapi.middleware.cors.CORSMiddleware | **Built-in** |
-| flask-compress | fastapi.middleware.gzip.GZIPMiddleware | **Built-in** |
-| N/A | uvicorn | **Add for ASGI server** |
-| N/A | pydantic | **Add for request validation** |
+| Flask Dependency | FastAPI Equivalent                     | Status                         |
+| ---------------- | -------------------------------------- | ------------------------------ |
+| flask            | fastapi                                | **Direct replacement**         |
+| flask-cors       | fastapi.middleware.cors.CORSMiddleware | **Built-in**                   |
+| flask-compress   | fastapi.middleware.gzip.GZIPMiddleware | **Built-in**                   |
+| N/A              | uvicorn                                | **Add for ASGI server**        |
+| N/A              | pydantic                               | **Add for request validation** |
 
 ### 1.3 Dependencies to Add to pyproject.toml
 ```toml
@@ -54,7 +54,7 @@ pydantic-settings>=2.0.0
 
 ### 2.1 New Directory Structure
 ```
-src/backend/webdir/
+src//
 ├── server.py                          # → main.py (FastAPI app initialization)
 ├── api/
 │   ├── __init__.py
@@ -499,14 +499,14 @@ uvicorn main:app --host 0.0.0.0 --port 5002 --workers 4
 
 ## Potential Challenges & Mitigations
 
-| Challenge | Mitigation |
-|---|---|
-| Breaking changes in request handling | Comprehensive validation layer, run tests against old payloads |
-| Static file serving differences | Use StaticFiles middleware, test thoroughly |
-| CORS/compression compatibility | Use built-in middleware, verify configuration |
-| CLI client compatibility | Update if needed, ensure JSON format unchanged |
-| Async compatibility with business logic | Wrap sync operations if needed, use `run_in_executor` |
-| Port configuration handling | Use Pydantic Settings + environment variables |
+| Challenge                               | Mitigation                                                     |
+| --------------------------------------- | -------------------------------------------------------------- |
+| Breaking changes in request handling    | Comprehensive validation layer, run tests against old payloads |
+| Static file serving differences         | Use StaticFiles middleware, test thoroughly                    |
+| CORS/compression compatibility          | Use built-in middleware, verify configuration                  |
+| CLI client compatibility                | Update if needed, ensure JSON format unchanged                 |
+| Async compatibility with business logic | Wrap sync operations if needed, use `run_in_executor`          |
+| Port configuration handling             | Use Pydantic Settings + environment variables                  |
 
 ---
 

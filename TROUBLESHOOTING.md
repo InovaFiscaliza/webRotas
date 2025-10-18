@@ -16,7 +16,7 @@ Updated `main.py` to:
 ## File Organization
 
 ```
-src/backend/webdir/
+src//
 ├── main.py                          # FastAPI app - FIXED
 ├── static/                          # Web interface files
 │   ├── index.html
@@ -45,7 +45,7 @@ src/backend/webdir/
 
 ### 1. Start the Server
 ```bash
-cd src/backend/webdir
+cd src/
 uv run python main.py --port 5002
 ```
 
@@ -54,7 +54,7 @@ Expected output:
 [webRotas] locationLimits loaded in 0.91 seconds
 [webRotas] locationUrbanAreas loaded in 0.35 seconds
 [webRotas] locationUrbanCommunities loaded in 0.05 seconds
-[webRotas] Static files mounted at /webRotas from /home/ronaldo/Work/webRotas/src/backend/webdir/static
+[webRotas] Static files mounted at /webRotas from /home/ronaldo/Work/webRotas/src//static
 [webRotas] Starting FastAPI server on port 5002
 [webRotas] API documentation available at http://0.0.0.0:5002/docs
 [webRotas] Server starting on port 5002
@@ -180,9 +180,9 @@ uv run python main.py --port 5003
 
 ### Issue: Import errors on startup
 **Cause**: Python path or module issues  
-**Solution**: Ensure running from `src/backend/webdir/` directory  
+**Solution**: Ensure running from `src//` directory  
 ```bash
-cd src/backend/webdir
+cd src/
 uv run python main.py --port 5002
 ```
 
@@ -190,30 +190,30 @@ uv run python main.py --port 5002
 
 ## Key Changes from Flask
 
-| Aspect | Flask | FastAPI |
-|--------|-------|---------|
-| Static files | `send_from_directory()` | `StaticFiles` mount |
-| Error handling | Flask exceptions | HTTPException |
-| Route order | No specific order | Order matters |
-| Query params | Automatic camelCase | Need `alias` parameter |
-| Documentation | Manual or third-party | Auto `/docs`, `/redoc` |
+| Aspect         | Flask                   | FastAPI                |
+| -------------- | ----------------------- | ---------------------- |
+| Static files   | `send_from_directory()` | `StaticFiles` mount    |
+| Error handling | Flask exceptions        | HTTPException          |
+| Route order    | No specific order       | Order matters          |
+| Query params   | Automatic camelCase     | Need `alias` parameter |
+| Documentation  | Manual or third-party   | Auto `/docs`, `/redoc` |
 
 ---
 
 ## URL Mapping
 
-| URL | Source | Returns |
-|-----|--------|---------|
-| `GET /` | `/root()` handler | `static/index.html` |
-| `GET /index.html` | `/index()` handler | `static/index.html` |
-| `GET /webRotas/index.html` | StaticFiles mount | `static/index.html` |
-| `GET /webRotas/css/style.css` | StaticFiles mount | CSS file if exists |
-| `GET /webRotas/js/app.js` | StaticFiles mount | JS file if exists |
-| `GET /ok?sessionId=X` | Health router | `"ok"` (string) |
-| `POST /process?sessionId=X` | Process router | Route data (JSON) |
-| `GET /docs` | FastAPI built-in | Swagger UI |
-| `GET /redoc` | FastAPI built-in | ReDoc |
-| `GET /openapi.json` | FastAPI built-in | OpenAPI schema |
+| URL                           | Source             | Returns             |
+| ----------------------------- | ------------------ | ------------------- |
+| `GET /`                       | `/root()` handler  | `static/index.html` |
+| `GET /index.html`             | `/index()` handler | `static/index.html` |
+| `GET /webRotas/index.html`    | StaticFiles mount  | `static/index.html` |
+| `GET /webRotas/css/style.css` | StaticFiles mount  | CSS file if exists  |
+| `GET /webRotas/js/app.js`     | StaticFiles mount  | JS file if exists   |
+| `GET /ok?sessionId=X`         | Health router      | `"ok"` (string)     |
+| `POST /process?sessionId=X`   | Process router     | Route data (JSON)   |
+| `GET /docs`                   | FastAPI built-in   | Swagger UI          |
+| `GET /redoc`                  | FastAPI built-in   | ReDoc               |
+| `GET /openapi.json`           | FastAPI built-in   | OpenAPI schema      |
 
 ---
 

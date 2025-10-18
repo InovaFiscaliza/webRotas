@@ -18,6 +18,7 @@ URL = {
 def controller(origin, waypoints, criterion="distance", avoid_zones=None):
     coords = [origin] + waypoints
     use_container = False
+    logging.warning(f"Number of coordinates: {len(coords)}")
 
     # Check if we should use local container due to limitations
     if len(coords) > 100:

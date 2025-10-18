@@ -16,6 +16,10 @@ from fastapi.responses import FileResponse
 from webrotas.api.routes.process import router as process_router
 from webrotas.api.routes.health import router as health_router
 from webrotas.server_env import env
+from webrotas.config.logging_config import get_logger
+
+# Initialize logging at module level
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
@@ -26,9 +30,9 @@ async def lifespan(app: FastAPI):
         args = parse_args()
         env.get_port(args.port)
         env.save_server_data()
-        print(f"[webRotas] Server starting on port {env.port}")
+        logger.info(f"Server starting on port {env.port}")
     except Exception as e:
-        print(f"[webRotas] Startup error: {e}")
+        logger.error(f"Startup error: {e}", exc_info=True)
         raise
 
     yield
@@ -36,9 +40,9 @@ async def lifespan(app: FastAPI):
     # Shutdown
     try:
         env.clean_server_data()
-        print("[webRotas] Server shutdown")
+        logger.info("Server shutdown")
     except Exception as e:
-        print(f"[webRotas] Cleanup error: {e}")
+        logger.error(f"Cleanup error: {e}", exc_info=True)
 
 
 # Create FastAPI application
@@ -78,11 +82,11 @@ if static_path.exists():
             StaticFiles(directory=str(static_path), html=True),
             name="webRotas_static",
         )
-        print(f"[webRotas] Static files mounted at / from {static_path}")
+        logger.info(f"Static files mounted at / from {static_path}")
     except Exception as e:
-        print(f"[webRotas] Warning: Could not mount static files: {e}")
+        logger.warning(f"Could not mount static files: {e}", exc_info=True)
 else:
-    print(f"[webRotas] Warning: Static directory not found at {static_path}")
+    logger.warning(f"Static directory not found at {static_path}")
 
 
 @app.get(
@@ -134,16 +138,16 @@ def parse_args() -> argparse.Namespace:
     try:
         args, unknown = parser.parse_known_args()
         if unknown:
-            print(f"[webRotas] Warning: Unknown arguments ignored: {unknown}")
-            print(
-                f"[webRotas] Using default values: port={env.port}, debug={env.debug_mode}"
+            logger.warning(f"Unknown arguments ignored: {unknown}")
+            logger.info(
+                f"Using default values: port={env.port}, debug={env.debug_mode}"
             )
         return args
 
     except Exception as e:
-        print(f"[webRotas] Error parsing arguments: {e}")
-        print(
-            f"[webRotas] Using default values: port={env.port}, debug={env.debug_mode}"
+        logger.error(f"Error parsing arguments: {e}", exc_info=True)
+        logger.info(
+            f"Using default values: port={env.port}, debug={env.debug_mode}"
         )
         return argparse.Namespace(port=env.port, debug=env.debug_mode)
 
@@ -155,9 +159,9 @@ def main():
 
         args = parse_args()
 
-        print(f"[webRotas] Starting FastAPI server on port {args.port}")
-        print(
-            f"[webRotas] API documentation available at http://0.0.0.0:{args.port}/docs"
+        logger.info(f"Starting FastAPI server on port {args.port}")
+        logger.info(
+            f"API documentation available at http://0.0.0.0:{args.port}/docs"
         )
 
         uvicorn.run(
@@ -170,7 +174,7 @@ def main():
         return 0
 
     except Exception as e:
-        print(f"[webRotas] Server error: {e}")
+        logger.error(f"Server error: {e}", exc_info=True)
         return 1
 
 
