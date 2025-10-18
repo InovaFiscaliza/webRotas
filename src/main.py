@@ -63,20 +63,21 @@ app.add_middleware(
 # Add GZIP compression middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# Mount static files BEFORE routers (mount has lower priority)
+# Include routers FIRST (so they have priority over static mount)
+app.include_router(process.router, prefix="", tags=["routing"])
+app.include_router(health.router, prefix="", tags=["health"])
+
+# Mount static files AFTER routers (so API endpoints take precedence)
 static_path = Path(__file__).parent / "static"
 if static_path.exists():
     try:
-        app.mount("/webRotas", StaticFiles(directory=str(static_path), html=True), name="webRotas_static")
-        print(f"[webRotas] Static files mounted at /webRotas from {static_path}")
+        # Mount at root to serve index.html and other assets
+        app.mount("/", StaticFiles(directory=str(static_path), html=True), name="webRotas_static")
+        print(f"[webRotas] Static files mounted at / from {static_path}")
     except Exception as e:
         print(f"[webRotas] Warning: Could not mount static files: {e}")
 else:
     print(f"[webRotas] Warning: Static directory not found at {static_path}")
-
-# Include routers AFTER static mount
-app.include_router(process.router, prefix="", tags=["routing"])
-app.include_router(health.router, prefix="", tags=["health"])
 
 
 @app.get(
