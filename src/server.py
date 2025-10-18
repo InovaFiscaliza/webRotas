@@ -1,5 +1,7 @@
 import sys
 import argparse
+import os
+from pathlib import Path
 
 from flask import (
     Flask,
@@ -16,6 +18,10 @@ import web_rotas
 from server_env import env
 import routing_servers_interface as rsi
 from route_request_manager import RouteRequestManager as rrm
+
+# Get the directory where server.py is located
+BASE_DIR = Path(__file__).parent
+STATIC_DIR = BASE_DIR / "static"
 
 # -----------------------------------------------------------------------------------#
 # ESTRUTURA DA REQUISIÇÃO JSON
@@ -56,7 +62,7 @@ KEYS_PARAMETERS = {
 # - "/ok" :
 #       Endpoint de verificação ("ping") entre servidor e clientes.
 # -----------------------------------------------------------------------------------#
-app = Flask(__name__, static_folder="static", static_url_path="/webRotas")
+app = Flask(__name__, static_folder=str(STATIC_DIR), static_url_path="/webRotas")
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 app.config["TEMPLATES_AUTO_RELOAD"] = False
 CORS(app)
@@ -73,7 +79,7 @@ def _root():
 # -----------------------------------------------------------------------------------#
 @app.route("/<path:filepath>", methods=["GET"])
 def _static_files(filepath):
-    return send_from_directory("static", filepath)
+    return send_from_directory(STATIC_DIR, filepath)
 
 
 # -----------------------------------------------------------------------------------#

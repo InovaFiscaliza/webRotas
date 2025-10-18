@@ -45,35 +45,44 @@ import time
 import web_rotas as wr
 import uf_code as uf
 
-#-----------------------------------------------------------------------------------#
-PATH_MODULE = Path(__file__).resolve().parent.parent.parent
+# -----------------------------------------------------------------------------------#
+PATH_MODULE = Path(__file__).resolve().parent
 FILES = {
-    "locationLimits":           PATH_MODULE / "resources" / "BR_Municipios_2023.shp.parquet",                  # "BR_Municipios" / "BR_Municipios_2023.shp"
-    "locationUrbanAreas":       PATH_MODULE / "resources" / "AU_2022_AreasUrbanizadas2019_Brasil.shp.parquet", # "Urbanizacao" / "AU_2022_AreasUrbanizadas2019_Brasil.shp"
-    "locationUrbanCommunities": PATH_MODULE / "resources" / "qg_2022_670_fcu_agregPolygon.shp.parquet"         # "Comunidades" / "qg_2022_670_fcu_agregPolygon.shp"
+    "locationLimits": PATH_MODULE
+    / "resources"
+    / "BR_Municipios_2023.shp.parquet",  # "BR_Municipios" / "BR_Municipios_2023.shp"
+    "locationUrbanAreas": PATH_MODULE
+    / "resources"
+    / "AU_2022_AreasUrbanizadas2019_Brasil.shp.parquet",  # "Urbanizacao" / "AU_2022_AreasUrbanizadas2019_Brasil.shp"
+    "locationUrbanCommunities": PATH_MODULE
+    / "resources"
+    / "qg_2022_670_fcu_agregPolygon.shp.parquet",  # "Comunidades" / "qg_2022_670_fcu_agregPolygon.shp"
 }
 CACHE = {}
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 def read_file(type: str):
     if type not in FILES:
         raise ValueError(f'Invalid geofile type "{type}"')
     if type not in CACHE:
         CACHE[type] = gpd.read_parquet(FILES[type])
-      # CACHE[type] = gpd.read_file(FILES[type])
-      # CACHE[type].to_parquet(f"{FILES[type]}.parquet")
+    # CACHE[type] = gpd.read_file(FILES[type])
+    # CACHE[type].to_parquet(f"{FILES[type]}.parquet")
     return CACHE[type]
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 # TESTE DE PRE-CARREGAMENTO
-#-----------------------------------------------------------------------------------#
+# -----------------------------------------------------------------------------------#
 for f in FILES:
     start = time.perf_counter()
     read_file(f)
     end = time.perf_counter()
     print(f"[webRotas] {f} loaded in {end - start:.2f} seconds")
 
-#-----------------------------------------------------------------------------------#
+
+# -----------------------------------------------------------------------------------#
 def expand_bounding_box(box, margin_km):
     """
     Expande o bounding box em uma margem de distância ao redor (em km).
@@ -114,6 +123,7 @@ def expand_bounding_box(box, margin_km):
     ]
 
     return new_box
+
 
 ##############################################################################################################
 def uf_sigla_para_codigo_ibge(sigla):
@@ -161,6 +171,7 @@ def uf_sigla_para_codigo_ibge(sigla):
 
     return sigla_to_ibge.get(sigla)
 
+
 ##############################################################################################################
 def get_bounding_box_for_municipalities(lista_municipios):
     # Carrega o shapefile dos municípios
@@ -178,11 +189,11 @@ def get_bounding_box_for_municipalities(lista_municipios):
     gdf_filtrado = gdf[
         gdf.apply(
             lambda row: (
-                row["NM_MUN"] is not None and
-                row["CD_UF"] is not None and
-                (row["NM_MUN"].strip().lower(), int(row["CD_UF"])) in entrada
+                row["NM_MUN"] is not None
+                and row["CD_UF"] is not None
+                and (row["NM_MUN"].strip().lower(), int(row["CD_UF"])) in entrada
             ),
-            axis=1
+            axis=1,
         )
     ]
 
@@ -202,13 +213,17 @@ def get_bounding_box_for_municipalities(lista_municipios):
     ]
     return box
 
+
 ##############################################################################################################
 def get_gr_data(data, gr_alvo):
     for regiao in data.get("RegioesCache", []):
         if regiao.get("GR") == gr_alvo:
             return regiao
     return None  # Se não encontrar
+
+
 ##############################################################################################################
+
 
 def get_bounding_box_from_states(estados_siglas: list) -> list:
     """
@@ -251,6 +266,7 @@ def get_bounding_box_from_states(estados_siglas: list) -> list:
     ]
     return box
 
+
 ##############################################################################################################
 def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     """
@@ -270,7 +286,9 @@ def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     ]
 
     if municipio.empty:
-        print(f"Município '{nome_municipio}' no estado '{estado_sigla}' não encontrado.")
+        print(
+            f"Município '{nome_municipio}' no estado '{estado_sigla}' não encontrado."
+        )
         return None
 
     # Obter a geometria do município
