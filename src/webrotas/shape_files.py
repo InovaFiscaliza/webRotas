@@ -183,7 +183,7 @@ def read_file(type: str):
 try:
     # Ensure all shapefiles exist (download if necessary)
     if not ensure_all_shapefiles():
-        print(f"[webRotas] Warning: Some shapefiles could not be downloaded")
+        print("[webRotas] Warning: Some shapefiles could not be downloaded")
     
     # Preload the shapefiles
     for f in FILES:
@@ -193,7 +193,7 @@ try:
         print(f"[webRotas] {f} loaded in {end - start:.2f} seconds")
 except FileNotFoundError as e:
     print(f"[webRotas] Warning: Could not preload shapefiles: {e}")
-    print(f"[webRotas] Shapefiles will be loaded on-demand")
+    print("[webRotas] Shapefiles will be loaded on-demand")
 
 
 # -----------------------------------------------------------------------------------#

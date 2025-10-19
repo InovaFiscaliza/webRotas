@@ -227,115 +227,115 @@ def region_container_alive(cacheid):
 
 
 ################################################################################
-def AtivaServidorOSMR(regioes):
-    return  # TODO: remover esta linha quando for usar
-    # startserver filtro 8001 osmr_server8001
-    chave = cb.cCacheBoundingBox.chave(regioes)
-    # -------------------------------------------------
-    porta = region_container_alive(chave)
+# def AtivaServidorOSMR(regioes):
+#     return  # TODO: remover esta linha quando for usar
+#     # startserver filtro 8001 osmr_server8001
+#     chave = cb.cCacheBoundingBox.chave(regioes)
+#     # -------------------------------------------------
+#     porta = region_container_alive(chave)
 
-    if porta:
-        wr.UserData.OSMRport = porta
-        return
+#     if porta:
+#         wr.UserData.OSMRport = porta
+#         return
 
-    # -------------------------------------------------
-    wr.UserData.OSMRport = find_available_port(start_port=50000, max_port=65535)
-    logger.debug(
-        f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}"
-    )
-    logger.debug("Ativando Servidor OSMR")
-    subprocess.run(
-        ["podman", "stop", f"osmr_{wr.UserData.ssid}_{chave}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    # Assegura que o container executa em paralelo com o python
-    volume_host = str(Path(pf.OSMR_PATH_CACHE_DATA) / f"filtro_{chave}")
-    volume_container = f"/data/filtro_{chave}"
-    port_map = f"{wr.UserData.OSMRport}:5000"
-    log_file = open(logok_osmr, "a")
+#     # -------------------------------------------------
+#     wr.UserData.OSMRport = find_available_port(start_port=50000, max_port=65535)
+#     logger.debug(
+#         f"Porta tcp/ip disponivel encontrada: {wr.UserData.OSMRport}"
+#     )
+#     logger.debug("Ativando Servidor OSMR")
+#     subprocess.run(
+#         ["podman", "stop", f"osmr_{wr.UserData.ssid}_{chave}"],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#     )
+#     # Assegura que o container executa em paralelo com o python
+#     volume_host = str(Path(pf.OSMR_PATH_CACHE_DATA) / f"filtro_{chave}")
+#     volume_container = f"/data/filtro_{chave}"
+#     port_map = f"{wr.UserData.OSMRport}:5000"
+#     log_file = open(logok_osmr, "a")
 
-    comando = f"""podman run --tty=false --rm --name osmr_{wr.UserData.ssid}_{chave} -m 32g -t -i \
-    -p {port_map} \
-    -v "{volume_host}:{volume_container}" \
-    localhost/osmr_webrota osrm-routed --algorithm mld {volume_container}/filtro-latest.osm.pbf"""
+#     comando = f"""podman run --tty=false --rm --name osmr_{wr.UserData.ssid}_{chave} -m 32g -t -i \
+#     -p {port_map} \
+#     -v "{volume_host}:{volume_container}" \
+#     localhost/osmr_webrota osrm-routed --algorithm mld {volume_container}/filtro-latest.osm.pbf"""
 
-    subprocess.Popen(comando, shell=True, stdout=log_file, stderr=subprocess.STDOUT)
-    return
+#     subprocess.Popen(comando, shell=True, stdout=log_file, stderr=subprocess.STDOUT)
+#     return
 
 
 ################################################################################
-def GerarIndicesExecutarOSRMServer(regioes):
-    # os.chdir("../../resources/OSMR/data")
-    chave = cb.cCacheBoundingBox.chave(regioes)
-    DIRETORIO_REGIAO = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
-    DIRETORIO_REGIAO_CONTAINER = f"filtro_{chave}"
-    subprocess.run(
-        ["podman", "stop", f"osmr_{wr.UserData.ssid}_{chave}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    subprocess.run(
-        [
-            "podman",
-            "run",
-            "--rm",
-            "--name",
-            f"temp1{chave}",
-            "-m",
-            "32g",
-            "-t",
-            "-v",
-            f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO_CONTAINER}",
-            "localhost/osmr_webrota",
-            "osrm-extract",
-            "-p",
-            "/opt/car.lua",
-            f"/data/{DIRETORIO_REGIAO_CONTAINER}/filtro-latest.osm.pbf",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    subprocess.run(
-        [
-            "podman",
-            "run",
-            "--rm",
-            "--name",
-            f"temp2{chave}",
-            "-m",
-            "32g",
-            "-t",
-            "-v",
-            f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO_CONTAINER}",
-            "localhost/osmr_webrota",
-            "osrm-partition",
-            f"/data/{DIRETORIO_REGIAO_CONTAINER}/filtro-latest.osm.pbf",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    subprocess.run(
-        [
-            "podman",
-            "run",
-            "--rm",
-            "--name",
-            f"temp3{chave}",
-            "-m",
-            "32g",
-            "-t",
-            "-v",
-            f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO_CONTAINER}",
-            "localhost/osmr_webrota",
-            "osrm-customize",
-            f"/data/{DIRETORIO_REGIAO_CONTAINER}/filtro-latest.osm.pbf",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    AtivaServidorOSMR(regioes)
-    return
+# def GerarIndicesExecutarOSRMServer(regioes):
+#     # os.chdir("../../resources/OSMR/data")
+#     chave = cb.cCacheBoundingBox.chave(regioes)
+#     DIRETORIO_REGIAO = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
+#     DIRETORIO_REGIAO_CONTAINER = f"filtro_{chave}"
+#     subprocess.run(
+#         ["podman", "stop", f"osmr_{wr.UserData.ssid}_{chave}"],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#     )
+#     subprocess.run(
+#         [
+#             "podman",
+#             "run",
+#             "--rm",
+#             "--name",
+#             f"temp1{chave}",
+#             "-m",
+#             "32g",
+#             "-t",
+#             "-v",
+#             f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO_CONTAINER}",
+#             "localhost/osmr_webrota",
+#             "osrm-extract",
+#             "-p",
+#             "/opt/car.lua",
+#             f"/data/{DIRETORIO_REGIAO_CONTAINER}/filtro-latest.osm.pbf",
+#         ],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#     )
+#     subprocess.run(
+#         [
+#             "podman",
+#             "run",
+#             "--rm",
+#             "--name",
+#             f"temp2{chave}",
+#             "-m",
+#             "32g",
+#             "-t",
+#             "-v",
+#             f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO_CONTAINER}",
+#             "localhost/osmr_webrota",
+#             "osrm-partition",
+#             f"/data/{DIRETORIO_REGIAO_CONTAINER}/filtro-latest.osm.pbf",
+#         ],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#     )
+#     subprocess.run(
+#         [
+#             "podman",
+#             "run",
+#             "--rm",
+#             "--name",
+#             f"temp3{chave}",
+#             "-m",
+#             "32g",
+#             "-t",
+#             "-v",
+#             f"{DIRETORIO_REGIAO}:/data/{DIRETORIO_REGIAO_CONTAINER}",
+#             "localhost/osmr_webrota",
+#             "osrm-customize",
+#             f"/data/{DIRETORIO_REGIAO_CONTAINER}/filtro-latest.osm.pbf",
+#         ],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#     )
+#     AtivaServidorOSMR(regioes)
+#     return
 
 
 ################################################################################
@@ -646,9 +646,7 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
         # Aguarda o intervalo antes de tentar novamente
         time.sleep(intervalo)
 
-    logger.debug(
-        "O servidor OSRM não ficou disponível após várias tentativas."
-    )
+    logger.debug("O servidor OSRM não ficou disponível após várias tentativas.")
     return False
 
 
@@ -671,13 +669,6 @@ def procurar_multiplas_strings_em_arquivo(caminho_arquivo, lista_strings):
 
 ################################################################################
 def VerificarFalhaServidorOSMR():
-    erros_procurados = [
-        "terminate called after throwing an instance of",
-        "Required files are missing, cannot continue",
-        "Error: CreateFile TempData",
-        "Error: statfs",
-        "UnableZZZ to restore terminal:",
-    ]
     # TODO: Implement proper log file location if needed
     # For now, we'll skip file-based error checking
     logger.debug("Verificando falhas do servidor OSRM")

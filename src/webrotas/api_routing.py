@@ -1,5 +1,5 @@
-import logging
 import math
+import socket
 from typing import List, Tuple
 
 import requests
@@ -7,6 +7,7 @@ from geopy.distance import geodesic
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 from webrotas.routing_servers_interface import PreparaServidorRoteamento, UserData
 from webrotas.config.logging_config import get_logger
+from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
 
 # Initialize logging at module level
 logger = get_logger(__name__)
@@ -26,7 +27,7 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
 
     # Check if we should use local container due to limitations
     if len(coords) > 100:
-        logger.info(f"Too many points ({len(coords)}), using local container")
+        logger.info(f"Too many points ({len(coords)}), using local container or iterative matrix")
         use_container = True
 
     if avoid_zones and len(avoid_zones) > 0:
@@ -41,10 +42,16 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
             distances, durations = get_osrm_matrix_from_local_container(coords)
         except Exception as e:
             logger.error(
-                f"Local container failed: {e}. Falling back to geodesic calculation",
+                f"Local container failed: {e}. Trying iterative matrix builder",
                 exc_info=True,
             )
-            distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
+            try:
+                distances, durations = get_osrm_matrix_iterative(coords)
+            except Exception as iterative_e:
+                logger.warning(
+                    f"Iterative matrix builder also failed: {iterative_e}. Using geodesic calculation"
+                )
+                distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
     else:
         # Try public API first
         try:
@@ -57,9 +64,15 @@ def controller(origin, waypoints, criterion="distance", avoid_zones=None):
                 distances, durations = get_osrm_matrix_from_local_container(coords)
             except Exception as container_e:
                 logger.warning(
-                    f"Local container also failed: {container_e}. Using geodesic calculation"
+                    f"Local container also failed: {container_e}. Trying iterative matrix builder"
                 )
-                distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
+                try:
+                    distances, durations = get_osrm_matrix_iterative(coords)
+                except Exception as iterative_e:
+                    logger.warning(
+                        f"Iterative matrix builder also failed: {iterative_e}. Using geodesic calculation"
+                    )
+                    distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
 
     mat = validate_matrix(coords, distances, durations)
 
@@ -120,15 +133,47 @@ def get_osrm_matrix(coords):
 
 
 # -----------------------------------------------------------------------------------#
-def get_osrm_matrix_from_local_container(coords):
+def is_port_available(host="localhost", port=5000, timeout=3):
     """
-    Get distance and duration matrix from local OSRM container.
+    Check if a container is available on the specified port.
+    
+    Args:
+        host (str): The host to check (default: localhost)
+        port (int): The port to check (default: 5000)
+        timeout (int): Connection timeout in seconds (default: 3)
+    
+    Returns:
+        bool: True if port is available and responding, False otherwise
+    """
+    try:
+        # First check if port is open
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(timeout)
+            result = sock.connect_ex((host, port))
+            if result != 0:
+                # Port is not open
+                return False
+        
+        # Port is open, now check if OSRM is responding
+        try:
+            response = requests.get(f"http://{host}:{port}/health", timeout=timeout)
+            return response.status_code == 200
+        except requests.exceptions.RequestException:
+            # Port is open but OSRM is not responding properly
+            return False
+            
+    except Exception:
+        return False
 
-    This function:
-    1. Estimates bounding box for the route
-    2. Checks if there's an active container for this area
-    3. If not, starts a new container
-    4. Makes the request to the local container
+
+# -----------------------------------------------------------------------------------#
+def get_osrm_matrix_iterative(coords):
+    """
+    Get distance and duration matrix using iterative batching for large coordinate sets.
+
+    This function uses the IterativeMatrixBuilder to split coordinates into batches
+    respecting the public API's 100-waypoint limit, making multiple requests with
+    rate limiting and automatic fallback to geodesic calculation for failed pairs.
 
     Args:
         coords: List of coordinates [{"lat": float, "lng": float}, ...]
@@ -137,8 +182,43 @@ def get_osrm_matrix_from_local_container(coords):
         tuple: (distances, durations) matrices
 
     Raises:
-        Exception: If container setup or request fails
+        Exception: If the iterative matrix build fails completely
     """
+    logger.info(
+        f"Using iterative matrix builder for {len(coords)} coordinates"
+    )
+    builder = IterativeMatrixBuilder(coords)
+    return builder.build()
+
+
+# -----------------------------------------------------------------------------------#
+def get_osrm_matrix_from_local_container(coords):
+    """
+    Get distance and duration matrix from local OSRM container.
+
+    This function:
+    1. Checks if port 5000 is available and responding
+    2. If not available, immediately raises exception to fallback to iterative method
+    3. Estimates bounding box for the route
+    4. Checks if there's an active container for this area
+    5. If not, starts a new container
+    6. Makes the request to the local container
+
+    Args:
+        coords: List of coordinates [{"lat": float, "lng": float}, ...]
+
+    Returns:
+        tuple: (distances, durations) matrices
+
+    Raises:
+        Exception: If container setup or request fails, or if port 5000 is not available
+    """
+    # First check if container is available on port 5000
+    if not is_port_available("localhost", 5000):
+        raise Exception("OSRM container not available on port 5000 - falling back to iterative method")
+    
+    logger.info("OSRM container verified available on port 5000, proceeding with local container request")
+    
     try:
         # Extract bounding box from coordinates
         if not coords or len(coords) < 2:

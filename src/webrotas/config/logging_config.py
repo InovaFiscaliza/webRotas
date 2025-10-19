@@ -7,8 +7,6 @@ and structured formatting. Logs are saved to the ../logs directory.
 
 import logging
 import logging.handlers
-from pathlib import Path
-from datetime import datetime
 import sys
 
 from webrotas.project_folders import LOGS_PATH

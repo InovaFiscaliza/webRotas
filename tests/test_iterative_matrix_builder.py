@@ -229,15 +229,15 @@ class TestIterativeMatrixBuilderWithMocks:
             if mock_get_func.call_count == 1:
                 return mock_response
             raise requests.exceptions.ConnectionError("API unavailable")
-        
+
         mock_get_func.call_count = 0
-        
+
         def side_effect_func(url, timeout):
             side_effect_func.call_count += 1
             if side_effect_func.call_count == 1:
                 return mock_response
             raise requests.exceptions.ConnectionError("API unavailable")
-        
+
         side_effect_func.call_count = 0
         mock_get.side_effect = side_effect_func
 
@@ -264,7 +264,7 @@ class TestIterativeMatrixBuilderWithMocks:
             if side_effect_func.call_count <= 2:
                 raise requests.exceptions.Timeout("Timeout")
             return mock_response
-        
+
         side_effect_func.call_count = 0
         mock_get.side_effect = side_effect_func
 
