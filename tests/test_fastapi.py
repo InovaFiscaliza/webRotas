@@ -4,10 +4,6 @@
 import subprocess
 import time
 import requests
-import json
-import signal
-import os
-import sys
 
 
 def test_fastapi():
@@ -20,7 +16,7 @@ def test_fastapi():
             "uv",
             "run",
             "uvicorn",
-            "src//main:app",
+            "webrotas.main:app",
             "--port",
             "5003",
             "--host",
@@ -28,7 +24,7 @@ def test_fastapi():
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        cwd="/home/ronaldo/Work/webRotas",
+        cwd="/home/ronaldo/Work/webRotas/src",
     )
 
     time.sleep(5)  # Give server time to start
