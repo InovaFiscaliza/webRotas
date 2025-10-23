@@ -1,0 +1,18 @@
+{
+    "type": "circle",
+    "origin": {
+        "lat": -3.099300,
+        "lng": -60.018506,
+        "description": "Anatel-AM"
+    },
+    "parameters": {
+        "centerPoint": {
+            "lat": -3.119027,
+            "lng": -60.021797
+        },
+        "radius": 15,
+        "totalWaypoints": 20
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

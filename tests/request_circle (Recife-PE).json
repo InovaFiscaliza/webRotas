@@ -1,0 +1,40 @@
+{
+    "type": "circle",
+    "origin": {
+        "lat": -8.047562,
+        "lng": -34.877005,
+        "description": "Anatel-PE"
+    },
+    "parameters": {
+        "centerPoint": {
+            "lat": -8.061771,
+            "lng": -34.871267
+        },
+        "radius": 9,
+        "totalWaypoints": 19
+    },
+    "avoidZones": [
+        {
+            "name": "Complexo da Livraria",
+            "coord": [
+                [
+                    -8.063500,
+                    -34.872800
+                ],
+                [
+                    -8.063500,
+                    -34.870100
+                ],
+                [
+                    -8.060300,
+                    -34.870100
+                ],
+                [
+                    -8.060300,
+                    -34.872800
+                ]
+            ]
+        }
+    ],
+    "criterion": "duration"
+}

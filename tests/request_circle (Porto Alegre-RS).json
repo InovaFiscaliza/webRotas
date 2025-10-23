@@ -1,0 +1,40 @@
+{
+    "type": "circle",
+    "origin": {
+        "lat": -30.034647,
+        "lng": -51.217658,
+        "description": "Anatel-RS"
+    },
+    "parameters": {
+        "centerPoint": {
+            "lat": -30.026570,
+            "lng": -51.226420
+        },
+        "radius": 10,
+        "totalWaypoints": 22
+    },
+    "avoidZones": [
+        {
+            "name": "Parque da Redenção",
+            "coord": [
+                [
+                    -30.035500,
+                    -51.239800
+                ],
+                [
+                    -30.033200,
+                    -51.238900
+                ],
+                [
+                    -30.032900,
+                    -51.242200
+                ],
+                [
+                    -30.034800,
+                    -51.243100
+                ]
+            ]
+        }
+    ],
+    "criterion": "duration"
+}

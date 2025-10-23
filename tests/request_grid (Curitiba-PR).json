@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -25.428954,
+        "lng": -49.273369,
+        "description": "Anatel-PR"
+    },
+    "parameters": {
+        "city": "Curitiba",
+        "state": "PR",
+        "scope": "Location",
+        "pointDistance": 9000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

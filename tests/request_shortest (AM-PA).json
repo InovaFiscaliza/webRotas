@@ -1,0 +1,34 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -3.099300,
+        "lng": -60.018506,
+        "description": "Anatel-AM"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -3.119027,
+                "lng": -60.021797,
+                "description": "Manaus Centro"
+            },
+            {
+                "lat": -2.790198,
+                "lng": -59.982177,
+                "description": "Manacapuru"
+            },
+            {
+                "lat": -3.893191,
+                "lng": -58.301095,
+                "description": "Iranduba"
+            },
+            {
+                "lat": -1.455750,
+                "lng": -48.502141,
+                "description": "Belém"
+            }
+        ]
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

@@ -1,0 +1,40 @@
+{
+    "type": "circle",
+    "origin": {
+        "lat": -15.747942,
+        "lng": -47.889822,
+        "description": "Anatel-DF"
+    },
+    "parameters": {
+        "centerPoint": {
+            "lat": -15.793889,
+            "lng": -47.879540
+        },
+        "radius": 8,
+        "totalWaypoints": 18
+    },
+    "avoidZones": [
+        {
+            "name": "Esplanada dos Ministérios",
+            "coord": [
+                [
+                    -15.792890,
+                    -47.870520
+                ],
+                [
+                    -15.793500,
+                    -47.868900
+                ],
+                [
+                    -15.795200,
+                    -47.869800
+                ],
+                [
+                    -15.794890,
+                    -47.871200
+                ]
+            ]
+        }
+    ],
+    "criterion": "duration"
+}

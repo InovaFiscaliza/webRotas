@@ -1,0 +1,39 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -23.550520,
+        "lng": -46.633309,
+        "description": "Anatel-SP"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -23.172505,
+                "lng": -45.899369,
+                "description": "São José dos Campos"
+            },
+            {
+                "lat": -23.006500,
+                "lng": -46.402170,
+                "description": "Atibaia"
+            },
+            {
+                "lat": -22.751781,
+                "lng": -45.565601,
+                "description": "Pindamonhangaba"
+            },
+            {
+                "lat": -23.213539,
+                "lng": -44.975869,
+                "description": "Guaratinguetá"
+            },
+            {
+                "lat": -23.325848,
+                "lng": -46.879043,
+                "description": "Diadema"
+            }
+        ]
+    },
+    "avoidZones": [],
+    "criterion": "distance"
+}

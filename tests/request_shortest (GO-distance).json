@@ -1,0 +1,34 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -15.789469,
+        "lng": -48.044128,
+        "description": "Anatel-GO"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -15.827059,
+                "lng": -48.955326,
+                "description": "Goiânia"
+            },
+            {
+                "lat": -16.676149,
+                "lng": -49.255202,
+                "description": "Anápolis"
+            },
+            {
+                "lat": -17.304756,
+                "lng": -48.947273,
+                "description": "Itumbiara"
+            },
+            {
+                "lat": -15.507968,
+                "lng": -48.957699,
+                "description": "Águas Lindas de Goiás"
+            }
+        ]
+    },
+    "avoidZones": [],
+    "criterion": "distance"
+}

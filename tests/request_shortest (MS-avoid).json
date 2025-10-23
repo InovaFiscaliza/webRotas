@@ -1,0 +1,56 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -20.442537,
+        "lng": -54.610392,
+        "description": "Anatel-MS"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -20.442537,
+                "lng": -54.610392,
+                "description": "Campo Grande"
+            },
+            {
+                "lat": -19.798325,
+                "lng": -54.616852,
+                "description": "Rio Brilhante"
+            },
+            {
+                "lat": -21.192583,
+                "lng": -55.708434,
+                "description": "Dourados"
+            },
+            {
+                "lat": -22.213337,
+                "lng": -55.531857,
+                "description": "Naviraí"
+            }
+        ]
+    },
+    "avoidZones": [
+        {
+            "name": "Área de Proteção",
+            "coord": [
+                [
+                    -20.450000,
+                    -54.620000
+                ],
+                [
+                    -20.450000,
+                    -54.600000
+                ],
+                [
+                    -20.435000,
+                    -54.600000
+                ],
+                [
+                    -20.435000,
+                    -54.620000
+                ]
+            ]
+        }
+    ],
+    "criterion": "duration"
+}
