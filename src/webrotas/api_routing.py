@@ -1,6 +1,6 @@
 import math
 import socket
-from typing import List, Tuple
+from typing import List, Tuple, Iterable
 
 import requests
 from geopy.distance import geodesic
@@ -224,7 +224,8 @@ def get_osrm_matrix_from_local_container(coords):
         Exception: If container setup or request fails, or if port 5000 is not available
     """
     # First check if container is available on port 5000
-    if not is_port_available("localhost", 5000):
+    # Use 'osrm' hostname for Docker network connectivity
+    if not is_port_available("osrm", 5000):
         raise Exception(
             "OSRM container not available on port 5000 - falling back to iterative method"
         )
@@ -282,7 +283,8 @@ def get_osrm_matrix_from_local_container(coords):
 
         # Make request to local container
         coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
-        local_url = f"http://localhost:{UserData.OSMRport}/table/v1/driving/{coord_str}?annotations=distance,duration"
+        # Use 'osrm' hostname for Docker network connectivity instead of localhost
+        local_url = f"http://osrm:{UserData.OSMRport}/table/v1/driving/{coord_str}?annotations=distance,duration"
 
         logger.debug(f"Making request to local OSRM: {local_url}")
 
