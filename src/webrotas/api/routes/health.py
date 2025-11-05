@@ -19,10 +19,10 @@ async def health_check(session_id: str = Query(..., alias="sessionId", descripti
     """
     Health check endpoint.
     
-    Returns 'ok' if the server is running properly.
+    Returns JSON status if the server is running properly.
     """
     # Validate session_id
     if not session_id:
         from webrotas.core.exceptions import MissingSessionIdError
         raise MissingSessionIdError()
-    return "ok"
+    return {"status": "healthy"}
