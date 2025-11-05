@@ -1,0 +1,54 @@
+services:
+  webrotas:
+    build: .
+    container_name: webrotas
+    restart: always
+    ports:
+      - "5002:5002"
+    depends_on:
+      - osrm
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - /media/ronaldo/Homelab/webrotas:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+
+#   vroom:
+#     network_mode: host
+#     image: vroomvrp/vroom-docker:v1.14.0-rc.2
+#     container_name: vroom
+#     restart: always
+#     volumes:
+#       - /media/ronaldo/Homelab/webrotas/conf:/conf
+#     ports:
+#       - 3000:3000
+#     environment:
+#       - VROOM_ROUTER=osrm  # router to use, osrm, valhalla or ors
+#     depends_on:
+#       - osrm
+#   osrm_frontend:
+#     image: osrm/osrm-frontend:latest
+#     container_name: osrm_frontend
+#     restart: always
+#     ports:
+#       - 9966:9966
+#     depends_on:
+#       - osrm
+  osrm:
+    image: osrm/osrm-backend
+    container_name: osrm
+    restart: always
+    ports:
+      - 5000:5000
+    volumes:
+      - /media/ronaldo/Homelab/webrotas:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 16G
+    command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/brazil-latest.osrm"

@@ -168,8 +168,6 @@ class CacheBoundingBox:
             "inf"
         )  # Initialize with infinity to ensure any real area is smaller
 
-        return regiao_alvo
-
         for data in self.cache.values():  # Iterate through all cached regions
             candidate_region = data.get(
                 "regiaodados"
@@ -197,11 +195,9 @@ class CacheBoundingBox:
         chave = self._hash_bbox(regioes)
         self.ultimaregiao = regioes
 
-        return regioes, chave
-
         entry = self.cache.get(chave)
 
-        if entry:
+        if entry is not None:
             # Atualiza o timestamp de último acesso
             entry["lastrequest"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
             self.gr = entry["gr"]
