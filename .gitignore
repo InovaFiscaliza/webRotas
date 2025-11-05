@@ -30,3 +30,5 @@ src/resources/Urbanizacao/Mapa_*.*
 *.lock
 *.log
 logs/
+logs/main.log
+logs/routing_servers_interface.log

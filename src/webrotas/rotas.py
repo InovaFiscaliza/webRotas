@@ -336,10 +336,3 @@ def get_polyline_comunities(regioes):
         )
 
     return polylinesComunidades
-
-
-# -----------------------------------------------------------------------------------#
-# DEBUG
-# -----------------------------------------------------------------------------------#
-if __name__ == "__main__":
-    print("Hello world from web_rotas.py")

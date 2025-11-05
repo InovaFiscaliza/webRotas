@@ -56,6 +56,7 @@ import webrotas.cache.bounding_boxes as cb
 import webrotas.regions as rg
 import webrotas.shape_files as sf
 from webrotas.config.logging_config import get_logger
+from webrotas.config.server_hosts import get_webrotas_host
 
 # Configure logging
 logger = get_logger(__name__)
@@ -73,13 +74,14 @@ CONFIG_FILE = (
 
 
 # -----------------------------------------------------------------------------------#
-def find_available_port(start_port=50000, max_port=65535):
+def find_available_port(start_port=50000, max_port=65535, host=None):
     """
     Procura a primeira porta disponível no host local a partir de uma porta inicial.
 
     Args:
         start_port (int): Porta inicial para começar a busca.
         max_port (int): Número máximo de porta a verificar (default: 65535).
+        host (str): Host to bind to (default: localhost for development binding)
 
     Returns:
         int: O número da primeira porta disponível.
@@ -87,11 +89,14 @@ def find_available_port(start_port=50000, max_port=65535):
     Raises:
         RuntimeError: Se nenhuma porta estiver disponível no intervalo.
     """
+    if host is None:
+        host = "localhost"
+    
     for port in range(start_port, max_port + 1):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 # Tenta vincular o socket à porta
-                s.bind(("localhost", port))
+                s.bind((host, port))
                 return port  # Retorna a porta se estiver disponível
             except OSError:
                 continue  # Porta está em uso, passa para a próxima
@@ -605,20 +610,20 @@ def StopOldContainers(days=30):
 
 
 ################################################################################
-# TODO: Parametrizar a porta
 def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
     """
     Verifica se o servidor OSRM está ativo.
 
     Args:
-    - url: URL do serviço de rota OSRM.
     - tentativas: Número máximo de tentativas de verificação.
     - intervalo: Intervalo de tempo (em segundos) entre as tentativas.
 
     Returns:
     - bool: True se o servidor estiver no ar, False caso contrário.
     """
-    url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
+    from webrotas.config.server_hosts import get_osrm_host
+    osrm_host = get_osrm_host()
+    url = f"http://{osrm_host}:{UserData.OSMRport}/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
 
     for tentativa in range(tentativas):
         try:

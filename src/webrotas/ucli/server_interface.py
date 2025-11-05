@@ -11,11 +11,12 @@ import subprocess
 import time
 import webbrowser
 from pathlib import Path
+from webrotas.config.server_hosts import get_webrotas_host
 
 
 SERVER_NAME = "WebRotas Server"
 SERVER_PORT = 5001
-SERVER_ROOT_URL = "http://localhost:"
+SERVER_ROOT_URL = None  # Set dynamically in update_url_port()
 SERVER_TEST_URL_FOLDER = "/ok"
 SERVER_URL_FOLDER = "/webrotas"
 PROJECT_FOLDER_NAME = "webRotas"
@@ -85,8 +86,10 @@ class ServerData:
         """
         Update URL values using the server port number.
         """
-        self.test_url = f"{SERVER_ROOT_URL}{self.port}{SERVER_TEST_URL_FOLDER}"
-        self.url = f"{SERVER_ROOT_URL}{self.port}{SERVER_URL_FOLDER}"
+        host = get_webrotas_host()
+        base_url = f"http://{host}:"
+        self.test_url = f"{base_url}{self.port}{SERVER_TEST_URL_FOLDER}"
+        self.url = f"{base_url}{self.port}{SERVER_URL_FOLDER}"
 
     # ------------------------------------------------------------------------------------------
     def load_server_data(self):

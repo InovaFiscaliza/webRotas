@@ -8,6 +8,7 @@ from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 from webrotas.routing_servers_interface import PreparaServidorRoteamento, UserData
 from webrotas.config.logging_config import get_logger
 from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
+from webrotas.config.server_hosts import get_osrm_host, get_osrm_url
 
 # Initialize logging at module level
 logger = get_logger(__name__)
@@ -91,23 +92,22 @@ def controller(
     if mat is None:
         logger.error("Matrix validation failed, falling back to geodesic calculation")
         distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
-    elif len(mat) == 3:
-        # Invalid pairs found, only calculate geodesic for those
-        distances, durations, invalid_pairs = mat
-        logger.warning(
-            f"Found {len(invalid_pairs)} invalid pairs, calculating geodesic only for those"
-        )
-
-        geodesic_distances, geodesic_durations = get_geodesic_matrix(
-            coords, speed_kmh=40, invalid_pairs=invalid_pairs
-        )
-
-        # Merge geodesic values into the existing matrices
-        for ii, jj in invalid_pairs:
-            distances[ii][jj] = geodesic_distances[ii][jj]
-            durations[ii][jj] = geodesic_durations[ii][jj]
     else:
-        distances, durations = mat
+        distances, durations, invalid_pairs = mat
+        if invalid_pairs:
+            # Invalid pairs found, only calculate geodesic for those
+            logger.warning(
+                f"Found {len(invalid_pairs)} invalid pairs, calculating geodesic only for those"
+            )
+
+            geodesic_distances, geodesic_durations = get_geodesic_matrix(
+                coords, speed_kmh=40, invalid_pairs=invalid_pairs
+            )
+
+            # Merge geodesic values into the existing matrices
+            for ii, jj in invalid_pairs:
+                distances[ii][jj] = geodesic_distances[ii][jj]
+                durations[ii][jj] = geodesic_durations[ii][jj]
 
     if criterion in ["distance", "duration"]:
         matrix = distances if criterion == "distance" else durations
@@ -145,18 +145,21 @@ def get_osrm_matrix(coords):
 
 
 # -----------------------------------------------------------------------------------#
-def is_port_available(host="localhost", port=5000, timeout=10):
+def is_port_available(host=None, port=5000, timeout=10):
     """
     Check if a container is available on the specified port.
 
     Args:
-        host (str): The host to check (default: localhost)
+        host (str): The host to check (default: None, uses get_osrm_host())
         port (int): The port to check (default: 5000)
-        timeout (int): Connection timeout in seconds (default: 3)
+        timeout (int): Connection timeout in seconds (default: 10)
 
     Returns:
         bool: True if port is available and responding, False otherwise
     """
+    if host is None:
+        host = get_osrm_host()
+    
     try:
         # First check if port is open
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -165,7 +168,9 @@ def is_port_available(host="localhost", port=5000, timeout=10):
             if result != 0:
                 # Port is not open
                 return False
+        return True
 
+        # TODO: Fix this logic
         # Port is open, now check if OSRM is responding
         try:
             response = requests.get(f"http://{host}:{port}/health", timeout=timeout)
@@ -224,10 +229,11 @@ def get_osrm_matrix_from_local_container(coords):
         Exception: If container setup or request fails, or if port 5000 is not available
     """
     # First check if container is available on port 5000
-    # Use 'osrm' hostname for Docker network connectivity
-    if not is_port_available("osrm", 5000):
+    # Use parametrized hostname for Docker network connectivity
+    osrm_host = get_osrm_host()
+    if not is_port_available(osrm_host, 5000):
         raise Exception(
-            "OSRM container not available on port 5000 - falling back to iterative method"
+            f"OSRM container not available on {osrm_host}:5000 - falling back to iterative method"
         )
 
     logger.info(
@@ -283,10 +289,11 @@ def get_osrm_matrix_from_local_container(coords):
 
         # Make request to local container
         coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
-        # Use 'osrm' hostname for Docker network connectivity instead of localhost
-        local_url = f"http://osrm:{UserData.OSMRport}/table/v1/driving/{coord_str}?annotations=distance,duration"
+        # Use parametrized hostname for Docker network connectivity
+        osrm_host = get_osrm_host()
+        local_url = f"http://{osrm_host}:{UserData.OSMRport}/table/v1/driving/{coord_str}?annotations=distance,duration"
 
-        logger.debug(f"Making request to local OSRM: {local_url}")
+        logger.debug(f"Making request to OSRM at {osrm_host}: {local_url}")
 
         # Use longer timeout for local container as it might need to start up
         response = requests.get(local_url, timeout=60)
@@ -349,14 +356,14 @@ def get_geodesic_matrix(coords, speed_kmh=40, invalid_pairs=None):
 # -----------------------------------------------------------------------------------#
 def validate_matrix(
     coords, distances, durations
-) -> Tuple[List[float], List[float]] | None:
+) -> Tuple[List[float], List[float], List[Tuple[int, int]]] | None:
     num_points = len(coords)
     if distances is None or durations is None:
-        return False
+        return None
 
     # quick shape checks
     if not (len(distances) == len(durations) == num_points):
-        return False
+        return None
     if any(len(row) != num_points for row in distances) or any(
         len(row) != num_points for row in durations
     ):
@@ -369,7 +376,7 @@ def validate_matrix(
     for mat in (distances, durations):
         # diagonal must be exactly zero
         if any(mat[i][i] != 0 for i in range(num_points)):
-            return False
+            return None
 
         for i in range(num_points):
             for j in range(num_points):
@@ -383,11 +390,7 @@ def validate_matrix(
                             if (i, j) not in invalid_pairs:
                                 invalid_pairs.append((i, j))
 
-    # If there are invalid pairs, return them along with the matrices
-    if invalid_pairs:
-        return distances, durations, invalid_pairs
-
-    return distances, durations
+    return distances, durations, invalid_pairs
 
 
 # -----------------------------------------------------------------------------------#
@@ -410,7 +413,8 @@ def get_osrm_route(coords, order):
         if not UserData.OSMRport:
             raise Exception("No local OSRM container available")
 
-        local_url = f"http://localhost:{UserData.OSMRport}/route/v1/driving/{coord_str}?overview=full&geometries=geojson"
+        osrm_host = get_osrm_host()
+        local_url = f"http://{osrm_host}:{UserData.OSMRport}/route/v1/driving/{coord_str}?overview=full&geometries=geojson"
         req = requests.get(local_url, timeout=30)
         req.raise_for_status()
         data = req.json()
@@ -478,16 +482,6 @@ def solve_open_tsp_from_matrix(distance_matrix):
     while not routing.IsEnd(idx):
         order.append(manager.IndexToNode(idx))
         idx = solution.Value(routing.NextVar(idx))
-    # idx agora é End(0) (que corresponde ao depósito 0). Remover retorno:
-    if order and order[-1] != 0:
-        # Se por alguma razão não voltou para 0 (não deve acontecer nesse setup), mantemos.
-        pass
-    else:
-        # Garante sequência sem o retorno final ao 0.
-        # A sequência atual termina no penúltimo nó visitado.
-        # Não adicionamos o 0 final.
-        pass
-
     return order
 
 

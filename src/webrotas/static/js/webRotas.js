@@ -18,7 +18,7 @@
       │   ├── Tooltip         (new Tooltip)
       │   └── Utils           ('js/Utils.js')
       ├── server
-      │   ├── url             ('http://127.0.0.1:5001')
+      │   ├── url             (determined dynamically based on host)
       │   ├── sessionId
       │   ├── status
       │   └── statusMonitor
@@ -109,7 +109,15 @@ async function loadScript(filename) {
         },
 
         server: {
-            url: null,
+            url: (function() {
+                // Determine server URL based on current location
+                // Development: uses localhost
+                // Production/Containerized: uses hostname from window.location
+                const protocol = window.location.protocol;
+                const hostname = window.location.hostname;
+                const port = 5001; // webRotas server port
+                return `${protocol}//${hostname}:${port}`;
+            })(),
             sessionId: '',
             status: (window.location.protocol === "file:") ? 'offline' : 'online',
             statusMonitor: {
