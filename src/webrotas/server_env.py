@@ -1,131 +1,56 @@
-"""
-Define and manage the server environment
-"""
+"""Server environment configuration"""
 
-import os
 import json
+from pathlib import Path
+from typing import Optional
 import webrotas.port_test as pt
 
-# ---------------------------------------------------------------------------
-"""	Constants	"""
+# Module directory (where this file is located)
+MODULE_DIR = Path(__file__).parent
 
-PREFERRED_PORT = 5002
-DEBUG_MODE = False
-LOG_FILE_PATH = "logs/webRotas"
-SERVER_DATA_PATH = "config/server.json"
+# Default configuration
+DEFAULT_PORT = 5002
+DEFAULT_DEBUG = False
 
 
-# ---------------------------------------------------------------------------
 class ServerEnv:
+    """Manages server environment configuration and paths."""
+    
     def __init__(self):
-        self.port: int = PREFERRED_PORT
-
-        """Port number for the server."""
-        self.debug_mode: bool = DEBUG_MODE
-
-        """Debug mode for the server."""
-        self.script_path: str = os.path.realpath(__file__)
-
-        """Path to the script file."""
-        self.server_data_file: str = SERVER_DATA_PATH
-
-        """Path to the server data file."""
-        self.log_file: str = LOG_FILE_PATH
-
-        """Path to the log file."""
-        self.required_paths: list = []
-
-        """List of required folders for the server."""
-        self.set_paths()
-        self.test_required_paths()
-
-    # ---------------------------------------------------------------------------
-    def set_paths(self) -> None:
-        """Change the current working directory to the directory of the script.\n
-        Avoid error if script is called from a folder different from the script's folder.
-        """
-        cd = os.path.dirname(self.script_path)
-        os.chdir(cd)
-
-        self.server_data_file = os.path.normpath(os.path.join(cd, SERVER_DATA_PATH))
-        self.log_file = os.path.normpath(os.path.join(cd, LOG_FILE_PATH))
-        self.required_paths = [
-            os.path.dirname(self.server_data_file),
-            os.path.dirname(self.log_file),
-        ]
-
-    # ---------------------------------------------------------------------------
-    def test_write_permission(self, folder: str) -> bool:
-        """Test if a folder has write permission."""
-
-        if not os.access(folder, os.W_OK):
-            print(
-                f"Warning: Folder {folder} exists but does not have write permission!"
-            )
-            try:
-                # Create a test file to verify actual write permission
-                test_file = os.path.join(folder, ".write_test")
-                with open(test_file, "w") as f:
-                    f.write("test")
-                os.remove(test_file)
-                print(f"Write test successful despite access check failure in {folder}")
-            except Exception as write_err:
-                # This confirms we actually can't write to the folder
-                print(f"Confirmed write permission error: {write_err}")
-
-    # ---------------------------------------------------------------------------
-    def test_folder(self, folder: str) -> None:
-        """Test if a folder exists and has write permission. Creates the folder if needed."""
-        try:
-            # Try to create the folder directly
-            os.makedirs(folder)
-            print(f"Created folder: {folder}")
-        except FileExistsError:
-            # Folder already exists, which is fine
-            pass
-        except Exception as e:
-            # Other creation errors (permissions, disk full, etc.)
-            print(f"Error creating folder {folder}: {e}")
-
-        self.test_write_permission(folder)
-
-    # ---------------------------------------------------------------------------
-    def test_required_paths(self) -> None:
-        """Test if all required folders exist and have write permission."""
-        for folder in self.required_paths:
-            self.test_folder(folder)
-
-    # ---------------------------------------------------------------------------
-    def get_port(self, port: int) -> None:
-        """Get an available port for the server.
-
-        :param port: Preferred port to start the search.
-        :raises ValueError: If no available port is found.
-        """
-
-        port = pt.get_port(preferred_port=port)
+        self.port: int = DEFAULT_PORT
+        self.debug_mode: bool = DEFAULT_DEBUG
+        
+        # Paths relative to module directory
+        self.log_file = MODULE_DIR / "logs" / "webRotas"
+        self.server_data_file = MODULE_DIR / "config" / "server.json"
+        
+        self._ensure_directories()
+    
+    def _ensure_directories(self) -> None:
+        """Create required directories if they don't exist."""
+        for path in [self.log_file, self.server_data_file]:
+            path.parent.mkdir(parents=True, exist_ok=True)
+    
+    def get_port(self, preferred_port: int) -> None:
+        """Get an available port, starting from the preferred port."""
+        port = pt.get_port(preferred_port=preferred_port)
         if port is None:
             raise ValueError("No available port found")
-
         self.port = port
-
-    # ---------------------------------------------------------------------------
+    
     def save_server_data(self) -> None:
-        """Save server data to a JSON file."""
+        """Save server configuration to JSON file."""
         data = {"port": self.port}
         try:
-            with open(self.server_data_file, "w", encoding="utf-8") as file:
-                json.dump(data, file, indent=4, ensure_ascii=False)
+            with self.server_data_file.open("w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4, ensure_ascii=False)
         except Exception as e:
             print(f"Error saving server data: {e}")
-
-    # ---------------------------------------------------------------------------
+    
     def clean_server_data(self) -> None:
-        """Remove the server data file."""
+        """Remove server configuration file."""
         try:
-            os.remove(self.server_data_file)
-        except FileNotFoundError:
-            pass
+            self.server_data_file.unlink(missing_ok=True)
         except Exception as e:
             print(f"Error removing server data file: {e}")
 
