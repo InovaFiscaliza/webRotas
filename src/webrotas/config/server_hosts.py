@@ -17,88 +17,87 @@ from enum import Enum
 
 class Environment(Enum):
     """Environment types"""
+
     DEVELOPMENT = "development"
     PRODUCTION = "production"  # or containerized environments
 
 
 class ServerHosts:
     """Central configuration for server host addresses"""
-    
+
     @staticmethod
     def get_environment() -> str:
         """
         Get the current environment from environment variable or default to development.
-        
+
         Returns:
             str: Either 'development' or 'production'
         """
-        env = os.getenv('WEBROTAS_ENVIRONMENT', 'development').lower()
-        return env if env in ['development', 'production'] else 'development'
-    
+        env = os.getenv("WEBROTAS_ENVIRONMENT", "development").lower()
+        return env if env in ["development", "production"] else "development"
+
     @staticmethod
     def is_containerized() -> bool:
         """Check if running in containerized environment"""
-        return ServerHosts.get_environment() == 'production'
-    
+        return ServerHosts.get_environment() == "production"
+
     @staticmethod
     def get_osrm_host() -> str:
         """
         Get OSRM server hostname.
-        
+
         Development: localhost (127.0.0.1)
         Production: osrm (container hostname)
-        
+
         Returns:
             str: Hostname for OSRM server
         """
-        if os.getenv('OSRM_HOSTNAME'):
-            return os.getenv('OSRM_HOSTNAME')
-        
-        return 'osrm' if ServerHosts.is_containerized() else 'localhost'
-    
+        if (osrm_hostname := os.getenv("OSRM_HOSTNAME")) is not None:
+            return osrm_hostname
+
+        return "osrm" if ServerHosts.is_containerized() else "localhost"
+
     @staticmethod
     def get_webrotas_host() -> str:
         """
         Get webRotas server hostname.
-        
+
         Development: localhost (127.0.0.1)
         Production: webrotas (container hostname)
-        
+
         Returns:
             str: Hostname for webRotas server
         """
-        if os.getenv('WEBROTAS_HOSTNAME'):
-            return os.getenv('WEBROTAS_HOSTNAME')
-        
-        return 'webrotas' if ServerHosts.is_containerized() else 'localhost'
-    
+        if (webrotas_hostname := os.getenv("WEBROTAS_HOSTNAME")) is not None:
+            return webrotas_hostname
+
+        return "webrotas" if ServerHosts.is_containerized() else "localhost"
+
     @staticmethod
     def get_webrotas_url(port: int) -> str:
         """
         Get webRotas server base URL.
-        
+
         Args:
             port (int): Server port number
-            
+
         Returns:
             str: Full URL for webRotas server (e.g., http://localhost:5002 or http://webrotas:5002)
         """
-        host = ServerHosts.get_webrotas_host()
-        return f"http://{host}:{port}"
-    
+        return f"http://{ServerHosts.get_webrotas_host()}:{port}"
+
     @staticmethod
     def get_osrm_url(port: int) -> str:
         """
         Get OSRM server base URL.
-        
+
         Args:
             port (int): Server port number (typically 5000)
-            
+
         Returns:
             str: Full URL for OSRM server (e.g., http://localhost:5000 or http://osrm:5000)
         """
-        host = ServerHosts.get_osrm_host()
-        return f"http://{host}:{port}"
+        return f"http://{ServerHosts.get_osrm_host()}:{port}"
 
 
 # Convenience functions for direct import
