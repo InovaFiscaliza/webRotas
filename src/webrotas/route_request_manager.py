@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
-""" """
-
 import json
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import datetime
 import uuid
 from typing import Any

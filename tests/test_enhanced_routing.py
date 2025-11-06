@@ -12,7 +12,7 @@ sys.path.insert(
     0, os.path.join(os.path.dirname(__file__), "..", "src", "backend", "webdir")
 )
 
-import api_routing
+from webrotas import api_routing
 
 # Setup basic logging
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(message)s")

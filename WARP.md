@@ -16,19 +16,25 @@ The application processes geospatial data, calculates optimal routes using OSRM 
 
 ### Core Components
 
-- **Backend Server** (`src//`): Flask-based REST API server
-  - `server.py`: Main Flask application with route endpoints
-  - `web_rotas.py`: Core routing logic for different route types
+- **FastAPI Backend** (`src/webrotas/`): Modern async REST API server
+  - `main.py`: FastAPI application with Uvicorn server
+  - `server.py`: Legacy Flask server (still available)
+  - `rotas.py`: Core routing logic for different route types
   - `route_request_manager.py`: Manages route request lifecycle
   - `api_routing.py` & `api_elevation.py`: External API integrations
   - `routing_servers_interface.py`: Container/OSRM server management
+
+- **API Layer** (`src/webrotas/api/`): Structured FastAPI endpoints
+  - `routes/process.py`: Main route processing endpoint
+  - `routes/health.py`: Health check endpoint
+  - `models/requests.py`: Pydantic request/response models
 
 - **Client Interface** (`src/ucli/`): Command-line client for server interaction
   - `webrota_client.py`: CLI client for sending requests
   - `server_interface.py`: Server communication abstraction
   - `json_validate.py`: Request validation logic
 
-- **Static Assets** (`src//static/`): Web frontend (HTML/CSS/JS)
+- **Static Assets** (`src/webrotas/static/`): Web frontend (HTML/CSS/JS)
 
 - **Data Resources** (`src/resources/`): Geospatial reference data
   - Brazilian municipal boundaries, urban areas, street networks (OSM data)
@@ -37,7 +43,8 @@ The application processes geospatial data, calculates optimal routes using OSRM 
 ### Technology Stack
 
 - **Python 3.11** with UV package manager
-- **Flask** web framework with CORS and compression
+- **FastAPI** web framework with async support, automatic OpenAPI docs
+- **Uvicorn** ASGI server for production-ready deployment
 - **Geospatial**: GeoPandas, Shapely, GeoPy for geographic operations
 - **Routing**: OSRM backend via containers (Podman)
 - **Data Processing**: NumPy, PyArrow for performance
@@ -55,12 +62,15 @@ uv sync --dev
 ```
 
 ### Running the Application
-```powershell
-# Start the Flask development server
-uv run src//server.py
+```bash
+# Start the FastAPI server (recommended)
+uv run --directory src uvicorn webrotas.main:app --port 5003 --host 127.0.0.1
 
-# Start server with custom port
-uv run src//server.py --port 5003
+# Alternative: Start FastAPI server using main.py
+uv run src/webrotas/main.py --port 5003
+
+# Legacy: Start Flask server (still available)
+uv run src/webrotas/server.py --port 5003
 
 # Run client with example payload
 uv run src/ucli/webrota_client.py tests/request_shortest\ \(RJ\).json
@@ -70,27 +80,35 @@ uv run src/ucli/webrota_client.py
 ```
 
 ### Testing
-```powershell
-# Run all tests (when pytest is added as dev dependency)
+```bash
+# Run all tests with pytest
 uv run pytest tests/
 
 # Run specific test file
-uv run pytest tests/dev/test_Funcionalidades.py
+uv run pytest tests/test_fastapi.py
 
 # Run individual development test scripts
-uv run tests/dev/test_Altitude.py
+uv run python tests/test_fastapi.py
+uv run python tests/test_logging.py
 ```
 
 ### Development Workflow
-```powershell
+```bash
 # Launch server in debug mode (VSCode configuration available)
 # Use .vscode/launch.json configurations for debugging
+
+# Access interactive API documentation
+# Start server and visit http://127.0.0.1:5003/docs (Swagger UI)
+# or http://127.0.0.1:5003/redoc (ReDoc)
 
 # Validate request payloads
 uv run src/ucli/json_validate.py path/to/request.json
 
 # Test server connectivity
-curl "http://127.0.0.1:5002/ok?sessionId=test"
+curl "http://127.0.0.1:5003/ok?sessionId=test"
+
+# Get OpenAPI schema
+curl "http://127.0.0.1:5003/openapi.json"
 ```
 
 ## Request Types & API Structure
@@ -109,7 +127,10 @@ The server accepts JSON requests with the following structure:
 ### API Endpoints
 - `POST /process?sessionId=<id>`: Main route processing endpoint
 - `GET /ok?sessionId=<id>`: Health check endpoint
-- `GET /` or `/webRotas`: Serves static web interface
+- `GET /`: Serves static web interface
+- `GET /docs`: Interactive API documentation (Swagger UI)
+- `GET /redoc`: Alternative API documentation (ReDoc)
+- `GET /openapi.json`: OpenAPI schema specification
 
 ## Data Dependencies
 
@@ -131,8 +152,12 @@ Services are managed via Podman and initialized during first setup.
 ## Development Notes
 
 - The codebase uses Portuguese comments and variable names (ANATEL context)
+- **Migration**: Application migrated from Flask to FastAPI for better performance and auto-documentation
 - Route calculations are cached using bounding box-based cache system
-- The application is Windows-focused but uses WSL/containers for compatibility
-- Static files are served directly by Flask in development mode
+- The application supports both Linux and Windows (via WSL/containers)
+- Static files are served by FastAPI with automatic HTML serving
 - All Python execution should use `uv run` commands for proper environment management
+- Interactive API documentation available at `/docs` and `/redoc` endpoints
 - Test files in `tests/` directory contain both JSON request examples and Python test scripts
+- FastAPI provides automatic OpenAPI schema generation and validation
+- VSCode debug configurations available in `.vscode/launch.json` for both Flask and FastAPI
