@@ -13,14 +13,14 @@ class RouteService:
     async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]:
         """
         Process a route request and return the result as a JSON-serializable dict.
-        
+
         Args:
             data: Request data containing type, origin, parameters, etc.
             session_id: Unique session identifier
-            
+
         Returns:
             JSON-serializable route response
-            
+
         Raises:
             ProcessingError: If route processing fails
         """
@@ -99,8 +99,9 @@ class RouteService:
             # Convert Response object to dict if needed
             if isinstance(response_json, str):
                 import json
+
                 return json.loads(response_json)
-            
+
             return response_json
 
         except ProcessingError:

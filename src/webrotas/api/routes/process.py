@@ -8,7 +8,7 @@ from webrotas.core.dependencies import (
     validate_request_type,
     validate_parameters,
 )
-from webrotas.services.route_service import RouteService
+from webrotas.services.route_service import process_route
 
 router = APIRouter(tags=["routing"])
 
@@ -58,6 +58,6 @@ async def process(
     await validate_parameters(request_type, parameters)
     
     # Process the route
-    response = await RouteService.process_route(request_data, session_id)
+    response = await process_route(request_data, session_id)
     
     return JSONResponse(content=response)
