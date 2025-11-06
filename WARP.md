@@ -18,7 +18,6 @@ The application processes geospatial data, calculates optimal routes using OSRM 
 
 - **FastAPI Backend** (`src/webrotas/`): Modern async REST API server
   - `main.py`: FastAPI application with Uvicorn server
-  - `server.py`: Legacy Flask server (still available)
   - `rotas.py`: Core routing logic for different route types
   - `route_request_manager.py`: Manages route request lifecycle
   - `api_routing.py` & `api_elevation.py`: External API integrations
@@ -68,9 +67,6 @@ uv run --directory src uvicorn webrotas.main:app --port 5003 --host 127.0.0.1
 
 # Alternative: Start FastAPI server using main.py
 uv run src/webrotas/main.py --port 5003
-
-# Legacy: Start Flask server (still available)
-uv run src/webrotas/server.py --port 5003
 
 # Run client with example payload
 uv run src/ucli/webrota_client.py tests/request_shortest\ \(RJ\).json
@@ -152,7 +148,7 @@ Services are managed via Podman and initialized during first setup.
 ## Development Notes
 
 - The codebase uses Portuguese comments and variable names (ANATEL context)
-- **Migration**: Application migrated from Flask to FastAPI for better performance and auto-documentation
+- Application uses FastAPI for async performance and automatic OpenAPI documentation
 - Route calculations are cached using bounding box-based cache system
 - The application supports both Linux and Windows (via WSL/containers)
 - Static files are served by FastAPI with automatic HTML serving
@@ -160,4 +156,4 @@ Services are managed via Podman and initialized during first setup.
 - Interactive API documentation available at `/docs` and `/redoc` endpoints
 - Test files in `tests/` directory contain both JSON request examples and Python test scripts
 - FastAPI provides automatic OpenAPI schema generation and validation
-- VSCode debug configurations available in `.vscode/launch.json` for both Flask and FastAPI
+- VSCode debug configurations available in `.vscode/launch.json`
