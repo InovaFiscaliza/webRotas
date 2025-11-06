@@ -1,14 +1,20 @@
 """Server environment configuration"""
 
+import os
 import json
 from pathlib import Path
-import webrotas.port_test as pt
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = Path(__file__).parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # Module directory (where this file is located)
 MODULE_DIR = Path(__file__).parent
 
 # Default configuration
-DEFAULT_PORT = 5002
+DEFAULT_WEBROTAS_PORT = 5003
+DEFAULT_OSRM_PORT = 5000
 DEFAULT_DEBUG = False
 
 
@@ -16,7 +22,9 @@ class ServerEnv:
     """Manages server environment configuration and paths."""
     
     def __init__(self):
-        self.port: int = DEFAULT_PORT
+        # Read ports from environment variables (set by .env file)
+        self.webrotas_port: int = int(os.getenv("WEBROTAS_PORT", DEFAULT_WEBROTAS_PORT))
+        self.osrm_port: int = int(os.getenv("OSRM_PORT", DEFAULT_OSRM_PORT))
         self.debug_mode: bool = DEFAULT_DEBUG
         
         # Paths relative to module directory
@@ -25,21 +33,24 @@ class ServerEnv:
         
         self._ensure_directories()
     
+    @property
+    def port(self) -> int:
+        """Get the webRotas server port."""
+        return self.webrotas_port
+    
+    @port.setter
+    def port(self, value: int) -> None:
+        """Set the webRotas server port."""
+        self.webrotas_port = value
+    
     def _ensure_directories(self) -> None:
         """Create required directories if they don't exist."""
         for path in [self.log_file, self.server_data_file]:
             path.parent.mkdir(parents=True, exist_ok=True)
     
-    def get_port(self, preferred_port: int) -> None:
-        """Get an available port, starting from the preferred port."""
-        port = pt.get_port(preferred_port=preferred_port)
-        if port is None:
-            raise ValueError("No available port found")
-        self.port = port
-    
     def save_server_data(self) -> None:
         """Save server configuration to JSON file."""
-        data = {"port": self.port}
+        data = {"webrotas_port": self.webrotas_port, "osrm_port": self.osrm_port}
         try:
             with self.server_data_file.open("w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)

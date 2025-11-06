@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import math
 import socket
 from typing import List, Tuple, Iterable
@@ -19,6 +20,12 @@ URL = {
     "table": lambda coord_str: f"http://router.project-osrm.org/table/v1/driving/{coord_str}?annotations=distance,duration",
     "route": lambda coord_str: f"http://router.project-osrm.org/route/v1/driving/{coord_str}?overview=full&geometries=geojson",
 }
+
+
+@dataclass
+class UserData:
+    OSMRport: int = 5000
+    ssid: str | None = None
 
 
 # -----------------------------------------------------------------------------------#

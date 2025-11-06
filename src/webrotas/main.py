@@ -28,7 +28,9 @@ async def lifespan(app: FastAPI):
     # Startup
     try:
         args = parse_args()
-        env.get_port(args.port)
+        # Override port if provided via command line arguments
+        if args.port != env.port:
+            env.port = args.port
         env.save_server_data()
         logger.info(f"Server starting on port {env.port}")
     except Exception as e:

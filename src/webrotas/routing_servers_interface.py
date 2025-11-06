@@ -49,22 +49,15 @@ import socket
 import glob
 from pathlib import Path
 import json
-from dataclasses import dataclass
 import webrotas.rotas as wr
 import webrotas.project_folders as pf
 import webrotas.cache.bounding_boxes as cb
 import webrotas.regions as rg
-import webrotas.shape_files as sf
+import webrotas.shapefiles as sf
 from webrotas.config.logging_config import get_logger
 
 # Configure logging
 logger = get_logger(__name__)
-
-
-@dataclass
-class UserData:
-    OSMRport: int = 5000
-    ssid: str = None
 
 
 CONFIG_FILE = (
@@ -90,7 +83,7 @@ def find_available_port(start_port=50000, max_port=65535, host=None):
     """
     if host is None:
         host = "localhost"
-    
+
     for port in range(start_port, max_port + 1):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -342,129 +335,129 @@ def region_container_alive(cacheid):
 #     return
 
 
-################################################################################
-def manutencao_arquivos_antigos():
-    DeleteOldFilesAndFolders(f"{pf.OSMR_PATH_CACHE_DATA}", days=365)
-    DeleteOldFilesAndFolders("logs", days=30)
-    DeleteOldFilesAndFolders(pf.OSMOSIS_TEMPDATA_PATH, days=365)
-    StopOldContainers(days=30)
+# ################################################################################
+# def manutencao_arquivos_antigos():
+#     DeleteOldFilesAndFolders(f"{pf.OSMR_PATH_CACHE_DATA}", days=365)
+#     DeleteOldFilesAndFolders("logs", days=30)
+#     DeleteOldFilesAndFolders(pf.OSMOSIS_TEMPDATA_PATH, days=365)
+#     StopOldContainers(days=30)
 
 
-################################################################################
-def is_podman_running_health():
-    """
-    Checks whether Podman is operational and capable of running containers.
+# ################################################################################
+# def is_podman_running_health():
+#     """
+#     Checks whether Podman is operational and capable of running containers.
 
-    Returns:
-        (bool, str): A tuple where the first element indicates success (True/False),
-                     and the second element provides a descriptive status message.
-    """
-    try:
-        subprocess.run(
-            ["podman", "ps"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            check=True,
-        )
-        return True, "Podman is running and operational."
+#     Returns:
+#         (bool, str): A tuple where the first element indicates success (True/False),
+#                      and the second element provides a descriptive status message.
+#     """
+#     try:
+#         subprocess.run(
+#             ["podman", "ps"],
+#             stdout=subprocess.PIPE,
+#             stderr=subprocess.PIPE,
+#             text=True,
+#             check=True,
+#         )
+#         return True, "Podman is running and operational."
 
-    except FileNotFoundError:
-        return (
-            False,
-            "The 'podman' command was not found. Please ensure it is installed and in your PATH.",
-        )
+#     except FileNotFoundError:
+#         return (
+#             False,
+#             "The 'podman' command was not found. Please ensure it is installed and in your PATH.",
+#         )
 
-    except subprocess.CalledProcessError as e:
-        return (
-            False,
-            f"Podman returned an error.\nSTDOUT:\n{e.stdout}\nSTDERR:\n{e.stderr}",
-        )
+#     except subprocess.CalledProcessError as e:
+#         return (
+#             False,
+#             f"Podman returned an error.\nSTDOUT:\n{e.stdout}\nSTDERR:\n{e.stderr}",
+#         )
 
-    except Exception as e:
-        return False, f"Unexpected error: {str(e)}"
-
-
-################################################################################
-def get_containers():
-    """
-    Obtém a lista de contêineres cujo nome começa com 'osmr_', incluindo o ID e a data de criação.
-    Retorna uma lista de tuplas (container_id, created_at).
-    """
-
-    subprocess.run(
-        ["podman", "machine", "start"],
-        capture_output=True,
-        text=True,
-    )
-
-    # Usa delimitador claro entre os campos para evitar problemas com espaços
-    result = subprocess.run(
-        ["podman", "ps", "-a", "--format", "{{.ID}}||{{.CreatedAt}}||{{.Names}}"],
-        capture_output=True,
-        text=True,
-    )
-
-    if result.returncode != 0:
-        return []
-
-    containers = []
-    for line in result.stdout.strip().splitlines():
-        parts = line.split("||")
-        if len(parts) == 3:
-            container_id, created_at, name = [p.strip() for p in parts]
-            if name.startswith("osmr_"):
-                containers.append((container_id, created_at))
-
-    return containers
+#     except Exception as e:
+#         return False, f"Unexpected error: {str(e)}"
 
 
-################################################################################
-def get_container_by_cacheid(cacheid):
-    """
-    Retorna uma lista com o contêiner cujo nome começa com 'osmr_' e contém o cacheid.
-    Para cada contêiner, inclui: (container_id, created_at, porta)
-    """
+# ################################################################################
+# def get_containers():
+#     """
+#     Obtém a lista de contêineres cujo nome começa com 'osmr_', incluindo o ID e a data de criação.
+#     Retorna uma lista de tuplas (container_id, created_at).
+#     """
 
-    result = subprocess.run(
-        ["podman", "ps", "-a", "--format", "{{.ID}}||{{.CreatedAt}}||{{.Names}}"],
-        capture_output=True,
-        text=True,
-    )
+#     subprocess.run(
+#         ["podman", "machine", "start"],
+#         capture_output=True,
+#         text=True,
+#     )
 
-    if result.returncode != 0:
-        # wl.wLog("Erro ao listar contêineres")
-        return []
+#     # Usa delimitador claro entre os campos para evitar problemas com espaços
+#     result = subprocess.run(
+#         ["podman", "ps", "-a", "--format", "{{.ID}}||{{.CreatedAt}}||{{.Names}}"],
+#         capture_output=True,
+#         text=True,
+#     )
 
-    containers = []
-    for line in result.stdout.strip().splitlines():
-        parts = line.split("||")
-        if len(parts) == 3:
-            container_id, created_at, name = [p.strip() for p in parts]
-            if name.startswith("osmr_") and cacheid in name:
-                port_result = subprocess.run(
-                    ["podman", "port", container_id],
-                    capture_output=True,
-                    text=True,
-                )
-                if port_result.returncode == 0:
-                    raw_port = (
-                        port_result.stdout.strip().splitlines()[0]
-                        if port_result.stdout.strip()
-                        else "desconhecida"
-                    )
-                    if "->" in raw_port and ":" in raw_port:
-                        porta = raw_port.split(":")[
-                            -1
-                        ]  # pega só a última parte (ex: 50000)
-                    else:
-                        porta = raw_port
-                else:
-                    porta = "erro"
+#     if result.returncode != 0:
+#         return []
 
-                containers.append((container_id, created_at, porta))
+#     containers = []
+#     for line in result.stdout.strip().splitlines():
+#         parts = line.split("||")
+#         if len(parts) == 3:
+#             container_id, created_at, name = [p.strip() for p in parts]
+#             if name.startswith("osmr_"):
+#                 containers.append((container_id, created_at))
 
-    return containers
+#     return containers
+
+
+# ################################################################################
+# def get_container_by_cacheid(cacheid):
+#     """
+#     Retorna uma lista com o contêiner cujo nome começa com 'osmr_' e contém o cacheid.
+#     Para cada contêiner, inclui: (container_id, created_at, porta)
+#     """
+
+#     result = subprocess.run(
+#         ["podman", "ps", "-a", "--format", "{{.ID}}||{{.CreatedAt}}||{{.Names}}"],
+#         capture_output=True,
+#         text=True,
+#     )
+
+#     if result.returncode != 0:
+#         # wl.wLog("Erro ao listar contêineres")
+#         return []
+
+#     containers = []
+#     for line in result.stdout.strip().splitlines():
+#         parts = line.split("||")
+#         if len(parts) == 3:
+#             container_id, created_at, name = [p.strip() for p in parts]
+#             if name.startswith("osmr_") and cacheid in name:
+#                 port_result = subprocess.run(
+#                     ["podman", "port", container_id],
+#                     capture_output=True,
+#                     text=True,
+#                 )
+#                 if port_result.returncode == 0:
+#                     raw_port = (
+#                         port_result.stdout.strip().splitlines()[0]
+#                         if port_result.stdout.strip()
+#                         else "desconhecida"
+#                     )
+#                     if "->" in raw_port and ":" in raw_port:
+#                         porta = raw_port.split(":")[
+#                             -1
+#                         ]  # pega só a última parte (ex: 50000)
+#                     else:
+#                         porta = raw_port
+#                 else:
+#                     porta = "erro"
+
+#                 containers.append((container_id, created_at, porta))
+
+#     return containers
 
 
 ###########################################################################################################################
@@ -481,10 +474,9 @@ def check_osrm_server(host: str, port: int, timeout: int = 3) -> bool:
             data = response.json()
             if response.status_code == 200 and "routes" in data:
                 return True
-            else:
-                return False
     except requests.exceptions.RequestException:
         return False
+    return False
 
 
 ###########################################################################################################################
@@ -516,96 +508,96 @@ def check_osrm_server(host: str, port: int, timeout: int = 3) -> bool:
 
 
 ################################################################################
-def get_max_active_containers():
-    """
-    Carrega o número máximo de contêineres permitidos em execução a partir do arquivo JSON.
-    Retorna 5 se não conseguir carregar.
-    """
-    try:
-        with open(CONFIG_FILE, "r") as f:
-            config = json.load(f)
-            return int(config.get("max_active_containers", 5))
-    except Exception:
-        return 5
+# def get_max_active_containers():
+#     """
+#     Carrega o número máximo de contêineres permitidos em execução a partir do arquivo JSON.
+#     Retorna 5 se não conseguir carregar.
+#     """
+#     try:
+#         with open(CONFIG_FILE, "r") as f:
+#             config = json.load(f)
+#             return int(config.get("max_active_containers", 5))
+#     except Exception:
+#         return 5
 
 
 ################################################################################
-def keep_last_n_containers_running():
-    """
-    Mantém apenas os contêineres mais recentes definidos no JSON em execução.
-    """
-    num_max = get_max_active_containers()
-    containers = get_containers()
-    now = datetime.datetime.now()
+# def keep_last_n_containers_running():
+#     """
+#     Mantém apenas os contêineres mais recentes definidos no JSON em execução.
+#     """
+#     num_max = get_max_active_containers()
+#     containers = get_containers()
+#     now = datetime.datetime.now()
 
-    def parse_created_time(created_at):
-        try:
-            cleaned = " ".join(created_at.split()[:2])[:26]
-            return datetime.datetime.strptime(cleaned, "%Y-%m-%d %H:%M:%S.%f")
-        except ValueError:
-            return now  # Se falhar, assume como se fosse "agora"
+#     def parse_created_time(created_at):
+#         try:
+#             cleaned = " ".join(created_at.split()[:2])[:26]
+#             return datetime.datetime.strptime(cleaned, "%Y-%m-%d %H:%M:%S.%f")
+#         except ValueError:
+#             return now  # Se falhar, assume como se fosse "agora"
 
-    containers_sorted = sorted(
-        containers, key=lambda c: parse_created_time(c[1]), reverse=True
-    )
+#     containers_sorted = sorted(
+#         containers, key=lambda c: parse_created_time(c[1]), reverse=True
+#     )
 
-    ids_to_keep = {c[0] for c in containers_sorted[: num_max - 1]}
+#     ids_to_keep = {c[0] for c in containers_sorted[: num_max - 1]}
 
-    result = subprocess.run(
-        ["podman", "ps", "--format", "{{.ID}}"],
-        capture_output=True,
-        text=True,
-    )
-    running_ids = set(result.stdout.strip().splitlines())
+#     result = subprocess.run(
+#         ["podman", "ps", "--format", "{{.ID}}"],
+#         capture_output=True,
+#         text=True,
+#     )
+#     running_ids = set(result.stdout.strip().splitlines())
 
-    for container_id in running_ids:
-        if container_id not in ids_to_keep:
-            logger.info(f"Parando conteiner: {container_id}")
-            subprocess.run(["podman", "stop", container_id], stdout=subprocess.DEVNULL)
+#     for container_id in running_ids:
+#         if container_id not in ids_to_keep:
+#             logger.info(f"Parando conteiner: {container_id}")
+#             subprocess.run(["podman", "stop", container_id], stdout=subprocess.DEVNULL)
 
 
 ################################################################################
-def StopOldContainers(days=30):
-    """
-    Para contêineres que têm mais de 'days' dias de idade.
-    """
-    # Obtém a data atual
-    current_time = datetime.datetime.now()
+# def StopOldContainers(days=30):
+#     """
+#     Para contêineres que têm mais de 'days' dias de idade.
+#     """
+#     # Obtém a data atual
+#     current_time = datetime.datetime.now()
 
-    # Obtém os contêineres
-    containers = get_containers()
+#     # Obtém os contêineres
+#     containers = get_containers()
 
-    for container_id, created_at in containers:
-        # Converte a data de criação para um objeto datetime
-        try:
-            # Remover a parte extra do fuso horário (a última parte)
-            created_at_cleaned = (
-                created_at.split(" ")[0] + " " + created_at.split(" ")[1]
-            )  # Remove a parte extra de fuso horário
-            created_at_cleaned = created_at_cleaned[:26]
-            # wLog("---------------------- Data com problema "+created_at_cleaned)
-            created_time = datetime.datetime.strptime(
-                created_at_cleaned, "%Y-%m-%d %H:%M:%S.%f"
-            )
-        except ValueError:
-            # Caso o formato de data não tenha microsegundos
-            created_at_cleaned = (
-                created_at.split(" ")[0] + " " + created_at.split(" ")[1]
-            )  # Remove a parte extra de fuso horário
-            created_at_cleaned = created_at_cleaned[:26]
-            # wLog("---------------------- Data ajustada "+created_at_cleaned)
-            created_time = datetime.datetime.strptime(
-                created_at_cleaned, "%Y-%m-%d %H:%M:%S.%f"
-            )
+#     for container_id, created_at in containers:
+#         # Converte a data de criação para um objeto datetime
+#         try:
+#             # Remover a parte extra do fuso horário (a última parte)
+#             created_at_cleaned = (
+#                 created_at.split(" ")[0] + " " + created_at.split(" ")[1]
+#             )  # Remove a parte extra de fuso horário
+#             created_at_cleaned = created_at_cleaned[:26]
+#             # wLog("---------------------- Data com problema "+created_at_cleaned)
+#             created_time = datetime.datetime.strptime(
+#                 created_at_cleaned, "%Y-%m-%d %H:%M:%S.%f"
+#             )
+#         except ValueError:
+#             # Caso o formato de data não tenha microsegundos
+#             created_at_cleaned = (
+#                 created_at.split(" ")[0] + " " + created_at.split(" ")[1]
+#             )  # Remove a parte extra de fuso horário
+#             created_at_cleaned = created_at_cleaned[:26]
+#             # wLog("---------------------- Data ajustada "+created_at_cleaned)
+#             created_time = datetime.datetime.strptime(
+#                 created_at_cleaned, "%Y-%m-%d %H:%M:%S.%f"
+#             )
 
-        # Calcula a diferença de dias entre a data atual e a data de criação
-        age_in_days = (current_time - created_time).days
-        # wLog(f"---------------------- age_in_days: {age_in_days}")
+#         # Calcula a diferença de dias entre a data atual e a data de criação
+#         age_in_days = (current_time - created_time).days
+#         # wLog(f"---------------------- age_in_days: {age_in_days}")
 
-        # Se o contêiner for mais antigo que o limite (30 dias)
-        if age_in_days > days:
-            logger.info(f"Parando contêiner {container_id} (idade: {age_in_days} dias)")
-            subprocess.run(["podman", "stop", container_id])
+#         # Se o contêiner for mais antigo que o limite (30 dias)
+#         if age_in_days > days:
+#             logger.info(f"Parando contêiner {container_id} (idade: {age_in_days} dias)")
+#             subprocess.run(["podman", "stop", container_id])
 
 
 ################################################################################
@@ -621,6 +613,7 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
     - bool: True se o servidor estiver no ar, False caso contrário.
     """
     from webrotas.config.server_hosts import get_osrm_host
+
     osrm_host = get_osrm_host()
     url = f"http://{osrm_host}:{UserData.OSMRport}/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
 
@@ -655,179 +648,179 @@ def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
 
 
 ################################################################################
-def procurar_multiplas_strings_em_arquivo(caminho_arquivo, lista_strings):
-    try:
-        with open(caminho_arquivo, "r", encoding="utf-8") as arquivo:
-            for linha in arquivo:
-                for s in lista_strings:
-                    if s in linha:
-                        return True
-        return False
-    except FileNotFoundError:
-        logger.warning(f"Arquivo não encontrado: {caminho_arquivo}")
-        return False
-    except Exception as e:
-        logger.error(f"Erro ao ler o arquivo: {e}")
-        return False
+# def procurar_multiplas_strings_em_arquivo(caminho_arquivo, lista_strings):
+#     try:
+#         with open(caminho_arquivo, "r", encoding="utf-8") as arquivo:
+#             for linha in arquivo:
+#                 for s in lista_strings:
+#                     if s in linha:
+#                         return True
+#         return False
+#     except FileNotFoundError:
+#         logger.warning(f"Arquivo não encontrado: {caminho_arquivo}")
+#         return False
+#     except Exception as e:
+#         logger.error(f"Erro ao ler o arquivo: {e}")
+#         return False
 
 
 ################################################################################
-def VerificarFalhaServidorOSMR():
-    # TODO: Implement proper log file location if needed
-    # For now, we'll skip file-based error checking
-    logger.debug("Verificando falhas do servidor OSRM")
-    return False
+# def VerificarFalhaServidorOSMR():
+#     # TODO: Implement proper log file location if needed
+#     # For now, we'll skip file-based error checking
+#     logger.debug("Verificando falhas do servidor OSRM")
+#     return False
 
 
 ################################################################################
-def KillProcessByCommand(target_command):
-    """
-    Encerra processos com base em um comando específico.
+# def KillProcessByCommand(target_command):
+#     """
+#     Encerra processos com base em um comando específico.
 
-    :param target_command: Parte do comando que identifica o processo a ser encerrado (string).
-    """
-    found = False  # Para verificar se algum processo foi encontrado
-    for process in psutil.process_iter(attrs=["pid", "name", "cmdline"]):
-        try:
-            # Obtém a linha de comando do processo
-            cmdline = process.info["cmdline"]
-            # Verifica se cmdline não é None e contém o comando alvo
-            if cmdline and target_command in cmdline:
-                logger.info(
-                    f"Matando processo {process.info['name']} (PID: {process.info['pid']})"
-                )
-                process.kill()  # Encerra o processo
-                found = True
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
+#     :param target_command: Parte do comando que identifica o processo a ser encerrado (string).
+#     """
+#     found = False  # Para verificar se algum processo foi encontrado
+#     for process in psutil.process_iter(attrs=["pid", "name", "cmdline"]):
+#         try:
+#             # Obtém a linha de comando do processo
+#             cmdline = process.info["cmdline"]
+#             # Verifica se cmdline não é None e contém o comando alvo
+#             if cmdline and target_command in cmdline:
+#                 logger.info(
+#                     f"Matando processo {process.info['name']} (PID: {process.info['pid']})"
+#                 )
+#                 process.kill()  # Encerra o processo
+#                 found = True
+#         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+#             pass
 
-    if not found:
-        # wLog(f"Nenhum processo encontrado com o comando '{target_command}'.")
-        pass
-    else:
-        # wLog("Processo encerrado com sucesso, se encontrado.")
-        pass
-
-
-################################################################################
-def MataServidorWebRotas():
-    KillProcessByCommand("Server.py")
-    return
+#     if not found:
+#         # wLog(f"Nenhum processo encontrado com o comando '{target_command}'.")
+#         pass
+#     else:
+#         # wLog("Processo encerrado com sucesso, se encontrado.")
+#         pass
 
 
 ################################################################################
-def VerificaArquivosIguais(arquivo_atual, arquivo_backup):
-    # Verifica se ambos os arquivos existem
-    if not os.path.exists(arquivo_atual):
-        logger.warning(f"O arquivo atual '{arquivo_atual}' não existe.")
-        return False
-    if not os.path.exists(arquivo_backup):
-        logger.warning(f"O arquivo backup '{arquivo_backup}' não existe.")
-        return False
+# def MataServidorWebRotas():
+#     KillProcessByCommand("Server.py")
+#     return
 
-    # Compara os arquivos
-    arquivos_sao_iguais = filecmp.cmp(arquivo_atual, arquivo_backup, shallow=False)
-    return arquivos_sao_iguais
+
+################################################################################
+# def VerificaArquivosIguais(arquivo_atual, arquivo_backup):
+#     # Verifica se ambos os arquivos existem
+#     if not os.path.exists(arquivo_atual):
+#         logger.warning(f"O arquivo atual '{arquivo_atual}' não existe.")
+#         return False
+#     if not os.path.exists(arquivo_backup):
+#         logger.warning(f"O arquivo backup '{arquivo_backup}' não existe.")
+#         return False
+
+#     # Compara os arquivos
+#     arquivos_sao_iguais = filecmp.cmp(arquivo_atual, arquivo_backup, shallow=False)
+#     return arquivos_sao_iguais
 
 
 ###########################################################################################################################
-def DeleteOldFilesAndFolders(directory, days=30):
-    """
-    Remove arquivos e pastas (inclusive não vazias) mais antigos que um número específico de dias.
+# def DeleteOldFilesAndFolders(directory, days=30):
+#     """
+#     Remove arquivos e pastas (inclusive não vazias) mais antigos que um número específico de dias.
 
-    Args:
-        directory (str): Caminho para o diretório base.
-        days (int): Número de dias para considerar como o limite. Padrão é 30.
+#     Args:
+#         directory (str): Caminho para o diretório base.
+#         days (int): Número de dias para considerar como o limite. Padrão é 30.
 
-    DeleteOldFilesAndFolders("/caminho/para/seu/diretorio", days=30)
-    """
-    try:
-        # Calcula a data limite
-        now = time.time()
-        cutoff = now - (days * 86400)  # 86400 segundos por dia
+#     DeleteOldFilesAndFolders("/caminho/para/seu/diretorio", days=30)
+#     """
+#     try:
+#         # Calcula a data limite
+#         now = time.time()
+#         cutoff = now - (days * 86400)  # 86400 segundos por dia
 
-        # Itera pelos itens no diretório
-        for filename in os.listdir(directory):
-            item_path = os.path.join(directory, filename)
+#         # Itera pelos itens no diretório
+#         for filename in os.listdir(directory):
+#             item_path = os.path.join(directory, filename)
 
-            # Obtém o tempo de modificação do item
-            item_mtime = os.path.getmtime(item_path)
+#             # Obtém o tempo de modificação do item
+#             item_mtime = os.path.getmtime(item_path)
 
-            # Verifica se é um arquivo
-            if os.path.isfile(item_path) and item_mtime < cutoff:
-                os.remove(item_path)
-                logger.debug(f"Arquivo removido: {item_path}")
+#             # Verifica se é um arquivo
+#             if os.path.isfile(item_path) and item_mtime < cutoff:
+#                 os.remove(item_path)
+#                 logger.debug(f"Arquivo removido: {item_path}")
 
-            # Verifica se é um diretório
-            elif os.path.isdir(item_path) and item_mtime < cutoff:
-                # Remove o diretório e todo o seu conteúdo
-                shutil.rmtree(item_path)  # Remove diretórios e seus conteúdos
-                logger.debug(f"Pasta removida: {item_path}")
-    except Exception as e:
-        logger.error(f"Erro ao processar o diretório: {e}")
-
-
-################################################################################
-def parar_containers_osmr(nome_usuario):
-    try:
-        # Lista os containers com nome
-        podman_ps = subprocess.run(
-            ["podman", "ps", "-a", "--format", "{{.ID}} {{.Names}}"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-
-        linhas = podman_ps.stdout.strip().splitlines()
-        for linha in linhas:
-            container_id, container_name = linha.strip().split(maxsplit=1)
-            # if container_name == f"osmr_{nome_usuario}":
-            if container_name.startswith(f"osmr_{nome_usuario}_"):
-                subprocess.run(
-                    ["podman", "stop", container_id],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                logger.debug(f"Container {container_name} parado.")
-
-    except Exception as e:
-        logger.error(f"Erro ao parar containers: {e}")
+#             # Verifica se é um diretório
+#             elif os.path.isdir(item_path) and item_mtime < cutoff:
+#                 # Remove o diretório e todo o seu conteúdo
+#                 shutil.rmtree(item_path)  # Remove diretórios e seus conteúdos
+#                 logger.debug(f"Pasta removida: {item_path}")
+#     except Exception as e:
+#         logger.error(f"Erro ao processar o diretório: {e}")
 
 
 ################################################################################
-def recreate_temp_folders_osmr():
-    logger.debug("Removendo arquivos osmozis e osmr")
+# def parar_containers_osmr(nome_usuario):
+#     try:
+#         # Lista os containers com nome
+#         podman_ps = subprocess.run(
+#             ["podman", "ps", "-a", "--format", "{{.ID}} {{.Names}}"],
+#             capture_output=True,
+#             text=True,
+#             check=True,
+#         )
 
-    caminhos = [f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.ssid}*"]
+#         linhas = podman_ps.stdout.strip().splitlines()
+#         for linha in linhas:
+#             container_id, container_name = linha.strip().split(maxsplit=1)
+#             # if container_name == f"osmr_{nome_usuario}":
+#             if container_name.startswith(f"osmr_{nome_usuario}_"):
+#                 subprocess.run(
+#                     ["podman", "stop", container_id],
+#                     stdout=subprocess.DEVNULL,
+#                     stderr=subprocess.DEVNULL,
+#                 )
+#                 logger.debug(f"Container {container_name} parado.")
 
-    for caminho in caminhos:
-        for item in glob.glob(caminho, recursive=True):
-            try:
-                if os.path.isfile(item):
-                    os.remove(item)
-                    logger.debug(f"Arquivo removido: {item}")
-                elif os.path.isdir(item):
-                    shutil.rmtree(item)
-                    logger.debug(f"Diretório removido: {item}")
-            except Exception as e:
-                logger.error(f"Erro ao remover {item}: {e}")
+#     except Exception as e:
+#         logger.error(f"Erro ao parar containers: {e}")
 
 
 ################################################################################
-def esperar_container_parar(nome_usuario, timeout=30):
-    for _ in range(timeout):
-        # Verifica se o container ainda está rodando
-        result = subprocess.run(
-            ["podman", "ps", "--filter", f"name={nome_usuario}", "--format", "{{.ID}}"],
-            capture_output=True,
-            text=True,
-        )
-        if not result.stdout.strip():
-            return  # Container finalizou
-        time.sleep(1)
-    raise TimeoutError(
-        f"Container de {nome_usuario} ainda está ativo após {timeout} segundos."
-    )
+# def recreate_temp_folders_osmr():
+#     logger.debug("Removendo arquivos osmozis e osmr")
+
+#     caminhos = [f"../../resources/Osmosis/TempData/exclusion_{wr.UserData.ssid}*"]
+
+#     for caminho in caminhos:
+#         for item in glob.glob(caminho, recursive=True):
+#             try:
+#                 if os.path.isfile(item):
+#                     os.remove(item)
+#                     logger.debug(f"Arquivo removido: {item}")
+#                 elif os.path.isdir(item):
+#                     shutil.rmtree(item)
+#                     logger.debug(f"Diretório removido: {item}")
+#             except Exception as e:
+#                 logger.error(f"Erro ao remover {item}: {e}")
+
+
+################################################################################
+# def esperar_container_parar(nome_usuario, timeout=30):
+#     for _ in range(timeout):
+#         # Verifica se o container ainda está rodando
+#         result = subprocess.run(
+#             ["podman", "ps", "--filter", f"name={nome_usuario}", "--format", "{{.ID}}"],
+#             capture_output=True,
+#             text=True,
+#         )
+#         if not result.stdout.strip():
+#             return  # Container finalizou
+#         time.sleep(1)
+#     raise TimeoutError(
+#         f"Container de {nome_usuario} ainda está ativo após {timeout} segundos."
+#     )
 
 
 ################################################################################

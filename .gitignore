@@ -32,3 +32,4 @@ src/resources/Urbanizacao/Mapa_*.*
 logs/
 logs/main.log
 logs/routing_servers_interface.log
+.env
