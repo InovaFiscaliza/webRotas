@@ -62,13 +62,49 @@ FILES = {
 CACHE = {}
 
 # GitHub release base URL for resources
-GITHUB_RELEASE_URL = "https://github.com/InovaFiscaliza/webRotas/releases/download/resources"
+GITHUB_RELEASE_URL = (
+    "https://github.com/InovaFiscaliza/webRotas/releases/download/resources"
+)
+
+# Define UF codes according to IBGE definitions.
+# see: https://www.ibge.gov.br/explica/codigos-dos-municipios.php
+
+SIGLAS_UF = {
+    "RO": {"CD_UF": "11", "NM_UF": "Rondônia"},
+    "AC": {"CD_UF": "12", "NM_UF": "Acre"},
+    "AM": {"CD_UF": "13", "NM_UF": "Amazonas"},
+    "RR": {"CD_UF": "14", "NM_UF": "Roraima"},
+    "PA": {"CD_UF": "15", "NM_UF": "Pará"},
+    "AP": {"CD_UF": "16", "NM_UF": "Amapá"},
+    "TO": {"CD_UF": "17", "NM_UF": "Tocantins"},
+    "MA": {"CD_UF": "21", "NM_UF": "Maranhão"},
+    "PI": {"CD_UF": "22", "NM_UF": "Piauí"},
+    "CE": {"CD_UF": "23", "NM_UF": "Ceará"},
+    "RN": {"CD_UF": "24", "NM_UF": "Rio Grande do Norte"},
+    "PB": {"CD_UF": "25", "NM_UF": "Paraíba"},
+    "PE": {"CD_UF": "26", "NM_UF": "Pernambuco"},
+    "AL": {"CD_UF": "27", "NM_UF": "Alagoas"},
+    "SE": {"CD_UF": "28", "NM_UF": "Sergipe"},
+    "BA": {"CD_UF": "29", "NM_UF": "Bahia"},
+    "MG": {"CD_UF": "31", "NM_UF": "Minas Gerais"},
+    "ES": {"CD_UF": "32", "NM_UF": "Espírito Santo"},
+    "RJ": {"CD_UF": "33", "NM_UF": "Rio de Janeiro"},
+    "SP": {"CD_UF": "35", "NM_UF": "São Paulo"},
+    "PR": {"CD_UF": "41", "NM_UF": "Paraná"},
+    "SC": {"CD_UF": "42", "NM_UF": "Santa Catarina"},
+    "RS": {"CD_UF": "43", "NM_UF": "Rio Grande do Sul"},
+    "MS": {"CD_UF": "50", "NM_UF": "Mato Grosso do Sul"},
+    "MT": {"CD_UF": "51", "NM_UF": "Mato Grosso"},
+    "GO": {"CD_UF": "52", "NM_UF": "Goiás"},
+    "DF": {"CD_UF": "53", "NM_UF": "Distrito Federal"},
+    "BR": {"CD_UF": "99", "NM_UF": "Brasil"},
+}
 
 
 def _ensure_resources_dir():
     """
     Ensures that the resources directory exists.
-    
+
     :return: Path to the resources directory
     """
     resources_dir = PATH_MODULE / "resources"
@@ -79,7 +115,7 @@ def _ensure_resources_dir():
 def _download_file(url: str, destination: Path, chunk_size: int = 8192) -> bool:
     """
     Downloads a file from a URL to a destination path with progress reporting.
-    
+
     :param url: URL to download from
     :param destination: Path where the file will be saved
     :param chunk_size: Size of chunks to download at a time
@@ -88,21 +124,21 @@ def _download_file(url: str, destination: Path, chunk_size: int = 8192) -> bool:
     try:
         print(f"[webRotas] Downloading {url}...")
         with urllib.request.urlopen(url) as response:
-            total_size = int(response.headers.get('content-length', 0))
+            total_size = int(response.headers.get("content-length", 0))
             downloaded = 0
-            
-            with open(destination, 'wb') as out_file:
+
+            with open(destination, "wb") as out_file:
                 while True:
                     chunk = response.read(chunk_size)
                     if not chunk:
                         break
                     out_file.write(chunk)
                     downloaded += len(chunk)
-                    
+
                     if total_size > 0:
                         progress = (downloaded / total_size) * 100
-                        print(f"[webRotas] Progress: {progress:.1f}%", end='\r')
-            
+                        print(f"[webRotas] Progress: {progress:.1f}%", end="\r")
+
             if total_size > 0:
                 print()  # New line after progress
         print(f"[webRotas] Successfully downloaded {destination.name}")
@@ -118,31 +154,31 @@ def _download_file(url: str, destination: Path, chunk_size: int = 8192) -> bool:
 def ensure_shapefile_exists(file_type: str) -> bool:
     """
     Ensures that a shapefile exists, downloading it if necessary.
-    
+
     :param file_type: Type of file (must be a key in FILES dict)
     :return: True if file exists after this call, False if download failed
     :raises ValueError: If file_type is invalid
     """
     if file_type not in FILES:
         raise ValueError(f'Invalid geofile type "{file_type}"')
-    
+
     file_path = FILES[file_type]
-    
+
     # If file already exists, we're done
     if file_path.exists():
         print(f"[webRotas] {file_type} already exists at {file_path}")
         return True
-    
+
     # Ensure resources directory exists
     _ensure_resources_dir()
-    
+
     # Construct download URL
     filename = file_path.name
     download_url = f"{GITHUB_RELEASE_URL}/{filename}"
-    
+
     # Download the file
     success = _download_file(download_url, file_path)
-    
+
     if success and file_path.exists():
         return True
     else:
@@ -153,16 +189,16 @@ def ensure_shapefile_exists(file_type: str) -> bool:
 def ensure_all_shapefiles() -> bool:
     """
     Ensures that all required shapefiles exist, downloading any missing ones.
-    
+
     :return: True if all files exist, False if any download failed
     """
     print("[webRotas] Checking shapefile availability...")
     all_exist = True
-    
+
     for file_type in FILES:
         if not ensure_shapefile_exists(file_type):
             all_exist = False
-    
+
     return all_exist
 
 
@@ -184,7 +220,7 @@ try:
     # Ensure all shapefiles exist (download if necessary)
     if not ensure_all_shapefiles():
         print("[webRotas] Warning: Some shapefiles could not be downloaded")
-    
+
     # Preload the shapefiles
     for f in FILES:
         start = time.perf_counter()
@@ -357,7 +393,7 @@ def get_bounding_box_from_states(estados_siglas: list) -> list:
     gdf = read_file("locationLimits")
 
     # Obtém os códigos dos estados a partir das siglas
-    codigos_uf = [uf.SIGLAS_UF[sigla]["CD_UF"] for sigla in estados_siglas]
+    codigos_uf = [SIGLAS_UF[sigla]["CD_UF"] for sigla in estados_siglas]
 
     # Filtra os municípios dos estados desejados
     gdf_filtrado = gdf[gdf["CD_UF"].isin(codigos_uf)]
@@ -396,7 +432,7 @@ def GetBoundMunicipio(nome_municipio: str, estado_sigla: str) -> list:
     # Filtrar município e estado
     municipio = gdf[
         (gdf["NM_MUN"] == nome_municipio)
-        & (gdf["CD_UF"] == uf.SIGLAS_UF[estado_sigla]["CD_UF"])
+        & (gdf["CD_UF"] == SIGLAS_UF[estado_sigla]["CD_UF"])
     ]
 
     if municipio.empty:
@@ -474,7 +510,7 @@ def FiltrarAreasUrbanizadasPorMunicipio(municipio_nome: str, estado_sigla: str) 
     # Filtrar o município pelo nome e estado
     municipio_filtrado = gdf_municipios[
         (gdf_municipios["NM_MUN"] == municipio_nome)
-        & (gdf_municipios["CD_UF"] == uf.SIGLAS_UF[estado_sigla]["CD_UF"])
+        & (gdf_municipios["CD_UF"] == SIGLAS_UF[estado_sigla]["CD_UF"])
     ]
 
     # Garantir que os sistemas de coordenadas (CRS) são os mesmos
@@ -537,7 +573,7 @@ def ObterMunicipiosNoBoundingBox(bounding_box: tuple) -> list:
         nome = row["NM_MUN"]
         codigo_uf = row["CD_UF"]
         sigla_uf = None
-        for uf_sigla, dados in uf.SIGLAS_UF.items():
+        for uf_sigla, dados in SIGLAS_UF.items():
             if dados["CD_UF"] == codigo_uf:
                 sigla_uf = uf_sigla
                 break
@@ -582,7 +618,7 @@ def ObterMunicipiosNoBoundingBoxOrdenados(bounding_box: tuple) -> list:
         nome = row["NM_MUN"]
         codigo_uf = row["CD_UF"]
         sigla_uf = None
-        for uf_sigla, dados in uf.SIGLAS_UF.items():
+        for uf_sigla, dados in SIGLAS_UF.items():
             if dados["CD_UF"] == codigo_uf:
                 sigla_uf = uf_sigla
                 break
