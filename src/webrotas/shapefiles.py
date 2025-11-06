@@ -44,7 +44,6 @@ import time
 import urllib.request
 import urllib.error
 
-import webrotas.uf_code as uf
 
 # -----------------------------------------------------------------------------------#
 PATH_MODULE = Path(__file__).parents[2]

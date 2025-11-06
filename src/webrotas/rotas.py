@@ -7,22 +7,16 @@ from shapely.ops import unary_union
 
 import webrotas.cache.bounding_boxes as cb
 import webrotas.regions as rg
-import webrotas.shape_files as sf
+import webrotas.shapefiles as sf
 from webrotas import api_elevation, api_routing
 
 
-# -----------------------------------------------------------------------------------#
-## <Compatibilidade com "routing_servers_interface.py">
 @dataclass
 class UserData:
     OSMRport: int = 5000
     ssid: str | None = None
 
 
-## </Compatibilidade com "routing_servers_interface.py">
-
-
-# -----------------------------------------------------------------------------------#
 def osrm_shortest(
     current_request,
     session_id,

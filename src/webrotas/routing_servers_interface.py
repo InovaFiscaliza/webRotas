@@ -56,7 +56,6 @@ import webrotas.cache.bounding_boxes as cb
 import webrotas.regions as rg
 import webrotas.shape_files as sf
 from webrotas.config.logging_config import get_logger
-from webrotas.config.server_hosts import get_webrotas_host
 
 # Configure logging
 logger = get_logger(__name__)

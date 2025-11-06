@@ -5,10 +5,10 @@ from typing import List, Tuple, Iterable
 import requests
 from geopy.distance import geodesic
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
-from webrotas.routing_servers_interface import PreparaServidorRoteamento, UserData
+from webrotas.routing_servers_interface import PreparaServidorRoteamento
 from webrotas.config.logging_config import get_logger
 from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
-from webrotas.config.server_hosts import get_osrm_host, get_osrm_url
+from webrotas.config.server_hosts import get_osrm_host
 
 # Initialize logging at module level
 logger = get_logger(__name__)
@@ -159,7 +159,7 @@ def is_port_available(host=None, port=5000, timeout=10):
     """
     if host is None:
         host = get_osrm_host()
-    
+
     try:
         # First check if port is open
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:

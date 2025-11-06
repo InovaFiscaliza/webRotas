@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-from typing import Optional
 import webrotas.port_test as pt
 
 # Module directory (where this file is located)
