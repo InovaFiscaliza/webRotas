@@ -296,27 +296,6 @@ def calculate_optimal_route(
     return _format_route_output(route_json, ordered_coords)
 
 
-def calculate_optimal_route(
-    origin, waypoints, criterion: str = "distance", avoid_zones: Iterable | None = None
-):
-    """
-    Legacy wrapper for calculate_optimal_route.
-
-    Maintained for backward compatibility. Use calculate_optimal_route() for new code.
-
-    Args:
-        origin: Starting coordinate dict with 'lat' and 'lng' keys
-        waypoints: List of waypoint coordinate dicts
-        criterion: Optimization criterion ('distance' or 'duration', default: 'distance')
-        avoid_zones: Optional iterable of avoidance zones
-
-    Returns:
-        tuple: (origin, waypoints, paths, duration_hms, distance_km)
-    """
-    return calculate_optimal_route(origin, waypoints, criterion, avoid_zones)
-
-
-# -----------------------------------------------------------------------------------#
 def get_osrm_matrix(coords):
     coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
 
