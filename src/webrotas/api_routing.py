@@ -21,6 +21,8 @@ URL = {
     "route": lambda coord_str: f"http://router.project-osrm.org/route/v1/driving/{coord_str}?overview=full&geometries=geojson",
 }
 
+TEST_ROUTE = "/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
+
 
 @dataclass
 class UserData:
@@ -29,105 +31,214 @@ class UserData:
 
 
 # -----------------------------------------------------------------------------------#
-def controller(
-    origin, waypoints, criterion: str = "distance", avoid_zones: Iterable | None = None
-):
-    coords = [origin] + waypoints
-    use_container = False
+def compute_distance_and_duration_matrices(coords, avoid_zones: Iterable | None = None):
+    """
+    Retrieve distance and duration matrices using fallback strategy.
 
-    # Check if we should use local container due to limitations
+    Attempts to fetch routing matrices in this order:
+    1. Local container (if many points or avoidance zones present)
+    2. Public OSRM API
+    3. Iterative matrix builder (for large datasets)
+    4. Geodesic fallback (as last resort)
+
+    Args:
+        coords: List of coordinate dicts with 'lat' and 'lng' keys
+        avoid_zones: Optional iterable of avoidance zones
+
+    Returns:
+        tuple: (distances, durations) matrices
+    """
+    use_container = _should_use_local_container(coords, avoid_zones)
+
+    if use_container:
+        return _get_matrix_with_local_container_priority(coords, avoid_zones)
+    else:
+        return _get_matrix_with_public_api_priority(coords)
+
+
+def _should_use_local_container(coords, avoid_zones: Iterable | None = None) -> bool:
+    """
+    Determine if local container should be used for routing.
+
+    Local container is preferred when:
+    - More than 100 points (exceeds public API limits)
+    - Avoidance zones are present (require local processing)
+
+    Args:
+        coords: List of coordinates
+        avoid_zones: Optional iterable of avoidance zones
+
+    Returns:
+        bool: True if local container should be used
+    """
     if len(coords) > 100:
         logger.info(
             f"Too many points ({len(coords)}), using local container or iterative matrix"
         )
-        use_container = True
+        return True
 
     if avoid_zones is not None and len(avoid_zones) > 0:
         logger.info(
             f"Exclusion zones present ({len(avoid_zones)}), using local container"
         )
-        use_container = True
+        return True
 
-    if use_container:
-        # Use local container directly
-        try:
-            distances, durations = get_osrm_matrix_from_local_container(coords)
-        except Exception as e:
-            if avoid_zones is None:
-                logger.error(
-                    f"Local container failed: {e}. 🟢 NO Avoidance Zones Present. Trying iterative matrix builder",
-                    exc_info=True,
-                )
-                try:
-                    distances, durations = get_osrm_matrix_iterative(coords)
-                except Exception as iterative_e:
-                    logger.warning(
-                        f"Iterative matrix builder also failed: {iterative_e}. Using geodesic calculation"
-                    )
-                    distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
+    return False
 
-            else:
-                logger.error(
-                    f"Local container failed: {e}. 🚫 Avoidance Zones present. Using geodesic calculation",
-                    exc_info=True,
-                )
-                distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
-    else:
-        # Try public API first
-        try:
-            distances, durations = get_osrm_matrix(coords)
-        except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+
+def _get_matrix_with_local_container_priority(coords, avoid_zones):
+    """
+    Attempt to retrieve matrix starting with local container.
+
+    Fallback chain:
+    1. Local OSRM container
+    2. Iterative matrix builder (if no avoidance zones)
+    3. Geodesic calculation
+
+    Args:
+        coords: List of coordinates
+        avoid_zones: Optional iterable of avoidance zones
+
+    Returns:
+        tuple: (distances, durations) matrices
+    """
+    try:
+        return get_osrm_matrix_from_local_container(coords)
+    except Exception as e:
+        if avoid_zones is None:
             logger.error(
-                f"Public API failed: {e}. Trying local container", exc_info=True
+                f"Local container failed: {e}. 🟢 NO Avoidance Zones Present. Trying iterative matrix builder",
+                exc_info=True,
             )
             try:
-                distances, durations = get_osrm_matrix_from_local_container(coords)
-            except Exception as container_e:
+                return get_osrm_matrix_iterative(coords)
+            except Exception as iterative_e:
                 logger.warning(
-                    f"Local container also failed: {container_e}. Trying iterative matrix builder"
+                    f"Iterative matrix builder also failed: {iterative_e}. Using geodesic calculation"
                 )
-                try:
-                    distances, durations = get_osrm_matrix_iterative(coords)
-                except Exception as iterative_e:
-                    logger.warning(
-                        f"Iterative matrix builder also failed: {iterative_e}. Using geodesic calculation"
-                    )
-                    distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
+                return get_geodesic_matrix(coords, speed_kmh=40)
+        else:
+            logger.error(
+                f"Local container failed: {e}. 🚫 Avoidance Zones present. Using geodesic calculation",
+                exc_info=True,
+            )
+            return get_geodesic_matrix(coords, speed_kmh=40)
 
+
+def _get_matrix_with_public_api_priority(coords):
+    """
+    Attempt to retrieve matrix starting with public OSRM API.
+
+    Fallback chain:
+    1. Public OSRM API
+    2. Local OSRM container
+    3. Iterative matrix builder
+    4. Geodesic calculation
+
+    Args:
+        coords: List of coordinates
+
+    Returns:
+        tuple: (distances, durations) matrices
+    """
+    try:
+        return get_osrm_matrix(coords)
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+        logger.error(f"Public API failed: {e}. Trying local container", exc_info=True)
+        try:
+            return get_osrm_matrix_from_local_container(coords)
+        except Exception as container_e:
+            logger.warning(
+                f"Local container also failed: {container_e}. Trying iterative matrix builder"
+            )
+            try:
+                return get_osrm_matrix_iterative(coords)
+            except Exception as iterative_e:
+                logger.warning(
+                    f"Iterative matrix builder also failed: {iterative_e}. Using geodesic calculation"
+                )
+                return get_geodesic_matrix(coords, speed_kmh=40)
+
+
+def _ensure_valid_matrices(coords, distances, durations):
+    """
+    Validate and repair distance/duration matrices.
+
+    Performs validation checks and attempts to fix invalid pairs using geodesic calculation.
+    If validation fails completely, falls back to full geodesic calculation.
+
+    Args:
+        coords: List of coordinates
+        distances: Distance matrix
+        durations: Duration matrix
+
+    Returns:
+        tuple: (distances, durations) valid matrices
+    """
     mat = validate_matrix(coords, distances, durations)
 
     if mat is None:
         logger.error("Matrix validation failed, falling back to geodesic calculation")
-        distances, durations = get_geodesic_matrix(coords, speed_kmh=40)
-    else:
-        distances, durations, invalid_pairs = mat
-        if invalid_pairs:
-            # Invalid pairs found, only calculate geodesic for those
-            logger.warning(
-                f"Found {len(invalid_pairs)} invalid pairs, calculating geodesic only for those"
-            )
+        return get_geodesic_matrix(coords, speed_kmh=40)
 
-            geodesic_distances, geodesic_durations = get_geodesic_matrix(
-                coords, speed_kmh=40, invalid_pairs=invalid_pairs
-            )
+    distances, durations, invalid_pairs = mat
+    if invalid_pairs:
+        # Only calculate geodesic for invalid pairs
+        logger.warning(
+            f"Found {len(invalid_pairs)} invalid pairs, calculating geodesic only for those"
+        )
+        geodesic_distances, geodesic_durations = get_geodesic_matrix(
+            coords, speed_kmh=40, invalid_pairs=invalid_pairs
+        )
+        # Merge geodesic values into existing matrices
+        for ii, jj in invalid_pairs:
+            distances[ii][jj] = geodesic_distances[ii][jj]
+            durations[ii][jj] = geodesic_durations[ii][jj]
 
-            # Merge geodesic values into the existing matrices
-            for ii, jj in invalid_pairs:
-                distances[ii][jj] = geodesic_distances[ii][jj]
-                durations[ii][jj] = geodesic_durations[ii][jj]
+    return distances, durations
 
+
+def _calculate_route_order(coords, distances, durations, criterion: str = "distance"):
+    """
+    Calculate optimal waypoint visitation order using TSP.
+
+    Solves the open Traveling Salesman Problem based on the specified criterion.
+    If criterion is invalid, returns natural order (no optimization).
+
+    Args:
+        coords: List of coordinates (unused but kept for consistency)
+        distances: Distance matrix
+        durations: Duration matrix
+        criterion: Optimization criterion ('distance' or 'duration')
+
+    Returns:
+        list: Indices representing optimal visitation order
+    """
     if criterion in ["distance", "duration"]:
         matrix = distances if criterion == "distance" else durations
-        order = solve_open_tsp_from_matrix(matrix)
+        return solve_open_tsp_from_matrix(matrix)
     else:
-        order = list(range(len(coords)))
+        logger.warning(f"Unknown criterion '{criterion}', using natural order")
+        return list(range(len(coords)))
 
-    route_json, ordered_coords = get_osrm_route(coords, order)
+
+def _format_route_output(route_json, ordered_coords):
+    """
+    Extract and format route output from OSRM response.
+
+    Reverses path coordinates and formats duration and distance for display.
+
+    Args:
+        route_json: OSRM route response
+        ordered_coords: Ordered list of coordinates
+
+    Returns:
+        tuple: (origin, waypoints, paths, duration_str, distance_str)
+    """
     paths = [
         list(reversed(path))
         for path in route_json["routes"][0]["geometry"]["coordinates"]
     ]
-
     estimated_sec = route_json["routes"][0]["duration"]
     estimated_m = route_json["routes"][0]["distance"]
 
@@ -138,6 +249,71 @@ def controller(
         seconds_to_hms(estimated_sec),
         f"{round(estimated_m / 1000, 1)} km",
     )
+
+
+def calculate_optimal_route(
+    origin, waypoints, criterion: str = "distance", avoid_zones: Iterable | None = None
+):
+    """
+    Calculate optimal route visiting origin and waypoints.
+
+    This is the main entry point for route optimization. It orchestrates:
+    1. Matrix retrieval with intelligent fallback strategy
+    2. Matrix validation and repair
+    3. TSP solving for waypoint order optimization
+    4. OSRM route calculation
+    5. Output formatting
+
+    Args:
+        origin: Starting coordinate dict with 'lat' and 'lng' keys
+        waypoints: List of waypoint coordinate dicts
+        criterion: Optimization criterion ('distance' or 'duration', default: 'distance')
+        avoid_zones: Optional iterable of avoidance zones
+
+    Returns:
+        tuple: (origin, waypoints, paths, duration_hms, distance_km)
+            - origin: First waypoint coordinate
+            - waypoints: Remaining optimized waypoint coordinates
+            - paths: Route geometry paths
+            - duration_hms: Formatted duration (HH:MM:SS)
+            - distance_km: Formatted distance (km)
+    """
+    coords = [origin] + waypoints
+
+    # Retrieve distance/duration matrices with fallback strategy
+    distances, durations = compute_distance_and_duration_matrices(coords, avoid_zones)
+
+    # Validate and repair matrices
+    distances, durations = _ensure_valid_matrices(coords, distances, durations)
+
+    # Calculate optimal waypoint order
+    order = _calculate_route_order(coords, distances, durations, criterion)
+
+    # Get route geometry from OSRM
+    route_json, ordered_coords = get_osrm_route(coords, order)
+
+    # Format and return output
+    return _format_route_output(route_json, ordered_coords)
+
+
+def calculate_optimal_route(
+    origin, waypoints, criterion: str = "distance", avoid_zones: Iterable | None = None
+):
+    """
+    Legacy wrapper for calculate_optimal_route.
+
+    Maintained for backward compatibility. Use calculate_optimal_route() for new code.
+
+    Args:
+        origin: Starting coordinate dict with 'lat' and 'lng' keys
+        waypoints: List of waypoint coordinate dicts
+        criterion: Optimization criterion ('distance' or 'duration', default: 'distance')
+        avoid_zones: Optional iterable of avoidance zones
+
+    Returns:
+        tuple: (origin, waypoints, paths, duration_hms, distance_km)
+    """
+    return calculate_optimal_route(origin, waypoints, criterion, avoid_zones)
 
 
 # -----------------------------------------------------------------------------------#
@@ -175,12 +351,12 @@ def is_port_available(host=None, port=5000, timeout=10):
             if result != 0:
                 # Port is not open
                 return False
-        return True
 
-        # TODO: Fix this logic
         # Port is open, now check if OSRM is responding
         try:
-            response = requests.get(f"http://{host}:{port}/health", timeout=timeout)
+            response = requests.get(
+                f"http://{host}:{port}{TEST_ROUTE}", timeout=timeout
+            )
             return response.status_code == 200
         except requests.exceptions.RequestException:
             # Port is open but OSRM is not responding properly
@@ -211,6 +387,32 @@ def get_osrm_matrix_iterative(coords):
     logger.info(f"Using iterative matrix builder for {len(coords)} coordinates")
     builder = IterativeMatrixBuilder(coords)
     return builder.build()
+
+
+def compute_bounding_box(coords):
+    """Calculate bounding box with padding for routing"""
+    lats = [c["lat"] for c in coords]
+    lngs = [c["lng"] for c in coords]
+
+    lat_min, lat_max = min(lats), max(lats)
+    lng_min, lng_max = min(lngs), max(lngs)
+
+    # Add padding for routing (50km as in web_rotas.py)
+    padding_km = 50
+    lat_diff = padding_km / 111.0  # Approximately 1 degree = 111 km
+    lng_diff = padding_km / (111.0 * math.cos(math.radians((lat_min + lat_max) / 2)))
+
+    lat_min = round(lat_min - lat_diff, 6)
+    lat_max = round(lat_max + lat_diff, 6)
+    lng_min = round(lng_min - lng_diff, 6)
+    lng_max = round(lng_max + lng_diff, 6)
+
+    return [
+        [lat_max, lng_min],
+        [lat_max, lng_max],
+        [lat_min, lng_max],
+        [lat_min, lng_min],
+    ]
 
 
 # -----------------------------------------------------------------------------------#
@@ -252,34 +454,9 @@ def get_osrm_matrix_from_local_container(coords):
         if not coords or len(coords) < 2:
             raise ValueError("Need at least 2 coordinates for routing")
 
-        # Calculate bounding box with padding for routing
-        lats = [c["lat"] for c in coords]
-        lngs = [c["lng"] for c in coords]
-
-        lat_min, lat_max = min(lats), max(lats)
-        lng_min, lng_max = min(lngs), max(lngs)
-
-        # Add padding for routing (50km as in web_rotas.py)
-        padding_km = 50
-        lat_diff = padding_km / 111.0  # Approximately 1 degree = 111 km
-        lng_diff = padding_km / (
-            111.0 * math.cos(math.radians((lat_min + lat_max) / 2))
-        )
-
-        lat_min -= lat_diff
-        lat_max += lat_diff
-        lng_min -= lng_diff
-        lng_max += lng_diff
-
-        # Create routing area for container management
-        bounding_box = [
-            [lat_max, lng_min],
-            [lat_max, lng_max],
-            [lat_min, lng_max],
-            [lat_min, lng_min],
+        routing_area = [
+            {"name": "boundingBoxRegion", "coord": compute_bounding_box(coords)}
         ]
-
-        routing_area = [{"name": "boundingBoxRegion", "coord": bounding_box}]
 
         # Set up user data for container interface
         if not hasattr(UserData, "ssid") or UserData.ssid is None:
@@ -289,10 +466,6 @@ def get_osrm_matrix_from_local_container(coords):
 
         # Try to prepare the routing server
         PreparaServidorRoteamento(routing_area)
-
-        # Check if server is running
-        if not UserData.OSMRport:
-            raise Exception("Failed to start OSRM container - no port assigned")
 
         # Make request to local container
         coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
@@ -510,5 +683,5 @@ if __name__ == "__main__":
         {"lat": -23.55130, "lng": -46.57944},
     ]
 
-    result = controller(origin, waypoints)
+    result = calculate_optimal_route(origin, waypoints)
     print(result)
