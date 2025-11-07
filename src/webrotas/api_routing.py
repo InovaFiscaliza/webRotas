@@ -191,9 +191,9 @@ def _ensure_valid_matrices(coords, distances, durations):
             coords, speed_kmh=40, invalid_pairs=invalid_pairs
         )
         # Merge geodesic values into existing matrices
-        for ii, jj in invalid_pairs:
-            distances[ii][jj] = geodesic_distances[ii][jj]
-            durations[ii][jj] = geodesic_durations[ii][jj]
+        for i, j in invalid_pairs:
+            distances[i][j] = geodesic_distances[i][j]
+            durations[i][j] = geodesic_durations[i][j]
 
     return distances, durations
 
@@ -557,29 +557,35 @@ def get_osrm_route(coords, order):
     ordered = [coords[ii] for ii in order]
     coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
 
-    # Try public API first
-    try:
-        if len(ordered) > 100:
-            raise ValueError("Too many points for public API")
-
-        req = requests.get(URL["route"](coord_str), timeout=10)
-        req.raise_for_status()
-        data = req.json()
-    except (requests.exceptions.RequestException, ValueError) as e:
-        logger.warning(f"Public route API failed: {e}. Trying local container")
-    # Try local container
+    # Try local container first (priority order as requested)
     try:
         if not UserData.OSMRport:
             raise Exception("No local OSRM container available")
 
         osrm_host = get_osrm_host()
         local_url = f"http://{osrm_host}:{UserData.OSMRport}/route/v1/driving/{coord_str}?overview=full&geometries=geojson"
+        logger.info(f"Attempting local container route: {osrm_host}:{UserData.OSMRport}")
         req = requests.get(local_url, timeout=30)
         req.raise_for_status()
         data = req.json()
+        logger.info("Successfully retrieved route from local container")
+        return data, ordered
     except Exception as container_e:
-        logger.error(f"Local container route also failed: {container_e}")
-        # Return a minimal valid response structure
+        logger.warning(f"Local container route failed: {container_e}. Trying public API")
+
+    # Try public API if local container failed or if too many points
+    try:
+        if len(ordered) > 100:
+            raise ValueError("Too many points for public API")
+
+        logger.info(f"Attempting public API route for {len(ordered)} points")
+        req = requests.get(URL["route"](coord_str), timeout=10)
+        req.raise_for_status()
+        data = req.json()
+        logger.info("Successfully retrieved route from public API")
+    except (requests.exceptions.RequestException, ValueError) as e:
+        logger.error(f"Public route API failed: {e}. Using fallback response")
+        # Fallback: return a minimal valid response structure
         data = {
             "routes": [
                 {
