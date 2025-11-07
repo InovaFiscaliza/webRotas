@@ -8,7 +8,8 @@ from shapely.ops import unary_union
 import webrotas.cache.bounding_boxes as cb
 import webrotas.regions as rg
 import webrotas.shapefiles as sf
-from webrotas import api_elevation, api_routing
+from webrotas.api_routing import compute_bounding_box, calculate_optimal_route
+from webrotas.api_elevation import enrich_waypoints_with_elevation
 
 
 @dataclass
@@ -33,9 +34,10 @@ def osrm_shortest(
     # si.PreparaServidorRoteamento(routing_area)
 
     origin, waypoints, paths, estimated_time, estimated_distance = (
-        api_routing.controller(origin, waypoints, criterion, avoid_zones)
+        calculate_optimal_route(origin, waypoints, criterion, avoid_zones)
     )
-    origin, waypoints = api_elevation.controller(origin, waypoints)
+
+    origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
     current_request.update(
         {
@@ -68,7 +70,6 @@ def osrm_circle(
     avoid_zones,
     criterion,
 ):
-    ## <Função escopo local> ##
     def generate_waypoints_in_radius(center_point, radius_km, total_waypoints):
         R = 6371.0
         waypoints = []
@@ -100,8 +101,6 @@ def osrm_circle(
 
         return waypoints
 
-    ## </Função escopo local> ##
-
     waypoints = generate_waypoints_in_radius(center_point, radius_km, total_waypoints)
     osrm_shortest(
         current_request, session_id, origin, waypoints, avoid_zones, criterion
@@ -120,7 +119,6 @@ def osrm_grid(
     avoid_zones,
     criterion,
 ):
-    ## <Função escopo local> ##
     def generate_waypoints_in_city(
         city_boundaries: list, avoid_zones: list, point_distance: int
     ) -> list:
@@ -177,8 +175,6 @@ def osrm_grid(
             )
         return waypoints
 
-    ## </Função escopo local> ##
-
     location_limits, location_urban_areas = get_areas_urbanas_cache(city, state)
 
     match scope:
@@ -222,9 +218,9 @@ def osrm_ordered(
     routing_area = []  # PENDENTE
 
     origin, waypoints, paths, estimated_time, estimated_distance = (
-        api_routing.controller(origin, waypoints, criterion, avoid_zones)
+        calculate_optimal_route(origin, waypoints, criterion, avoid_zones)
     )
-    origin, waypoints = api_elevation.controller(origin, waypoints)
+    origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
     current_request.update(
         {
@@ -243,42 +239,9 @@ def osrm_ordered(
     )
 
 
-# -----------------------------------------------------------------------------------#
 def compute_routing_area(avoid_zones, origin, waypoints):
-    ## <Função escopo local> ##
-    def compute_bounding_box(origin, waypoints, padding_km=50):
-        points = waypoints + [origin]
-        lat_min = min(point["lat"] for point in points)
-        lat_max = max(point["lat"] for point in points)
-        lng_min = min(point["lng"] for point in points)
-        lng_max = max(point["lng"] for point in points)
-
-        lat_diff = padding_km / 111.0
-        lng_diff = padding_km / (
-            111.0 * math.cos(math.radians((lat_min + lat_max) / 2))
-        )
-
-        lat_min -= lat_diff
-        lat_max += lat_diff
-        lng_min -= lng_diff
-        lng_max += lng_diff
-
-        return (
-            round(lat_min, 6),
-            round(lat_max, 6),
-            round(lng_min, 6),
-            round(lng_max, 6),
-        )
-
-    ## </Função escopo local> ##
-
-    lat_min, lat_max, lng_min, lng_max = compute_bounding_box(origin, waypoints)
-    bounding_box = [
-        [lat_max, lng_min],
-        [lat_max, lng_max],
-        [lat_min, lng_max],
-        [lat_min, lng_min],
-    ]
+    coords = [origin] + waypoints
+    bounding_box = compute_bounding_box(coords)
 
     routing_area = [{"name": "boundingBoxRegion", "coord": bounding_box}]
 

@@ -29,7 +29,7 @@ def test_basic_routing():
     ]
 
     try:
-        result = api_routing.controller(origin, waypoints, "distance")
+        result = api_routing.calculate_optimal_route(origin, waypoints, "distance")
         print("✅ Basic routing successful")
         print(f"   Origin: {result[0]}")
         print(f"   Waypoints: {len(result[1])}")
@@ -55,7 +55,7 @@ def test_many_points_routing():
         waypoints.append({"lat": lat, "lng": lng, "description": f"Point {i + 1}"})
 
     try:
-        result = api_routing.controller(origin, waypoints, "distance")
+        result = api_routing.calculate_optimal_route(origin, waypoints, "distance")
         print("✅ Many points routing successful")
         print(f"   Origin: {result[0]}")
         print(f"   Waypoints: {len(result[1])}")
@@ -92,7 +92,9 @@ def test_exclusion_zones_routing():
     ]
 
     try:
-        result = api_routing.controller(origin, waypoints, "distance", avoid_zones)
+        result = api_routing.calculate_optimal_route(
+            origin, waypoints, "distance", avoid_zones
+        )
         print("✅ Exclusion zones routing successful")
         print(f"   Origin: {result[0]}")
         print(f"   Waypoints: {len(result[1])}")

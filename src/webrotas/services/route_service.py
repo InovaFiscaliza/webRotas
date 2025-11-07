@@ -1,7 +1,7 @@
 """Route processing service - extracted controller logic"""
 
 from typing import Dict, Any
-import webrotas.web_rotas as web_rotas
+from webrotas.rotas import osrm_circle, osrm_grid, osrm_ordered, osrm_shortest
 from webrotas.route_request_manager import RouteRequestManager as rrm
 from webrotas.core.exceptions import ProcessingError
 
@@ -43,7 +43,7 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
         # Route processing based on type
         match request_type:
             case "shortest":
-                web_rotas.osrm_shortest(
+                osrm_shortest(
                     current_request,
                     session_id,
                     origin,
@@ -52,7 +52,7 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
                     criterion,
                 )
             case "circle":
-                web_rotas.osrm_circle(
+                osrm_circle(
                     current_request,
                     session_id,
                     origin,
@@ -63,7 +63,7 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
                     criterion,
                 )
             case "grid":
-                web_rotas.osrm_grid(
+                osrm_grid(
                     current_request,
                     session_id,
                     origin,
@@ -75,7 +75,7 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
                     criterion,
                 )
             case "ordered":
-                web_rotas.osrm_ordered(
+                osrm_ordered(
                     current_request,
                     session_id,
                     origin,

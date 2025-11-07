@@ -60,7 +60,8 @@ import atexit
 import signal
 import time
 
-import webrotas.project_folders as pf
+
+from webrotas.config.constants import OSMR_PATH_CACHE
 import webrotas.regions as rg
 from webrotas.config.logging_config import get_logger
 
@@ -76,7 +77,7 @@ class CacheBoundingBox:
         self.areas_urbanas = pl.PolylineCache()
         self.cache = {}
         self.ultimaregiao = None
-        self.cache_file = Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.bin.gz"
+        self.cache_file = Path(OSMR_PATH_CACHE) / "cache_boundingbox.bin.gz"
         self._save_timer = None
         self._debounce_delay = 4  # segundos
         self._lock = threading.Lock()
@@ -247,7 +248,7 @@ class CacheBoundingBox:
         chave = self._hash_bbox(regioes)
         dir = self.cache.get(chave, None)["diretorio"]
         if dir:
-            self.remover_item_disco(Path(pf.OSMR_PATH_CACHE_DATA) / dir)
+            self.remover_item_disco(Path(OSMR_PATH_CACHE) / dir)
         if chave in self.cache:
             del self.cache[chave]
             self._save_to_disk_sync()
@@ -283,7 +284,7 @@ class CacheBoundingBox:
             # print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
             return
 
-        diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / diretorio_rel
+        diretorio = Path(OSMR_PATH_CACHE) / diretorio_rel
         diretorio.mkdir(parents=True, exist_ok=True)
 
         route_data = self.route_cache.cache.get(chave)
@@ -341,7 +342,7 @@ class CacheBoundingBox:
         """
         # print(f"Cache contém {len(self.cache)} entradas")
         for chave, dados in self.cache.items():
-            diretorio = Path(pf.OSMR_PATH_CACHE_DATA) / dados.get("diretorio")
+            diretorio = Path(OSMR_PATH_CACHE) / dados.get("diretorio")
 
             if not diretorio:
                 # print(f"[AVISO] Chave '{chave}' não possui diretório definido. Pulando...")
@@ -401,7 +402,7 @@ class CacheBoundingBox:
 
             # Exporta a planilha ZIP
             self.exportar_cache_para_xlsx_zip(
-                Path(pf.OSMR_PATH_CACHE_DATA) / "cache_boundingbox.zip"
+                Path(OSMR_PATH_CACHE) / "cache_boundingbox.zip"
             )
 
             # Se tudo deu certo, remove o backup
@@ -487,7 +488,7 @@ class CacheBoundingBox:
 
         for chave, _ in chaves_para_remover:
             diretorio = self.cache[chave]["diretorio"]
-            self.remover_item_disco(Path(pf.OSMR_PATH_CACHE_DATA) / diretorio)
+            self.remover_item_disco(Path(OSMR_PATH_CACHE) / diretorio)
             del self.cache[chave]
             self.route_cache.clear_regioes_pela_chave(chave)
             self.comunidades_cache.clear_regioes_pela_chave(chave)

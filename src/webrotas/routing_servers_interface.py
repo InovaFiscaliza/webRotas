@@ -37,20 +37,9 @@ Data: [Opcional]
 """
 
 ###########################################################################################################################
-import os
-import shutil
-import psutil
-import filecmp
-import subprocess
-import datetime
-import time
 import requests
-import socket
-import glob
 from pathlib import Path
-import json
 import webrotas.rotas as wr
-import webrotas.project_folders as pf
 import webrotas.cache.bounding_boxes as cb
 import webrotas.regions as rg
 import webrotas.shapefiles as sf
@@ -60,167 +49,167 @@ from webrotas.config.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-CONFIG_FILE = (
-    pf.PROJECT_PATH / "src" / "backend" / "webdir" / "config" / "containers.json"
-)
+# CONFIG_FILE = (
+#     pf.PROJECT_PATH / "src" / "backend" / "webdir" / "config" / "containers.json"
+# )
 
 
-# -----------------------------------------------------------------------------------#
-def find_available_port(start_port=50000, max_port=65535, host=None):
-    """
-    Procura a primeira porta disponível no host local a partir de uma porta inicial.
+# # -----------------------------------------------------------------------------------#
+# def find_available_port(start_port=50000, max_port=65535, host=None):
+#     """
+#     Procura a primeira porta disponível no host local a partir de uma porta inicial.
 
-    Args:
-        start_port (int): Porta inicial para começar a busca.
-        max_port (int): Número máximo de porta a verificar (default: 65535).
-        host (str): Host to bind to (default: localhost for development binding)
+#     Args:
+#         start_port (int): Porta inicial para começar a busca.
+#         max_port (int): Número máximo de porta a verificar (default: 65535).
+#         host (str): Host to bind to (default: localhost for development binding)
 
-    Returns:
-        int: O número da primeira porta disponível.
+#     Returns:
+#         int: O número da primeira porta disponível.
 
-    Raises:
-        RuntimeError: Se nenhuma porta estiver disponível no intervalo.
-    """
-    if host is None:
-        host = "localhost"
+#     Raises:
+#         RuntimeError: Se nenhuma porta estiver disponível no intervalo.
+#     """
+#     if host is None:
+#         host = "localhost"
 
-    for port in range(start_port, max_port + 1):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
-                # Tenta vincular o socket à porta
-                s.bind((host, port))
-                return port  # Retorna a porta se estiver disponível
-            except OSError:
-                continue  # Porta está em uso, passa para a próxima
+#     for port in range(start_port, max_port + 1):
+#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#             try:
+#                 # Tenta vincular o socket à porta
+#                 s.bind((host, port))
+#                 return port  # Retorna a porta se estiver disponível
+#             except OSError:
+#                 continue  # Porta está em uso, passa para a próxima
 
-    raise RuntimeError(
-        f"Nenhuma porta livre encontrada no intervalo {start_port}-{max_port}."
-    )
-
-
-# -----------------------------------------------------------------------------------#
-def delete_temp_folder(filtro: str) -> bool:
-    try:
-        if os.path.exists(filtro):
-            shutil.rmtree(filtro)
-            return True
-        else:
-            return False
-    except Exception:
-        return False
+#     raise RuntimeError(
+#         f"Nenhuma porta livre encontrada no intervalo {start_port}-{max_port}."
+#     )
 
 
-# -----------------------------------------------------------------------------------#
-def create_temp_folder(caminho: str) -> bool:
-    try:
-        os.makedirs(caminho, exist_ok=True)
-        return True
-    except Exception:
-        return False
+# # -----------------------------------------------------------------------------------#
+# def delete_temp_folder(filtro: str) -> bool:
+#     try:
+#         if os.path.exists(filtro):
+#             shutil.rmtree(filtro)
+#             return True
+#         else:
+#             return False
+#     except Exception:
+#         return False
 
 
-# -----------------------------------------------------------------------------------#
-def move_files(origem: str, destino: str) -> bool:
-    try:
-        os.makedirs(destino, exist_ok=True)
-        shutil.move(origem, destino)
-        return True
-    except Exception:
-        return False
+# # -----------------------------------------------------------------------------------#
+# def create_temp_folder(caminho: str) -> bool:
+#     try:
+#         os.makedirs(caminho, exist_ok=True)
+#         return True
+#     except Exception:
+#         return False
 
 
-################################################################################
-def init_and_load_podman_images():
-    logger.debug("Initializing and loading podman images")
-
-    subprocess.run(
-        ["podman", "machine", "init"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    subprocess.run(
-        ["podman", "machine", "start"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    subprocess.run(
-        ["podman", "load", "-i", Path(f"{pf.OSMOSIS_PATH}") / "osmosis_webrota.tar"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    subprocess.run(
-        ["podman", "load", "-i", Path(f"{pf.OSMR_PATH}") / "data" / "osmr_webrota.tar"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+# # -----------------------------------------------------------------------------------#
+# def move_files(origem: str, destino: str) -> bool:
+#     try:
+#         os.makedirs(destino, exist_ok=True)
+#         shutil.move(origem, destino)
+#         return True
+#     except Exception:
+#         return False
 
 
 ################################################################################
-def FiltrarRegiaoComOsmosis(regioes):
-    chave = cb.cCacheBoundingBox.chave(regioes)
+# def init_and_load_podman_images():
+#     logger.debug("Initializing and loading podman images")
 
-    destino = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
-    # Se o diretório de destino já existe, não faz nada, pode ser um cache já feito corrompido, vale tentar poupar o tempo.
-    if destino.exists():
-        logger.info(f"Diretório '{destino}' já existe. Ignorando processamento.")
-        return 0  # Não criou diretório pode ignorar criação dos indices OSMR
-
-    logger.debug(
-        f"Fazendo osmosis no diretório {pf.OSMOSIS_TEMPDATA_PATH}/filtro_{chave}"
-    )
-
-    delete_temp_folder(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}") / f"filtro_{chave}")
-    create_temp_folder(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}") / f"filtro_{chave}")
-    subprocess.run(
-        [
-            "podman",
-            "run",
-            "--rm",
-            "-m",
-            "32g",
-            "-v",
-            f"{pf.OSMOSIS_PATH}:/data",
-            "--name",
-            f"osmosis_{wr.UserData.ssid}",
-            "localhost/osmosis_webrota",
-            "osmosis",
-            "--read-pbf",
-            "file=/data/brazil/brazil-latest.osm.pbf",
-            "--bounding-polygon",
-            f"file=/data/TempData/exclusion_{chave}.poly",
-            "completeWays=no",
-            "--write-pbf",
-            f"file=/data/TempData/filtro_{chave}/filtro-latest.osm.pbf",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    delete_temp_folder(Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}")
-    create_temp_folder(Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}")
-
-    move_files(
-        Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")
-        / f"filtro_{chave}"
-        / "filtro-latest.osm.pbf",
-        Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}",
-    )
-    delete_temp_folder(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}") / f"filtro_{chave}")
-    return 1  # Criou diretório roda ciração dos indices OSMR
+#     subprocess.run(
+#         ["podman", "machine", "init"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+#     )
+#     subprocess.run(
+#         ["podman", "machine", "start"],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#     )
+#     subprocess.run(
+#         ["podman", "load", "-i", Path(f"{pf.OSMOSIS_PATH}") / "osmosis_webrota.tar"],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#     )
+#     subprocess.run(
+#         ["podman", "load", "-i", Path(f"{pf.OSMR_PATH}") / "data" / "osmr_webrota.tar"],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#     )
 
 
 ################################################################################
-def region_container_alive(cacheid):
-    containers = get_container_by_cacheid(cacheid)
+# def FiltrarRegiaoComOsmosis(regioes):
+#     chave = cb.cCacheBoundingBox.chave(regioes)
 
-    if not containers:
-        # não encontrou nenhum container com esse cacheid
-        logger.debug(f"Nenhum contêiner encontrado para cacheid {cacheid}")
-        return None
+#     destino = Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}"
+#     # Se o diretório de destino já existe, não faz nada, pode ser um cache já feito corrompido, vale tentar poupar o tempo.
+#     if destino.exists():
+#         logger.info(f"Diretório '{destino}' já existe. Ignorando processamento.")
+#         return 0  # Não criou diretório pode ignorar criação dos indices OSMR
 
-    # se há pelo menos um container, pegue a porta do primeiro
-    container_id, created_at, porta = containers[0]
-    logger.debug(
-        f"Contêiner {container_id} (criado em {created_at}) está na porta {porta}"
-    )
-    return porta
+#     logger.debug(
+#         f"Fazendo osmosis no diretório {pf.OSMOSIS_TEMPDATA_PATH}/filtro_{chave}"
+#     )
+
+#     delete_temp_folder(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}") / f"filtro_{chave}")
+#     create_temp_folder(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}") / f"filtro_{chave}")
+#     subprocess.run(
+#         [
+#             "podman",
+#             "run",
+#             "--rm",
+#             "-m",
+#             "32g",
+#             "-v",
+#             f"{pf.OSMOSIS_PATH}:/data",
+#             "--name",
+#             f"osmosis_{wr.UserData.ssid}",
+#             "localhost/osmosis_webrota",
+#             "osmosis",
+#             "--read-pbf",
+#             "file=/data/brazil/brazil-latest.osm.pbf",
+#             "--bounding-polygon",
+#             f"file=/data/TempData/exclusion_{chave}.poly",
+#             "completeWays=no",
+#             "--write-pbf",
+#             f"file=/data/TempData/filtro_{chave}/filtro-latest.osm.pbf",
+#         ],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#     )
+#     delete_temp_folder(Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}")
+#     create_temp_folder(Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}")
+
+#     move_files(
+#         Path(f"{pf.OSMOSIS_TEMPDATA_PATH}")
+#         / f"filtro_{chave}"
+#         / "filtro-latest.osm.pbf",
+#         Path(f"{pf.OSMR_PATH_CACHE_DATA}") / f"filtro_{chave}",
+#     )
+#     delete_temp_folder(Path(f"{pf.OSMOSIS_TEMPDATA_PATH}") / f"filtro_{chave}")
+#     return 1  # Criou diretório roda ciração dos indices OSMR
+
+
+################################################################################
+# def region_container_alive(cacheid):
+#     containers = get_container_by_cacheid(cacheid)
+
+#     if not containers:
+#         # não encontrou nenhum container com esse cacheid
+#         logger.debug(f"Nenhum contêiner encontrado para cacheid {cacheid}")
+#         return None
+
+#     # se há pelo menos um container, pegue a porta do primeiro
+#     container_id, created_at, porta = containers[0]
+#     logger.debug(
+#         f"Contêiner {container_id} (criado em {created_at}) está na porta {porta}"
+#     )
+#     return porta
 
 
 ################################################################################
@@ -601,50 +590,50 @@ def check_osrm_server(host: str, port: int, timeout: int = 3) -> bool:
 
 
 ################################################################################
-def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
-    """
-    Verifica se o servidor OSRM está ativo.
+# def VerificarOsrmAtivo(tentativas=1000, intervalo=5):
+#     """
+#     Verifica se o servidor OSRM está ativo.
 
-    Args:
-    - tentativas: Número máximo de tentativas de verificação.
-    - intervalo: Intervalo de tempo (em segundos) entre as tentativas.
+#     Args:
+#     - tentativas: Número máximo de tentativas de verificação.
+#     - intervalo: Intervalo de tempo (em segundos) entre as tentativas.
 
-    Returns:
-    - bool: True se o servidor estiver no ar, False caso contrário.
-    """
-    from webrotas.config.server_hosts import get_osrm_host
+#     Returns:
+#     - bool: True se o servidor estiver no ar, False caso contrário.
+#     """
+#     from webrotas.config.server_hosts import get_osrm_host
 
-    osrm_host = get_osrm_host()
-    url = f"http://{osrm_host}:{UserData.OSMRport}/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
+#     osrm_host = get_osrm_host()
+#     url = f"http://{osrm_host}:{UserData.OSMRport}/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
 
-    for tentativa in range(tentativas):
-        try:
-            # Faz a requisição GET
-            response = requests.get(url)
+#     for tentativa in range(tentativas):
+#         try:
+#             # Faz a requisição GET
+#             response = requests.get(url)
 
-            # Verifica o código de status HTTP
-            if response.status_code == 200:
-                logger.debug("OSRM está funcionando corretamente.")
-                return True
-            else:
-                logger.debug(
-                    f"Tentativa {tentativa + 1}/{tentativas}: Erro {response.status_code}. Tentando novamente..."
-                )
-                if VerificarFalhaServidorOSMR():
-                    return False
+#             # Verifica o código de status HTTP
+#             if response.status_code == 200:
+#                 logger.debug("OSRM está funcionando corretamente.")
+#                 return True
+#             else:
+#                 logger.debug(
+#                     f"Tentativa {tentativa + 1}/{tentativas}: Erro {response.status_code}. Tentando novamente..."
+#                 )
+#                 if VerificarFalhaServidorOSMR():
+#                     return False
 
-        except requests.exceptions.RequestException as e:
-            logger.debug(
-                f"Tentativa {tentativa + 1}/{tentativas}: Erro ao acessar o OSRM: {e}. Tentando novamente..."
-            )
-            if VerificarFalhaServidorOSMR():
-                return False
+#         except requests.exceptions.RequestException as e:
+#             logger.debug(
+#                 f"Tentativa {tentativa + 1}/{tentativas}: Erro ao acessar o OSRM: {e}. Tentando novamente..."
+#             )
+#             if VerificarFalhaServidorOSMR():
+#                 return False
 
-        # Aguarda o intervalo antes de tentar novamente
-        time.sleep(intervalo)
+#         # Aguarda o intervalo antes de tentar novamente
+#         time.sleep(intervalo)
 
-    logger.debug("O servidor OSRM não ficou disponível após várias tentativas.")
-    return False
+#     logger.debug("O servidor OSRM não ficou disponível após várias tentativas.")
+#     return False
 
 
 ################################################################################
