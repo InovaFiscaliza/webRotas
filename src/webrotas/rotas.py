@@ -8,7 +8,6 @@ import numpy as np
 from shapely.geometry import Point, Polygon
 from shapely.ops import unary_union
 
-import webrotas.cache.bounding_boxes as cb
 import webrotas.regions as rg
 import webrotas.shapefiles as sf
 from webrotas.api_routing import compute_bounding_box, calculate_optimal_route
@@ -57,7 +56,6 @@ class RouteProcessor:
         self.route_id = route_id or str(uuid.uuid4())
 
         # Route result fields (populated during processing)
-        self.cache_id = None
         self.routing_area = None
         self.bounding_box = None
         self.location_limits = None
@@ -81,7 +79,7 @@ class RouteProcessor:
             location_limits: Optional city boundaries
             location_urban_areas: Optional urban areas information
         """
-        routing_area, bounding_box, cache_id = compute_routing_area(
+        routing_area, bounding_box = compute_routing_area(
             self.avoid_zones, self.origin, waypoints
         )
         # si.PreparaServidorRoteamento(routing_area)
@@ -93,7 +91,6 @@ class RouteProcessor:
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
         # Store results in instance for response generation
-        self.cache_id = cache_id
         self.routing_area = routing_area
         self.bounding_box = bounding_box
         self.location_limits = location_limits
@@ -182,7 +179,6 @@ class RouteProcessor:
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
         # Store results in instance for response generation
-        self.cache_id = cache_id
         self.routing_area = routing_area
         self.bounding_box = bounding_box
         self.origin = origin
@@ -233,7 +229,6 @@ class RouteProcessor:
                 {
                     "request": self.request,
                     "response": {
-                        "cacheId": f"{self.cache_id}",
                         "boundingBox": self.bounding_box,
                         "location": {
                             "limits": self.location_limits,
@@ -335,46 +330,30 @@ def compute_routing_area(avoid_zones, origin, waypoints):
             {"name": avoid_zone["name"].replace(" ", "_"), "coord": avoid_zone["coord"]}
         )
 
-    cached_routing_area, cache_id = cb.cCacheBoundingBox.get_cache(routing_area)
-    if cached_routing_area is not None:
-        routing_area = cached_routing_area
-
-    return (routing_area, bounding_box, cache_id)
+    return (routing_area, bounding_box)
 
 
 # -----------------------------------------------------------------------------------#
 def get_areas_urbanas_cache(city, state):
-    chave_regiao = {"city": city, "state": state}
-    cache_polylines = cb.cCacheBoundingBox.areas_urbanas.get_polylines(chave_regiao)
-
-    if not cache_polylines:
-        polMunicipio = sf.GetBoundMunicipio(city, state)
-        polMunicipioAreasUrbanizadas = sf.FiltrarAreasUrbanizadasPorMunicipio(
-            city, state
-        )
-        cache_polylines = [
-            f"{city}-{state}",
-            polMunicipio,
-            polMunicipioAreasUrbanizadas,
-        ]
-        cb.cCacheBoundingBox.areas_urbanas.add_polyline(chave_regiao, cache_polylines)
-
-    else:
-        polMunicipio = cache_polylines[1]
-        polMunicipioAreasUrbanizadas = cache_polylines[2]
-
+    """Fetch urban areas data for a city/state combination.
+    
+    Note: Cache has been removed as it's no longer necessary with async FastAPI.
+    Data is fetched directly from shapefiles on each request.
+    """
+    polMunicipio = sf.GetBoundMunicipio(city, state)
+    polMunicipioAreasUrbanizadas = sf.FiltrarAreasUrbanizadasPorMunicipio(
+        city, state
+    )
     return polMunicipio, polMunicipioAreasUrbanizadas
 
 
 # -----------------------------------------------------------------------------------#
 def get_polyline_comunities(regioes):
+    """Fetch community polylines for a region.
+    
+    Note: Cache has been removed as it's no longer necessary with async FastAPI.
+    Polylines are fetched directly from shapefiles on each request.
+    """
     bounding_box = rg.extrair_bounding_box_de_regioes(regioes)
-    polylinesComunidades = cb.cCacheBoundingBox.comunidades_cache.get_polylines(regioes)
-
-    if not polylinesComunidades:
-        polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
-        cb.cCacheBoundingBox.comunidades_cache.add_polyline(
-            regioes, polylinesComunidades
-        )
-
+    polylinesComunidades = sf.FiltrarComunidadesBoundingBox(bounding_box)
     return polylinesComunidades
