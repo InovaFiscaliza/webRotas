@@ -1,5 +1,8 @@
+import json
 import math
+import uuid
 from dataclasses import dataclass
+from datetime import datetime
 
 import numpy as np
 from shapely.geometry import Point, Polygon
@@ -10,6 +13,8 @@ import webrotas.regions as rg
 import webrotas.shapefiles as sf
 from webrotas.api_routing import compute_bounding_box, calculate_optimal_route
 from webrotas.api_elevation import enrich_waypoints_with_elevation
+from webrotas.config.server_hosts import get_webrotas_url
+from webrotas.server_env import env
 
 
 @dataclass
@@ -22,30 +27,46 @@ class RouteProcessor:
     """Processor for different route types (shortest, circle, grid, ordered).
 
     Encapsulates shared parameters and routing logic for various route generation strategies.
+    Replaces RouteRequestManager with a more streamlined async-friendly design.
     """
 
     def __init__(
         self,
-        current_request,
         session_id,
         origin,
         avoid_zones,
         criterion,
+        request_data=None,
+        route_id=None,
     ):
         """Initialize RouteProcessor with common routing parameters.
 
         Args:
-            current_request: Request object to be updated with routing results
             session_id: Unique session identifier
             origin: Starting point coordinates (dict with 'lat' and 'lng')
             avoid_zones: List of zones to avoid in route calculation
             criterion: Routing criterion ('distance', 'time', etc.)
+            request_data: Original request data (for create_initial_route)
+            route_id: Unique route identifier (auto-generated if not provided)
         """
-        self.current_request = current_request
         self.session_id = session_id
         self.origin = origin
         self.avoid_zones = avoid_zones
         self.criterion = criterion
+        self.request = request_data
+        self.route_id = route_id or str(uuid.uuid4())
+
+        # Route result fields (populated during processing)
+        self.cache_id = None
+        self.routing_area = None
+        self.bounding_box = None
+        self.location_limits = None
+        self.location_urban_areas = None
+        self.location_urban_communities = None
+        self.waypoints = None
+        self.paths = None
+        self.estimated_distance = None
+        self.estimated_time = None
 
     def process_shortest(
         self,
@@ -71,24 +92,18 @@ class RouteProcessor:
 
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
-        self.current_request.update(
-            {
-                "session_id": self.session_id,
-                "cache_id": cache_id,
-                "routing_area": routing_area,
-                "bounding_box": bounding_box,
-                "avoid_zones": self.avoid_zones,
-                "location_limits": location_limits,
-                "location_urban_areas": location_urban_areas,
-                "location_urban_communities": get_polyline_comunities(routing_area),
-                "origin": origin,
-                "waypoints": waypoints,
-                "criterion": self.criterion,
-                "paths": paths,
-                "estimated_distance": estimated_distance,
-                "estimated_time": estimated_time,
-            }
-        )
+        # Store results in instance for response generation
+        self.cache_id = cache_id
+        self.routing_area = routing_area
+        self.bounding_box = bounding_box
+        self.location_limits = location_limits
+        self.location_urban_areas = location_urban_areas
+        self.location_urban_communities = get_polyline_comunities(routing_area)
+        self.origin = origin
+        self.waypoints = waypoints
+        self.paths = paths
+        self.estimated_distance = estimated_distance
+        self.estimated_time = estimated_time
 
     def process_circle(
         self,
@@ -166,21 +181,15 @@ class RouteProcessor:
         )
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
-        self.current_request.update(
-            {
-                "session_id": self.session_id,
-                "cache_id": cache_id,
-                "routing_area": routing_area,
-                "bounding_box": bounding_box,
-                "avoid_zones": self.avoid_zones,
-                "origin": origin,
-                "waypoints": waypoints,
-                "criterion": self.criterion,
-                "paths": paths,
-                "estimated_distance": estimated_distance,
-                "estimated_time": estimated_time,
-            }
-        )
+        # Store results in instance for response generation
+        self.cache_id = cache_id
+        self.routing_area = routing_area
+        self.bounding_box = bounding_box
+        self.origin = origin
+        self.waypoints = waypoints
+        self.paths = paths
+        self.estimated_distance = estimated_distance
+        self.estimated_time = estimated_time
 
     @staticmethod
     def _generate_waypoints_in_radius(center_point, radius_km, total_waypoints):
@@ -214,6 +223,47 @@ class RouteProcessor:
             )
 
         return waypoints
+
+    def create_initial_route(self):
+        """Generate initial route response with location and routing details."""
+        initial_route = {
+            "url": f"{get_webrotas_url(env.port)}/",
+            "type": "initialRoute",
+            "routing": [
+                {
+                    "request": self.request,
+                    "response": {
+                        "cacheId": f"{self.cache_id}",
+                        "boundingBox": self.bounding_box,
+                        "location": {
+                            "limits": self.location_limits,
+                            "urbanAreas": self.location_urban_areas,
+                            "urbanCommunities": self.location_urban_communities,
+                        },
+                        "routes": [self.route_for_gui()],
+                    },
+                }
+            ],
+        }
+        return json.dumps(initial_route, indent=4, ensure_ascii=False)
+
+    def create_custom_route(self):
+        """Generate custom route response."""
+        custom_route = {"type": "customRoute", "route": self.route_for_gui()}
+        return json.dumps(custom_route, indent=4, ensure_ascii=False)
+
+    def route_for_gui(self):
+        """Format route data for GUI consumption."""
+        return {
+            "routeId": self.route_id,
+            "automatic": self.criterion != "ordered",
+            "created": f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}",
+            "origin": self.origin,
+            "waypoints": self.waypoints,
+            "paths": self.paths,
+            "estimatedDistance": self.estimated_distance,
+            "estimatedTime": self.estimated_time,
+        }
 
     @staticmethod
     def _generate_waypoints_in_city(

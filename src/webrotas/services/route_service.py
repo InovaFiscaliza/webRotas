@@ -1,8 +1,9 @@
 """Route processing service - extracted controller logic"""
 
+import json
+import uuid
 from typing import Dict, Any
 from webrotas.rotas import RouteProcessor
-from webrotas.route_request_manager import RouteRequestManager as rrm
 from webrotas.core.exceptions import ProcessingError
 
 
@@ -27,26 +28,36 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
         avoid_zones = data.get("avoidZones", [])
         criterion = data.get("criterion", "distance")
 
-        # Process or retrieve cached request
-        current_request, new_request_flag = rrm.process_request(request_type, data)
+        # Generate route ID based on request type
+        if request_type in {"shortest", "circle", "grid"}:
+            route_id = str(uuid.uuid4())
+            is_new_request = True
+        elif request_type == "ordered":
+            route_id = parameters["routeId"]
+            # Note: cached request lookup not implemented - async eliminates need
+            is_new_request = True
+        else:
+            raise ValueError(f"Unknown request type: {request_type}")
+
         status = (
             "[webRotas] Created new request"
-            if new_request_flag
+            if is_new_request
             else "Using existing request"
         )
         print(
-            f'{status} routeId="{current_request.route_id}" '
+            f'{status} routeId="{route_id}" '
             f'(type="{request_type}", criterion="{criterion}", '
             f'sessionId="{session_id}")'
         )
 
         # Initialize RouteProcessor with common parameters
         processor = RouteProcessor(
-            current_request,
-            session_id,
-            origin,
-            avoid_zones,
-            criterion,
+            session_id=session_id,
+            origin=origin,
+            avoid_zones=avoid_zones,
+            criterion=criterion,
+            request_data=data,
+            route_id=route_id,
         )
 
         # Route processing based on type
@@ -75,14 +86,12 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
 
         # Generate response
         if request_type in {"shortest", "circle", "grid"}:
-            response_json = current_request.create_initial_route()
+            response_json = processor.create_initial_route()
         else:
-            response_json = current_request.create_custom_route()
+            response_json = processor.create_custom_route()
 
         # Convert Response object to dict if needed
         if isinstance(response_json, str):
-            import json
-
             return json.loads(response_json)
 
         return response_json
