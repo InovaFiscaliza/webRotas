@@ -94,7 +94,7 @@ async function loadScript(filename) {
 (function () {
     window.app = {
         name: 'webRotas',
-        version: '0.93.0',
+        version: '0.0.1',
         released: 'R2025b (15/10/2025)',
         sharepoint: 'https://anatel365.sharepoint.com/sites/InovaFiscaliza/SitePages/webRotas.aspx',
 

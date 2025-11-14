@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="webRotas",
     description="Vehicle route management for ANATEL inspection activities",
-    version="0.1.0",
+    version="0.0.1",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -75,7 +75,7 @@ app.include_router(process_router, prefix="", tags=["routing"])
 app.include_router(health_router, prefix="", tags=["health"])
 
 # Mount static files AFTER routers (so API endpoints take precedence)
-static_path = Path(__file__).parent / "static"
+static_path = Path(__file__).parent / "frontend"
 if static_path.exists():
     try:
         # Mount at root to serve index.html and other assets
@@ -99,7 +99,7 @@ else:
 )
 async def root():
     """Serve root - return index.html"""
-    index_path = Path(__file__).parent / "static" / "index.html"
+    index_path = Path(__file__).parent / "frontend" / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path))
     raise HTTPException(status_code=404, detail="index.html not found")
@@ -113,7 +113,7 @@ async def root():
 )
 async def index():
     """Serve index.html"""
-    index_path = Path(__file__).parent / "static" / "index.html"
+    index_path = Path(__file__).parent / "frontend" / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path))
     raise HTTPException(status_code=404, detail="index.html not found")
@@ -148,9 +148,7 @@ def parse_args() -> argparse.Namespace:
 
     except Exception as e:
         logger.error(f"Error parsing arguments: {e}", exc_info=True)
-        logger.info(
-            f"Using default values: port={env.port}, debug={env.debug_mode}"
-        )
+        logger.info(f"Using default values: port={env.port}, debug={env.debug_mode}")
         return argparse.Namespace(port=env.port, debug=env.debug_mode)
 
 
@@ -162,9 +160,7 @@ def main():
         args = parse_args()
 
         logger.info(f"Starting FastAPI server on port {args.port}")
-        logger.info(
-            f"API documentation available at http://0.0.0.0:{args.port}/docs"
-        )
+        logger.info(f"API documentation available at http://0.0.0.0:{args.port}/docs")
 
         uvicorn.run(
             "main:app",

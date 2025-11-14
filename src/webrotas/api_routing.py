@@ -564,14 +564,18 @@ def get_osrm_route(coords, order):
 
         osrm_host = get_osrm_host()
         local_url = f"http://{osrm_host}:{UserData.OSMRport}/route/v1/driving/{coord_str}?overview=full&geometries=geojson"
-        logger.info(f"Attempting local container route: {osrm_host}:{UserData.OSMRport}")
+        logger.info(
+            f"Attempting local container route: {osrm_host}:{UserData.OSMRport}"
+        )
         req = requests.get(local_url, timeout=30)
         req.raise_for_status()
         data = req.json()
         logger.info("Successfully retrieved route from local container")
         return data, ordered
     except Exception as container_e:
-        logger.warning(f"Local container route failed: {container_e}. Trying public API")
+        logger.warning(
+            f"Local container route failed: {container_e}. Trying public API"
+        )
 
     # Try public API if local container failed or if too many points
     try:

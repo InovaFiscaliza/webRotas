@@ -1,0 +1,264 @@
+// Docker Compose service names; localhost for local development
+const OSRM_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:9090';
+
+// For Docker Compose internal networking, uncomment:
+// const OSRM_URL = 'http://osrm:5000';
+// const API_URL = 'http://avoidzones:9090';
+// const TILE_URL = 'http://osmtiles:80/tile/{z}/{x}/{y}.png';
+
+
+
+function status(s) { document.getElementById('status').textContent = 'status: ' + s; }
+function token() { return document.getElementById('token').value.trim(); }
+function authHeaders() {
+    const t = token(); return t ? { 'Authorization': 'Bearer ' + t } : {};
+}
+
+async function doRoute() {
+    routeLayer.clearLayers();
+    const a = document.getElementById('a').value.trim();
+    const b = document.getElementById('b').value.trim();
+    const zonesVersion = document.getElementById('zones-version').value || 'latest';
+    const avoidMode = document.getElementById('avoid-mode').value || 'penalize';
+
+    try {
+        const a_coords = a.split(',').map(Number);
+        const b_coords = b.split(',').map(Number);
+
+        const data = await routeWithZones(a_coords, b_coords, zonesVersion, avoidMode);
+
+        if (!data.routes || data.routes.length === 0) {
+            alert('No route found');
+            return;
+        }
+
+        // Display all route variants with color coding
+        data.routes.forEach((route, idx) => {
+            const penalties = route.penalties || { zone_intersections: 0, intersection_length_km: 0, penalty_score: 0 };
+            const layer = visualizeRoutePenalties(route, penalties, idx === 0);
+            layer.addTo(routeLayer);
+        });
+
+        // Show best route details
+        const bestRoute = data.routes[0];
+        document.getElementById('dur').textContent = (bestRoute.duration / 60).toFixed(1) + ' min';
+        document.getElementById('dist').textContent = (bestRoute.distance / 1000).toFixed(1) + ' km';
+
+        // Display zone info
+        if (data.zones_applied) {
+            document.getElementById('zones-info').textContent =
+                `Using zones: ${data.zones_applied.version} (${data.zones_applied.polygon_count} zones)`;
+        }
+
+        // Fit map to route bounds
+        const coords = bestRoute.geometry.coordinates;
+        const bounds = bbox(coords);
+        map.fitBounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]]);
+
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+function bbox(coords) { let mnL = 1e9, mnB = 1e9, mxL = -1e9, mxB = -1e9; for (const [x, y] of coords) { if (x < mnL) mnL = x; if (y < mnB) mnB = y; if (x > mxL) mxL = x; if (y > mxB) mxB = y } return [mnL, mnB, mxL, mxB] }
+
+// Phase 2: Client-side zone routing functions
+async function routeWithZones(start, end, zonesVersion = 'latest', avoidMode = 'penalize') {
+    const coords = `${start[0]},${start[1]};${end[0]},${end[1]}`;
+    try {
+        // If 'none' selected, call OSRM directly without avoid zones
+        if (zonesVersion === 'none') {
+            const response = await fetch(`${OSRM_URL}/route/v1/driving/${coords}?alternatives=3&overview=full&geometries=geojson`);
+            if (!response.ok) throw new Error(`OSRM request failed: ${response.status}`);
+            const data = await response.json();
+            if (data.code !== 'Ok') throw new Error('OSRM returned error: ' + data.code);
+            // Wrap response to match expected format
+            return {
+                code: 'Ok',
+                routes: data.routes || [],
+                zones_applied: { version: 'none', polygon_count: 0 },
+                intersection_info: {}
+            };
+        }
+
+        // Otherwise use avoidzones API with zones
+        const params = new URLSearchParams({
+            zones_version: zonesVersion,
+            avoid_mode: avoidMode,
+            alternatives: 3
+        });
+        const response = await fetch(`${API_URL}/route/v1/driving/${coords}?${params}`);
+        if (!response.ok) throw new Error(`Route request failed: ${response.status}`);
+        const data = await response.json();
+        console.log('Zone Penalties:', data.intersection_info);
+        // Routes already sorted by penalty in endpoint, but sort again for safety
+        if (avoidMode === 'penalize' && data.routes) {
+            data.routes.sort((a, b) =>
+                (a.penalties?.penalty_score || 0) - (b.penalties?.penalty_score || 0)
+            );
+        }
+        return data;
+    } catch (error) {
+        console.error('Route request error:', error);
+        throw error;
+    }
+}
+
+function visualizeRoutePenalties(route, penalties, isFirst = false) {
+    // When no zones applied, use green with no dash
+    const hasZones = penalties && penalties.zone_intersections > 0;
+    const color = !hasZones ? '#00aa00' :
+        penalties.penalty_score > 0.5 ? '#ff0000' :
+            penalties.penalty_score > 0.2 ? '#ff9900' :
+                '#00aa00';
+    const line = L.geoJSON(
+        { type: 'Feature', geometry: route.geometry },
+        {
+            style: {
+                color: color,
+                weight: isFirst ? 6 : 3,
+                opacity: isFirst ? 0.9 : 0.5,
+                dashArray: hasZones ? '5, 5' : ''
+            }
+        }
+    );
+
+    // Build popup content based on whether zones are applied
+    let popupContent = `
+        <b>Route Statistics</b><br/>
+        Distance: ${(route.distance / 1000).toFixed(1)} km<br/>
+        Duration: ${(route.duration / 60).toFixed(1)} min<br/>`;
+
+    if (hasZones) {
+        popupContent += `
+        <hr/>
+        <b>Avoid Zones Impact</b><br/>
+        Intersections: ${penalties.zone_intersections}<br/>
+        Length in zones: ${penalties.intersection_length_km.toFixed(2)} km<br/>
+        Penalty score: ${(penalties.penalty_score * 100).toFixed(1)}%`;
+    } else if (penalties && penalties.zone_intersections !== undefined) {
+        popupContent += `<hr/><b>No avoid zones applied</b>`;
+    }
+
+    const popup = L.popup().setContent(popupContent);
+    line.bindPopup(popup);
+    return line;
+}
+
+async function populateZonesHistory() {
+    const versions = document.getElementById('zones-version');
+    const currentValue = versions.value;
+    // Keep 'latest' option
+    const options = versions.querySelectorAll('option');
+    for (let i = options.length - 1; i > 0; i--) {
+        versions.removeChild(options[i]);
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/avoidzones/history`, { headers: authHeaders() });
+        if (!response.ok) return;
+        const history = await response.json();
+
+        // Add historical versions (most recent first)
+        history.forEach(item => {
+            const option = document.createElement('option');
+            const versionId = item.filename.replace('.geojson', '').replace('avoidzones_', '');
+            option.value = versionId;
+            option.textContent = `${item.ts}`;
+            versions.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to load zone history:', error);
+    }
+}
+
+document.getElementById('route').onclick = doRoute;
+
+// Apply polygons → service → penalize → rebuild OSRM
+document.getElementById('apply').onclick = async () => {
+    const fc = {
+        type: 'FeatureCollection',
+        features: drawnItems.getLayers().map(l => l.toGeoJSON())
+    };
+    status('uploading…');
+    const res = await fetch(`${API_URL}/avoidzones/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify(fc)
+    });
+    if (!res.ok) { status('error'); alert(await res.text()); return; }
+    const j = await res.json();
+    status(j.status || 'done');
+    alert('Zonas de Exclusão Aplicadas! Solicite o roteamento novamente.');
+    await refreshHistory();
+    await populateZonesHistory();  // Update zones dropdown
+};
+
+async function refreshHistory() {
+    const ul = document.getElementById('history'); ul.innerHTML = '';
+    const res = await fetch(`${API_URL}/avoidzones/history`, { headers: authHeaders() });
+    if (!res.ok) { ul.innerHTML = '<li>Failed to load history</li>'; return; }
+    const list = await res.json(); // [{filename, ts, size}]
+    if (!list.length) { ul.innerHTML = '<li>(no history yet)</li>'; return; }
+    for (const item of list) {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `${API_URL}/avoidzones/download/${encodeURIComponent(item.filename)}`;
+        a.textContent = `${item.ts} — ${item.filename} (${item.size})`;
+        a.target = '_blank';
+
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = async () => {
+            try {
+                const downloadUrl = `${API_URL}/avoidzones/download/${encodeURIComponent(item.filename)}`;
+                const downloadRes = await fetch(downloadUrl, { headers: authHeaders() });
+                if (!downloadRes.ok) { alert('Failed to load configuration'); return; }
+                const geojson = await downloadRes.json();
+
+                // Clear current drawings
+                drawnItems.clearLayers();
+
+                // Load features from history into the drawing interface
+                if (geojson.features && Array.isArray(geojson.features)) {
+                    geojson.features.forEach(feature => {
+                        try {
+                            const layer = L.geoJSON(feature).getLayers()[0];
+                            if (layer) drawnItems.addLayer(layer);
+                        } catch (fe) {
+                            console.error('Error loading feature:', fe);
+                        }
+                    });
+                }
+                alert('Loaded into editor. Modify and click Apply to create a new version.');
+            } catch (e) {
+                alert('Error loading configuration: ' + e.message);
+            }
+        };
+
+        const revertBtn = document.createElement('button');
+        revertBtn.textContent = 'Revert';
+        revertBtn.onclick = async () => {
+            if (!confirm(`Revert to ${item.filename}?`)) return;
+            const r = await fetch(`${API_URL}/avoidzones/revert`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                body: JSON.stringify({ filename: item.filename })
+            });
+            if (!r.ok) { alert(await r.text()); return; }
+            const jj = await r.json();
+            alert('Reverted and rebuilt OSRM.');
+            await refreshHistory();
+        };
+
+        li.appendChild(a);
+        li.appendChild(document.createTextNode(' '));
+        li.appendChild(editBtn);
+        li.appendChild(document.createTextNode(' '));
+        li.appendChild(revertBtn);
+        ul.appendChild(li);
+    }
+}
+document.getElementById('refresh-history').onclick = refreshHistory;
+refreshHistory();
+populateZonesHistory();  // Initialize zones dropdown

@@ -10,7 +10,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
-      - /media/ronaldo/Homelab/webrotas:/data
+      - ${OSRM_DATA}:/data
     deploy:
       resources:
         limits:
@@ -45,7 +45,7 @@ services:
     ports:
       - 5000:5000
     volumes:
-      - /media/ronaldo/Homelab/webrotas:/data
+      - ${OSRM_DATA}:/data
     deploy:
       resources:
         limits:

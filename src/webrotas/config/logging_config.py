@@ -9,18 +9,18 @@ import logging
 import logging.handlers
 import sys
 
-from webrotas.project_folders import LOGS_PATH
+from .constants import LOGS_PATH
 
 
 class ColoredFormatter(logging.Formatter):
     """Formatter that adds color to console output."""
 
     COLORS = {
-        "DEBUG": "\033[36m",      # Cyan
-        "INFO": "\033[32m",       # Green
-        "WARNING": "\033[33m",    # Yellow
-        "ERROR": "\033[31m",      # Red
-        "CRITICAL": "\033[35m",   # Magenta
+        "DEBUG": "\033[36m",  # Cyan
+        "INFO": "\033[32m",  # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",  # Red
+        "CRITICAL": "\033[35m",  # Magenta
     }
     RESET = "\033[0m"
 
