@@ -18,59 +18,173 @@ class UserData:
     ssid: str | None = None
 
 
-def osrm_shortest(
-    current_request,
-    session_id,
-    origin,
-    waypoints,
-    avoid_zones,
-    criterion,
-    location_limits=[],
-    location_urban_areas=[],
-):
-    routing_area, bounding_box, cache_id = compute_routing_area(
-        avoid_zones, origin, waypoints
-    )
-    # si.PreparaServidorRoteamento(routing_area)
+class RouteProcessor:
+    """Processor for different route types (shortest, circle, grid, ordered).
 
-    origin, waypoints, paths, estimated_time, estimated_distance = (
-        calculate_optimal_route(origin, waypoints, criterion, avoid_zones)
-    )
+    Encapsulates shared parameters and routing logic for various route generation strategies.
+    """
 
-    origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
+    def __init__(
+        self,
+        current_request,
+        session_id,
+        origin,
+        avoid_zones,
+        criterion,
+    ):
+        """Initialize RouteProcessor with common routing parameters.
 
-    current_request.update(
-        {
-            "session_id": session_id,
-            "cache_id": cache_id,
-            "routing_area": routing_area,
-            "bounding_box": bounding_box,
-            "avoid_zones": avoid_zones,
-            "location_limits": location_limits,
-            "location_urban_areas": location_urban_areas,
-            "location_urban_communities": get_polyline_comunities(routing_area),
-            "origin": origin,
-            "waypoints": waypoints,
-            "criterion": criterion,
-            "paths": paths,
-            "estimated_distance": estimated_distance,
-            "estimated_time": estimated_time,
-        }
-    )
+        Args:
+            current_request: Request object to be updated with routing results
+            session_id: Unique session identifier
+            origin: Starting point coordinates (dict with 'lat' and 'lng')
+            avoid_zones: List of zones to avoid in route calculation
+            criterion: Routing criterion ('distance', 'time', etc.)
+        """
+        self.current_request = current_request
+        self.session_id = session_id
+        self.origin = origin
+        self.avoid_zones = avoid_zones
+        self.criterion = criterion
 
+    def process_shortest(
+        self,
+        waypoints,
+        location_limits=[],
+        location_urban_areas=[],
+    ):
+        """Process shortest route between origin and waypoints.
 
-# -----------------------------------------------------------------------------------#
-def osrm_circle(
-    current_request,
-    session_id,
-    origin,
-    center_point,
-    radius_km,
-    total_waypoints,
-    avoid_zones,
-    criterion,
-):
-    def generate_waypoints_in_radius(center_point, radius_km, total_waypoints):
+        Args:
+            waypoints: List of waypoints to visit
+            location_limits: Optional city boundaries
+            location_urban_areas: Optional urban areas information
+        """
+        routing_area, bounding_box, cache_id = compute_routing_area(
+            self.avoid_zones, self.origin, waypoints
+        )
+        # si.PreparaServidorRoteamento(routing_area)
+
+        origin, waypoints, paths, estimated_time, estimated_distance = (
+            calculate_optimal_route(self.origin, waypoints, self.criterion, self.avoid_zones)
+        )
+
+        origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
+
+        self.current_request.update(
+            {
+                "session_id": self.session_id,
+                "cache_id": cache_id,
+                "routing_area": routing_area,
+                "bounding_box": bounding_box,
+                "avoid_zones": self.avoid_zones,
+                "location_limits": location_limits,
+                "location_urban_areas": location_urban_areas,
+                "location_urban_communities": get_polyline_comunities(routing_area),
+                "origin": origin,
+                "waypoints": waypoints,
+                "criterion": self.criterion,
+                "paths": paths,
+                "estimated_distance": estimated_distance,
+                "estimated_time": estimated_time,
+            }
+        )
+
+    def process_circle(
+        self,
+        center_point,
+        radius_km,
+        total_waypoints,
+    ):
+        """Process circle route around a center point.
+
+        Args:
+            center_point: Center point coordinates (dict with 'lat' and 'lng')
+            radius_km: Radius in kilometers
+            total_waypoints: Number of waypoints to generate
+        """
+        waypoints = self._generate_waypoints_in_radius(
+            center_point, radius_km, total_waypoints
+        )
+        self.process_shortest(waypoints)
+
+    def process_grid(
+        self,
+        city,
+        state,
+        scope,
+        point_distance,
+    ):
+        """Process grid route within a city or urban area.
+
+        Args:
+            city: City name
+            state: State code
+            scope: Either "Location" (city boundaries) or "UrbanAreas"
+            point_distance: Distance between grid points in meters
+        """
+        location_limits, location_urban_areas = get_areas_urbanas_cache(city, state)
+
+        match scope:
+            case "Location":
+                waypoints = self._generate_waypoints_in_city(
+                    location_limits, self.avoid_zones, point_distance, scope
+                )
+            case "UrbanAreas":
+                waypoints = self._generate_waypoints_in_city(
+                    location_urban_areas, self.avoid_zones, point_distance, scope
+                )
+            case _:
+                raise ValueError(f'Invalid scope "{scope}"')
+
+        self.process_shortest(
+            waypoints,
+            location_limits,
+            location_urban_areas,
+        )
+
+    def process_ordered(
+        self,
+        cache_id,
+        bounding_box,
+        waypoints,
+    ):
+        """Process ordered route with predefined cache and bounding box.
+
+        Args:
+            cache_id: Cache identifier
+            bounding_box: Predefined bounding box
+            waypoints: List of waypoints to visit
+        """
+        # routing_area, bounding_box, cache_id = compute_routing_area(self.avoid_zones, self.origin, waypoints)
+        # si.PreparaServidorRoteamento(routing_area)
+
+        routing_area = []  # PENDENTE
+
+        origin, waypoints, paths, estimated_time, estimated_distance = (
+            calculate_optimal_route(self.origin, waypoints, self.criterion, self.avoid_zones)
+        )
+        origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
+
+        self.current_request.update(
+            {
+                "session_id": self.session_id,
+                "cache_id": cache_id,
+                "routing_area": routing_area,
+                "bounding_box": bounding_box,
+                "avoid_zones": self.avoid_zones,
+                "origin": origin,
+                "waypoints": waypoints,
+                "criterion": self.criterion,
+                "paths": paths,
+                "estimated_distance": estimated_distance,
+                "estimated_time": estimated_time,
+            }
+        )
+
+    @staticmethod
+    def _generate_waypoints_in_radius(center_point, radius_km, total_waypoints):
+        """Generate waypoints arranged in a circle."""
         R = 6371.0
         waypoints = []
 
@@ -101,27 +215,11 @@ def osrm_circle(
 
         return waypoints
 
-    waypoints = generate_waypoints_in_radius(center_point, radius_km, total_waypoints)
-    osrm_shortest(
-        current_request, session_id, origin, waypoints, avoid_zones, criterion
-    )
-
-
-# -----------------------------------------------------------------------------------#
-def osrm_grid(
-    current_request,
-    session_id,
-    origin,
-    city,
-    state,
-    scope,
-    point_distance,
-    avoid_zones,
-    criterion,
-):
-    def generate_waypoints_in_city(
-        city_boundaries: list, avoid_zones: list, point_distance: int
+    @staticmethod
+    def _generate_waypoints_in_city(
+        city_boundaries: list, avoid_zones: list, point_distance: int, scope: str
     ) -> list:
+        """Generate waypoints arranged in a grid within city boundaries."""
         city_polygon_list = []
         avoid_polygon_list = []
 
@@ -174,69 +272,6 @@ def osrm_grid(
                 f'No waypoints found for scope "{scope}" with a point distance of {point_distance} meters.'
             )
         return waypoints
-
-    location_limits, location_urban_areas = get_areas_urbanas_cache(city, state)
-
-    match scope:
-        case "Location":
-            waypoints = generate_waypoints_in_city(
-                location_limits, avoid_zones, point_distance
-            )
-        case "UrbanAreas":
-            waypoints = generate_waypoints_in_city(
-                location_urban_areas, avoid_zones, point_distance
-            )
-        case _:
-            raise ValueError(f'Invalid scope "{scope}"')
-
-    osrm_shortest(
-        current_request,
-        session_id,
-        origin,
-        waypoints,
-        avoid_zones,
-        criterion,
-        location_limits,
-        location_urban_areas,
-    )
-
-
-# -----------------------------------------------------------------------------------#
-def osrm_ordered(
-    current_request,
-    session_id,
-    origin,
-    cache_id,
-    bounding_box,
-    waypoints,
-    avoid_zones,
-    criterion,
-):
-    # routing_area, bounding_box, cache_id = compute_routing_area(avoid_zones, origin, waypoints)
-    # si.PreparaServidorRoteamento(routing_area)
-
-    routing_area = []  # PENDENTE
-
-    origin, waypoints, paths, estimated_time, estimated_distance = (
-        calculate_optimal_route(origin, waypoints, criterion, avoid_zones)
-    )
-    origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
-
-    current_request.update(
-        {
-            "session_id": session_id,
-            "cache_id": cache_id,
-            "routing_area": routing_area,
-            "bounding_box": bounding_box,
-            "avoid_zones": avoid_zones,
-            "origin": origin,
-            "waypoints": waypoints,
-            "criterion": criterion,
-            "paths": paths,
-            "estimated_distance": estimated_distance,
-            "estimated_time": estimated_time,
-        }
-    )
 
 
 def compute_routing_area(avoid_zones, origin, waypoints):
