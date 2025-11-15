@@ -6,7 +6,6 @@ from typing import List, Tuple, Iterable
 import requests
 from geopy.distance import geodesic
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
-from webrotas.routing_servers_interface import PreparaServidorRoteamento
 from webrotas.config.logging_config import get_logger
 from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
 from webrotas.config.server_hosts import get_osrm_host
@@ -52,8 +51,7 @@ def compute_distance_and_duration_matrices(coords, avoid_zones: Iterable | None 
 
     if use_container:
         return _get_matrix_with_local_container_priority(coords, avoid_zones)
-    else:
-        return _get_matrix_with_public_api_priority(coords)
+    return _get_matrix_with_public_api_priority(coords)
 
 
 def _should_use_local_container(coords, avoid_zones: Iterable | None = None) -> bool:
@@ -442,9 +440,6 @@ def get_osrm_matrix_from_local_container(coords):
             import uuid
 
             UserData.ssid = str(uuid.uuid4())[:8]
-
-        # Try to prepare the routing server
-        PreparaServidorRoteamento(routing_area)
 
         # Make request to local container
         coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
