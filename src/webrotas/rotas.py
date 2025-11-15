@@ -1,3 +1,4 @@
+import hashlib
 import json
 import math
 import uuid
@@ -56,6 +57,7 @@ class RouteProcessor:
         self.route_id = route_id or str(uuid.uuid4())
 
         # Route result fields (populated during processing)
+        self.cache_id = None  # Will be computed deterministically from request content for deduplication
         self.routing_area = None
         self.bounding_box = None
         self.location_limits = None
@@ -101,6 +103,9 @@ class RouteProcessor:
         self.paths = paths
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
+        
+        # Compute cache_id based on routing parameters for deduplication
+        self._compute_cache_id()
 
     def process_circle(
         self,
@@ -186,6 +191,33 @@ class RouteProcessor:
         self.paths = paths
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
+        
+        # Compute cache_id based on routing parameters for deduplication
+        self._compute_cache_id()
+
+    def _compute_cache_id(self):
+        """Compute cache_id deterministically for deduplication.
+        
+        We hash the bounding_box and routing_area (which includes avoid_zones) so
+        that identical requests produce identical cacheIds. If data is missing,
+        fall back to a random UUID to avoid collisions.
+        """
+        try:
+            if not self.bounding_box or not self.routing_area:
+                self.cache_id = str(uuid.uuid4())
+                return
+
+            # Prepare a stable JSON payload (sorted keys) for hashing
+            cache_payload = {
+                "bounding_box": self.bounding_box,
+                "routing_area": self.routing_area,
+                "criterion": self.criterion,
+            }
+            payload_str = json.dumps(cache_payload, sort_keys=True, separators=(",", ":"))
+            self.cache_id = hashlib.sha256(payload_str.encode("utf-8")).hexdigest()[:12]
+        except Exception:
+            # In case of any unexpected serialization issues, ensure a value exists
+            self.cache_id = str(uuid.uuid4())
 
     @staticmethod
     def _generate_waypoints_in_radius(center_point, radius_km, total_waypoints):
@@ -229,6 +261,7 @@ class RouteProcessor:
                 {
                     "request": self.request,
                     "response": {
+                        "cacheId": self.cache_id,
                         "boundingBox": self.bounding_box,
                         "location": {
                             "limits": self.location_limits,
