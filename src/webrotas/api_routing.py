@@ -362,7 +362,6 @@ async def request_osrm(
         assert request_type in {"route", "table"}, "Invalid request type"
         url = f"{get_osrm_url()}/{request_type}/v1/driving/{coordinates}"
         data = await make_request(url, params=params)
-        logger.info(f"OSRM returned {len(data.get('routes', []))} routes")
         return data
 
     except httpx.HTTPError as e:
@@ -896,6 +895,8 @@ async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
                 alternatives=ALTERNATIVES,
             )
             logger.info("Successfully retrieved route with zone processing")
+            logger.info(f"OSRM returned {len(data.get('routes', []))} routes")
+
             # Update descriptions
             for ii, waypoint in enumerate(ordered):
                 if not waypoint.get("description") and "waypoints" in data:
@@ -919,6 +920,7 @@ async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
             params=params,
         )
         logger.info("Successfully retrieved route from local container")
+        logger.info(f"OSRM returned {len(data.get('routes', []))} routes")
         return data, ordered
     except Exception as container_e:
         logger.warning(
