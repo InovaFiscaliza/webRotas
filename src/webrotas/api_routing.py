@@ -57,6 +57,7 @@ DOCKER_CPUS_LIMIT = float(os.getenv("DOCKER_CPUS_LIMIT", "4.0"))
 # History and state directories
 HISTORY_DIR = OSRM_DATA_DIR / "avoidzones_history"
 LATEST_POLYGONS = OSRM_DATA_DIR / "latest_avoidzones.geojson"
+LUA_ZONES_FILE = OSRM_DATA_DIR / "profiles" / "avoid_zones_data.lua"
 
 HISTORY_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -72,7 +73,7 @@ class UserData:
 # ============================================================================
 
 
-def process_avoidzones(geojson: dict) -> str:
+def process_avoidzones(geojson: dict) -> None:
     """
     Process avoid zones:
     1. Save the geojson to history (with deduplication)
@@ -98,11 +99,10 @@ def process_avoidzones(geojson: dict) -> str:
     logger.info(f"Saved as latest polygons: {LATEST_POLYGONS}")
 
     # Convert to Lua format
-    lua_zones_file = OSRM_DATA_DIR / "profiles" / "avoid_zones_data.lua"
     try:
         logger.info("Converting polygons to Lua format...")
-        if write_lua_zones_file(LATEST_POLYGONS, lua_zones_file):
-            logger.info(f"Lua zones file written to {lua_zones_file}")
+        if write_lua_zones_file(LATEST_POLYGONS, LUA_ZONES_FILE):
+            logger.info(f"Lua zones file written to {LUA_ZONES_FILE}")
         else:
             logger.warning("Failed to write Lua zones file, continuing anyway")
     except Exception as e:
@@ -642,7 +642,9 @@ async def calculate_optimal_route(
     order = _calculate_route_order(coords, distances, durations, criterion)
 
     # Get route geometry from OSRM
-    route_json, ordered_coords = await get_osrm_route(coords, order, avoid_zones=avoid_zones)
+    route_json, ordered_coords = await get_osrm_route(
+        coords, order, avoid_zones=avoid_zones
+    )
 
     # Format and return output
     return _format_route_output(route_json, ordered_coords)
@@ -858,12 +860,12 @@ def validate_matrix(
 async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
     """
     Get OSRM route with optional avoid zones processing.
-    
+
     Args:
         coords: List of all coordinate dicts
         order: Ordered indices for waypoint visitation
         avoid_zones: Optional list of avoid zone dicts with 'name' and 'coord' keys
-    
+
     Returns:
         tuple: (route_data, ordered_coords)
     """
@@ -877,13 +879,16 @@ async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
             geojson = avoid_zones_to_geojson(avoid_zones)
             logger.info(f"Converted {len(avoid_zones)} avoid zones to GeoJSON")
         except Exception as e:
-            logger.warning(f"Failed to convert avoid zones to GeoJSON: {e}. Continuing without zones")
+            logger.warning(
+                f"Failed to convert avoid zones to GeoJSON: {e}. Continuing without zones"
+            )
             geojson = None
 
     # If we have valid GeoJSON, use route_with_zones for client-side filtering
     if geojson is not None:
         try:
             logger.info("Processing route with avoid zones")
+            process_avoidzones(geojson)return
             data = await route_with_zones(
                 coordinates=coord_str,
                 geojson=geojson,

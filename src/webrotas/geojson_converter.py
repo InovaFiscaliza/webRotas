@@ -59,11 +59,13 @@ def avoid_zones_to_geojson(avoid_zones: list[dict]) -> dict[str, Any]:
     
     # Determine geometry type based on number of polygons
     if len(polygons) == 1:
+        # Polygon requires coordinates to be wrapped in an array: [[[lng, lat], ...]]
         geometry = {
             "type": "Polygon",
-            "coordinates": polygons[0]
+            "coordinates": [polygons[0]]
         }
     else:
+        # MultiPolygon requires: [[[[lng, lat], ...]], [[[lng, lat], ...]]]
         geometry = {
             "type": "MultiPolygon",
             "coordinates": [[polygon] for polygon in polygons]
