@@ -888,7 +888,7 @@ async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
     if geojson is not None:
         try:
             logger.info("Processing route with avoid zones")
-            process_avoidzones(geojson)return
+            process_avoidzones(geojson)
             data = await route_with_zones(
                 coordinates=coord_str,
                 geojson=geojson,
