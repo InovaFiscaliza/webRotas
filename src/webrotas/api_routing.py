@@ -1,6 +1,8 @@
+import json
+import os
 from dataclasses import dataclass
 import math
-import socket
+from pathlib import Path
 from typing import List, Tuple, Iterable, Dict, Any, Optional
 from fastapi import HTTPException
 
@@ -14,7 +16,12 @@ from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
 from webrotas.config.logging_config import get_logger
 from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
-from webrotas.config.server_hosts import get_osrm_host, get_osrm_url
+from webrotas.config.server_hosts import get_osrm_url
+from webrotas.geojson_converter import avoid_zones_to_geojson
+
+from .lua_converter import write_lua_zones_file
+from .version_manager import save_version, load_version, list_versions
+
 
 # Initialize logging at module level
 logger = get_logger(__name__)
@@ -29,6 +36,30 @@ URL = {
 TEST_ROUTE = "/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
 ALTERNATIVES = 3
 
+# ============================================================================
+# Configuration
+# ============================================================================
+
+OSRM_PROFILE = os.getenv("OSRM_PROFILE", "/profiles/car_avoid.lua")
+PBF_NAME = os.getenv("PBF_NAME", "region.osm.pbf")
+OSRM_BASE = os.getenv("OSRM_BASE", "region")
+AVOIDZONES_TOKEN = os.getenv("AVOIDZONES_TOKEN", "default-token")
+OSRM_DATA_DIR = Path(os.getenv("OSRM_DATA", "/data"))
+OSM_PBF_URL = os.getenv("OSM_PBF_URL", "")
+
+# OSRM server URL for routing requests
+OSRM_URL = os.getenv("OSRM_URL", "http://localhost:5000")
+
+# Docker resource limits for OSRM preprocessing
+DOCKER_MEMORY_LIMIT = os.getenv("DOCKER_MEMORY_LIMIT", "16g")
+DOCKER_CPUS_LIMIT = float(os.getenv("DOCKER_CPUS_LIMIT", "4.0"))
+
+# History and state directories
+HISTORY_DIR = OSRM_DATA_DIR / "avoidzones_history"
+LATEST_POLYGONS = OSRM_DATA_DIR / "latest_avoidzones.geojson"
+
+HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+
 
 @dataclass
 class UserData:
@@ -39,6 +70,85 @@ class UserData:
 # ============================================================================
 # Client-Side Zone Processing Helpers
 # ============================================================================
+
+
+def process_avoidzones(geojson: dict) -> str:
+    """
+    Process avoid zones:
+    1. Save the geojson to history (with deduplication)
+    2. Convert polygons to Lua format
+    3. Start PBF reprocessing in background thread (non-blocking)
+
+    Returns the version identifier (e.g., "v5") of the configuration,
+    which may be an existing duplicate or a newly created version.
+    PBF reprocessing happens in the background for new versions.
+    """
+    # Validate GeoJSON
+    if geojson.get("type") != "FeatureCollection":
+        raise ValueError("Expected FeatureCollection")
+
+    # Save to history with deduplication
+    version_filename, is_new_version = save_version(
+        geojson, HISTORY_DIR, check_duplicates=True
+    )
+    logger.info(f"Saved avoidzones version: {version_filename} (new={is_new_version})")
+
+    # Save as latest
+    LATEST_POLYGONS.write_text(json.dumps(geojson, indent=2), encoding="utf-8")
+    logger.info(f"Saved as latest polygons: {LATEST_POLYGONS}")
+
+    # Convert to Lua format
+    lua_zones_file = OSRM_DATA_DIR / "profiles" / "avoid_zones_data.lua"
+    try:
+        logger.info("Converting polygons to Lua format...")
+        if write_lua_zones_file(LATEST_POLYGONS, lua_zones_file):
+            logger.info(f"Lua zones file written to {lua_zones_file}")
+        else:
+            logger.warning("Failed to write Lua zones file, continuing anyway")
+    except Exception as e:
+        logger.error(f"Failed to convert polygons to Lua: {e}")
+        logger.warning("Continuing despite Lua conversion error")
+
+
+def load_spatial_index(geojson: Dict[str, Any]) -> tuple[List, Optional[STRtree]]:
+    """
+    Build spatial index from GeoJSON for fast polygon queries.
+
+    Args:
+        geojson: GeoJSON FeatureCollection or Feature
+
+    Returns:
+        Tuple of (list of shapely polygons, STRtree spatial index)
+        Returns ([], None) if no valid polygons found
+    """
+    try:
+        features = (
+            geojson.get("features", [])
+            if geojson.get("type") == "FeatureCollection"
+            else [geojson]
+        )
+
+        polys = []
+        for feature in features:
+            geom = feature.get("geometry")
+            if geom and geom.get("type") in ("Polygon", "MultiPolygon"):
+                try:
+                    poly = shape(geom)
+                    if poly.is_valid:
+                        polys.append(poly)
+                except Exception as e:
+                    logger.warning(f"Could not convert geometry to polygon: {e}")
+                    continue
+
+        if not polys:
+            logger.info("No valid polygons found in GeoJSON")
+            return [], None
+
+        tree = STRtree(polys)
+        return polys, tree
+    except Exception as e:
+        logger.error(f"Error building spatial index: {e}")
+        return [], None
 
 
 def check_route_intersections(
@@ -109,6 +219,116 @@ def check_route_intersections(
             "penalty_ratio": 0.0,
             "route_length_km": 0.0,
         }
+
+
+async def route_with_zones(
+    coordinates: str,
+    geojson: Dict[str, Any],
+    avoid_mode: str = "penalize",
+    alternatives: int = ALTERNATIVES,
+) -> Dict[str, Any]:
+    """
+    Route with client-side avoid zones filtering.
+
+    Request route from OSRM, then filter/penalize based on avoid zones.
+
+    Args:
+        coordinates: OSRM format "lng1,lat1;lng2,lat2"
+        geojson: GeoJSON object representing avoid zones
+        avoid_mode: "filter" (exclude routes in zones) or "penalize" (return all routes with scores)
+        alternatives: Number of alternative routes (1-3)
+
+    Returns:
+        OSRM response with added penalties and zones metadata
+    """
+    try:
+        # Validate avoid_mode
+        if avoid_mode not in ("filter", "penalize"):
+            raise HTTPException(
+                status_code=400,
+                detail="avoid_mode must be 'filter' or 'penalize'",
+            )
+
+        # Load zones configuration
+        polys, tree = load_spatial_index(geojson)
+
+        polygon_count = len(polys)
+        logger.info(f"Loaded {polygon_count} avoid zone polygons")
+
+        # Request route from OSRM
+        logger.info(f"Requesting {alternatives} route(s) from OSRM")
+        params = {
+            "alternatives": ALTERNATIVES,
+            "overview": "full",
+            "geometries": "geojson",
+        }
+        osrm_response = await request_osrm(
+            request_type="route",
+            coordinates=coordinates,
+            params=params,
+        )
+
+        if not osrm_response.get("routes"):
+            logger.warning("No routes found from OSRM")
+            return osrm_response
+
+        # Process routes through zones
+        processed_routes = []
+        intersection_info = {}
+
+        for idx, route in enumerate(osrm_response["routes"]):
+            coords = route["geometry"]["coordinates"]
+            intersection_data = check_route_intersections(coords, polys, tree)
+
+            # Apply avoid mode logic
+            if avoid_mode == "filter" and intersection_data["intersection_count"] > 0:
+                logger.info(
+                    f"Route {idx} filtered (crosses {intersection_data['intersection_count']} zones)"
+                )
+                continue  # Skip routes with intersections
+            elif avoid_mode == "penalize":
+                # Add penalty information to route
+                if "penalties" not in route:
+                    route["penalties"] = {}
+                route["penalties"] = {
+                    "zone_intersections": intersection_data["intersection_count"],
+                    "intersection_length_km": intersection_data["total_length_km"],
+                    "penalty_score": intersection_data["penalty_ratio"],
+                }
+
+            processed_routes.append(route)
+            intersection_info[f"route_{len(processed_routes) - 1}"] = intersection_data
+
+        # Sort routes by penalty score (best first)
+        if avoid_mode == "penalize":
+            processed_routes.sort(
+                key=lambda r: r.get("penalties", {}).get("penalty_score", 0)
+            )
+
+        # Return processed response
+        osrm_response["routes"] = processed_routes
+        osrm_response["zones_applied"] = {
+            "version": "latest",
+            "polygon_count": polygon_count,
+        }
+        osrm_response["intersection_info"] = intersection_info
+
+        logger.info(
+            f"Returning {len(processed_routes)} route(s) with {polygon_count} zones applied"
+        )
+        return osrm_response
+
+    except FileNotFoundError as e:
+        logger.error(f"Zones file not found: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        logger.error(f"Invalid version format: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in route_with_zones: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Routing failed: {str(e)}")
 
 
 async def make_request(url, params=None):
@@ -422,7 +642,7 @@ async def calculate_optimal_route(
     order = _calculate_route_order(coords, distances, durations, criterion)
 
     # Get route geometry from OSRM
-    route_json, ordered_coords = await get_osrm_route(coords, order)
+    route_json, ordered_coords = await get_osrm_route(coords, order, avoid_zones=avoid_zones)
 
     # Format and return output
     return _format_route_output(route_json, ordered_coords)
@@ -636,8 +856,50 @@ def validate_matrix(
 
 # -----------------------------------------------------------------------------------#
 async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
+    """
+    Get OSRM route with optional avoid zones processing.
+    
+    Args:
+        coords: List of all coordinate dicts
+        order: Ordered indices for waypoint visitation
+        avoid_zones: Optional list of avoid zone dicts with 'name' and 'coord' keys
+    
+    Returns:
+        tuple: (route_data, ordered_coords)
+    """
     ordered = [coords[ii] for ii in order]
     coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
+
+    # Convert avoid_zones to GeoJSON if present
+    geojson = None
+    if avoid_zones and len(avoid_zones) > 0:
+        try:
+            geojson = avoid_zones_to_geojson(avoid_zones)
+            logger.info(f"Converted {len(avoid_zones)} avoid zones to GeoJSON")
+        except Exception as e:
+            logger.warning(f"Failed to convert avoid zones to GeoJSON: {e}. Continuing without zones")
+            geojson = None
+
+    # If we have valid GeoJSON, use route_with_zones for client-side filtering
+    if geojson is not None:
+        try:
+            logger.info("Processing route with avoid zones")
+            data = await route_with_zones(
+                coordinates=coord_str,
+                geojson=geojson,
+                avoid_mode="penalize",
+                alternatives=ALTERNATIVES,
+            )
+            logger.info("Successfully retrieved route with zone processing")
+            # Update descriptions
+            for ii, waypoint in enumerate(ordered):
+                if not waypoint.get("description") and "waypoints" in data:
+                    waypoint["description"] = data["waypoints"][ii].get("name", "")
+            return data, ordered
+        except Exception as zone_e:
+            logger.warning(
+                f"Route with zones processing failed: {zone_e}. Falling back to standard routing"
+            )
 
     # Try local container first (priority order as requested)
     try:
