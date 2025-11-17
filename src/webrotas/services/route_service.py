@@ -63,22 +63,22 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
         # Route processing based on type
         match request_type:
             case "shortest":
-                processor.process_shortest(parameters["waypoints"])
+                await processor.process_shortest(parameters["waypoints"])
             case "circle":
-                processor.process_circle(
+                await processor.process_circle(
                     parameters["centerPoint"],
                     parameters["radius"],
                     parameters["totalWaypoints"],
                 )
             case "grid":
-                processor.process_grid(
+                await processor.process_grid(
                     parameters["city"],
                     parameters["state"],
                     parameters["scope"],
                     parameters["pointDistance"],
                 )
             case "ordered":
-                processor.process_ordered(
+                await processor.process_ordered(
                     parameters["cacheId"],
                     parameters["boundingBox"],
                     parameters["waypoints"],

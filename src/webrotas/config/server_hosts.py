@@ -12,14 +12,12 @@ Environment variables:
 """
 
 import os
-from enum import Enum
+from dotenv import load_dotenv, find_dotenv
 
+load_dotenv(find_dotenv())
 
-class Environment(Enum):
-    """Environment types"""
-
-    DEVELOPMENT = "development"
-    PRODUCTION = "production"  # or containerized environments
+OSRM_PORT = int(os.getenv("OSRM_PORT", 5000))
+WEBROTAS_PORT = int(os.getenv("WEBROTAS_PORT", 5002))
 
 
 class ServerHosts:
@@ -74,30 +72,24 @@ class ServerHosts:
         return "webrotas" if ServerHosts.is_containerized() else "localhost"
 
     @staticmethod
-    def get_webrotas_url(port: int) -> str:
+    def get_webrotas_url() -> str:
         """
         Get webRotas server base URL.
-
-        Args:
-            port (int): Server port number
 
         Returns:
             str: Full URL for webRotas server (e.g., http://localhost:5002 or http://webrotas:5002)
         """
-        return f"http://{ServerHosts.get_webrotas_host()}:{port}"
+        return f"http://{ServerHosts.get_webrotas_host()}:{WEBROTAS_PORT}"
 
     @staticmethod
-    def get_osrm_url(port: int) -> str:
+    def get_osrm_url() -> str:
         """
         Get OSRM server base URL.
-
-        Args:
-            port (int): Server port number (typically 5000)
 
         Returns:
             str: Full URL for OSRM server (e.g., http://localhost:5000 or http://osrm:5000)
         """
-        return f"http://{ServerHosts.get_osrm_host()}:{port}"
+        return f"http://{ServerHosts.get_osrm_host()}:{OSRM_PORT}"
 
 
 # Convenience functions for direct import
@@ -111,14 +103,14 @@ def get_webrotas_host() -> str:
     return ServerHosts.get_webrotas_host()
 
 
-def get_webrotas_url(port: int) -> str:
+def get_webrotas_url() -> str:
     """Get webRotas server URL"""
-    return ServerHosts.get_webrotas_url(port)
+    return ServerHosts.get_webrotas_url()
 
 
-def get_osrm_url(port: int) -> str:
+def get_osrm_url() -> str:
     """Get OSRM server URL"""
-    return ServerHosts.get_osrm_url(port)
+    return ServerHosts.get_osrm_url()
 
 
 def is_containerized() -> bool:

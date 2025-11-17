@@ -12,8 +12,8 @@ load_dotenv(find_dotenv())
 MODULE_DIR = Path(__file__).parent.parent.parent
 
 # Default configuration
-DEFAULT_WEBROTAS_PORT = 5002
-DEFAULT_OSRM_PORT = 5000
+DEFAULT_WEBROTAS_PORT = int(os.getenv("WEBROTAS_PORT", 5002))
+DEFAULT_OSRM_PORT = int(os.getenv("OSRM_PORT", 5000))
 DEFAULT_DEBUG = False
 
 

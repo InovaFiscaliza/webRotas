@@ -1,14 +1,20 @@
 from dataclasses import dataclass
 import math
 import socket
-from typing import List, Tuple, Iterable
+from typing import List, Tuple, Iterable, Dict, Any, Optional
+from fastapi import HTTPException
 
-import requests
+# Client-side zone processing imports
+import httpx
+from shapely.geometry import LineString, shape
+from shapely.strtree import STRtree
+
 from geopy.distance import geodesic
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+
 from webrotas.config.logging_config import get_logger
 from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
-from webrotas.config.server_hosts import get_osrm_host
+from webrotas.config.server_hosts import get_osrm_host, get_osrm_url
 
 # Initialize logging at module level
 logger = get_logger(__name__)
@@ -21,6 +27,7 @@ URL = {
 }
 
 TEST_ROUTE = "/route/v1/driving/-43.105772903105354,-22.90510838815471;-43.089637952126694,-22.917360518277434?overview=full&geometries=polyline&steps=true"
+ALTERNATIVES = 3
 
 
 @dataclass
@@ -29,8 +36,133 @@ class UserData:
     ssid: str | None = None
 
 
+# ============================================================================
+# Client-Side Zone Processing Helpers
+# ============================================================================
+
+
+def check_route_intersections(
+    coords: List[List[float]], polygons: List, tree: Optional[STRtree]
+) -> Dict[str, Any]:
+    """
+    Calculate route-polygon intersections for a given route and set of avoid zone polygons.
+
+    Args:
+        coords: List of [longitude, latitude] coordinates forming the route
+        polygons: List of shapely polygon objects representing avoid zones
+        tree: STRtree spatial index of polygons (or None if no polygons)
+
+    Returns:
+        Dictionary with intersection statistics:
+        - intersection_count: Number of polygons route intersects
+        - total_length_km: Total length of route within avoid zones
+        - penalty_ratio: Fraction of route within zones (0.0-1.0)
+        - route_length_km: Total route length in kilometers
+    """
+    if not polygons or tree is None:
+        return {
+            "intersection_count": 0,
+            "total_length_km": 0.0,
+            "penalty_ratio": 0.0,
+            "route_length_km": 0.0,
+        }
+
+    try:
+        route_line = LineString(coords)
+        intersection_count = 0
+        total_intersection_length = 0
+
+        # Query spatial index for candidate polygons
+        candidate_indices = tree.query(route_line)
+
+        for idx in candidate_indices:
+            polygon = polygons[idx]
+            if route_line.intersects(polygon):
+                intersection_count += 1
+                intersection = route_line.intersection(polygon)
+                # Handle both Point and LineString/MultiLineString intersections
+                if hasattr(intersection, "length"):
+                    total_intersection_length += intersection.length
+
+        total_route_length = route_line.length
+        penalty_ratio = (
+            total_intersection_length / total_route_length
+            if total_route_length > 0
+            else 0.0
+        )
+
+        # Convert to km for readability
+        total_intersection_km = total_intersection_length / 1000
+        route_length_km = total_route_length / 1000
+
+        return {
+            "intersection_count": intersection_count,
+            "total_length_km": round(total_intersection_km, 3),
+            "penalty_ratio": min(penalty_ratio, 1.0),  # Cap at 100%
+            "route_length_km": round(route_length_km, 3),
+        }
+    except Exception as e:
+        logger.error(f"Error calculating route intersections: {e}")
+        return {
+            "intersection_count": 0,
+            "total_length_km": 0.0,
+            "penalty_ratio": 0.0,
+            "route_length_km": 0.0,
+        }
+
+
+async def make_request(url, params=None):
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+
+
+async def request_osrm(
+    request_type: str,
+    coordinates: str,
+    params: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Request route from OSRM with specified parameters.
+
+    Args:
+        coordinates: OSRM format coordinates "lng1,lat1;lng2,lat2"
+        alternatives: Number of alternative routes (1-3)
+        overview: Detail level ("simplified", "full", "false")
+        geometries: Geometry format ("geojson", "polyline", "polyline6")
+
+    Returns:
+        OSRM response as dictionary
+
+    Raises:
+        HTTPException: On connection or OSRM errors
+    """
+    try:
+        assert request_type in {"route", "table"}, "Invalid request type"
+        url = f"{get_osrm_url()}/{request_type}/v1/driving/{coordinates}"
+        data = await make_request(url, params=params)
+        logger.info(f"OSRM returned {len(data.get('routes', []))} routes")
+        return data
+
+    except httpx.HTTPError as e:
+        logger.error(f"OSRM HTTP error: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"OSRM routing request failed: {str(e)}",
+        )
+    except Exception as e:
+        logger.error(f"Error requesting OSRM: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error requesting OSRM: {str(e)}",
+        )
+
+
 # -----------------------------------------------------------------------------------#
-def compute_distance_and_duration_matrices(coords, avoid_zones: Iterable | None = None):
+async def compute_distance_and_duration_matrices(
+    coords, avoid_zones: Iterable | None = None
+):
     """
     Retrieve distance and duration matrices using fallback strategy.
 
@@ -50,8 +182,8 @@ def compute_distance_and_duration_matrices(coords, avoid_zones: Iterable | None 
     use_container = _should_use_local_container(coords, avoid_zones)
 
     if use_container:
-        return _get_matrix_with_local_container_priority(coords, avoid_zones)
-    return _get_matrix_with_public_api_priority(coords)
+        return await _get_matrix_with_local_container_priority(coords, avoid_zones)
+    return await _get_matrix_with_public_api_priority(coords)
 
 
 def _should_use_local_container(coords, avoid_zones: Iterable | None = None) -> bool:
@@ -84,7 +216,7 @@ def _should_use_local_container(coords, avoid_zones: Iterable | None = None) -> 
     return False
 
 
-def _get_matrix_with_local_container_priority(coords, avoid_zones):
+async def _get_matrix_with_local_container_priority(coords, avoid_zones):
     """
     Attempt to retrieve matrix starting with local container.
 
@@ -101,7 +233,7 @@ def _get_matrix_with_local_container_priority(coords, avoid_zones):
         tuple: (distances, durations) matrices
     """
     try:
-        return get_osrm_matrix_from_local_container(coords)
+        return await get_osrm_matrix_from_local_container(coords)
     except Exception as e:
         if avoid_zones is None:
             logger.error(
@@ -123,7 +255,7 @@ def _get_matrix_with_local_container_priority(coords, avoid_zones):
             return get_geodesic_matrix(coords, speed_kmh=40)
 
 
-def _get_matrix_with_public_api_priority(coords):
+async def _get_matrix_with_public_api_priority(coords):
     """
     Attempt to retrieve matrix starting with public OSRM API.
 
@@ -140,11 +272,11 @@ def _get_matrix_with_public_api_priority(coords):
         tuple: (distances, durations) matrices
     """
     try:
-        return get_osrm_matrix(coords)
-    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+        return await get_osrm_matrix(coords)
+    except (httpx.HTTPError, ValueError, KeyError) as e:
         logger.error(f"Public API failed: {e}. Trying local container", exc_info=True)
         try:
-            return get_osrm_matrix_from_local_container(coords)
+            return await get_osrm_matrix_from_local_container(coords)
         except Exception as container_e:
             logger.warning(
                 f"Local container also failed: {container_e}. Trying iterative matrix builder"
@@ -249,7 +381,7 @@ def _format_route_output(route_json, ordered_coords):
     )
 
 
-def calculate_optimal_route(
+async def calculate_optimal_route(
     origin, waypoints, criterion: str = "distance", avoid_zones: Iterable | None = None
 ):
     """
@@ -279,7 +411,9 @@ def calculate_optimal_route(
     coords = [origin] + waypoints
 
     # Retrieve distance/duration matrices with fallback strategy
-    distances, durations = compute_distance_and_duration_matrices(coords, avoid_zones)
+    distances, durations = await compute_distance_and_duration_matrices(
+        coords, avoid_zones
+    )
 
     # Validate and repair matrices
     distances, durations = _ensure_valid_matrices(coords, distances, durations)
@@ -288,59 +422,29 @@ def calculate_optimal_route(
     order = _calculate_route_order(coords, distances, durations, criterion)
 
     # Get route geometry from OSRM
-    route_json, ordered_coords = get_osrm_route(coords, order)
+    route_json, ordered_coords = await get_osrm_route(coords, order)
 
     # Format and return output
     return _format_route_output(route_json, ordered_coords)
 
 
-def get_osrm_matrix(coords):
-    coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
-
-    req = requests.get(URL["table"](coord_str), timeout=10)
-    req.raise_for_status()
-    data = req.json()
-
-    return data["distances"], data["durations"]
-
-
-# -----------------------------------------------------------------------------------#
-def is_port_available(host=None, port=5000, timeout=10):
-    """
-    Check if a container is available on the specified port.
-
-    Args:
-        host (str): The host to check (default: None, uses get_osrm_host())
-        port (int): The port to check (default: 5000)
-        timeout (int): Connection timeout in seconds (default: 10)
-
-    Returns:
-        bool: True if port is available and responding, False otherwise
-    """
-    if host is None:
-        host = get_osrm_host()
-
+async def get_osrm_matrix(coords):
     try:
-        # First check if port is open
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.settimeout(timeout)
-            result = sock.connect_ex((host, port))
-            if result != 0:
-                # Port is not open
-                return False
-
-        # Port is open, now check if OSRM is responding
-        try:
-            response = requests.get(
-                f"http://{host}:{port}{TEST_ROUTE}", timeout=timeout
-            )
-            return response.status_code == 200
-        except requests.exceptions.RequestException:
-            # Port is open but OSRM is not responding properly
-            return False
-
-    except Exception:
-        return False
+        coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
+        params = {
+            "annotations": "distance,duration",
+        }
+        data = await request_osrm(
+            request_type="table",
+            coordinates=coord_str,
+            params=params,
+        )
+        return data["distances"], data["durations"]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in get_osrm_matrix: {e}")
+        raise
 
 
 # -----------------------------------------------------------------------------------#
@@ -393,13 +497,11 @@ def compute_bounding_box(coords):
 
 
 # -----------------------------------------------------------------------------------#
-def get_osrm_matrix_from_local_container(coords):
+async def get_osrm_matrix_from_local_container(coords):
     """
     Get distance and duration matrix from local OSRM container.
 
     This function:
-    1. Checks if port 5000 is available and responding
-    2. If not available, immediately raises exception to fallback to iterative method
     3. Estimates bounding box for the route
     4. Checks if there's an active container for this area
     5. If not, starts a new container
@@ -414,26 +516,11 @@ def get_osrm_matrix_from_local_container(coords):
     Raises:
         Exception: If container setup or request fails, or if port 5000 is not available
     """
-    # First check if container is available on port 5000
-    # Use parametrized hostname for Docker network connectivity
-    osrm_host = get_osrm_host()
-    if not is_port_available(osrm_host, 5000):
-        raise Exception(
-            f"OSRM container not available on {osrm_host}:5000 - falling back to iterative method"
-        )
-
-    logger.info(
-        "OSRM container verified available on port 5000, proceeding with local container request"
-    )
 
     try:
         # Extract bounding box from coordinates
         if not coords or len(coords) < 2:
             raise ValueError("Need at least 2 coordinates for routing")
-
-        routing_area = [
-            {"name": "boundingBoxRegion", "coord": compute_bounding_box(coords)}
-        ]
 
         # Set up user data for container interface
         if not hasattr(UserData, "ssid") or UserData.ssid is None:
@@ -443,17 +530,17 @@ def get_osrm_matrix_from_local_container(coords):
 
         # Make request to local container
         coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
-        # Use parametrized hostname for Docker network connectivity
-        osrm_host = get_osrm_host()
-        local_url = f"http://{osrm_host}:{UserData.OSMRport}/table/v1/driving/{coord_str}?annotations=distance,duration"
 
-        logger.debug(f"Making request to OSRM at {osrm_host}: {local_url}")
+        logger.info(f"Making request to OSRM at: {get_osrm_url()}")
 
-        # Use longer timeout for local container as it might need to start up
-        response = requests.get(local_url, timeout=60)
-        response.raise_for_status()
-
-        data = response.json()
+        params = {
+            "annotations": "distance,duration",
+        }
+        data = await request_osrm(
+            request_type="table",
+            coordinates=coord_str,
+            params=params,
+        )
 
         if "distances" not in data or "durations" not in data:
             raise ValueError("Invalid response from local OSRM container")
@@ -548,23 +635,22 @@ def validate_matrix(
 
 
 # -----------------------------------------------------------------------------------#
-def get_osrm_route(coords, order):
+async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
     ordered = [coords[ii] for ii in order]
     coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
 
     # Try local container first (priority order as requested)
     try:
-        if not UserData.OSMRport:
-            raise Exception("No local OSRM container available")
-
-        osrm_host = get_osrm_host()
-        local_url = f"http://{osrm_host}:{UserData.OSMRport}/route/v1/driving/{coord_str}?overview=full&geometries=geojson"
-        logger.info(
-            f"Attempting local container route: {osrm_host}:{UserData.OSMRport}"
+        params = {
+            "alternatives": ALTERNATIVES,
+            "overview": "full",
+            "geometries": "geojson",
+        }
+        data = await request_osrm(
+            request_type="route",
+            coordinates=coord_str,
+            params=params,
         )
-        req = requests.get(local_url, timeout=30)
-        req.raise_for_status()
-        data = req.json()
         logger.info("Successfully retrieved route from local container")
         return data, ordered
     except Exception as container_e:
@@ -578,12 +664,19 @@ def get_osrm_route(coords, order):
             raise ValueError("Too many points for public API")
 
         logger.info(f"Attempting public API route for {len(ordered)} points")
-        req = requests.get(URL["route"](coord_str), timeout=10)
-        req.raise_for_status()
-        data = req.json()
+        params = {
+            "alternatives": ALTERNATIVES,
+            "overview": "full",
+            "geometries": "geojson",
+        }
+        data = await request_osrm(
+            request_type="route",
+            coordinates=coord_str,
+            params=params,
+        )
         logger.info("Successfully retrieved route from public API")
-    except (requests.exceptions.RequestException, ValueError) as e:
-        logger.error(f"Public route API failed: {e}. Using fallback response")
+    except HTTPException:
+        logger.error(f"Public route API failed. Using fallback response")
         # Fallback: return a minimal valid response structure
         data = {
             "routes": [

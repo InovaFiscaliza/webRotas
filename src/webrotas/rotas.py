@@ -68,7 +68,7 @@ class RouteProcessor:
         self.estimated_distance = None
         self.estimated_time = None
 
-    def process_shortest(
+    async def process_shortest(
         self,
         waypoints,
         location_limits=[],
@@ -86,8 +86,10 @@ class RouteProcessor:
         )
         # si.PreparaServidorRoteamento(routing_area)
 
-        origin, waypoints, paths, estimated_time, estimated_distance = (
-            calculate_optimal_route(self.origin, waypoints, self.criterion, self.avoid_zones)
+        origin, waypoints, paths, estimated_time, estimated_distance = await (
+            calculate_optimal_route(
+                self.origin, waypoints, self.criterion, self.avoid_zones
+            )
         )
 
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
@@ -103,11 +105,11 @@ class RouteProcessor:
         self.paths = paths
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
-        
+
         # Compute cache_id based on routing parameters for deduplication
         self._compute_cache_id()
 
-    def process_circle(
+    async def process_circle(
         self,
         center_point,
         radius_km,
@@ -123,9 +125,9 @@ class RouteProcessor:
         waypoints = self._generate_waypoints_in_radius(
             center_point, radius_km, total_waypoints
         )
-        self.process_shortest(waypoints)
+        await self.process_shortest(waypoints)
 
-    def process_grid(
+    async def process_grid(
         self,
         city,
         state,
@@ -154,15 +156,14 @@ class RouteProcessor:
             case _:
                 raise ValueError(f'Invalid scope "{scope}"')
 
-        self.process_shortest(
+        await self.process_shortest(
             waypoints,
             location_limits,
             location_urban_areas,
         )
 
-    def process_ordered(
+    async def process_ordered(
         self,
-        cache_id,
         bounding_box,
         waypoints,
     ):
@@ -178,8 +179,10 @@ class RouteProcessor:
 
         routing_area = []  # PENDENTE
 
-        origin, waypoints, paths, estimated_time, estimated_distance = (
-            calculate_optimal_route(self.origin, waypoints, self.criterion, self.avoid_zones)
+        origin, waypoints, paths, estimated_time, estimated_distance = await (
+            calculate_optimal_route(
+                self.origin, waypoints, self.criterion, self.avoid_zones
+            )
         )
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
@@ -191,13 +194,13 @@ class RouteProcessor:
         self.paths = paths
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
-        
+
         # Compute cache_id based on routing parameters for deduplication
         self._compute_cache_id()
 
     def _compute_cache_id(self):
         """Compute cache_id deterministically for deduplication.
-        
+
         We hash the bounding_box and routing_area (which includes avoid_zones) so
         that identical requests produce identical cacheIds. If data is missing,
         fall back to a random UUID to avoid collisions.
@@ -213,7 +216,9 @@ class RouteProcessor:
                 "routing_area": self.routing_area,
                 "criterion": self.criterion,
             }
-            payload_str = json.dumps(cache_payload, sort_keys=True, separators=(",", ":"))
+            payload_str = json.dumps(
+                cache_payload, sort_keys=True, separators=(",", ":")
+            )
             self.cache_id = hashlib.sha256(payload_str.encode("utf-8")).hexdigest()[:12]
         except Exception:
             # In case of any unexpected serialization issues, ensure a value exists
@@ -255,7 +260,7 @@ class RouteProcessor:
     def create_initial_route(self):
         """Generate initial route response with location and routing details."""
         initial_route = {
-            "url": f"{get_webrotas_url(env.port)}/",
+            "url": f"{get_webrotas_url()}/",
             "type": "initialRoute",
             "routing": [
                 {
@@ -369,21 +374,19 @@ def compute_routing_area(avoid_zones, origin, waypoints):
 # -----------------------------------------------------------------------------------#
 def get_areas_urbanas_cache(city, state):
     """Fetch urban areas data for a city/state combination.
-    
+
     Note: Cache has been removed as it's no longer necessary with async FastAPI.
     Data is fetched directly from shapefiles on each request.
     """
     polMunicipio = sf.GetBoundMunicipio(city, state)
-    polMunicipioAreasUrbanizadas = sf.FiltrarAreasUrbanizadasPorMunicipio(
-        city, state
-    )
+    polMunicipioAreasUrbanizadas = sf.FiltrarAreasUrbanizadasPorMunicipio(city, state)
     return polMunicipio, polMunicipioAreasUrbanizadas
 
 
 # -----------------------------------------------------------------------------------#
 def get_polyline_comunities(regioes):
     """Fetch community polylines for a region.
-    
+
     Note: Cache has been removed as it's no longer necessary with async FastAPI.
     Polylines are fetched directly from shapefiles on each request.
     """

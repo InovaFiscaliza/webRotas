@@ -18,7 +18,7 @@ from webrotas import api_routing
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(message)s")
 
 
-def test_basic_routing():
+async def test_basic_routing():
     """Test basic routing functionality with small number of points."""
     print("\n=== Test 1: Basic routing (should use public API) ===")
 
@@ -29,7 +29,7 @@ def test_basic_routing():
     ]
 
     try:
-        result = api_routing.calculate_optimal_route(origin, waypoints, "distance")
+        result = await api_routing.calculate_optimal_route(origin, waypoints, "distance")
         print("✅ Basic routing successful")
         print(f"   Origin: {result[0]}")
         print(f"   Waypoints: {len(result[1])}")
@@ -41,7 +41,7 @@ def test_basic_routing():
         return False
 
 
-def test_many_points_routing():
+async def test_many_points_routing():
     """Test routing with >100 points (should use local container)."""
     print("\n=== Test 2: Many points routing (should use local container) ===")
 
@@ -55,7 +55,7 @@ def test_many_points_routing():
         waypoints.append({"lat": lat, "lng": lng, "description": f"Point {i + 1}"})
 
     try:
-        result = api_routing.calculate_optimal_route(origin, waypoints, "distance")
+        result = await api_routing.calculate_optimal_route(origin, waypoints, "distance")
         print("✅ Many points routing successful")
         print(f"   Origin: {result[0]}")
         print(f"   Waypoints: {len(result[1])}")
@@ -68,7 +68,7 @@ def test_many_points_routing():
         return False
 
 
-def test_exclusion_zones_routing():
+async def test_exclusion_zones_routing():
     """Test routing with exclusion zones (should use local container)."""
     print("\n=== Test 3: Exclusion zones routing (should use local container) ===")
 
@@ -92,7 +92,7 @@ def test_exclusion_zones_routing():
     ]
 
     try:
-        result = api_routing.calculate_optimal_route(
+        result = await api_routing.calculate_optimal_route(
             origin, waypoints, "distance", avoid_zones
         )
         print("✅ Exclusion zones routing successful")
@@ -107,7 +107,7 @@ def test_exclusion_zones_routing():
         return False
 
 
-def test_matrix_functions():
+async def test_matrix_functions():
     """Test the matrix calculation functions directly."""
     print("\n=== Test 4: Matrix functions ===")
 
@@ -119,12 +119,12 @@ def test_matrix_functions():
 
     # Test public API matrix
     try:
-        distances, durations = api_routing.get_osrm_matrix(coords)
+        distances, durations = await api_routing.get_osrm_matrix(coords)
         print(
             f"✅ Public API matrix successful: {len(distances)}x{len(distances[0])} matrix"
         )
-        valid = api_routing.check_matrix_validity(coords, distances, durations)
-        print(f"   Matrix valid: {valid}")
+        valid = api_routing.validate_matrix(coords, distances, durations)
+        print(f"   Matrix valid: {valid is not None}")
     except Exception as e:
         print(f"❌ Public API matrix failed: {e}")
 
@@ -134,35 +134,37 @@ def test_matrix_functions():
         print(
             f"✅ Geodesic matrix successful: {len(distances)}x{len(distances[0])} matrix"
         )
-        valid = api_routing.check_matrix_validity(coords, distances, durations)
-        print(f"   Matrix valid: {valid}")
+        valid = api_routing.validate_matrix(coords, distances, durations)
+        print(f"   Matrix valid: {valid is not None}")
     except Exception as e:
         print(f"❌ Geodesic matrix failed: {e}")
 
     # Test local container (will likely fail without setup, but should not crash)
     try:
-        distances, durations = api_routing.get_osrm_matrix_from_local_container(coords)
+        distances, durations = await api_routing.get_osrm_matrix_from_local_container(coords)
         print(
             f"✅ Local container matrix successful: {len(distances)}x{len(distances[0])} matrix"
         )
-        valid = api_routing.check_matrix_validity(coords, distances, durations)
-        print(f"   Matrix valid: {valid}")
+        valid = api_routing.validate_matrix(coords, distances, durations)
+        print(f"   Matrix valid: {valid is not None}")
     except Exception as e:
         print(f"❌ Local container matrix failed (expected): {e}")
 
 
-def main():
+async def main():
     """Run all tests."""
+    import asyncio
+    
     print("🚀 Testing Enhanced Routing Functionality")
     print("=" * 50)
 
     test_results = []
 
-    test_results.append(test_basic_routing())
-    test_results.append(test_many_points_routing())
-    test_results.append(test_exclusion_zones_routing())
+    test_results.append(await test_basic_routing())
+    test_results.append(await test_many_points_routing())
+    test_results.append(await test_exclusion_zones_routing())
 
-    test_matrix_functions()
+    await test_matrix_functions()
 
     print("\n" + "=" * 50)
     print("📊 Test Summary:")
@@ -180,4 +182,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
