@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 from dataclasses import dataclass
@@ -333,26 +334,85 @@ async def route_with_zones(
         raise HTTPException(status_code=500, detail=f"Routing failed: {str(e)}")
 
 
-async def make_request(url, params=None):
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.get(url, params=params)
-        response.raise_for_status()
-        return response.json()
+async def make_request(url, params=None, timeout=30.0, max_retries=2):
+    """Make an async HTTP GET request with retry logic and proper parameter handling.
+    
+    Args:
+        url: Base URL (may already contain query parameters)
+        params: Optional dict of additional query parameters
+        timeout: Request timeout in seconds
+        max_retries: Maximum number of retry attempts
+    
+    Returns:
+        Parsed JSON response
+    
+    Raises:
+        httpx.HTTPError: If all retry attempts fail
+    """
+    last_error = None
+    
+    for attempt in range(max_retries):
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                # Build full URL with parameters
+                if params:
+                    # Use httpx's URL class to properly merge parameters
+                    request_url = httpx.URL(url, params=params)
+                else:
+                    request_url = url
+                
+                logger.debug(f"Request attempt {attempt + 1}/{max_retries}: {request_url}")
+                response = await client.get(request_url)
+                response.raise_for_status()
+                return response.json()
+        
+        except httpx.ConnectError as e:
+            last_error = e
+            logger.warning(
+                f"Connection error on attempt {attempt + 1}/{max_retries}: {e}"
+            )
+            if attempt < max_retries - 1:
+                # Wait a bit before retrying (exponential backoff)
+                await asyncio.sleep(0.5 * (attempt + 1))
+        
+        except httpx.ReadTimeout as e:
+            last_error = e
+            logger.warning(
+                f"Read timeout on attempt {attempt + 1}/{max_retries}: {e}"
+            )
+            if attempt < max_retries - 1:
+                await asyncio.sleep(0.5 * (attempt + 1))
+        
+        except httpx.HTTPError as e:
+            last_error = e
+            logger.warning(
+                f"HTTP error on attempt {attempt + 1}/{max_retries}: {e}"
+            )
+            if attempt < max_retries - 1:
+                await asyncio.sleep(0.5 * (attempt + 1))
+    
+    # All retries failed, raise the last error
+    if last_error:
+        raise last_error
+    raise httpx.RequestError("Failed to make request after all retries")
 
 
 async def request_osrm(
     request_type: str,
     coordinates: str,
     params: Dict[str, Any],
+    timeout: float = 30.0,
+    max_retries: int = 1,
 ) -> Dict[str, Any]:
     """
     Request route from OSRM with specified parameters.
 
     Args:
+        request_type: Type of request ("route" or "table")
         coordinates: OSRM format coordinates "lng1,lat1;lng2,lat2"
-        alternatives: Number of alternative routes (1-3)
-        overview: Detail level ("simplified", "full", "false")
-        geometries: Geometry format ("geojson", "polyline", "polyline6")
+        params: Query parameters for the request
+        timeout: Request timeout in seconds (default: 30)
+        max_retries: Maximum retry attempts (default: 1, no retries)
 
     Returns:
         OSRM response as dictionary
@@ -363,9 +423,15 @@ async def request_osrm(
     try:
         assert request_type in {"route", "table"}, "Invalid request type"
         url = f"{get_osrm_url()}/{request_type}/v1/driving/{coordinates}"
-        data = await make_request(url, params=params)
+        data = await make_request(url, params=params, timeout=timeout, max_retries=max_retries)
         return data
 
+    except (httpx.ConnectError, httpx.ReadTimeout) as e:
+        logger.error(f"OSRM connection error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"OSRM service unavailable: {str(e)}",
+        )
     except httpx.HTTPError as e:
         logger.error(f"OSRM HTTP error: {e}")
         raise HTTPException(
@@ -384,6 +450,8 @@ async def request_osrm_public_api(
     request_type: str,
     coordinates: str,
     params: Dict[str, Any],
+    timeout: float = 30.0,
+    max_retries: int = 2,
 ) -> Dict[str, Any]:
     """
     Request route from public OSRM API (router.project-osrm.org).
@@ -394,6 +462,8 @@ async def request_osrm_public_api(
         request_type: Type of request ("route" or "table")
         coordinates: OSRM format coordinates "lng1,lat1;lng2,lat2"
         params: Additional parameters for the request
+        timeout: Request timeout in seconds (default: 30)
+        max_retries: Maximum retry attempts (default: 2)
 
     Returns:
         OSRM response as dictionary
@@ -404,17 +474,23 @@ async def request_osrm_public_api(
     try:
         assert request_type in {"route", "table"}, "Invalid request type"
         url = f"http://router.project-osrm.org/{request_type}/v1/driving/{coordinates}"
-        data = await make_request(url, params=params)
+        data = await make_request(url, params=params, timeout=timeout, max_retries=max_retries)
         return data
 
+    except (httpx.ConnectError, httpx.ReadTimeout) as e:
+        logger.error(f"Public OSRM connection error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Public OSRM service unavailable: {str(e)}",
+        )
     except httpx.HTTPError as e:
-        logger.error(f"OSRM HTTP error: {e}")
+        logger.error(f"Public OSRM HTTP error: {e}")
         raise HTTPException(
             status_code=502,
             detail=f"OSRM routing request failed: {str(e)}",
         )
     except Exception as e:
-        logger.error(f"Error requesting OSRM: {e}")
+        logger.error(f"Error requesting public OSRM: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Error requesting OSRM: {str(e)}",
@@ -551,7 +627,7 @@ async def _get_matrix_with_public_api_priority(coords):
         tuple: (distances, durations) matrices
     """
     try:
-        return await get_osrm_matrix(coords)
+        return await get_osrm_matrix_public_api(coords)
     except (httpx.HTTPError, ValueError, KeyError) as e:
         logger.error(f"Public API failed: {e}. Trying local container", exc_info=True)
         try:
@@ -710,6 +786,7 @@ async def calculate_optimal_route(
 
 
 async def get_osrm_matrix(coords):
+    """Get matrix from local OSRM container."""
     try:
         coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
         params = {
@@ -725,6 +802,26 @@ async def get_osrm_matrix(coords):
         raise
     except Exception as e:
         logger.error(f"Error in get_osrm_matrix: {e}")
+        raise
+
+
+async def get_osrm_matrix_public_api(coords):
+    """Get matrix from public OSRM API (router.project-osrm.org)."""
+    try:
+        coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)
+        params = {
+            "annotations": "distance,duration",
+        }
+        data = await request_osrm_public_api(
+            request_type="table",
+            coordinates=coord_str,
+            params=params,
+        )
+        return data["distances"], data["durations"]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in get_osrm_matrix_public_api: {e}")
         raise
 
 
@@ -1100,7 +1197,7 @@ async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
             "overview": "full",
             "geometries": "geojson",
         }
-        data = await request_osrm(
+        data = await request_osrm_public_api(
             request_type="route",
             coordinates=coord_str,
             params=params,

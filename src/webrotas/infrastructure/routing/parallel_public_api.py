@@ -22,9 +22,10 @@ logger = get_logger(__name__)
 
 # Configuration for parallel requests
 PUBLIC_API_MAX_CONCURRENT = 10  # Limit concurrent requests to avoid rate limiting
-PUBLIC_API_REQUEST_TIMEOUT = 30  # Timeout per request in seconds
+PUBLIC_API_REQUEST_TIMEOUT = 60  # Timeout per request in seconds (increased from 30s)
 PUBLIC_API_RETRY_ATTEMPTS = 2
 PUBLIC_API_RETRY_DELAY = 1.0
+PUBLIC_API_REQUEST_DELAY = 0.1  # Delay between batches of parallel requests (in seconds)
 
 
 async def request_osrm_parallel(request_type: str, coordinates: str, params: dict = None):
@@ -119,6 +120,8 @@ async def get_full_route_parallel(
     
     async def bounded_request(start, end, idx):
         async with semaphore:
+            # Add delay to avoid overwhelming the public API
+            await asyncio.sleep(PUBLIC_API_REQUEST_DELAY)
             return await get_route_segment_parallel(osrm_request_fn, start, end, idx)
     
     tasks = [bounded_request(start, end, idx) for start, end, idx in segments]
@@ -196,10 +199,13 @@ async def get_distance_matrix_parallel_public_api(
             try:
                 coord_str = f"{start['lng']},{start['lat']};{end['lng']},{end['lat']}"
                 
+                # Add delay to avoid overwhelming the public API
+                await asyncio.sleep(PUBLIC_API_REQUEST_DELAY)
+                
                 response = await osrm_request_fn(
                     request_type="table",
                     coordinates=coord_str,
-                    params={},
+                    params={"annotations": "distance,duration"},
                 )
                 
                 if response and response.get("distances") and response.get("durations"):
