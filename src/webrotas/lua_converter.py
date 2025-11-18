@@ -7,7 +7,6 @@ reprocessing the PBF file.
 
 import json
 from pathlib import Path
-from typing import Dict, Any, List
 import logging
 
 logger = logging.getLogger(__name__)
@@ -60,14 +59,14 @@ def geojson_to_lua_data(geojson_path: Path) -> str:
     lua_code += "return {\n"
 
     for i, polygon in enumerate(polygons):
-        lua_code += f"  {{\n"
-        lua_code += f"    coords = {{\n"
+        lua_code += "  {\n"
+        lua_code += "    coords = {\n"
         for lon, lat in polygon:
             lua_code += f"      {{{lon}, {lat}}},\n"
-        lua_code += f"    }},\n"
-        lua_code += f"    is_inside = true,\n"
-        lua_code += f"    is_touching = true,\n"
-        lua_code += f"  }},\n"
+        lua_code += "    },\n"
+        lua_code += "    is_inside = true,\n"
+        lua_code += "    is_touching = true,\n"
+        lua_code += "  },\n"
 
     lua_code += "}\n"
 

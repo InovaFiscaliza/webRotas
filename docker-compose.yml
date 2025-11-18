@@ -39,16 +39,17 @@ services:
 #     depends_on:
 #       - osrm
   osrm:
-    image: osrm/osrm-backend
+    image: ghcr.io/project-osrm/osrm-backend:latest
     container_name: osrm
     restart: always
     ports:
       - 5000:5000
     volumes:
       - ${OSRM_DATA}:/data
+      - ${OSRM_DATA}/profiles:/profiles:ro
     deploy:
       resources:
         limits:
-          cpus: '4'
-          memory: 16G
-    command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/brazil-latest.osrm"
+          memory: ${OSRM_MEMORY_LIMIT:-16g}
+          cpus: ${OSRM_CPUS_LIMIT:-4.0}
+    command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/region.osrm"

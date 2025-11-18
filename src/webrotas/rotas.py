@@ -14,7 +14,6 @@ import webrotas.shapefiles as sf
 from webrotas.api_routing import compute_bounding_box, calculate_optimal_route
 from webrotas.api_elevation import enrich_waypoints_with_elevation
 from webrotas.config.server_hosts import get_webrotas_url
-from webrotas.server_env import env
 
 
 @dataclass

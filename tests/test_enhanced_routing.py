@@ -153,7 +153,6 @@ async def test_matrix_functions():
 
 async def main():
     """Run all tests."""
-    import asyncio
     
     print("🚀 Testing Enhanced Routing Functionality")
     print("=" * 50)
