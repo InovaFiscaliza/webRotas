@@ -1,9 +1,0 @@
-
-As seguintes opções estão disponíveis:
-
- - "webrotas <nome_do_arquivo>.json", para realizar o cálculo de rotas com o arquivo de configuração desejado.
- - "limpa", para limpar todos os arquivos temporários gerados pelo webRotas, caso necessário.
- - "exemplos", para copiar arquivos json de exemplo para a pasta atual.
- - "ajuda", para exibir esta mensagem de ajuda.
-
- 
