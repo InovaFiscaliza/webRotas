@@ -1,0 +1,28 @@
+"""Health check endpoint"""
+
+from fastapi import APIRouter, Query
+
+
+router = APIRouter(tags=["health"])
+
+
+@router.get(
+    "/ok",
+    summary="Health check",
+    description="Verify server is running and responsive",
+    responses={
+        200: {"description": "Server is healthy"},
+        400: {"description": "Missing sessionId"},
+    }
+)
+async def health_check(session_id: str = Query(..., alias="sessionId", description="Unique session identifier")):
+    """
+    Health check endpoint.
+    
+    Returns JSON status if the server is running properly.
+    """
+    # Validate session_id
+    if not session_id:
+        from webrotas.core.exceptions import MissingSessionIdError
+        raise MissingSessionIdError()
+    return {"status": "healthy"}

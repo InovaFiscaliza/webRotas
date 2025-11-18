@@ -4,38 +4,13 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
-        
-        {
-            "name": "server default args",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/backend/webdir/server.py",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "server -h",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/backend/webdir/server.py",
-            "console": "integratedTerminal",
-            "args": ["-h"]
-        },
-        {
-            "name": "server",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/backend/webdir/server.py",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "server argument_error",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/backend/webdir/server.py",
-            "console": "integratedTerminal",
-            "args": ["argument_error"]
-        },
+    {
+        "name": "FastAPI main",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/src/webrotas/main.py",
+        "console": "integratedTerminal"
+    },
         {
             "name": "Current file",
             "type": "debugpy",

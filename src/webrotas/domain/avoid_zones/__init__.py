@@ -1,0 +1,1 @@
+"""Avoid zones domain logic - zone processing and spatial analysis"""

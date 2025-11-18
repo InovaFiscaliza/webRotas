@@ -1,0 +1,1 @@
+"""Geospatial domain logic - region calculations and bounding box operations"""

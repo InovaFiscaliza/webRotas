@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -8.047562,
+        "lng": -34.877005,
+        "description": "Anatel-PE"
+    },
+    "parameters": {
+        "city": "Recife",
+        "state": "PE",
+        "scope": "Location",
+        "pointDistance": 8000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

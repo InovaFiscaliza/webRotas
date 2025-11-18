@@ -1,0 +1,30 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -23.458495,
+        "lng": -46.584126,
+        "description": "Guarulhos-SP"
+    },
+    "parameters": {
+        "city": "Guarulhos",
+        "state": "SP",
+        "scope": "Location",
+        "pointDistance": 1000
+    },
+    "avoidZones": [
+        {
+            "name": "Aeroporto de Guarulhos",
+            "coord": [
+                [-23.4660, -46.4660],
+                [-23.4680, -46.4620],
+                [-23.4731, -46.4610],
+                [-23.4782, -46.4620],
+                [-23.4800, -46.4660],
+                [-23.4790, -46.4700],
+                [-23.4731, -46.4710],
+                [-23.4672, -46.4700]
+            ]
+        }
+    ],
+    "criterion": "distance"
+}

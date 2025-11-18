@@ -25,3 +25,11 @@ src/resources/Urbanizacao/Mapa_*.*
 /src/resources/Estados/BR_UF_2024.cpg
 /src/resources/Estados/BR_UF_2024.shp
 /src/resources/Estados/BR_UF_2024.shx
+
+.ruff_cache
+*.lock
+*.log
+logs/
+logs/main.log
+logs/routing_servers_interface.log
+.env

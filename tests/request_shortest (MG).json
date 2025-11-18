@@ -1,0 +1,34 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -19.924656,
+        "lng": -43.942075,
+        "description": "Anatel-MG"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -19.855652,
+                "lng": -43.628475,
+                "description": "Ouro Preto"
+            },
+            {
+                "lat": -20.394994,
+                "lng": -43.453374,
+                "description": "Itabira"
+            },
+            {
+                "lat": -19.640904,
+                "lng": -43.958564,
+                "description": "Sabará"
+            },
+            {
+                "lat": -20.118184,
+                "lng": -44.256984,
+                "description": "Betim"
+            }
+        ]
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

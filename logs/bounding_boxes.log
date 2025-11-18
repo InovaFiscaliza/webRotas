@@ -1,0 +1,2 @@
+2025-10-18 02:38:30 - webrotas.cache.bounding_boxes - DEBUG - [test_logging.py:38] - This is a DEBUG message from cache module
+2025-10-18 02:38:30 - webrotas.cache.bounding_boxes - INFO - [test_logging.py:39] - This is an INFO message from cache module

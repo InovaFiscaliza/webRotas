@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -19.924656,
+        "lng": -43.942075,
+        "description": "Anatel-MG"
+    },
+    "parameters": {
+        "city": "Belo Horizonte",
+        "state": "MG",
+        "scope": "Location",
+        "pointDistance": 7000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

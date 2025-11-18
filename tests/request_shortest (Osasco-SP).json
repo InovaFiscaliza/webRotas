@@ -1,0 +1,24 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -23.5346647,
+        "lng": -46.8258591,
+        "description": "Osasco-SP"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -23.58561,
+                "lng": -46.6677705,
+                "description": "Ibirapuera"
+            },
+            {
+                "lat": -23.587504,
+                "lng": -46.633257,
+                "description": "Anatel-SP"
+            }
+        ]
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

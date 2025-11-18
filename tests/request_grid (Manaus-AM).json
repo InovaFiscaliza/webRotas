@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -3.099300,
+        "lng": -60.018506,
+        "description": "Anatel-AM"
+    },
+    "parameters": {
+        "city": "Manaus",
+        "state": "AM",
+        "scope": "Location",
+        "pointDistance": 15000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}

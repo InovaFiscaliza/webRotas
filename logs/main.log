@@ -1,0 +1,10 @@
+2025-10-18 02:38:30 - webrotas.main - DEBUG - [test_logging.py:30] - This is a DEBUG message from main module
+2025-10-18 02:38:30 - webrotas.main - INFO - [test_logging.py:31] - This is an INFO message from main module
+2025-10-18 02:38:30 - webrotas.main - WARNING - [test_logging.py:32] - This is a WARNING message from main module
+2025-10-18 02:38:30 - webrotas.main - ERROR - [test_logging.py:33] - This is an ERROR message from main module
+2025-11-05 14:53:42 - main - INFO - [main.py:85] - Static files mounted at / from /home/ronaldo/Work/webRotas/src/webrotas/static
+2025-11-05 14:53:42 - main - INFO - [main.py:33] - Server starting on port 5002
+2025-11-05 17:25:51 - main - INFO - [main.py:85] - Static files mounted at / from /home/ronaldo/Work/webRotas/src/webrotas/static
+2025-11-05 17:25:51 - main - INFO - [main.py:33] - Server starting on port 5502
+2025-11-05 17:28:00 - main - INFO - [main.py:85] - Static files mounted at / from /home/ronaldo/Work/webRotas/src/webrotas/static
+2025-11-05 17:28:00 - main - INFO - [main.py:33] - Server starting on port 5502

@@ -1,0 +1,16 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -3.731862,
+        "lng": -38.526668,
+        "description": "Anatel-CE"
+    },
+    "parameters": {
+        "city": "Fortaleza",
+        "state": "CE",
+        "scope": "Location",
+        "pointDistance": 12000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}
