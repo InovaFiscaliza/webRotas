@@ -8,6 +8,11 @@
     "parameters": {
         "waypoints": [
             {
+                "lat": -23.58561,
+                "lng": -46.6677705,
+                "description": "Ibirapuera"
+            },
+            {
                 "lat": -23.587504,
                 "lng": -46.633257,
                 "description": "Anatel-SP"
@@ -61,5 +66,5 @@
             ]
         }
     ],
-    "criterion": "duration"
+    "criterion": "distance"
 }

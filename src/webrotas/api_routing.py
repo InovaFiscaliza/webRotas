@@ -18,6 +18,7 @@ from webrotas.config.logging_config import get_logger
 from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
 from webrotas.config.server_hosts import get_osrm_url
 from webrotas.geojson_converter import avoid_zones_to_geojson
+from webrotas.segment_alternatives import get_alternatives_for_multipoint_route
 
 from .lua_converter import write_lua_zones_file
 from .version_manager import save_version, load_version, list_versions
@@ -256,9 +257,9 @@ async def route_with_zones(
         logger.info(f"Loaded {polygon_count} avoid zone polygons")
 
         # Request route from OSRM
-        logger.info(f"Requesting {alternatives} route(s) from OSRM")
+        logger.info(f"Requesting {alternatives} alternative route(s) from OSRM")
         params = {
-            "alternatives": ALTERNATIVES,
+            "alternatives": alternatives,
             "overview": "full",
             "geometries": "geojson",
         }
@@ -860,6 +861,12 @@ async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
     """
     Get OSRM route with optional avoid zones processing.
 
+    For multi-waypoint requests with avoid zones, uses segment-based alternatives:
+    - Decomposes route into 2-coordinate segments
+    - Requests alternatives for each segment
+    - Recombines into complete route alternatives
+    - Scores by avoid zone penalties
+
     Args:
         coords: List of all coordinate dicts
         order: Ordered indices for waypoint visitation
@@ -871,40 +878,63 @@ async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
     ordered = [coords[ii] for ii in order]
     coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
 
-    # Convert avoid_zones to GeoJSON if present
-    geojson = None
-    if avoid_zones and len(avoid_zones) > 0:
-        try:
-            geojson = avoid_zones_to_geojson(avoid_zones)
-            logger.info(f"Converted {len(avoid_zones)} avoid zones to GeoJSON")
-        except Exception as e:
-            logger.warning(
-                f"Failed to convert avoid zones to GeoJSON: {e}. Continuing without zones"
-            )
-            geojson = None
+    # Check if we should use segment-based alternatives
+    has_avoid_zones = avoid_zones and len(avoid_zones) > 0
+    has_multiple_waypoints = len(ordered) > 2
 
-    # If we have valid GeoJSON, use route_with_zones for client-side filtering
-    if geojson is not None:
-        try:
-            logger.info("Processing route with avoid zones")
-            process_avoidzones(geojson)
-            data = await route_with_zones(
-                coordinates=coord_str,
-                geojson=geojson,
-                avoid_mode="penalize",
-                alternatives=ALTERNATIVES,
-            )
-            logger.info("Successfully retrieved route with zone processing")
-            logger.info(f"OSRM returned {len(data.get('routes', []))} routes")
+    if has_avoid_zones and has_multiple_waypoints:
+        logger.info(
+            f"Multi-waypoint route with avoid zones: using segment-based alternatives "
+            f"({len(ordered)} waypoints)"
+        )
 
-            # Update descriptions
-            for ii, waypoint in enumerate(ordered):
-                if not waypoint.get("description") and "waypoints" in data:
-                    waypoint["description"] = data["waypoints"][ii].get("name", "")
-            return data, ordered
-        except Exception as zone_e:
+        try:
+            # Use segment-based alternatives for multi-waypoint requests
+            alternatives, error = await get_alternatives_for_multipoint_route(
+                coordinates=ordered,
+                request_osrm_fn=request_osrm,
+                avoid_zones=avoid_zones,
+                num_alternatives=ALTERNATIVES,
+                max_routes=ALTERNATIVES,
+            )
+
+            if error:
+                logger.warning(
+                    f"Segment-based alternatives failed: {error}. Falling back to standard routing"
+                )
+            elif alternatives:
+                logger.info(
+                    f"Successfully generated {len(alternatives)} alternative routes via segment-based approach"
+                )
+
+                # Convert segment-based routes to OSRM format
+                osrm_routes = []
+                for alt in alternatives:
+                    osrm_route = {
+                        "geometry": alt["geometry"],
+                        "distance": alt["distance"],
+                        "duration": alt["duration"],
+                        "penalties": {
+                            "zone_intersections": alt.get("zone_intersections", 0),
+                            "penalty_score": alt.get("penalty_score", 0),
+                        },
+                    }
+                    osrm_routes.append(osrm_route)
+
+                data = {
+                    "routes": osrm_routes,
+                    "waypoints": [
+                        {"name": waypoint.get("description", "")}
+                        for waypoint in ordered
+                    ],
+                    "code": "Ok",
+                }
+
+                logger.info(f"Returning {len(osrm_routes)} routes with zone penalties")
+                return data, ordered
+        except Exception as seg_e:
             logger.warning(
-                f"Route with zones processing failed: {zone_e}. Falling back to standard routing"
+                f"Segment-based alternatives failed: {seg_e}. Falling back to standard routing"
             )
 
     # Try local container first (priority order as requested)
