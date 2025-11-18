@@ -8,7 +8,7 @@ from webrotas.core.dependencies import (
     validate_request_type,
     validate_parameters,
 )
-from webrotas.services.route_service import process_route
+from webrotas.api.services.route_service import process_route
 
 router = APIRouter(tags=["routing"])
 
