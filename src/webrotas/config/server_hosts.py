@@ -31,8 +31,8 @@ class ServerHosts:
         Returns:
             str: Either 'development' or 'production'
         """
-        env = os.getenv("WEBROTAS_ENVIRONMENT", "development").lower()
-        return env if env in ["development", "production"] else "development"
+        env = os.getenv("WEBROTAS_ENVIRONMENT", "production").lower()
+        return env if env in ["development", "production"] else "production"
 
     @staticmethod
     def is_containerized() -> bool:
