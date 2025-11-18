@@ -380,6 +380,47 @@ async def request_osrm(
         )
 
 
+async def request_osrm_public_api(
+    request_type: str,
+    coordinates: str,
+    params: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Request route from public OSRM API (router.project-osrm.org).
+    
+    This is used as a fallback when the local OSRM container is unavailable.
+
+    Args:
+        request_type: Type of request ("route" or "table")
+        coordinates: OSRM format coordinates "lng1,lat1;lng2,lat2"
+        params: Additional parameters for the request
+
+    Returns:
+        OSRM response as dictionary
+
+    Raises:
+        HTTPException: On connection or OSRM errors
+    """
+    try:
+        assert request_type in {"route", "table"}, "Invalid request type"
+        url = f"http://router.project-osrm.org/{request_type}/v1/driving/{coordinates}"
+        data = await make_request(url, params=params)
+        return data
+
+    except httpx.HTTPError as e:
+        logger.error(f"OSRM HTTP error: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"OSRM routing request failed: {str(e)}",
+        )
+    except Exception as e:
+        logger.error(f"Error requesting OSRM: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error requesting OSRM: {str(e)}",
+        )
+
+
 # -----------------------------------------------------------------------------------#
 async def compute_distance_and_duration_matrices(
     coords, avoid_zones: Iterable | None = None
@@ -461,20 +502,21 @@ async def _get_matrix_with_local_container_priority(coords, avoid_zones):
             f"Local container failed: {e}. ⚠️ Attempting parallel Public API as fallback",
             exc_info=True,
         )
-        
+
         # NEW: Try parallel Public API even with avoid zones
         try:
             from webrotas.infrastructure.routing.parallel_public_api import (
                 get_distance_matrix_parallel_public_api,
             )
+
             logger.info(f"🟡 Avoid zones present, using parallel Public API requests")
-            return await get_distance_matrix_parallel_public_api(request_osrm, coords)
+            return await get_distance_matrix_parallel_public_api(request_osrm_public_api, coords)
         except Exception as parallel_e:
             logger.warning(
                 f"Parallel Public API failed: {parallel_e}. Trying iterative matrix builder",
                 exc_info=True,
             )
-        
+
         # Fallback to iterative builder if no avoidance zones
         if avoid_zones is None:
             try:
@@ -925,11 +967,15 @@ async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
                 )
 
                 # Check if all alternatives cross avoid zones (penalty > 0)
-                all_cross_zones = all(alt.get("penalty_score", 0) > 0 for alt in alternatives)
-                
+                all_cross_zones = all(
+                    alt.get("penalty_score", 0) > 0 for alt in alternatives
+                )
+
                 if all_cross_zones and len(alternatives) > 0:
-                    logger.info("All segment alternatives cross avoid zones, attempting zone-aware routing...")
-                    
+                    logger.info(
+                        "All segment alternatives cross avoid zones, attempting zone-aware routing..."
+                    )
+
                     # Try zone-aware routing with waypoint insertion
                     try:
                         geojson = avoid_zones_to_geojson(avoid_zones)
@@ -942,38 +988,57 @@ async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
                                 polygons=polys,
                                 avoid_zones_list=avoid_zones,
                             )
-                            
+
                             if zone_route and zone_route.get("geometry"):
-                                logger.info("Zone-aware routing succeeded, using alternate path")
-                                logger.debug(f"Zone-aware route: {len(zone_route.get('geometry', []))} coords, {zone_route.get('distance', 0):.0f}m")
-                                
+                                logger.info(
+                                    "Zone-aware routing succeeded, using alternate path"
+                                )
+                                logger.debug(
+                                    f"Zone-aware route: {len(zone_route.get('geometry', []))} coords, {zone_route.get('distance', 0):.0f}m"
+                                )
+
                                 # Check if this route avoids zones better
                                 intersection_data = check_route_intersections(
                                     zone_route["geometry"], polys, tree
                                 )
-                                logger.info(f"Zone-aware route intersection check: {intersection_data['intersection_count']} intersections, penalty {intersection_data['penalty_ratio']:.4f}")
-                                
+                                logger.info(
+                                    f"Zone-aware route intersection check: {intersection_data['intersection_count']} intersections, penalty {intersection_data['penalty_ratio']:.4f}"
+                                )
+
                                 # If this route has lower penalty (less zone overlap), prioritize it
-                                best_alt_penalty = alternatives[0].get("penalty_score", 999)
+                                best_alt_penalty = alternatives[0].get(
+                                    "penalty_score", 999
+                                )
                                 zone_aware_penalty = intersection_data["penalty_ratio"]
-                                logger.info(f"Comparing penalties: zone-aware={zone_aware_penalty:.4f} vs best_alt={best_alt_penalty:.4f}")
-                                
+                                logger.info(
+                                    f"Comparing penalties: zone-aware={zone_aware_penalty:.4f} vs best_alt={best_alt_penalty:.4f}"
+                                )
+
                                 # Prioritize if it has significantly lower penalty (at least 10% improvement)
                                 if zone_aware_penalty < best_alt_penalty * 0.9:
-                                    logger.info(f"Zone-aware route has better penalty ({zone_aware_penalty:.4f} vs {best_alt_penalty:.4f}), prioritizing")
-                                    alternatives.insert(0, {
-                                        "geometry": {
-                                            "type": "LineString",
-                                            "coordinates": zone_route["geometry"]
+                                    logger.info(
+                                        f"Zone-aware route has better penalty ({zone_aware_penalty:.4f} vs {best_alt_penalty:.4f}), prioritizing"
+                                    )
+                                    alternatives.insert(
+                                        0,
+                                        {
+                                            "geometry": {
+                                                "type": "LineString",
+                                                "coordinates": zone_route["geometry"],
+                                            },
+                                            "distance": zone_route.get("distance", 0),
+                                            "duration": zone_route.get("duration", 0),
+                                            "zone_intersections": intersection_data[
+                                                "intersection_count"
+                                            ],
+                                            "penalty_score": intersection_data[
+                                                "penalty_ratio"
+                                            ],
                                         },
-                                        "distance": zone_route.get("distance", 0),
-                                        "duration": zone_route.get("duration", 0),
-                                        "zone_intersections": intersection_data["intersection_count"],
-                                        "penalty_score": intersection_data["penalty_ratio"],
-                                    })
+                                    )
                     except Exception as zone_e:
                         logger.warning(f"Zone-aware routing failed: {zone_e}")
-                
+
                 # Convert segment-based routes to OSRM format
                 osrm_routes = []
                 for alt in alternatives:
