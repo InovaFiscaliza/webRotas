@@ -89,6 +89,8 @@ class ServerHosts:
         Returns:
             str: Full URL for OSRM server (e.g., http://localhost:5000 or http://osrm:5000)
         """
+        if remote_osrm := os.getenv("REMOTE_OSRM_URL"):
+            return remote_osrm
         return f"http://{ServerHosts.get_osrm_host()}:{OSRM_PORT}"
 
 
