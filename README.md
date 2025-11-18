@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/InovaFiscaliza/webRotas)
+
 # webRotas
 
 O webRotas é uma ferramenta de gerenciamento de rotas de veículos utilizada em atividades de inspeção da ANATEL. A aplicação permite gerar rotas a partir de diferentes estratégias de distribuição de pontos de interesse:
