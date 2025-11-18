@@ -77,7 +77,7 @@ mkdir -p src/webrotas/core
 
 **Before:**
 ```python
-from webrotas.rotas import RouteProcessor
+from webrotas.domain.routing.processor import RouteProcessor
 ```
 
 **After:**
@@ -186,7 +186,7 @@ class RouteProcessor:
 ```python
 # In rotas.py
 import webrotas.shapefiles as sf
-from webrotas.regions import extrair_bounding_box_de_regioes
+from webrotas.domain.geospatial.regions import extrair_bounding_box_de_regioes
 
 location_limits, location_urban_areas = get_areas_urbanas_cache(city, state)
 ```
@@ -207,8 +207,8 @@ location_limits, location_urban_areas = get_areas_urbanas_cache(city, state)
 **Before:**
 ```python
 from webrotas.geojson_converter import avoid_zones_to_geojson
-from webrotas.lua_converter import write_lua_zones_file
-from webrotas.version_manager import save_version
+from webrotas.utils.converters.lua import write_lua_zones_file
+from webrotas.utils.versioning.version_manager import save_version
 ```
 
 **After:**

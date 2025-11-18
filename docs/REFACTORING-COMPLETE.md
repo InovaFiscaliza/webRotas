@@ -224,7 +224,7 @@ from webrotas.utils.converters.geojson import avoid_zones_to_geojson
 ### Backwards Compatibility
 ```python
 # Old imports still work (compatibility shims)
-from webrotas.rotas import RouteProcessor
+from webrotas.domain.routing.processor import RouteProcessor
 from webrotas.api_routing import calculate_optimal_route
 ```
 
@@ -274,17 +274,17 @@ from webrotas.api_routing import calculate_optimal_route
 
 ```python
 # These still work (redirected to new locations):
-from webrotas.rotas import RouteProcessor
+from webrotas.domain.routing.processor import RouteProcessor
 from webrotas.api_routing import calculate_optimal_route
 from webrotas.api_elevation import enrich_waypoints_with_elevation
-from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
-from webrotas.zone_aware_routing import find_route_around_zones
-from webrotas.segment_alternatives import SegmentAlternativesBuilder
-from webrotas.shapefiles import GetBoundMunicipio
-from webrotas.regions import extrair_bounding_box_de_regioes
+webrotas.infrastructure.routing.matrix_builder import IterativeMatrixBuilder
+from webrotas.domain.routing.zone_aware import find_route_around_zones
+from webrotas.domain.routing.alternatives import SegmentAlternativesBuilder
+from webrotas.infrastructure.geospatial.shapefiles import GetBoundMunicipio
+from webrotas.domain.geospatial.regions import extrair_bounding_box_de_regioes
 from webrotas.geojson_converter import avoid_zones_to_geojson
-from webrotas.lua_converter import write_lua_zones_file
-from webrotas.version_manager import save_version
+from webrotas.utils.converters.lua import write_lua_zones_file
+from webrotas.utils.versioning.version_manager import save_version
 ```
 
 ---

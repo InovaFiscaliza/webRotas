@@ -305,8 +305,11 @@ class SegmentAlternativesBuilder:
             routes: List of complete routes to score
         """
         # Import here to avoid circular imports
-        from webrotas.geojson_converter import avoid_zones_to_geojson
-        from webrotas.api_routing import load_spatial_index, check_route_intersections
+        from webrotas.utils.converters.geojson import avoid_zones_to_geojson
+        from webrotas.infrastructure.routing.osrm import (
+            load_spatial_index,
+            check_route_intersections,
+        )
 
         try:
             geojson = avoid_zones_to_geojson(self.avoid_zones)

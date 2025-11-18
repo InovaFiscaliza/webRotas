@@ -43,7 +43,7 @@ response = current_request.create_initial_route()
 
 ### After (using RouteProcessor directly):
 ```python
-from webrotas.rotas import RouteProcessor
+from webrotas.domain.routing.processor import RouteProcessor
 import uuid
 
 route_id = str(uuid.uuid4())  # or from parameters for "ordered" type

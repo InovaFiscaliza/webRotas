@@ -11,7 +11,7 @@
 ### Basic Usage
 
 ```python
-from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
+webrotas.infrastructure.routing.matrix_builder import IterativeMatrixBuilder
 
 # Your coordinates (can have 100+ points)
 coords = [

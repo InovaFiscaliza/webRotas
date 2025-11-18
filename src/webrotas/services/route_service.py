@@ -3,7 +3,7 @@
 import json
 import uuid
 from typing import Dict, Any
-from webrotas.rotas import RouteProcessor
+from webrotas.domain.routing.processor import RouteProcessor
 from webrotas.core.exceptions import ProcessingError
 
 

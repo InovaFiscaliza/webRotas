@@ -76,7 +76,7 @@ While better structured, it depends on scattered functions:
 # Imports from multiple layers:
 from webrotas.api_routing import compute_bounding_box, calculate_optimal_route
 from webrotas.api_elevation import enrich_waypoints_with_elevation
-from webrotas.regions import ...  # region calculations
+from webrotas.domain.geospatial.regions import ...  # region calculations
 import webrotas.shapefiles as sf
 ```
 

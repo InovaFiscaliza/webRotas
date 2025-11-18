@@ -165,7 +165,7 @@ Test categories:
 ### Manual Testing
 
 ```python
-from webrotas.iterative_matrix_builder import IterativeMatrixBuilder
+webrotas.infrastructure.routing.matrix_builder import IterativeMatrixBuilder
 
 # Create test coordinates
 coords = [
