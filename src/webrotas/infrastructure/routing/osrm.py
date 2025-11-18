@@ -443,8 +443,9 @@ async def _get_matrix_with_local_container_priority(coords, avoid_zones):
 
     Fallback chain:
     1. Local OSRM container
-    2. Iterative matrix builder (if no avoidance zones)
-    3. Geodesic calculation
+    2. Parallel Public API requests (now works even with avoidance zones!)
+    3. Iterative matrix builder (if no avoidance zones)
+    4. Geodesic calculation
 
     Args:
         coords: List of coordinates
@@ -456,11 +457,26 @@ async def _get_matrix_with_local_container_priority(coords, avoid_zones):
     try:
         return await get_osrm_matrix_from_local_container(coords)
     except Exception as e:
-        if avoid_zones is None:
-            logger.error(
-                f"Local container failed: {e}. 🟢 NO Avoidance Zones Present. Trying iterative matrix builder",
+        logger.error(
+            f"Local container failed: {e}. ⚠️ Attempting parallel Public API as fallback",
+            exc_info=True,
+        )
+        
+        # NEW: Try parallel Public API even with avoid zones
+        try:
+            from webrotas.infrastructure.routing.parallel_public_api import (
+                get_distance_matrix_parallel_public_api,
+            )
+            logger.info(f"🟡 Avoid zones present, using parallel Public API requests")
+            return await get_distance_matrix_parallel_public_api(request_osrm, coords)
+        except Exception as parallel_e:
+            logger.warning(
+                f"Parallel Public API failed: {parallel_e}. Trying iterative matrix builder",
                 exc_info=True,
             )
+        
+        # Fallback to iterative builder if no avoidance zones
+        if avoid_zones is None:
             try:
                 return get_osrm_matrix_iterative(coords)
             except Exception as iterative_e:
@@ -469,9 +485,9 @@ async def _get_matrix_with_local_container_priority(coords, avoid_zones):
                 )
                 return get_geodesic_matrix(coords, speed_kmh=40)
         else:
-            logger.error(
-                f"Local container failed: {e}. 🚫 Avoidance Zones present. Using geodesic calculation",
-                exc_info=True,
+            # Last resort: geodesic calculation
+            logger.warning(
+                f"All routing services failed. Using geodesic calculation as fallback"
             )
             return get_geodesic_matrix(coords, speed_kmh=40)
 
