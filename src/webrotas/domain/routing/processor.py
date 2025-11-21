@@ -73,6 +73,7 @@ class RouteProcessor:
         self.paths = None
         self.estimated_distance = None
         self.estimated_time = None
+        self.zones_hit = None
 
     async def process_shortest(
         self,
@@ -97,6 +98,7 @@ class RouteProcessor:
             paths,
             estimated_time,
             estimated_distance,
+            zones_hit,
         ) = await calculate_optimal_route(
             self.origin, waypoints, self.criterion, self.avoid_zones
         )
@@ -114,6 +116,7 @@ class RouteProcessor:
         self.paths = paths
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
+        self.zones_hit = zones_hit
 
         # Compute cache_id based on routing parameters for deduplication
         self._compute_cache_id()
@@ -194,6 +197,7 @@ class RouteProcessor:
             paths,
             estimated_time,
             estimated_distance,
+            zones_hit,
         ) = await calculate_optimal_route(
             self.origin, waypoints, self.criterion, self.avoid_zones
         )
@@ -207,6 +211,7 @@ class RouteProcessor:
         self.paths = paths
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
+        self.zones_hit = zones_hit
 
         # Compute cache_id based on routing parameters for deduplication
         self._compute_cache_id()
@@ -309,6 +314,7 @@ class RouteProcessor:
             "paths": self.paths,
             "estimatedDistance": self.estimated_distance,
             "estimatedTime": self.estimated_time,
+            "waypointsInAvoidZones": self.zones_hit,
         }
 
     @staticmethod
@@ -404,5 +410,4 @@ def get_polyline_comunities(regioes):
     Polylines are fetched directly from shapefiles on each request.
     """
     bounding_box = extrair_bounding_box_de_regioes(regioes)
-    polylinesComunidades = FiltrarComunidadesBoundingBox(bounding_box)
-    return polylinesComunidades
+    return FiltrarComunidadesBoundingBox(bounding_box)

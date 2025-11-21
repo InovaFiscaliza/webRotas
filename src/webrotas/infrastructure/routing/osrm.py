@@ -713,10 +713,10 @@ def _calculate_route_order(coords, distances, durations, criterion: str = "dista
 
 def _filter_waypoints_in_zones(
     coords, avoid_zones: List | None = None
-) -> Tuple[List[Dict[str, float]], List[int]]:
+) -> Tuple[List[Dict[str, float]], List[int], List[Dict]]:
     """
     Filter out waypoints that are inside or on the boundary of exclusion zones.
-    
+
     Points must be strictly outside the bounding box - points on the frontier
     (boundary) of the zone are also excluded for safety.
 
@@ -729,9 +729,11 @@ def _filter_waypoints_in_zones(
         - filtered_coords: List of coordinates outside all zones
         - valid_indices: Mapping from filtered index to original index
     """
+    zones_hit = []
+
     if not avoid_zones:
         # No zones to filter against, return all coordinates
-        return coords, list(range(len(coords)))
+        return coords, list(range(len(coords))), zones_hit
 
     try:
         # Load zone polygons
@@ -740,13 +742,12 @@ def _filter_waypoints_in_zones(
 
         if not polys:
             logger.info("No valid zones to filter, keeping all waypoints")
-            return coords, list(range(len(coords)))
+            return coords, list(range(len(coords))), zones_hit
 
         from shapely.geometry import Point
 
         filtered_coords = []
         valid_indices = []
-        zones_hit = []
 
         for idx, coord in enumerate(coords):
             point = Point(coord["lng"], coord["lat"])
@@ -765,7 +766,9 @@ def _filter_waypoints_in_zones(
                 if not polygon.disjoint(point):
                     is_inside_or_on_boundary = True
                     zone_name = avoid_zones[zone_idx].get("name", f"Zone {zone_idx}")
-                    zones_hit.append((idx, zone_name))
+                    zones_hit.append(
+                        {"index": idx, "coord": coord, "zone_name": zone_name}
+                    )
                     logger.warning(
                         f"Waypoint {idx} at ({coord['lat']:.4f}, {coord['lng']:.4f}) "
                         f"is inside or on boundary of exclusion zone '{zone_name}', removing from route"
@@ -785,9 +788,9 @@ def _filter_waypoints_in_zones(
         if not filtered_coords:
             logger.error("All waypoints are inside or on zone boundaries!")
             # Fallback: return all coords, will handle in route calculation
-            return coords, list(range(len(coords)))
+            return coords, list(range(len(coords))), zones_hit
 
-        return filtered_coords, valid_indices
+        return filtered_coords, valid_indices, zones_hit
 
     except Exception as e:
         logger.error(f"Error filtering waypoints in zones: {e}")
@@ -795,7 +798,7 @@ def _filter_waypoints_in_zones(
         return coords, list(range(len(coords)))
 
 
-def _format_route_output(route_json, ordered_coords):
+def _format_route_output(route_json, ordered_coords, zones_hit):
     """
     Extract and format route output from OSRM response.
 
@@ -821,6 +824,7 @@ def _format_route_output(route_json, ordered_coords):
         paths,
         seconds_to_hms(estimated_sec),
         f"{round(estimated_m / 1000, 1)} km",
+        zones_hit,
     )
 
 
@@ -855,7 +859,9 @@ async def calculate_optimal_route(
     coords = [origin] + waypoints
 
     # Step 1: Filter out waypoints inside exclusion zones
-    filtered_coords, valid_indices = _filter_waypoints_in_zones(coords, avoid_zones)
+    filtered_coords, valid_indices, zones_hit = _filter_waypoints_in_zones(
+        coords, avoid_zones
+    )
 
     if len(filtered_coords) < len(coords):
         logger.info(
@@ -880,7 +886,7 @@ async def calculate_optimal_route(
     )
 
     # Format and return output
-    return _format_route_output(route_json, ordered_coords)
+    return _format_route_output(route_json, ordered_coords, zones_hit)
 
 
 async def get_osrm_matrix(coords):
