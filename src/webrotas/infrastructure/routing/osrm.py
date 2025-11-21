@@ -1125,133 +1125,133 @@ async def get_osrm_route(coords, order, avoid_zones: List | None = None):
     has_avoid_zones = avoid_zones and len(avoid_zones) > 0
     has_multiple_waypoints = len(ordered) > 2
 
-    if has_avoid_zones and has_multiple_waypoints:
-        logger.info(
-            f"Multi-waypoint route with avoid zones: using segment-based alternatives "
-            f"({len(ordered)} waypoints)"
-        )
+    # if has_avoid_zones and has_multiple_waypoints:
+    #     logger.info(
+    #         f"Multi-waypoint route with avoid zones: using segment-based alternatives "
+    #         f"({len(ordered)} waypoints)"
+    #     )
 
-        try:
-            # Use segment-based alternatives for multi-waypoint requests
-            alternatives, error = await get_alternatives_for_multipoint_route(
-                coordinates=ordered,
-                request_osrm_fn=request_osrm,
-                avoid_zones=avoid_zones,
-                num_alternatives=ALTERNATIVES,
-                max_routes=ALTERNATIVES,
-            )
+    #     try:
+    #         # Use segment-based alternatives for multi-waypoint requests
+    #         alternatives, error = await get_alternatives_for_multipoint_route(
+    #             coordinates=ordered,
+    #             request_osrm_fn=request_osrm,
+    #             avoid_zones=avoid_zones,
+    #             num_alternatives=ALTERNATIVES,
+    #             max_routes=ALTERNATIVES,
+    #         )
 
-            if error:
-                logger.warning(
-                    f"Segment-based alternatives failed: {error}. Falling back to standard routing"
-                )
-            elif alternatives:
-                logger.info(
-                    f"Successfully generated {len(alternatives)} alternative routes via segment-based approach"
-                )
+    #         if error:
+    #             logger.warning(
+    #                 f"Segment-based alternatives failed: {error}. Falling back to standard routing"
+    #             )
+    #         elif alternatives:
+    #             logger.info(
+    #                 f"Successfully generated {len(alternatives)} alternative routes via segment-based approach"
+    #             )
 
-                # Check if all alternatives cross avoid zones (penalty > 0)
-                all_cross_zones = all(
-                    alt.get("penalty_score", 0) > 0 for alt in alternatives
-                )
+    #             # Check if all alternatives cross avoid zones (penalty > 0)
+    #             all_cross_zones = all(
+    #                 alt.get("penalty_score", 0) > 0 for alt in alternatives
+    #             )
 
-                if all_cross_zones and len(alternatives) > 0:
-                    logger.info(
-                        "All segment alternatives cross avoid zones, attempting zone-aware routing..."
-                    )
+    #             if all_cross_zones and len(alternatives) > 0:
+    #                 logger.info(
+    #                     "All segment alternatives cross avoid zones, attempting zone-aware routing..."
+    #                 )
 
-                    # Try zone-aware routing with waypoint insertion
-                    try:
-                        geojson = avoid_zones_to_geojson(avoid_zones)
-                        polys, tree = load_spatial_index(geojson)
-                        if polys:
-                            zone_route = await find_route_around_zones(
-                                start_coord=ordered[0],
-                                waypoints=ordered[1:-1],
-                                request_osrm_fn=request_osrm,
-                                polygons=polys,
-                                avoid_zones_list=avoid_zones,
-                            )
+    #                 # Try zone-aware routing with waypoint insertion
+    #                 try:
+    #                     geojson = avoid_zones_to_geojson(avoid_zones)
+    #                     polys, tree = load_spatial_index(geojson)
+    #                     if polys:
+    #                         zone_route = await find_route_around_zones(
+    #                             start_coord=ordered[0],
+    #                             waypoints=ordered[1:-1],
+    #                             request_osrm_fn=request_osrm,
+    #                             polygons=polys,
+    #                             avoid_zones_list=avoid_zones,
+    #                         )
 
-                            if zone_route and zone_route.get("geometry"):
-                                logger.info(
-                                    "Zone-aware routing succeeded, using alternate path"
-                                )
-                                logger.debug(
-                                    f"Zone-aware route: {len(zone_route.get('geometry', []))} coords, {zone_route.get('distance', 0):.0f}m"
-                                )
+    #                         if zone_route and zone_route.get("geometry"):
+    #                             logger.info(
+    #                                 "Zone-aware routing succeeded, using alternate path"
+    #                             )
+    #                             logger.debug(
+    #                                 f"Zone-aware route: {len(zone_route.get('geometry', []))} coords, {zone_route.get('distance', 0):.0f}m"
+    #                             )
 
-                                # Check if this route avoids zones better
-                                intersection_data = check_route_intersections(
-                                    zone_route["geometry"], polys, tree
-                                )
-                                logger.info(
-                                    f"Zone-aware route intersection check: {intersection_data['intersection_count']} intersections, penalty {intersection_data['penalty_ratio']:.4f}"
-                                )
+    #                             # Check if this route avoids zones better
+    #                             intersection_data = check_route_intersections(
+    #                                 zone_route["geometry"], polys, tree
+    #                             )
+    #                             logger.info(
+    #                                 f"Zone-aware route intersection check: {intersection_data['intersection_count']} intersections, penalty {intersection_data['penalty_ratio']:.4f}"
+    #                             )
 
-                                # If this route has lower penalty (less zone overlap), prioritize it
-                                best_alt_penalty = alternatives[0].get(
-                                    "penalty_score", 999
-                                )
-                                zone_aware_penalty = intersection_data["penalty_ratio"]
-                                logger.info(
-                                    f"Comparing penalties: zone-aware={zone_aware_penalty:.4f} vs best_alt={best_alt_penalty:.4f}"
-                                )
+    #                             # If this route has lower penalty (less zone overlap), prioritize it
+    #                             best_alt_penalty = alternatives[0].get(
+    #                                 "penalty_score", 999
+    #                             )
+    #                             zone_aware_penalty = intersection_data["penalty_ratio"]
+    #                             logger.info(
+    #                                 f"Comparing penalties: zone-aware={zone_aware_penalty:.4f} vs best_alt={best_alt_penalty:.4f}"
+    #                             )
 
-                                # Prioritize if it has significantly lower penalty (at least 10% improvement)
-                                if zone_aware_penalty < best_alt_penalty * 0.9:
-                                    logger.info(
-                                        f"Zone-aware route has better penalty ({zone_aware_penalty:.4f} vs {best_alt_penalty:.4f}), prioritizing"
-                                    )
-                                    alternatives.insert(
-                                        0,
-                                        {
-                                            "geometry": {
-                                                "type": "LineString",
-                                                "coordinates": zone_route["geometry"],
-                                            },
-                                            "distance": zone_route.get("distance", 0),
-                                            "duration": zone_route.get("duration", 0),
-                                            "zone_intersections": intersection_data[
-                                                "intersection_count"
-                                            ],
-                                            "penalty_score": intersection_data[
-                                                "penalty_ratio"
-                                            ],
-                                        },
-                                    )
-                    except Exception as zone_e:
-                        logger.warning(f"Zone-aware routing failed: {zone_e}")
+    #                             # Prioritize if it has significantly lower penalty (at least 10% improvement)
+    #                             if zone_aware_penalty < best_alt_penalty * 0.9:
+    #                                 logger.info(
+    #                                     f"Zone-aware route has better penalty ({zone_aware_penalty:.4f} vs {best_alt_penalty:.4f}), prioritizing"
+    #                                 )
+    #                                 alternatives.insert(
+    #                                     0,
+    #                                     {
+    #                                         "geometry": {
+    #                                             "type": "LineString",
+    #                                             "coordinates": zone_route["geometry"],
+    #                                         },
+    #                                         "distance": zone_route.get("distance", 0),
+    #                                         "duration": zone_route.get("duration", 0),
+    #                                         "zone_intersections": intersection_data[
+    #                                             "intersection_count"
+    #                                         ],
+    #                                         "penalty_score": intersection_data[
+    #                                             "penalty_ratio"
+    #                                         ],
+    #                                     },
+    #                                 )
+    #                 except Exception as zone_e:
+    #                     logger.warning(f"Zone-aware routing failed: {zone_e}")
 
-                # Convert segment-based routes to OSRM format
-                osrm_routes = []
-                for alt in alternatives:
-                    osrm_route = {
-                        "geometry": alt["geometry"],
-                        "distance": alt["distance"],
-                        "duration": alt["duration"],
-                        "penalties": {
-                            "zone_intersections": alt.get("zone_intersections", 0),
-                            "penalty_score": alt.get("penalty_score", 0),
-                        },
-                    }
-                    osrm_routes.append(osrm_route)
+    #             # Convert segment-based routes to OSRM format
+    #             osrm_routes = []
+    #             for alt in alternatives:
+    #                 osrm_route = {
+    #                     "geometry": alt["geometry"],
+    #                     "distance": alt["distance"],
+    #                     "duration": alt["duration"],
+    #                     "penalties": {
+    #                         "zone_intersections": alt.get("zone_intersections", 0),
+    #                         "penalty_score": alt.get("penalty_score", 0),
+    #                     },
+    #                 }
+    #                 osrm_routes.append(osrm_route)
 
-                data = {
-                    "routes": osrm_routes,
-                    "waypoints": [
-                        {"name": waypoint.get("description", "")}
-                        for waypoint in ordered
-                    ],
-                    "code": "Ok",
-                }
+    #             data = {
+    #                 "routes": osrm_routes,
+    #                 "waypoints": [
+    #                     {"name": waypoint.get("description", "")}
+    #                     for waypoint in ordered
+    #                 ],
+    #                 "code": "Ok",
+    #             }
 
-                logger.info(f"Returning {len(osrm_routes)} routes with zone penalties")
-                return data, ordered
-        except Exception as seg_e:
-            logger.warning(
-                f"Segment-based alternatives failed: {seg_e}. Falling back to standard routing"
-            )
+    #             logger.info(f"Returning {len(osrm_routes)} routes with zone penalties")
+    #             return data, ordered
+    #     except Exception as seg_e:
+    #         logger.warning(
+    #             f"Segment-based alternatives failed: {seg_e}. Falling back to standard routing"
+    #         )
 
     # Try local container first (priority order as requested)
     try:
