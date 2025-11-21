@@ -336,21 +336,21 @@ async def route_with_zones(
 
 async def make_request(url, params=None, timeout=30.0, max_retries=2):
     """Make an async HTTP GET request with retry logic and proper parameter handling.
-    
+
     Args:
         url: Base URL (may already contain query parameters)
         params: Optional dict of additional query parameters
         timeout: Request timeout in seconds
         max_retries: Maximum number of retry attempts
-    
+
     Returns:
         Parsed JSON response
-    
+
     Raises:
         httpx.HTTPError: If all retry attempts fail
     """
     last_error = None
-    
+
     for attempt in range(max_retries):
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
@@ -360,12 +360,14 @@ async def make_request(url, params=None, timeout=30.0, max_retries=2):
                     request_url = httpx.URL(url, params=params)
                 else:
                     request_url = url
-                
-                logger.debug(f"Request attempt {attempt + 1}/{max_retries}: {request_url}")
+
+                logger.debug(
+                    f"Request attempt {attempt + 1}/{max_retries}: {request_url}"
+                )
                 response = await client.get(request_url)
                 response.raise_for_status()
                 return response.json()
-        
+
         except httpx.ConnectError as e:
             last_error = e
             logger.warning(
@@ -374,23 +376,19 @@ async def make_request(url, params=None, timeout=30.0, max_retries=2):
             if attempt < max_retries - 1:
                 # Wait a bit before retrying (exponential backoff)
                 await asyncio.sleep(0.5 * (attempt + 1))
-        
+
         except httpx.ReadTimeout as e:
             last_error = e
-            logger.warning(
-                f"Read timeout on attempt {attempt + 1}/{max_retries}: {e}"
-            )
+            logger.warning(f"Read timeout on attempt {attempt + 1}/{max_retries}: {e}")
             if attempt < max_retries - 1:
                 await asyncio.sleep(0.5 * (attempt + 1))
-        
+
         except httpx.HTTPError as e:
             last_error = e
-            logger.warning(
-                f"HTTP error on attempt {attempt + 1}/{max_retries}: {e}"
-            )
+            logger.warning(f"HTTP error on attempt {attempt + 1}/{max_retries}: {e}")
             if attempt < max_retries - 1:
                 await asyncio.sleep(0.5 * (attempt + 1))
-    
+
     # All retries failed, raise the last error
     if last_error:
         raise last_error
@@ -423,7 +421,9 @@ async def request_osrm(
     try:
         assert request_type in {"route", "table"}, "Invalid request type"
         url = f"{get_osrm_url()}/{request_type}/v1/driving/{coordinates}"
-        data = await make_request(url, params=params, timeout=timeout, max_retries=max_retries)
+        data = await make_request(
+            url, params=params, timeout=timeout, max_retries=max_retries
+        )
         return data
 
     except (httpx.ConnectError, httpx.ReadTimeout) as e:
@@ -455,7 +455,7 @@ async def request_osrm_public_api(
 ) -> Dict[str, Any]:
     """
     Request route from public OSRM API (router.project-osrm.org).
-    
+
     This is used as a fallback when the local OSRM container is unavailable.
 
     Args:
@@ -474,7 +474,9 @@ async def request_osrm_public_api(
     try:
         assert request_type in {"route", "table"}, "Invalid request type"
         url = f"http://router.project-osrm.org/{request_type}/v1/driving/{coordinates}"
-        data = await make_request(url, params=params, timeout=timeout, max_retries=max_retries)
+        data = await make_request(
+            url, params=params, timeout=timeout, max_retries=max_retries
+        )
         return data
 
     except (httpx.ConnectError, httpx.ReadTimeout) as e:
@@ -586,7 +588,9 @@ async def _get_matrix_with_local_container_priority(coords, avoid_zones):
             )
 
             logger.info(f"🟡 Avoid zones present, using parallel Public API requests")
-            return await get_distance_matrix_parallel_public_api(request_osrm_public_api, coords)
+            return await get_distance_matrix_parallel_public_api(
+                request_osrm_public_api, coords
+            )
         except Exception as parallel_e:
             logger.warning(
                 f"Parallel Public API failed: {parallel_e}. Trying iterative matrix builder",
@@ -707,6 +711,79 @@ def _calculate_route_order(coords, distances, durations, criterion: str = "dista
         return list(range(len(coords)))
 
 
+def _filter_waypoints_in_zones(
+    coords, avoid_zones: List | None = None
+) -> Tuple[List[Dict[str, float]], List[int]]:
+    """
+    Filter out waypoints that are inside exclusion zones.
+
+    Args:
+        coords: List of coordinate dicts with 'lat' and 'lng' keys
+        avoid_zones: Optional iterable of avoidance zones with 'coord' key
+
+    Returns:
+        Tuple of:
+        - filtered_coords: List of coordinates outside all zones
+        - valid_indices: Mapping from filtered index to original index
+    """
+    if not avoid_zones:
+        # No zones to filter against, return all coordinates
+        return coords, list(range(len(coords)))
+
+    try:
+        # Load zone polygons
+        geojson = avoid_zones_to_geojson(avoid_zones)
+        polys, tree = load_spatial_index(geojson)
+
+        if not polys:
+            logger.info("No valid zones to filter, keeping all waypoints")
+            return coords, list(range(len(coords)))
+
+        from shapely.geometry import Point
+
+        filtered_coords = []
+        valid_indices = []
+        zones_hit = []
+
+        for idx, coord in enumerate(coords):
+            point = Point(coord["lng"], coord["lat"])
+
+            # Check if point is inside any zone
+            is_inside_zone = False
+            for zone_idx, polygon in enumerate(polys):
+                if polygon.contains(point):
+                    is_inside_zone = True
+                    zone_name = avoid_zones[zone_idx].get("name", f"Zone {zone_idx}")
+                    zones_hit.append((idx, zone_name))
+                    logger.warning(
+                        f"Waypoint {idx} at ({coord['lat']:.4f}, {coord['lng']:.4f}) "
+                        f"is inside exclusion zone '{zone_name}', removing from route"
+                    )
+                    break
+
+            if not is_inside_zone:
+                filtered_coords.append(coord)
+                valid_indices.append(idx)
+
+        if zones_hit:
+            logger.info(
+                f"Filtered {len(zones_hit)} waypoint(s) inside exclusion zones. "
+                f"Keeping {len(filtered_coords)}/{len(coords)} waypoints."
+            )
+
+        if not filtered_coords:
+            logger.error("All waypoints are inside exclusion zones!")
+            # Fallback: return all coords, will handle in route calculation
+            return coords, list(range(len(coords)))
+
+        return filtered_coords, valid_indices
+
+    except Exception as e:
+        logger.error(f"Error filtering waypoints in zones: {e}")
+        # On error, return all coordinates
+        return coords, list(range(len(coords)))
+
+
 def _format_route_output(route_json, ordered_coords):
     """
     Extract and format route output from OSRM response.
@@ -737,17 +814,18 @@ def _format_route_output(route_json, ordered_coords):
 
 
 async def calculate_optimal_route(
-    origin, waypoints, criterion: str = "distance", avoid_zones: Iterable | None = None
+    origin, waypoints, criterion: str = "distance", avoid_zones: List | None = None
 ):
     """
     Calculate optimal route visiting origin and waypoints.
 
     This is the main entry point for route optimization. It orchestrates:
-    1. Matrix retrieval with intelligent fallback strategy
-    2. Matrix validation and repair
-    3. TSP solving for waypoint order optimization
-    4. OSRM route calculation
-    5. Output formatting
+    1. Filter out waypoints inside exclusion zones
+    2. Matrix retrieval with intelligent fallback strategy
+    3. Matrix validation and repair
+    4. TSP solving for waypoint order optimization
+    5. OSRM route calculation
+    6. Output formatting
 
     Args:
         origin: Starting coordinate dict with 'lat' and 'lng' keys
@@ -765,20 +843,29 @@ async def calculate_optimal_route(
     """
     coords = [origin] + waypoints
 
+    # Step 1: Filter out waypoints inside exclusion zones
+    filtered_coords, valid_indices = _filter_waypoints_in_zones(coords, avoid_zones)
+
+    if len(filtered_coords) < len(coords):
+        logger.info(
+            f"Filtered waypoints: {len(coords)} → {len(filtered_coords)} waypoints. "
+            f"Removed {len(coords) - len(filtered_coords)} waypoint(s) inside zones."
+        )
+
     # Retrieve distance/duration matrices with fallback strategy
     distances, durations = await compute_distance_and_duration_matrices(
-        coords, avoid_zones
+        filtered_coords, avoid_zones
     )
 
     # Validate and repair matrices
-    distances, durations = _ensure_valid_matrices(coords, distances, durations)
+    distances, durations = _ensure_valid_matrices(filtered_coords, distances, durations)
 
     # Calculate optimal waypoint order
-    order = _calculate_route_order(coords, distances, durations, criterion)
+    order = _calculate_route_order(filtered_coords, distances, durations, criterion)
 
     # Get route geometry from OSRM
     route_json, ordered_coords = await get_osrm_route(
-        coords, order, avoid_zones=avoid_zones
+        filtered_coords, order, avoid_zones=avoid_zones
     )
 
     # Format and return output
@@ -1013,7 +1100,7 @@ def validate_matrix(
 
 
 # -----------------------------------------------------------------------------------#
-async def get_osrm_route(coords, order, avoid_zones: Iterable | None = None):
+async def get_osrm_route(coords, order, avoid_zones: List | None = None):
     """
     Get OSRM route with optional avoid zones processing.
 

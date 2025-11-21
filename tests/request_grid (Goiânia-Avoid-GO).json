@@ -1,0 +1,25 @@
+{
+    "type": "grid",
+    "origin": {
+        "lat": -16.691903,
+        "lng": -49.267822,
+        "description": "Anatel-GO"
+    },
+    "parameters": {
+        "city": "Goiânia",
+        "state": "GO",
+        "scope": "Location",
+        "pointDistance": 3000
+    },
+    "avoidZones": [ {
+            "name": "Quadrado no Meio",
+            "coord": [
+                [-49.277659, -16.615660],
+                [-49.249451, -16.615660],
+                [-49.249451, -16.642687],
+                [-49.277659, -16.615660]
+                
+            ]
+        }],
+    "criterion": "duration"
+}
