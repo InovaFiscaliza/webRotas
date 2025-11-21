@@ -15,7 +15,10 @@ from webrotas.infrastructure.geospatial.shapefiles import (
     FiltrarAreasUrbanizadasPorMunicipio,
     FiltrarComunidadesBoundingBox,
 )
-from webrotas.infrastructure.routing.osrm import compute_bounding_box, calculate_optimal_route
+from webrotas.infrastructure.routing.osrm import (
+    compute_bounding_box,
+    calculate_optimal_route,
+)
 from webrotas.infrastructure.elevation.service import enrich_waypoints_with_elevation
 from webrotas.config.server_hosts import get_webrotas_url
 
@@ -87,12 +90,15 @@ class RouteProcessor:
         routing_area, bounding_box = compute_routing_area(
             self.avoid_zones, self.origin, waypoints
         )
-        # si.PreparaServidorRoteamento(routing_area)
 
-        origin, waypoints, paths, estimated_time, estimated_distance = await (
-            calculate_optimal_route(
-                self.origin, waypoints, self.criterion, self.avoid_zones
-            )
+        (
+            origin,
+            waypoints,
+            paths,
+            estimated_time,
+            estimated_distance,
+        ) = await calculate_optimal_route(
+            self.origin, waypoints, self.criterion, self.avoid_zones
         )
 
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
@@ -180,17 +186,21 @@ class RouteProcessor:
         # routing_area, bounding_box, cache_id = compute_routing_area(self.avoid_zones, self.origin, waypoints)
         # si.PreparaServidorRoteamento(routing_area)
 
-        routing_area = []  # PENDENTE
+        # routing_area = []  # PENDENTE
 
-        origin, waypoints, paths, estimated_time, estimated_distance = await (
-            calculate_optimal_route(
-                self.origin, waypoints, self.criterion, self.avoid_zones
-            )
+        (
+            origin,
+            waypoints,
+            paths,
+            estimated_time,
+            estimated_distance,
+        ) = await calculate_optimal_route(
+            self.origin, waypoints, self.criterion, self.avoid_zones
         )
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
         # Store results in instance for response generation
-        self.routing_area = routing_area
+        # self.routing_area = routing_area
         self.bounding_box = bounding_box
         self.origin = origin
         self.waypoints = waypoints

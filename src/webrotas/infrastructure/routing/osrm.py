@@ -715,7 +715,10 @@ def _filter_waypoints_in_zones(
     coords, avoid_zones: List | None = None
 ) -> Tuple[List[Dict[str, float]], List[int]]:
     """
-    Filter out waypoints that are inside exclusion zones.
+    Filter out waypoints that are inside or on the boundary of exclusion zones.
+    
+    Points must be strictly outside the bounding box - points on the frontier
+    (boundary) of the zone are also excluded for safety.
 
     Args:
         coords: List of coordinate dicts with 'lat' and 'lng' keys
@@ -748,31 +751,39 @@ def _filter_waypoints_in_zones(
         for idx, coord in enumerate(coords):
             point = Point(coord["lng"], coord["lat"])
 
-            # Check if point is inside any zone
-            is_inside_zone = False
+            # Never filter the origin (index 0); only filter waypoints
+            if idx == 0:
+                filtered_coords.append(coord)
+                valid_indices.append(idx)
+                continue
+
+            # Check if point is inside or on the boundary of any zone
+            is_inside_or_on_boundary = False
             for zone_idx, polygon in enumerate(polys):
-                if polygon.contains(point):
-                    is_inside_zone = True
+                # Use disjoint() - returns True only if point is completely outside
+                # This excludes points that are inside, on the boundary, or touching the zone
+                if not polygon.disjoint(point):
+                    is_inside_or_on_boundary = True
                     zone_name = avoid_zones[zone_idx].get("name", f"Zone {zone_idx}")
                     zones_hit.append((idx, zone_name))
                     logger.warning(
                         f"Waypoint {idx} at ({coord['lat']:.4f}, {coord['lng']:.4f}) "
-                        f"is inside exclusion zone '{zone_name}', removing from route"
+                        f"is inside or on boundary of exclusion zone '{zone_name}', removing from route"
                     )
                     break
 
-            if not is_inside_zone:
+            if not is_inside_or_on_boundary:
                 filtered_coords.append(coord)
                 valid_indices.append(idx)
 
         if zones_hit:
             logger.info(
-                f"Filtered {len(zones_hit)} waypoint(s) inside exclusion zones. "
+                f"Filtered {len(zones_hit)} waypoint(s) inside or on zone boundaries. "
                 f"Keeping {len(filtered_coords)}/{len(coords)} waypoints."
             )
 
         if not filtered_coords:
-            logger.error("All waypoints are inside exclusion zones!")
+            logger.error("All waypoints are inside or on zone boundaries!")
             # Fallback: return all coords, will handle in route calculation
             return coords, list(range(len(coords)))
 
@@ -1122,8 +1133,8 @@ async def get_osrm_route(coords, order, avoid_zones: List | None = None):
     coord_str = ";".join([f"{c['lng']},{c['lat']}" for c in ordered])
 
     # Check if we should use segment-based alternatives
-    has_avoid_zones = avoid_zones and len(avoid_zones) > 0
-    has_multiple_waypoints = len(ordered) > 2
+    # has_avoid_zones = avoid_zones and len(avoid_zones) > 0
+    # has_multiple_waypoints = len(ordered) > 2
 
     # if has_avoid_zones and has_multiple_waypoints:
     #     logger.info(

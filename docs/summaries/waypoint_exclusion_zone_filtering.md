@@ -2,23 +2,25 @@
 
 ## Overview
 
-When the routing matrix is retrieved from the local OSRM container (or any source), waypoints that lie inside exclusion zones are now automatically detected and removed from the route calculation. This prevents the route optimizer from attempting to visit points that are in restricted areas.
+When the routing matrix is retrieved from the local OSRM container (or any source), waypoints that lie inside exclusion zones OR on zone boundaries are automatically detected and removed from the route calculation. This prevents the route optimizer from attempting to visit points in restricted areas.
 
 ## Problem
 
-Previously, if a waypoint coordinate happened to fall inside an exclusion zone (avoid zone), the route optimizer would still include it in the route calculation, potentially resulting in:
-- Routes passing through restricted areas
+Previously, if a waypoint coordinate happened to fall inside an exclusion zone (avoid zone) or even on its boundary (frontier), the route optimizer would still include it in the route calculation, potentially resulting in:
+- Routes passing through or touching restricted areas
 - Inefficient routing to reach points that should not be visited
+- Safety concerns when waypoints are on zone boundaries
 - Confusion in route planning when waypoints are conceptually "in a zone to avoid"
 
 ## Solution
 
-Added a new function `_filter_waypoints_in_zones()` that:
+Added an improved function `_filter_waypoints_in_zones()` that:
 1. Converts exclusion zones to spatial polygons
-2. Tests each waypoint to see if it's inside any zone using `polygon.contains(point)`
-3. Removes waypoints that are inside zones
-4. Logs warnings for each removed waypoint
-5. Returns filtered coordinates and a mapping of valid indices
+2. Tests each waypoint using `polygon.disjoint(point)` to check if it's completely outside
+3. Removes waypoints that are inside, on the boundary, or touching any zone
+4. Ensures points are strictly exterior to the bounding box
+5. Logs warnings for each removed waypoint
+6. Returns filtered coordinates and a mapping of valid indices
 
 The filtering is integrated into the main `calculate_optimal_route()` function as the first step, right after coordinates are assembled but before the distance/duration matrix is retrieved.
 
