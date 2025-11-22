@@ -38,6 +38,22 @@ services:
 #       - 9966:9966
 #     depends_on:
 #       - osrm
+
+  osrm-preprocessing:
+      image: ghcr.io/project-osrm/osrm-backend:latest
+      container_name: osrm-preprocessing
+      user: "root"
+      volumes:
+        - ${OSRM_DATA}:/data
+      deploy:
+        resources:
+          limits:
+            memory: ${OSRM_MEMORY_LIMIT:-32g}
+            cpus: ${OSRM_CPUS_LIMIT:-8.0}
+      entrypoint: /bin/bash /osrm-preprocessing.sh
+      restart: "no"
+      env_file: .env
+
   osrm:
     image: ghcr.io/project-osrm/osrm-backend:latest
     container_name: osrm
@@ -52,4 +68,4 @@ services:
         limits:
           memory: ${OSRM_MEMORY_LIMIT:-16g}
           cpus: ${OSRM_CPUS_LIMIT:-4.0}
-    command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/region.osrm"
+    command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/brazil-latest.osrm"

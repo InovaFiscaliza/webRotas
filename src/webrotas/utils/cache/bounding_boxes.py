@@ -62,7 +62,7 @@ import time
 
 
 from webrotas.config.constants import OSMR_PATH_CACHE
-import webrotas.regions as rg
+import webrotas.domain.geospatial.regions as rg
 from webrotas.config.logging_config import get_logger
 
 # Configure logging
