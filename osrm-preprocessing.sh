@@ -54,6 +54,9 @@ echo -e "\n${YELLOW}Step 2: Validation${NC}"
 if [ "${LOCAL_MD5}" = "${REMOTE_MD5}" ] && [ -n "${LOCAL_MD5}" ]; then
     echo -e "${GREEN}✓ Files are up-to-date! No download needed.${NC}"
     echo -e "  Using existing: ${PBF_FILE}"
+    echo -e "\n${GREEN}============================================================${NC}"
+    echo -e "${GREEN}============================================================${NC}"
+    exit 0
 else
     echo -e "${YELLOW}✗ Files differ or local file missing. Downloading latest version...${NC}"
     
@@ -82,20 +85,48 @@ else
     fi
 fi
 
+# Helper function to format duration
+format_duration() {
+    local seconds=$1
+    local hours=$((seconds / 3600))
+    local minutes=$(((seconds % 3600) / 60))
+    local secs=$((seconds % 60))
+    
+    if [ $hours -gt 0 ]; then
+        printf "%dh %dm %ds" $hours $minutes $secs
+    elif [ $minutes -gt 0 ]; then
+        printf "%dm %ds" $minutes $secs
+    else
+        printf "%ds" $secs
+    fi
+}
+
 # Step 5: Run OSRM preprocessing
 echo -e "\n${YELLOW}Step 5: OSRM Preprocessing${NC}"
 
 echo -e "\nCommand 1/3:"
 echo -e "→ Running: osrm-extract"
+START_TIME=$(date +%s)
 docker run --rm -t -v ${OSRM_DATA}:/data ghcr.io/project-osrm/osrm-backend:latest osrm-extract -p /data/profiles/car_avoid.lua /data/brazil-latest.osm.pbf
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+echo -e "${GREEN}✓ osrm-extract completed in $(format_duration $DURATION)${NC}"
 
 echo -e "\nCommand 2/3:"
 echo -e "→ Running: osrm-partition"
+START_TIME=$(date +%s)
 docker run --rm -t -v ${OSRM_DATA}:/data ghcr.io/project-osrm/osrm-backend:latest osrm-partition /data/brazil-latest.osrm
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+echo -e "${GREEN}✓ osrm-partition completed in $(format_duration $DURATION)${NC}"
 
 echo -e "\nCommand 3/3:"
 echo -e "→ Running: osrm-customize"
+START_TIME=$(date +%s)
 docker run --rm -t -v ${OSRM_DATA}:/data ghcr.io/project-osrm/osrm-backend:latest osrm-customize /data/brazil-latest.osrm
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+echo -e "${GREEN}✓ osrm-customize completed in $(format_duration $DURATION)${NC}"
 
 echo -e "\n${GREEN}============================================================${NC}"
 echo -e "${GREEN}✓ Preprocessing complete!${NC}"
