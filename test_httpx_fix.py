@@ -31,10 +31,10 @@ async def test_httpx_url_building():
     
     # Test actual request (this will likely fail without the server, but syntax is what matters)
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=5.0):
             # Just test the URL building, don't wait for response
-            print(f"\n✓ AsyncClient created successfully")
-            print(f"✓ httpx async syntax is correct")
+            print("\n✓ AsyncClient created successfully")
+            print("✓ httpx async syntax is correct")
             return True
     except Exception as e:
         print(f"✗ Exception (may be expected if no server): {e}")

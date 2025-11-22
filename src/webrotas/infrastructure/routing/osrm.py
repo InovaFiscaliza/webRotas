@@ -19,8 +19,6 @@ from webrotas.config.logging_config import get_logger
 from webrotas.infrastructure.routing.matrix_builder import IterativeMatrixBuilder
 from webrotas.config.server_hosts import get_osrm_url
 from webrotas.utils.converters.geojson import avoid_zones_to_geojson
-from webrotas.domain.routing.alternatives import get_alternatives_for_multipoint_route
-from webrotas.domain.routing.zone_aware import find_route_around_zones
 
 from webrotas.utils.converters.lua import write_lua_zones_file
 from webrotas.utils.versioning.version_manager import save_version
@@ -587,7 +585,7 @@ async def _get_matrix_with_local_container_priority(coords, avoid_zones):
                 get_distance_matrix_parallel_public_api,
             )
 
-            logger.info(f"🟡 Avoid zones present, using parallel Public API requests")
+            logger.info("🟡 Avoid zones present, using parallel Public API requests")
             return await get_distance_matrix_parallel_public_api(
                 request_osrm_public_api, coords
             )
@@ -609,7 +607,7 @@ async def _get_matrix_with_local_container_priority(coords, avoid_zones):
         else:
             # Last resort: geodesic calculation
             logger.warning(
-                f"All routing services failed. Using geodesic calculation as fallback"
+                "All routing services failed. Using geodesic calculation as fallback"
             )
             return get_geodesic_matrix(coords, speed_kmh=40)
 
@@ -795,7 +793,7 @@ def _filter_waypoints_in_zones(
     except Exception as e:
         logger.error(f"Error filtering waypoints in zones: {e}")
         # On error, return all coordinates
-        return coords, list(range(len(coords)))
+        return coords, list(range(len(coords))), zones_hit
 
 
 def _format_route_output(route_json, ordered_coords, zones_hit):
