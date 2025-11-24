@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse
 
 from webrotas.api.routes.process import router as process_router
 from webrotas.api.routes.health import router as health_router
+from webrotas.api.routes.logs import router as logs_router
 from webrotas.server_env import env
 from webrotas.config.logging_config import get_logger
 
@@ -73,6 +74,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # Include routers FIRST (so they have priority over static mount)
 app.include_router(process_router, prefix="", tags=["routing"])
 app.include_router(health_router, prefix="", tags=["health"])
+app.include_router(logs_router, prefix="", tags=["logs"])
 
 # Mount static files AFTER routers (so API endpoints take precedence)
 static_path = Path(__file__).parent / "frontend"
