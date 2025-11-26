@@ -18,6 +18,7 @@ from webrotas.infrastructure.geospatial.shapefiles import (
 from webrotas.infrastructure.routing.osrm import (
     compute_bounding_box,
     calculate_optimal_route,
+    calculate_ordered_route,
 )
 from webrotas.infrastructure.elevation.service import enrich_waypoints_with_elevation
 from webrotas.config.server_hosts import get_webrotas_url
@@ -166,10 +167,13 @@ class RouteProcessor:
         self,
         waypoints,
     ):
-        """Process ordered route with predefined cache and bounding box.
+        """Process ordered route with predefined waypoint order.
+
+        Optimized for the "ordered" request type - skips matrix calculation
+        and TSP solving since waypoints are already in desired order.
 
         Args:
-            waypoints: List of waypoints to visit
+            waypoints: List of waypoints to visit (in desired order)
         """
         (
             origin,
@@ -178,13 +182,12 @@ class RouteProcessor:
             estimated_time,
             estimated_distance,
             zones_hit,
-        ) = await calculate_optimal_route(
-            self.origin, waypoints, self.criterion, self.avoid_zones
+        ) = await calculate_ordered_route(
+            self.origin, waypoints, self.avoid_zones
         )
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
         # Store results in instance for response generation
-        # self.routing_area = routing_area
         self.origin = origin
         self.waypoints = waypoints
         self.paths = paths

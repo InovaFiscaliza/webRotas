@@ -826,6 +826,54 @@ def _format_route_output(route_json, ordered_coords, zones_hit):
     )
 
 
+async def calculate_ordered_route(
+    origin, waypoints, avoid_zones: List | None = None
+):
+    """
+    Calculate route with predefined waypoint order (optimized for ordered requests).
+
+    This is optimized for the "ordered" request type where waypoints are already
+    in the desired order. It skips matrix calculation and TSP solving, going directly
+    to OSRM route calculation.
+
+    Args:
+        origin: Starting coordinate dict with 'lat' and 'lng' keys
+        waypoints: List of waypoint coordinate dicts (in desired order)
+        avoid_zones: Optional iterable of avoidance zones
+
+    Returns:
+        tuple: (origin, waypoints, paths, duration_hms, distance_km)
+            - origin: First waypoint coordinate
+            - waypoints: Remaining waypoint coordinates in provided order
+            - paths: Route geometry paths
+            - duration_hms: Formatted duration (HH:MM:SS)
+            - distance_km: Formatted distance (km)
+    """
+    coords = [origin] + waypoints
+
+    # Step 1: Filter out waypoints inside exclusion zones
+    filtered_coords, valid_indices, zones_hit = _filter_waypoints_in_zones(
+        coords, avoid_zones
+    )
+
+    if len(filtered_coords) < len(coords):
+        logger.info(
+            f"Filtered waypoints in ordered route: {len(coords)} → {len(filtered_coords)} waypoints. "
+            f"Removed {len(coords) - len(filtered_coords)} waypoint(s) inside zones."
+        )
+
+    # Use waypoints in provided order (no TSP solving)
+    order = list(range(len(filtered_coords)))
+
+    # Get route geometry from OSRM with this specific order
+    route_json, ordered_coords = await get_osrm_route(
+        filtered_coords, order, avoid_zones=avoid_zones
+    )
+
+    # Format and return output
+    return _format_route_output(route_json, ordered_coords, zones_hit)
+
+
 async def calculate_optimal_route(
     origin, waypoints, criterion: str = "distance", avoid_zones: List | None = None
 ):
@@ -1096,15 +1144,15 @@ def validate_matrix(
     # validate diagonal zeros and positive off-diagonals for both matrices
     for mat in (distances, durations):
         # diagonal must be exactly zero
-        if any(mat[i][i] != 0 for i in range(num_points)):
+        if any(mat[i][i] is None or mat[i][i] != 0 for i in range(num_points)):
             return None
 
         for i in range(num_points):
             for j in range(num_points):
                 if i != j:
                     # off-diagonal must be positive
-                    if mat[i][j] <= 0:
-                        if mat[j][i] > 0:
+                    if mat[i][j] is None or mat[i][j] <= 0:
+                        if mat[j][i] is not None and mat[j][i] > 0:
                             mat[i][j] = mat[j][i]
                         else:
                             # Record this as an invalid pair if not already recorded
