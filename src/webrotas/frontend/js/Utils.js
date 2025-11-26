@@ -246,7 +246,6 @@
 
         const ids = {
             created: route.created,
-            cacheId: routing.response.cacheId,
             routeId: route.routeId
         };
         const documentDescription = JSON.stringify(ids, null, 1);

@@ -3,12 +3,12 @@
     {
       "format": "expanded",
       "extensionName": ".css",
-      "savePath": "/src//static/css"
+      "savePath": "/src/webrotas/frontend/css"
     }
   ],
   "liveSassCompile.settings.excludeList": [
     "/.vscode"
   ],
   "liveSassCompile.settings.generateMap": true,
-  "livePreview.defaultPreviewPath": "/src//static/index.html"
+  "livePreview.defaultPreviewPath": "/src/webrotas/frontend/index.html"
 }

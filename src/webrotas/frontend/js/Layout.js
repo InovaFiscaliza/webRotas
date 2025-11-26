@@ -87,8 +87,34 @@
                                     </div>`
                         },
                         {
-                            click:      (event) => window.app.modules.Callbacks.onRouteListSelectionChanged(event),
-                            mouseover:  (event) => window.app.modules.Callbacks.onHighlightTextListItem(event),
+                            click: (event) => window.app.modules.Callbacks.onRouteListSelectionChanged(event),
+                            keydown: (event) => {
+                                if (!["ArrowUp", "ArrowDown", " ", "Enter"].includes(event.key)) return;
+
+                                const current = event.target.closest("li");
+                                if (!current) return;
+
+                                let nextItem;
+
+                                switch (event.key) {
+                                    case " ":
+                                    case "Enter":
+                                        nextItem = current;
+                                        break;
+                                    case "ArrowUp":
+                                        nextItem = current.previousElementSibling;
+                                        break;
+                                    case "ArrowDown":
+                                        nextItem = current.nextElementSibling;
+                                        break;
+                                }
+
+                                if (nextItem) {
+                                    nextItem.focus();
+                                    nextItem.click();
+                                }
+                            },
+                            mouseover: (event) => window.app.modules.Callbacks.onHighlightTextListItem(event),
                             mouseleave: (event) => window.app.modules.Callbacks.onHighlightTextListItem(event)
                         },
                         [index1, index2]
@@ -228,7 +254,6 @@
 
                     let ids = {
                         created: route.created,
-                        cacheId: routing.cacheId,
                         routeId: route.routeId || "n/a"
                     };
                     htmlEl.routeIds.textContent = JSON.stringify(ids, null, 1);
@@ -261,6 +286,12 @@
                     this.toggleEnabled([htmlEl.routeListConfirmBtn, htmlEl.routeListCancelBtn], editionMode);
 
                     this.toggleEnabled([htmlEl.routeListAddBtn, htmlEl.routeListDelBtn, htmlEl.routeList], !editionMode);
+                    if (!editionMode) {
+                        htmlEl.routeList.querySelectorAll('li').forEach(li => li.tabIndex = 0);
+                    } else {
+                        htmlEl.routeList.querySelectorAll('li').forEach(li => li.tabIndex = -1);
+                    }
+
                     this.toggleEnabled([htmlEl.initialPointBtn, htmlEl.routeListMoveUpBtn, htmlEl.routeListMoveDownBtn], editionMode);
                     [htmlEl.initialPointLatitude, htmlEl.initialPointLongitude, htmlEl.initialPointDescription].forEach(item => { 
                         item.disabled = !editionMode; 

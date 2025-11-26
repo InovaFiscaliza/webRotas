@@ -23,12 +23,6 @@ from webrotas.infrastructure.elevation.service import enrich_waypoints_with_elev
 from webrotas.config.server_hosts import get_webrotas_url
 
 
-@dataclass
-class UserData:
-    OSMRport: int = 5000
-    ssid: str | None = None
-
-
 class RouteProcessor:
     """Processor for different route types (shortest, circle, grid, ordered).
 
@@ -63,9 +57,7 @@ class RouteProcessor:
         self.route_id = route_id or str(uuid.uuid4())
 
         # Route result fields (populated during processing)
-        self.cache_id = None  # Will be computed deterministically from request content for deduplication
         self.routing_area = None
-        self.bounding_box = None
         self.location_limits = None
         self.location_urban_areas = None
         self.location_urban_communities = None
@@ -107,7 +99,6 @@ class RouteProcessor:
 
         # Store results in instance for response generation
         self.routing_area = routing_area
-        self.bounding_box = bounding_box
         self.location_limits = location_limits
         self.location_urban_areas = location_urban_areas
         self.location_urban_communities = get_polyline_comunities(routing_area)
@@ -117,9 +108,6 @@ class RouteProcessor:
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
         self.zones_hit = zones_hit
-
-        # Compute cache_id based on routing parameters for deduplication
-        self._compute_cache_id()
 
     async def process_circle(
         self,
@@ -176,21 +164,13 @@ class RouteProcessor:
 
     async def process_ordered(
         self,
-        bounding_box,
         waypoints,
     ):
         """Process ordered route with predefined cache and bounding box.
 
         Args:
-            cache_id: Cache identifier
-            bounding_box: Predefined bounding box
             waypoints: List of waypoints to visit
         """
-        # routing_area, bounding_box, cache_id = compute_routing_area(self.avoid_zones, self.origin, waypoints)
-        # si.PreparaServidorRoteamento(routing_area)
-
-        # routing_area = []  # PENDENTE
-
         (
             origin,
             waypoints,
@@ -205,42 +185,12 @@ class RouteProcessor:
 
         # Store results in instance for response generation
         # self.routing_area = routing_area
-        self.bounding_box = bounding_box
         self.origin = origin
         self.waypoints = waypoints
         self.paths = paths
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
         self.zones_hit = zones_hit
-
-        # Compute cache_id based on routing parameters for deduplication
-        self._compute_cache_id()
-
-    def _compute_cache_id(self):
-        """Compute cache_id deterministically for deduplication.
-
-        We hash the bounding_box and routing_area (which includes avoid_zones) so
-        that identical requests produce identical cacheIds. If data is missing,
-        fall back to a random UUID to avoid collisions.
-        """
-        try:
-            if not self.bounding_box or not self.routing_area:
-                self.cache_id = str(uuid.uuid4())
-                return
-
-            # Prepare a stable JSON payload (sorted keys) for hashing
-            cache_payload = {
-                "bounding_box": self.bounding_box,
-                "routing_area": self.routing_area,
-                "criterion": self.criterion,
-            }
-            payload_str = json.dumps(
-                cache_payload, sort_keys=True, separators=(",", ":")
-            )
-            self.cache_id = hashlib.sha256(payload_str.encode("utf-8")).hexdigest()[:12]
-        except Exception:
-            # In case of any unexpected serialization issues, ensure a value exists
-            self.cache_id = str(uuid.uuid4())
 
     @staticmethod
     def _generate_waypoints_in_radius(center_point, radius_km, total_waypoints):
@@ -284,8 +234,6 @@ class RouteProcessor:
                 {
                     "request": self.request,
                     "response": {
-                        "cacheId": self.cache_id,
-                        "boundingBox": self.bounding_box,
                         "location": {
                             "limits": self.location_limits,
                             "urbanAreas": self.location_urban_areas,
