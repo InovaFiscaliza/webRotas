@@ -51,6 +51,7 @@
                 loadRoutingFromIndexedDB()
                     .then(routingContext => {
                         routingContext = routingContext || [];
+                        window.app.routingContext = routingContext;
 
                         if (routingContext.length) {
                             const [index1 = 0, index2 = 0] = args;
