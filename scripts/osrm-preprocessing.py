@@ -145,6 +145,7 @@ def main() -> int:
     )
     pbf_url = "https://download.geofabrik.de/south-america/brazil-latest.osm.pbf"
     pbf_file = osrm_data / "brazil-latest.osm.pbf"
+    region_file = osrm_data / "region.osm.pbf"
     md5_file = osrm_data / "brazil-latest.osm.pbf.md5"
 
     # Step 1: Fetch remote MD5
@@ -166,20 +167,20 @@ def main() -> int:
     # Step 3: Compare and decide
     print_section("Step 2: Validation")
     if local_md5 and local_md5.lower() == remote_md5.lower():
-        print("✓ Files are up-to-date! No download needed.")
+        print("✓ Files are up-to-date! Preprocessing already complete.")
         print(f"  Using existing: {pbf_file}")
         return 0
     else:
         print("✗ Files differ or local file missing. Downloading latest version...")
 
         print_section("Step 3: Downloading data")
-        if not download_with_progress(pbf_url, str(pbf_file)):
+        if not download_with_progress(pbf_url, str(region_file)):
             return 1
 
         # Verify downloaded file
         print_section("Step 4: Verifying download")
         print_step("Calculating MD5 of downloaded file")
-        new_md5 = get_local_md5(str(pbf_file))
+        new_md5 = get_local_md5(str(region_file))
 
         if not new_md5:
             print("✗ Failed to calculate MD5 of downloaded file", file=sys.stderr)
@@ -212,7 +213,7 @@ def main() -> int:
                 "osrm-extract",
                 "-p",
                 "/data/profiles/car_avoid.lua",
-                "/data/brazil-latest.osm.pbf",
+                "/data/region.osm.pbf",
             ],
             "osrm-extract",
         ),
@@ -226,7 +227,7 @@ def main() -> int:
                 f"{osrm_data}:/data",
                 "ghcr.io/project-osrm/osrm-backend:latest",
                 "osrm-partition",
-                "/data/brazil-latest.osrm",
+                "/data/region.osrm",
             ],
             "osrm-partition",
         ),
@@ -240,23 +241,43 @@ def main() -> int:
                 f"{osrm_data}:/data",
                 "ghcr.io/project-osrm/osrm-backend:latest",
                 "osrm-customize",
-                "/data/brazil-latest.osrm",
+                "/data/region.osrm",
             ],
             "osrm-customize",
+        ),
+        (
+            [
+                "docker",
+                "restart",
+                "osrm",
+            ],
+            "osrm-restart",
         ),
     ]
 
     total_time = 0.0
     for i, (cmd, cmd_name) in enumerate(commands, 1):
         print(f"\nCommand {i}/{len(commands)}:")
-        cmd_time = 0.0
         success, duration = run_docker_command(cmd, str(osrm_data), cmd_name)
         if not success:
             print(f"\n✗ Preprocessing failed at command {i}", file=sys.stderr)
             return 1
         total_time += duration
-        cmd_time += duration
         print(f"  Command {i} ({cmd_name}) completed in {format_duration(duration)}")
+
+    # Step 6: Rename region.osm files back to brazil-latest.osm
+    print_section("Step 6: Finalizing preprocessing")
+    try:
+        for pattern in ["region.osm", "region.osm.*"]:
+            for file in osrm_data.glob(pattern):
+                new_name = file.name.replace("region.osm", "brazil-latest.osm")
+                new_path = osrm_data / new_name
+                print_step(f"Renaming {file.name} to {new_name}")
+                file.rename(new_path)
+                print(f"  ✓ {new_name}")
+    except Exception as e:
+        print(f"✗ Error renaming files: {e}", file=sys.stderr)
+        return 1
 
     print_section(
         f"✓ Preprocessing complete! Total time: {format_duration(total_time)}"

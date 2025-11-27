@@ -167,24 +167,39 @@ class RouteProcessor:
         self,
         waypoints,
     ):
-        """Process ordered route with predefined waypoint order.
+        """Process ordered route - behavior depends on criterion.
 
-        Optimized for the "ordered" request type - skips matrix calculation
-        and TSP solving since waypoints are already in desired order.
+        - If criterion="ordered": Uses optimized route (skips matrix calculation and TSP)
+        - If criterion="distance" or "duration": Uses full optimization (recalculates order)
 
         Args:
-            waypoints: List of waypoints to visit (in desired order)
+            waypoints: List of waypoints to visit
         """
-        (
-            origin,
-            waypoints,
-            paths,
-            estimated_time,
-            estimated_distance,
-            zones_hit,
-        ) = await calculate_ordered_route(
-            self.origin, waypoints, self.avoid_zones
-        )
+        if self.criterion == "ordered":
+            # Optimized path: use waypoints in provided order, skip matrix/TSP
+            (
+                origin,
+                waypoints,
+                paths,
+                estimated_time,
+                estimated_distance,
+                zones_hit,
+            ) = await calculate_ordered_route(
+                self.origin, waypoints, self.avoid_zones
+            )
+        else:
+            # Standard path: calculate optimal order based on distance/duration criterion
+            (
+                origin,
+                waypoints,
+                paths,
+                estimated_time,
+                estimated_distance,
+                zones_hit,
+            ) = await calculate_optimal_route(
+                self.origin, waypoints, self.criterion, self.avoid_zones
+            )
+
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
         # Store results in instance for response generation

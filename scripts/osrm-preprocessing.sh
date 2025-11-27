@@ -16,6 +16,7 @@ NC='\033[0m' # No Color
 REMOTE_MD5_URL="https://download.geofabrik.de/south-america/brazil-latest.osm.pbf.md5"
 PBF_URL="https://download.geofabrik.de/south-america/brazil-latest.osm.pbf"
 PBF_FILE="${OSRM_DATA}/brazil-latest.osm.pbf"
+REGION_FILE="${OSRM_DATA}/region.osm.pbf"
 MD5_FILE="${OSRM_DATA}/brazil-latest.osm.pbf.md5"
 
 if [ -z "${OSRM_DATA}" ]; then
@@ -52,9 +53,10 @@ fi
 # Step 3: Compare and decide
 echo -e "\n${YELLOW}Step 2: Validation${NC}"
 if [ "${LOCAL_MD5}" = "${REMOTE_MD5}" ] && [ -n "${LOCAL_MD5}" ]; then
-    echo -e "${GREEN}✓ Files are up-to-date! No download needed.${NC}"
+    echo -e "${GREEN}✓ Files are up-to-date! Preprocessing already complete.${NC}"
     echo -e "  Using existing: ${PBF_FILE}"
     echo -e "\n${GREEN}============================================================${NC}"
+    echo -e "${GREEN}✓ Preprocessing complete!${NC}"
     echo -e "${GREEN}============================================================${NC}"
     exit 0
 else
@@ -64,7 +66,7 @@ else
     echo -e "→ Downloading from ${PBF_URL}"
     
     # Download with curl, showing progress
-    if ! curl -L --progress-bar -o "${PBF_FILE}" "${PBF_URL}"; then
+    if ! curl -L --progress-bar -o "${REGION_FILE}" "${PBF_URL}"; then
         echo -e "${RED}✗ Failed to download file${NC}" >&2
         exit 1
     fi
@@ -72,7 +74,7 @@ else
     # Verify downloaded file
     echo -e "\n${YELLOW}Step 4: Verifying download${NC}"
     echo -e "→ Calculating MD5 of downloaded file"
-    NEW_MD5=$(md5sum "${PBF_FILE}" | awk '{print $1}')
+    NEW_MD5=$(md5sum "${REGION_FILE}" | awk '{print $1}')
     
     if [ "${NEW_MD5}" = "${REMOTE_MD5}" ]; then
         echo -e "${GREEN}✓ Downloaded file verified successfully${NC}"
@@ -107,7 +109,7 @@ echo -e "\n${YELLOW}Step 5: OSRM Preprocessing${NC}"
 echo -e "\nCommand 1/3:"
 echo -e "→ Running: osrm-extract"
 START_TIME=$(date +%s)
-docker run --rm -t -v ${OSRM_DATA}:/data ghcr.io/project-osrm/osrm-backend:latest osrm-extract -p /data/profiles/car_avoid.lua /data/brazil-latest.osm.pbf
+docker run --rm -t -v ${OSRM_DATA}:/data ghcr.io/project-osrm/osrm-backend:latest osrm-extract -p /data/profiles/car_avoid.lua /data/region.osm.pbf
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
 echo -e "${GREEN}✓ osrm-extract completed in $(format_duration $DURATION)${NC}"
@@ -115,7 +117,7 @@ echo -e "${GREEN}✓ osrm-extract completed in $(format_duration $DURATION)${NC}
 echo -e "\nCommand 2/3:"
 echo -e "→ Running: osrm-partition"
 START_TIME=$(date +%s)
-docker run --rm -t -v ${OSRM_DATA}:/data ghcr.io/project-osrm/osrm-backend:latest osrm-partition /data/brazil-latest.osrm
+docker run --rm -t -v ${OSRM_DATA}:/data ghcr.io/project-osrm/osrm-backend:latest osrm-partition /data/region.osrm
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
 echo -e "${GREEN}✓ osrm-partition completed in $(format_duration $DURATION)${NC}"
@@ -123,10 +125,21 @@ echo -e "${GREEN}✓ osrm-partition completed in $(format_duration $DURATION)${N
 echo -e "\nCommand 3/3:"
 echo -e "→ Running: osrm-customize"
 START_TIME=$(date +%s)
-docker run --rm -t -v ${OSRM_DATA}:/data ghcr.io/project-osrm/osrm-backend:latest osrm-customize /data/brazil-latest.osrm
+docker run --rm -t -v ${OSRM_DATA}:/data ghcr.io/project-osrm/osrm-backend:latest osrm-customize /data/region.osrm
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
 echo -e "${GREEN}✓ osrm-customize completed in $(format_duration $DURATION)${NC}"
+
+# Step 6: Rename region.osm files back to brazil-latest.osm
+echo -e "\n${YELLOW}Step 6: Finalizing preprocessing${NC}"
+echo -e "→ Renaming region.osm* files to brazil-latest.osm*"
+for file in "${OSRM_DATA}"/region.osm*; do
+    if [ -e "$file" ]; then
+        new_file="${file//region.osm/brazil-latest.osm}"
+        mv "$file" "$new_file"
+        echo -e "  ${GREEN}✓$(basename "$new_file")${NC}"
+    fi
+done
 
 echo -e "\n${GREEN}============================================================${NC}"
 echo -e "${GREEN}✓ Preprocessing complete!${NC}"

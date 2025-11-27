@@ -39,26 +39,28 @@ async def calculate_ordered_route(
 ### Updated: `RouteProcessor.process_ordered`
 **Location:** `src/webrotas/domain/routing/processor.py`
 
-- Now calls `calculate_ordered_route` instead of `calculate_optimal_route`
-- Updated docstring to clarify the optimization
+Implements criterion-based routing logic:
+- **If criterion="ordered"**: Calls `calculate_ordered_route` (optimized path, skips matrix/TSP)
+- **If criterion="distance" or "duration"**: Calls `calculate_optimal_route` (full optimization)
 - Same output format and compatibility with existing code
 
 ## Performance Impact
 
-### Before Optimization
-For an "ordered" request with N waypoints:
-- 1× OSRM table request (N² waypoint pairs) ← **Eliminated**
-- Matrix validation/repair processing ← **Eliminated**
-- TSP solving (polynomial time) ← **Eliminated**
-- 1× OSRM route request
-- Elevation enrichment
+### Criterion-Based Behavior
 
-### After Optimization
-For an "ordered" request with N waypoints:
-- 1× OSRM route request (only)
-- Elevation enrichment
+#### criterion="ordered" (Optimized Path)
+For an "ordered" request with criterion="ordered" and N waypoints:
+- **Before:** 1× OSRM table request (N² pairs) + matrix processing + TSP solving + 1× route request
+- **After:** 1× OSRM route request only
+- **Result:** Eliminates the most expensive operations
 
-**Result:** Eliminates the most expensive operation (matrix calculation) for ordered requests.
+#### criterion="distance" or "duration" (Full Optimization Path)
+For an "ordered" request with criterion="distance/duration" and N waypoints:
+- Uses full `calculate_optimal_route` flow
+- Calculates distance/duration matrices
+- Runs TSP optimization to find best order
+- Returns optimized waypoint sequence
+- **Note:** In this case, the provided waypoint order is considered just a starting point, not the final order
 
 ## Backward Compatibility
 - No API changes
@@ -75,9 +77,11 @@ For an "ordered" request with N waypoints:
 - ~45 lines of code
 
 ### 2. Updated processor.py
-- Changed import to include `calculate_ordered_route`
-- Modified `process_ordered()` to call new function
-- Updated docstring
+- Added import for `calculate_ordered_route`
+- Modified `process_ordered()` with conditional logic:
+  - If `criterion == "ordered"`: Uses optimized path
+  - Otherwise: Uses full optimization path
+- Updated docstring to explain both paths
 
 ## Testing Considerations
 - "Ordered" requests should return identical results faster
@@ -104,3 +108,11 @@ The function still filters waypoints inside exclusion zones, which is important 
 
 ### Elevation Enrichment Preserved
 After route calculation, waypoints are enriched with elevation data using the same flow as before, ensuring consistency across all request types.
+
+### Criterion Values
+The optimization respects the following criterion values:
+- **"ordered"**: Keep waypoints in provided order (optimized)
+- **"distance"**: Optimize for shortest route (full TSP with distance)
+- **"duration"**: Optimize for fastest route (full TSP with duration/time)
+
+This allows clients to use the same request type with different optimization strategies.
