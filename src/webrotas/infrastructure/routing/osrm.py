@@ -920,9 +920,17 @@ async def calculate_optimal_route(
 
     # Validate endpoint and closed constraints
     endpoint_index = None
+    tolerance = 1e-6  # Tolerance for float comparison in degrees
+    
     if closed and endpoint is not None:
         # If both are specified, endpoint must be origin
-        if not (endpoint.get("lat") == origin.get("lat") and endpoint.get("lng") == origin.get("lng")):
+        origin_lat = origin.get("lat", 0)
+        origin_lng = origin.get("lng", 0)
+        endpoint_lat = endpoint.get("lat", 0)
+        endpoint_lng = endpoint.get("lng", 0)
+        
+        if not (np.isclose(endpoint_lat, origin_lat, atol=tolerance) and 
+                np.isclose(endpoint_lng, origin_lng, atol=tolerance)):
             raise HTTPException(
                 status_code=422,
                 detail="Cannot specify both closed=true and endpoint different from origin",
@@ -931,8 +939,15 @@ async def calculate_optimal_route(
     # Map endpoint coordinate to its index in coords
     if endpoint is not None:
         endpoint_index = None
+        endpoint_lat = endpoint.get("lat", 0)
+        endpoint_lng = endpoint.get("lng", 0)
+        
         for idx, coord in enumerate(coords):
-            if coord.get("lat") == endpoint.get("lat") and coord.get("lng") == endpoint.get("lng"):
+            coord_lat = coord.get("lat", 0)
+            coord_lng = coord.get("lng", 0)
+            
+            if (np.isclose(coord_lat, endpoint_lat, atol=tolerance) and 
+                np.isclose(coord_lng, endpoint_lng, atol=tolerance)):
                 endpoint_index = idx
                 break
         
