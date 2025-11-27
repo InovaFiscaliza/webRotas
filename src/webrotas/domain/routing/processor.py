@@ -85,6 +85,10 @@ class RouteProcessor:
             self.avoid_zones, self.origin, waypoints
         )
 
+        # Extract endpoint and closed from request if available
+        endpoint = self.request.get("endpoint") if self.request else None
+        closed = self.request.get("closed", False) if self.request else False
+
         (
             origin,
             waypoints,
@@ -93,7 +97,12 @@ class RouteProcessor:
             estimated_distance,
             zones_hit,
         ) = await calculate_optimal_route(
-            self.origin, waypoints, self.criterion, self.avoid_zones
+            self.origin,
+            waypoints,
+            self.criterion,
+            self.avoid_zones,
+            endpoint=endpoint,
+            closed=closed,
         )
 
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
@@ -175,8 +184,30 @@ class RouteProcessor:
         Args:
             waypoints: List of waypoints to visit
         """
+        # Extract endpoint and closed from request if available
+        endpoint = self.request.get("endpoint") if self.request else None
+        closed = self.request.get("closed", False) if self.request else False
+
         if self.criterion == "ordered":
             # Optimized path: use waypoints in provided order, skip matrix/TSP
+            # For ordered criterion with closed or endpoint, adjust the coordinate list accordingly
+            coords_for_route = [self.origin] + waypoints
+            
+            if closed and len(coords_for_route) > 1:
+                # Ensure route ends at origin by adding it to the end if different
+                if coords_for_route[-1] != self.origin:
+                    coords_for_route.append(self.origin)
+            elif endpoint is not None:
+                # Ensure route ends at endpoint by moving it to the end
+                try:
+                    coords_for_route.remove(endpoint)
+                    coords_for_route.append(endpoint)
+                except (ValueError, KeyError):
+                    logger.warning(f"Endpoint not found in waypoints for ordered route")
+            
+            # Use adjusted coordinates for routing
+            adjusted_waypoints = coords_for_route[1:] if len(coords_for_route) > 1 else waypoints
+            
             (
                 origin,
                 waypoints,
@@ -185,7 +216,7 @@ class RouteProcessor:
                 estimated_distance,
                 zones_hit,
             ) = await calculate_ordered_route(
-                self.origin, waypoints, self.avoid_zones
+                self.origin, adjusted_waypoints, self.avoid_zones
             )
         else:
             # Standard path: calculate optimal order based on distance/duration criterion
@@ -197,7 +228,12 @@ class RouteProcessor:
                 estimated_distance,
                 zones_hit,
             ) = await calculate_optimal_route(
-                self.origin, waypoints, self.criterion, self.avoid_zones
+                self.origin,
+                waypoints,
+                self.criterion,
+                self.avoid_zones,
+                endpoint=endpoint,
+                closed=closed,
             )
 
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)

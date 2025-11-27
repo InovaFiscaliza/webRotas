@@ -57,6 +57,14 @@ class RouteRequest(BaseModel):
         description="Routing criterion (distance, duration, or ordered)",
         pattern="^(distance|duration|ordered)$"
     )
+    endpoint: Optional[Origin] = Field(
+        default=None,
+        description="Optional endpoint where route must end (must be one of the waypoints)"
+    )
+    closed: Optional[bool] = Field(
+        default=False,
+        description="If true, route returns to origin (closed tour). Cannot be true if endpoint is specified and differs from origin"
+    )
 
     class Config:
         json_schema_extra = {
