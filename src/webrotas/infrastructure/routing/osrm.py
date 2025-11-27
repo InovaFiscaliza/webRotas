@@ -12,6 +12,7 @@ import httpx
 from shapely.geometry import LineString, shape
 from shapely.strtree import STRtree
 
+import numpy as np
 from geopy.distance import geodesic
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
@@ -685,7 +686,14 @@ def _ensure_valid_matrices(coords, distances, durations):
     return distances, durations
 
 
-def _calculate_route_order(coords, distances, durations, criterion: str = "distance", endpoint_index: int | None = None, closed: bool = False):
+def _calculate_route_order(
+    coords,
+    distances,
+    durations,
+    criterion: str = "distance",
+    endpoint_index: int | None = None,
+    closed: bool = False,
+):
     """
     Calculate optimal waypoint visitation order using TSP.
 
@@ -706,10 +714,7 @@ def _calculate_route_order(coords, distances, durations, criterion: str = "dista
     if criterion in ["distance", "duration"]:
         matrix = distances if criterion == "distance" else durations
         return solve_tsp_from_matrix(
-            matrix,
-            criterion=criterion,
-            endpoint_index=endpoint_index,
-            closed=closed
+            matrix, criterion=criterion, endpoint_index=endpoint_index, closed=closed
         )
     else:
         logger.warning(f"Unknown criterion '{criterion}', using natural order")
@@ -833,9 +838,7 @@ def _format_route_output(route_json, ordered_coords, zones_hit):
     )
 
 
-async def calculate_ordered_route(
-    origin, waypoints, avoid_zones: List | None = None
-):
+async def calculate_ordered_route(origin, waypoints, avoid_zones: List | None = None):
     """
     Calculate route with predefined waypoint order (optimized for ordered requests).
 
@@ -921,36 +924,39 @@ async def calculate_optimal_route(
     # Validate endpoint and closed constraints
     endpoint_index = None
     tolerance = 1e-6  # Tolerance for float comparison in degrees
-    
+
     if closed and endpoint is not None:
         # If both are specified, endpoint must be origin
         origin_lat = origin.get("lat", 0)
         origin_lng = origin.get("lng", 0)
         endpoint_lat = endpoint.get("lat", 0)
         endpoint_lng = endpoint.get("lng", 0)
-        
-        if not (np.isclose(endpoint_lat, origin_lat, atol=tolerance) and 
-                np.isclose(endpoint_lng, origin_lng, atol=tolerance)):
+
+        if not (
+            np.isclose(endpoint_lat, origin_lat, atol=tolerance)
+            and np.isclose(endpoint_lng, origin_lng, atol=tolerance)
+        ):
             raise HTTPException(
                 status_code=422,
                 detail="Cannot specify both closed=true and endpoint different from origin",
             )
-    
+
     # Map endpoint coordinate to its index in coords
     if endpoint is not None:
         endpoint_index = None
         endpoint_lat = endpoint.get("lat", 0)
         endpoint_lng = endpoint.get("lng", 0)
-        
+
         for idx, coord in enumerate(coords):
             coord_lat = coord.get("lat", 0)
             coord_lng = coord.get("lng", 0)
-            
-            if (np.isclose(coord_lat, endpoint_lat, atol=tolerance) and 
-                np.isclose(coord_lng, endpoint_lng, atol=tolerance)):
+
+            if np.isclose(coord_lat, endpoint_lat, atol=tolerance) and np.isclose(
+                coord_lng, endpoint_lng, atol=tolerance
+            ):
                 endpoint_index = idx
                 break
-        
+
         if endpoint_index is None:
             raise HTTPException(
                 status_code=422,
@@ -967,14 +973,16 @@ async def calculate_optimal_route(
             f"Filtered waypoints: {len(coords)} → {len(filtered_coords)} waypoints. "
             f"Removed {len(coords) - len(filtered_coords)} waypoint(s) inside zones."
         )
-    
+
     # Remap endpoint_index if waypoints were filtered
     filtered_endpoint_index = None
     if endpoint_index is not None:
         if endpoint_index in valid_indices:
             filtered_endpoint_index = valid_indices.index(endpoint_index)
         else:
-            logger.warning(f"Endpoint at index {endpoint_index} was filtered out; using open tour instead")
+            logger.warning(
+                f"Endpoint at index {endpoint_index} was filtered out; using open tour instead"
+            )
 
     # Retrieve distance/duration matrices with fallback strategy
     distances, durations = await compute_distance_and_duration_matrices(
@@ -1449,12 +1457,12 @@ async def get_osrm_route(coords, order, avoid_zones: List | None = None):
 def solve_closed_tsp_from_matrix(distance_matrix):
     """
     Solve closed Traveling Salesman Problem (returns to origin).
-    
+
     Creates a circuit that starts at node 0 and returns to node 0.
-    
+
     Args:
         distance_matrix: Distance/cost matrix
-        
+
     Returns:
         list: Indices representing the route (starting and ending at 0)
     """
@@ -1497,106 +1505,111 @@ def solve_closed_tsp_from_matrix(distance_matrix):
 def solve_constrained_tsp_from_matrix(distance_matrix, start_index=0, end_index=None):
     """
     Solve TSP with fixed start and end nodes (open tour with fixed endpoint).
-    
+
     Creates a route that starts at start_index and must end at end_index.
-    
+
     Args:
         distance_matrix: Distance/cost matrix
         start_index: Starting node index (default 0)
         end_index: Ending node index; if None, uses open tour from start
-        
+
     Returns:
         list: Indices representing the route
     """
     n = len(distance_matrix)
     dm = [row[:] for row in distance_matrix]
-    
+
     if end_index is None:
         end_index = start_index  # Closed tour if no end specified
-    
+
     # Set free return cost for all nodes back to start (open tour trick)
     for ii in range(n):
         if ii != start_index:
             dm[ii][start_index] = 0  # Free return to start
-    
+
     manager = pywrapcp.RoutingIndexManager(n, 1, start_index)
     routing = pywrapcp.RoutingModel(manager)
-    
+
     def cost_cb(from_index, to_index):
         ii = manager.IndexToNode(from_index)
         jj = manager.IndexToNode(to_index)
         return int(dm[ii][jj])
-    
+
     transit_idx = routing.RegisterTransitCallback(cost_cb)
     routing.SetArcCostEvaluatorOfAllVehicles(transit_idx)
-    
+
     # If end_index differs from start, add constraint to force ending there
     if end_index != start_index:
         # Create a dimension for the constraint
-        dimension_name = 'Distance'
+        dimension_name = "Distance"
         routing.AddDimension(
             transit_idx,
             0,  # slack
             10000,  # max distance
             True,  # start cumul to zero
-            dimension_name)
+            dimension_name,
+        )
         # Force end at specified node by adding disjunctive constraints
         # OR-Tools doesn't have a direct "end at node X" constraint,
         # so we use a workaround: set a high penalty for not visiting the end node
         # by modifying the cost matrix after solving if needed.
         # For now, we'll use the open tour and post-process if the end differs.
         pass
-    
+
     params = pywrapcp.DefaultRoutingSearchParameters()
     params.first_solution_strategy = (
         routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
     )
-    
+
     solution = routing.SolveWithParameters(params)
     if not solution:
         raise RuntimeError("OR-Tools could not find a solution for constrained TSP.")
-    
+
     # Extract route
     order = []
     idx = routing.Start(0)
     while not routing.IsEnd(idx):
         order.append(manager.IndexToNode(idx))
         idx = solution.Value(routing.NextVar(idx))
-    
+
     # If we have a specific end_index, try to rearrange so it ends there
     if end_index != start_index and end_index in order:
         # Move end_index to the last position
         order.remove(end_index)
         order.append(end_index)
-    
+
     return order
 
 
-def solve_tsp_from_matrix(distance_matrix, criterion="distance", endpoint_index=None, closed=False):
+def solve_tsp_from_matrix(
+    distance_matrix, criterion="distance", endpoint_index=None, closed=False
+):
     """
     Dispatcher function for TSP solving based on route constraints.
-    
+
     Automatically selects the appropriate TSP solver:
     - open tour (default): solve_open_tsp_from_matrix
     - closed tour: solve_closed_tsp_from_matrix
     - fixed endpoint: solve_constrained_tsp_from_matrix
-    
+
     Args:
         distance_matrix: Distance/cost matrix
         criterion: Optimization criterion ('distance' or 'duration')
         endpoint_index: If specified, route must end at this node (open tour with fixed end)
         closed: If True, route returns to origin (closed tour)
-        
+
     Returns:
         list: Indices representing the route
     """
     if closed and endpoint_index is not None and endpoint_index != 0:
         raise ValueError("Cannot have both closed=True and endpoint != origin")
-    
+
     if closed:
         return solve_closed_tsp_from_matrix(distance_matrix)
     elif endpoint_index is not None:
-        return solve_constrained_tsp_from_matrix(distance_matrix, start_index=0, end_index=endpoint_index)
+        return solve_constrained_tsp_from_matrix(
+            distance_matrix, start_index=0, end_index=endpoint_index
+        )
     else:
         # Default open tour
         return solve_open_tsp_from_matrix(distance_matrix)
@@ -1605,10 +1618,10 @@ def solve_tsp_from_matrix(distance_matrix, criterion="distance", endpoint_index=
 def solve_open_tsp_from_matrix(distance_matrix):
     """
     Solve open Traveling Salesman Problem (no return to origin).
-    
+
     Uses the 'free return' trick: zero the cost to return to depot (node 0).
     Returns the order of visited nodes starting at 0 and without the final return.
-    
+
     Translated from Portuguese:
     Usa o 'truque do retorno grátis': zera custo para voltar ao depósito (coluna 0).
     Retorna a ordem dos índices dos nós visitados, começando em 0 e

@@ -1,8 +1,7 @@
-import hashlib
 import json
 import math
 import uuid
-from dataclasses import dataclass
+import logging
 from datetime import datetime
 
 import numpy as np
@@ -23,6 +22,7 @@ from webrotas.infrastructure.routing.osrm import (
 from webrotas.infrastructure.elevation.service import enrich_waypoints_with_elevation
 from webrotas.config.server_hosts import get_webrotas_url
 
+logger = logging.getLogger(__name__)
 
 class RouteProcessor:
     """Processor for different route types (shortest, circle, grid, ordered).
@@ -203,7 +203,7 @@ class RouteProcessor:
                     coords_for_route.remove(endpoint)
                     coords_for_route.append(endpoint)
                 except (ValueError, KeyError):
-                    logger.warning(f"Endpoint not found in waypoints for ordered route")
+                    logger.warning("Endpoint not found in waypoints for ordered route")
             
             # Use adjusted coordinates for routing
             adjusted_waypoints = coords_for_route[1:] if len(coords_for_route) > 1 else waypoints

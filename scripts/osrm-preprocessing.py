@@ -88,7 +88,7 @@ def download_with_progress(url: str, dest: str) -> bool:
                 )
 
         urllib.request.urlretrieve(url, dest, progress_hook)
-        print(f"  [100%] Download complete!             ")
+        print("  [100%] Download complete!             ")
         return True
     except Exception as e:
         print(f"\n✗ Error downloading file: {e}", file=sys.stderr)
@@ -162,7 +162,7 @@ def main() -> int:
     if local_md5:
         print(f"  Local MD5:  {local_md5}")
     else:
-        print(f"  Local file not found")
+        print("  Local file not found")
 
     # Step 3: Compare and decide
     print_section("Step 2: Validation")
@@ -187,12 +187,12 @@ def main() -> int:
             return 1
 
         if new_md5.lower() == remote_md5.lower():
-            print(f"✓ Downloaded file verified successfully")
+            print("✓ Downloaded file verified successfully")
             # Save MD5 for future reference
             with open(md5_file, "w") as f:
                 f.write(f"{remote_md5} {pbf_file.name}\n")
         else:
-            print(f"✗ MD5 mismatch after download!", file=sys.stderr)
+            print("✗ MD5 mismatch after download!", file=sys.stderr)
             print(f"  Expected: {remote_md5}", file=sys.stderr)
             print(f"  Got:      {new_md5}", file=sys.stderr)
             return 1

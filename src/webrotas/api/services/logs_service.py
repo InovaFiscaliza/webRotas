@@ -7,10 +7,8 @@ Provides functionality to:
 - Format and combine logs from multiple sources
 """
 
-import os
-from pathlib import Path
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
+from datetime import datetime
 from webrotas.config.constants import LOGS_PATH
 from webrotas.config.logging_config import get_logger
 from webrotas.infrastructure.docker import (
