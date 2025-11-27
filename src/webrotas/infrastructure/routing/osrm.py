@@ -326,7 +326,8 @@ async def route_with_zones(
     except ValueError as e:
         logger.error(f"Invalid version format: {e}")
         raise HTTPException(status_code=400, detail=str(e))
-    except HTTPException:
+    except HTTPException as e:
+        logger.error(f"Error in route_with_zones: {e}", exc_info=True)
         raise
     except Exception as e:
         logger.error(f"Error in route_with_zones: {e}", exc_info=True)

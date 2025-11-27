@@ -11,48 +11,12 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - ${OSRM_DATA}:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     deploy:
       resources:
         limits:
-          cpus: '4'
-          memory: 4G
-
-#   vroom:
-#     network_mode: host
-#     image: vroomvrp/vroom-docker:v1.14.0-rc.2
-#     container_name: vroom
-#     restart: always
-#     volumes:
-#       - /media/ronaldo/Homelab/webrotas/conf:/conf
-#     ports:
-#       - 3000:3000
-#     environment:
-#       - VROOM_ROUTER=osrm  # router to use, osrm, valhalla or ors
-#     depends_on:
-#       - osrm
-#   osrm_frontend:
-#     image: osrm/osrm-frontend:latest
-#     container_name: osrm_frontend
-#     restart: always
-#     ports:
-#       - 9966:9966
-#     depends_on:
-#       - osrm
-
-  # osrm-preprocessing:
-  #     image: ghcr.io/project-osrm/osrm-backend:latest
-  #     container_name: osrm-preprocessing
-  #     user: "root"
-  #     volumes:
-  #       - ${OSRM_DATA}:/data
-  #     deploy:
-  #       resources:
-  #         limits:
-  #           memory: ${OSRM_MEMORY_LIMIT:-32g}
-  #           cpus: ${OSRM_CPUS_LIMIT:-8.0}
-  #     entrypoint: /bin/bash /osrm-preprocessing.sh
-  #     restart: "no"
-  #     env_file: .env
+          memory: ${APP_MEMORY_LIMIT:-4g}
+          cpus: ${APP_CPUS_LIMIT:-4.0}
 
   osrm:
     image: ghcr.io/project-osrm/osrm-backend:latest
