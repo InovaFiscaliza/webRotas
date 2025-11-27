@@ -221,11 +221,12 @@
                         'routeListDelBtn',
                         'toolbarExportBtn',
                         'toolbarPositionSlider',
-                        'toolbarLocationBtn',
-                        'toolbarOrientationBtn'
+                        'toolbarLocationBtn'
                     ]);
-                    const htmlElArray = Object.values(htmlEl);                    
+                    const htmlElArray = Object.values(htmlEl);
                     this.toggleEnabled(htmlElArray, true);
+
+                    this.updateControlState('geolocationMode');
 
                     const htmlEditModeBtnElArray = [window.document.getElementById('routeListEditModeBtn')];
                     this.toggleEnabled(htmlEditModeBtnElArray, (window.location.protocol === "file:") ? false : true);
@@ -257,6 +258,36 @@
                         routeId: route.routeId || "n/a"
                     };
                     htmlEl.routeIds.textContent = JSON.stringify(ids, null, 1);
+                    break;
+                }
+
+                case 'geolocationMode': {
+                    const geolocation = window.app.mapContext.settings.geolocation;
+                    const orientation = window.app.mapContext.settings.orientation;
+                    
+                    const htmlEl = this.getDOMElements([
+                        'toolbarLocationBtn',
+                        'toolbarOrientationBtn'
+                    ]);
+
+                    switch (geolocation.status) {
+                        case 'off': {
+                            htmlEl.toolbarLocationBtn.style.backgroundImage = geolocation.icon.off;
+                            this.toggleEnabled([htmlEl.toolbarOrientationBtn], false);
+
+                            if (orientation.status !== 'north') {
+                                orientation.status = 'north';
+                                htmlEl.toolbarOrientationBtn.style.backgroundImage = orientation.icon.on;
+                            }
+                            break;
+                        }
+                        case 'on': {
+                            htmlEl.toolbarLocationBtn.style.backgroundImage = geolocation.icon.on;
+                            this.toggleEnabled([htmlEl.toolbarOrientationBtn], true);
+                            break;   
+                        }
+                    }
+
                     break;
                 }
 

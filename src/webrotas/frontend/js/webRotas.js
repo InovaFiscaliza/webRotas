@@ -34,7 +34,7 @@
       │       │   ├── urbanAreas
       │       │   └── urbanCommunities
       │       └── routes[]
-      │           ├── routeId (hash origin+waypoints)
+      │           ├── routeId
       │           ├── automatic
       |           ├── created
       │           ├── origin
@@ -106,15 +106,7 @@ async function loadScript(filename) {
         },
 
         server: {
-            url: (function() {
-                // Determine server URL based on current location
-                // Development: uses localhost
-                // Production/Containerized: uses hostname from window.location
-                const protocol = window.location.protocol;
-                const hostname = window.location.hostname;
-                const port = 5001; // webRotas server port
-                return `${protocol}//${hostname}:${port}`;
-            })(),
+            url: '',
             sessionId: '',
             status: (window.location.protocol === "file:") ? 'offline' : 'online',
             statusMonitor: {
@@ -313,6 +305,7 @@ async function loadScript(filename) {
                 orientation: {
                     status: 'north', // 'north' | 'car-heading'  
                     icon: { on: 'url(images/north.png)', off: 'url(images/car-heading.png)' },
+                    zoomLevel: 19,
                     lastHeading: 0
                 },
                 position: {

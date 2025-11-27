@@ -18,6 +18,7 @@
             switch (type) {
                 case 'clearAll': {
                     this.remove('allLayers');
+                    this.setView('zoom');
                     break;
                 }
 
@@ -345,26 +346,45 @@
             switch (operationType) {
                 case 'zoom': {
                     const { currentRoute } = window.app.modules.Layout.findSelectedRoute();
-                    const lastPosition = window.app.mapContext.settings.geolocation.lastPosition;
-                    const geoData = [...currentRoute.waypoints, currentRoute.origin, ...(lastPosition ? [{ lat: lastPosition.coords.latitude, lng: lastPosition.coords.longitude }] : [])];
 
-                    if (!Array.isArray(geoData)) {
-                        geoData = [geoData];
+                    if (currentRoute) {
+                        const lastPosition = window.app.mapContext.settings.geolocation.lastPosition;
+                        const geoData = [...currentRoute.waypoints, currentRoute.origin, ...(lastPosition ? [{ lat: lastPosition.coords.latitude, lng: lastPosition.coords.longitude }] : [])];
+
+                        if (!Array.isArray(geoData)) {
+                            geoData = [geoData];
+                        }
+
+                        let coords = [];
+                        geoData.forEach(element => coords.push([element.lat, element.lng]));
+
+                        map.fitBounds(coords);
+                        window.app.mapContext.settings.position.current.center = map.getCenter();
+                        window.app.mapContext.settings.position.current.zoom   = map.getZoom();
+                    } else {
+                        const { center, zoom } = window.app.mapContext.settings.position.default;
+                        map.setView(center, zoom);
                     }
 
-                    let coords = [];
-                    geoData.forEach(element => coords.push([element.lat, element.lng]));
-
-                    map.fitBounds(coords);
-                    window.app.mapContext.settings.position.current.center = map.getCenter();
-                    window.app.mapContext.settings.position.current.zoom   = map.getZoom();
+                    if (window.app.map.getBearing() !== 0) {
+                        map.setBearing(0);
+                    }
                     break;
                 }
 
                 case 'center': {
-                    const geoData = args[0];
+                    const lastPosition = window.app.mapContext.settings.geolocation.lastPosition;
+                    const heading = window.app.mapContext.settings.orientation.lastHeading;
 
-                    map.setView(geoData);
+                    if (lastPosition) {
+                        const { latitude, longitude, heading } = window.app.mapContext.settings.geolocation.lastPosition.coords;
+                        const { zoomLevel } = window.app.mapContext.settings.orientation;
+                        map.setView( { lat: latitude, lng: longitude }, zoomLevel);
+                    }
+
+                    if (heading !== null) {
+                        map.setBearing(heading);
+                    }
                     break;
                 }
             }

@@ -6,7 +6,8 @@
       ├── loadRoutingFromIndexedDB
       ├── updateRoutingInIndexedDB
       ├── loadRouteFromFileOrServer
-      └── loadCustomRouteFromServer
+      ├── loadCustomRouteFromServer
+      └── isRequestAlreadyHandled
 
     ToDo:
     Inserir aqui a exclusão de rotas, a inclusão de rotas, a análise sobre a rota customizada etc.
@@ -56,31 +57,27 @@
                             
                             window.app.routingContext = routingContext;
                             window.app.modules.Layout.startup(index1, index2);
+                        } else {
+                            window.app.modules.Layout.startup();
                         }
                     })
                     .catch(ME => console.error(ME) /*new DialogBox(ME.message, "error")*/);
-
-                if (window.app.routingContext.length === 0) {
-                    window.app.modules.Layout.startup();
-                }
                 break;
             }
 
-            case 'update':
-                if (window.app.routingContext.length === 0) {
-                    window.localStorage.clear();
-                    updateRoutingInIndexedDB([])
-
-                    window.app.modules.Layout.startup();
-                    return;
-                }
-                
-                window.localStorage.setItem('appName',   window.app.name);
-                window.localStorage.setItem('sessionId', window.app.server.sessionId);
+            case 'update':                
                 updateRoutingInIndexedDB(window.app.routingContext)
                     .then(() => {
-                        const [index1 = 0, index2 = 0] = args;
-                        window.app.modules.Layout.startup(index1, index2);
+                        if (window.app.routingContext.length) {
+                            const [index1 = 0, index2 = 0] = args;
+                            window.app.modules.Layout.startup(index1, index2);
+                        } else {
+                            window.app.modules.Layout.startup();
+                        }
+
+                        window.localStorage.setItem('appName',   window.app.name);
+                        window.localStorage.setItem('sessionId', window.app.server.sessionId);
+                        window.localStorage.setItem("timestamp", window.app.modules.Utils.getTimeStamp());
                     })
                     .catch(ME => console.error(ME) /*new DialogBox(ME.message, "error")*/);
                 break;
@@ -138,28 +135,30 @@
 
     /*---------------------------------------------------------------------------------*/
     function loadRouteFromFileOrServer(initialRoute) {
-        const routingContext = window.app.routingContext;
-        let renderUpdate = Array(initialRoute.length).fill(true);
+        let isRenderUpdateNeed = Array(initialRoute.length).fill(true);
+        const routingContext   = window.app.routingContext;        
         
         if (routingContext.length === 0) {
             routingContext.push(...initialRoute);
         } else {
             for (let ii = 0; ii < initialRoute.length; ii++) {                
                 for (let jj = 0; jj < routingContext.length; jj++) {
-                    if (initialRoute[ii].response.cacheId === routingContext[jj].response.cacheId && 
-                        window.app.modules.Utils.strcmp(initialRoute[ii].response.routes, routingContext[jj].response.routes)) {
-                        renderUpdate[ii] = false;
+                    const currentRequest = routingContext[jj].request;
+                    const firstRoute     = routingContext[jj].response.routes[0];
+
+                    if (currentRequest.requestId === initialRoute[ii].request.requestId && firstRoute.automatic) {
+                        isRenderUpdateNeed[ii] = false;
                         break;
                     }
                 }
 
-                if (renderUpdate[ii]) {
+                if (isRenderUpdateNeed[ii]) {
                     routingContext.push(initialRoute[ii]);
                 }
             }
         }
 
-        if (renderUpdate.some(Boolean)) {
+        if (isRenderUpdateNeed.some(Boolean)) {
             window.app.modules.Layout.controller('routeLoaded', 0, 0);
             window.app.modules.Plot.controller('draw', 0, 0);
             return true;
@@ -190,11 +189,33 @@
         return false;
     }
 
+    /*---------------------------------------------------------------------------------*/
+    function isRequestAlreadyHandled(newRequestId) {
+        let isAlreadyHandled = false;
+        let index1, index2;
+        const routingContext = window.app.routingContext;
+        
+        for (let ii = 0; ii < routingContext.length; ii++) {
+            const currentRequest = routingContext[ii].request;
+            const firstRoute     = routingContext[ii].response.routes[0];
+
+            if (currentRequest.requestId === newRequestId && firstRoute.automatic) {
+                isAlreadyHandled = true;
+                index1 = ii;
+                index2 = 0;
+                break;
+            }
+        }
+
+        return [isAlreadyHandled, index1, index2];
+    }
+
     window.app.modules.Model = {
         syncLocalStorage,
         loadRoutingFromIndexedDB,
         updateRoutingInIndexedDB,
         loadRouteFromFileOrServer,
-        loadCustomRouteFromServer
+        loadCustomRouteFromServer,
+        isRequestAlreadyHandled
     };
 })()

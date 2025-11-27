@@ -95,6 +95,8 @@
 
             const map = window.L.map('document', { 
                 zoomControl: false,
+                rotate: true,
+                bearing: 0
             }).setView(center, zoom);
 
             basemapList[basemapSelection].addTo(map);
@@ -991,7 +993,7 @@
                 radio.style.marginRight = '5px';
 
                 radio.addEventListener('change', () => {
-                    window.app.mapContext.settings.exportFile.selected = option;
+                    window.app.mapContext.settings[type].selected = option;
                 });
     
                 label.appendChild(radio);

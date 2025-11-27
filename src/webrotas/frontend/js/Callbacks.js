@@ -102,7 +102,7 @@
                                 callback: () => {
                                     try {
                                         const token  = window.app.modules.Utils.uuid();
-                                        const url    = `${app.server.url}/webRotas/index.html?token=${token}`;
+                                        const url    = `${app.server.url}?token=${token}`;
                                         const newWin = window.open(url, '_blank');
                                         setTimeout(() => newWin.postMessage({ 
                                             type: "handshake", 
@@ -298,6 +298,7 @@
 
             window.app.mapContext.settings.geolocation.lastPosition = position;
             const { latitude, longitude, heading } = position.coords;
+            window.app.mapContext.settings.orientation.lastHeading = heading;
             
             if (!window.app.mapContext.layers.currentPosition.handle) {
                 window.app.modules.Plot.create('currentPosition', { lat: latitude, lng: longitude })
@@ -305,24 +306,11 @@
                 window.app.mapContext.layers.currentPosition.handle[0].setLatLng([latitude, longitude]);
             }
 
-            window.app.modules.Plot.setView('zoom');            
-
-            /*
-            if (heading !== null) {
-                window.app.mapContext.settings.orientation.lastHeading = heading;
-
-                if (window.app.mapContext.settings.orientation.status) {
-                    window.app.mapContext.settings.geolocation.setRotationAngle(heading);
-                } else {
-                    let mapContainer = document.getElementById('document');
-                    mapContainer.style.transform = `rotate(${heading}deg) scale(1.0) `;
-                    mapContainer.style.transformOrigin = 'center'; 
-                }            
+            if (window.app.mapContext.settings.orientation.status === 'north') {
+                window.app.modules.Plot.setView('zoom');
+            } else {
+                window.app.modules.Plot.setView('center');
             }
-
-            calculateRouteToNextWayPoint(latitude, longitude); // GetRouteCarFromHere
-            checkIfNearSomeWayPoint(latitude, longitude); // DesabilitaMarquerNoGPSRaioDaEstacao
-            */
         }
 
 
@@ -462,12 +450,17 @@
                     if (criterion) {
                         createCustomRoute(criterion)
                     } else {
-                        const criterionButtonGroup = window.app.modules.Components.createBasicSelector('criterion');
+                        let criterionButtonGroup = window.app.modules.Components.createBasicSelector('criterion');
+                        criterionButtonGroup.insertAdjacentHTML("afterbegin", "Por ter sido evidenciada alteração tanto na origem quanto na ordem de visitação dos pontos, é necessário escolher o critério para a criação da rota customizada:<br><br>");
+
                         new DialogBox(criterionButtonGroup, 'question', [{ text: 'OK', callback: () => {
                             const popup = window.document.querySelector('.selector-popup');
                             const selected = popup.querySelector('input[type="radio"]:checked').value;
                             createCustomRoute(selected)
                         }, focus: true }]);
+
+                        const selected = window.app.mapContext.settings.criterion.selected;
+                        criterionButtonGroup.querySelector(`input[value="${selected}"]`).focus();
                     }
                     break;
                 }
@@ -743,6 +736,17 @@
                                         throw new Error(`Esta é a versão <i>offline</i> do webRotas, executada via <b>${protocol}</b>.<br><br>
                                                         Recursos que dependem de comunicação com o servidor foram removidos ou desativados.`);
                                     }
+
+                                    const requestId = window.app.modules.Utils.hash(returnedData);
+                                    const [isAlreadyHandled, index1, index2] = window.app.modules.Model.isRequestAlreadyHandled(requestId);
+                                    if (isAlreadyHandled) {
+                                        const selectedRouteElement = window.document.getElementById("routeList").querySelector(`li[data-index='[${index1},${index2}]']`);
+                                        this.onRouteListSelectionChanged({ target: selectedRouteElement });
+                                        selectedRouteElement.focus();
+                                        return;
+                                    }
+
+                                    returnedData.requestId = requestId;
                                     window.app.modules.Communication.computeRoute(returnedData);
 
                                 } else if (expectedKeys.routing.every(key => key in returnedData)) {
@@ -754,6 +758,7 @@
                                     throw new Error('Unexpected file content');
                                 }
                             } catch (ME) {
+                                console.log(ME);
                                 new DialogBox(ME.message, 'error');
                             }                            
                         })
@@ -764,7 +769,9 @@
                 }
 
                 case 'toolbarExportBtn': {
-                    const exportButtonGroup = window.app.modules.Components.createBasicSelector('exportFile');
+                    let exportButtonGroup = window.app.modules.Components.createBasicSelector('exportFile');
+                    exportButtonGroup.insertAdjacentHTML("afterbegin", "Selecione o formato de exportação: JSON (todas as rotas), KML (rota selecionada) ou HTML+JS+CSS (versão estática do webRotas).<br><br>");
+
                     new DialogBox(exportButtonGroup, 'question', [{ text: 'OK', callback: () => {
                         const popup = window.document.querySelector('.selector-popup');
                         const selected = popup.querySelector('input[type="radio"]:checked').value;
@@ -822,7 +829,7 @@
 
                     if (window.app.mapContext.settings.geolocation.status === 'on') {
                         window.app.mapContext.settings.geolocation.status = 'off';
-                        event.target.style.backgroundImage = window.app.mapContext.settings.geolocation.icon.off;
+                        window.app.modules.Layout.updateControlState('geolocationMode');
 
                         if (window.app.mapContext.settings.geolocation.navWatch) {
                             navigator.geolocation.clearWatch(window.app.mapContext.settings.geolocation.navWatch);
@@ -850,7 +857,7 @@
                                 );
 
                                 window.app.mapContext.settings.geolocation.status = 'on';
-                                event.target.style.backgroundImage = window.app.mapContext.settings.geolocation.icon.on;
+                                window.app.modules.Layout.updateControlState('geolocationMode');
                             },
                             (err) => console.warn(`Geolocation error: ${err.message}`),
                             { 
@@ -864,37 +871,23 @@
                 }
 
                 case 'toolbarOrientationBtn': {
-                    const currentOrientationStatus = window.app.mapContext.settings.orientation.status;
+                    const orientation = window.app.mapContext.settings.orientation;
 
-                    if (currentOrientationStatus === 'north') {
-                        window.app.mapContext.settings.orientation.status = 'car-heading';
-                        event.target.style.backgroundImage = window.app.mapContext.settings.orientation.icon.off;
-                    } else {
-                        window.app.mapContext.settings.orientation.status = 'north';
-                        event.target.style.backgroundImage = window.app.mapContext.settings.orientation.icon.on;
-                    }
-
-                    new DialogBox('Ainda pendente de implementação...</p>', 'warning'); 
-
-                    /*
-                    window.app.mapContext.settings.orientation.status = !window.app.mapContext.settings.orientation.status;
-
-                    let btn = document.getElementById('orientation');
-                    let src = window.app.mapContext.settings.orientation.status ? window.app.mapContext.settings.orientation.icon.on : window.app.mapContext.settings.orientation.icon.off;
-                    btn.style.backgroundImage = `url("${src}")`;
-
-                    try {
-                        if (window.app.mapContext.settings.orientation.status) {
-                            RodaMapaPorCss(0);
-                            window.app.plotHandle.geolocation.setRotationAngle(heading);
-                        } else {
-                            RodaMapaPorCss(-heading);
-                            gpsMarker.setRotationAngle(0);
+                    switch (orientation.status) {
+                        case 'north': {
+                            orientation.status = 'car-heading';
+                            event.target.style.backgroundImage = orientation.icon.off;
+                            window.app.modules.Plot.setView('center');
+                            break;
                         }
-                    } catch (ME) {
-                        alert(ME.message);
+
+                        case 'car-heading': {
+                            orientation.status = 'north';
+                            event.target.style.backgroundImage = orientation.icon.on;
+                            window.app.modules.Plot.setView('zoom');
+                            break;
+                        }
                     }
-                    */
                     break;
                 }
 
@@ -905,6 +898,8 @@
 
                 case 'toolbarBasemapsBtn': {
                     const radioButtonGroup = window.app.modules.Components.createBasemapSelector();
+                    radioButtonGroup.insertAdjacentHTML("afterbegin", "Selecione o <i>basemap</i>.<br><br>");
+
                     new DialogBox(radioButtonGroup, 'question', []);
 
                     const selected = window.app.mapContext.settings.basemap;
@@ -913,7 +908,11 @@
                 }
 
                 case 'toolbarInitialZoomBtn': {
-                    window.app.modules.Plot.setView('zoom');
+                    if (window.app.mapContext.settings.orientation.status === 'north') {
+                        window.app.modules.Plot.setView('zoom');
+                    } else {
+                        window.app.modules.Plot.setView('center');
+                    }
                     break;
                 }
 

@@ -116,13 +116,14 @@
     }
 
     /*---------------------------------------------------------------------------------*/
-    async function hash(src) {
-        const srcBytes   = new TextEncoder().encode(JSON.stringify(src));
-        const hashBuffer = await crypto.subtle.digest('SHA-256', srcBytes);
-        const hashArray  = Array.from(new Uint8Array(hashBuffer));
-        const hashHex    = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    function hash(obj) {
+        const str = JSON.stringify(obj);
+        let hh = 0, ii = 0, len = str.length;
 
-        return hashHex;
+        while (ii < len) {
+            hh = Math.imul(31, hh) + str.charCodeAt(ii++) | 0;
+        }
+        return (hh >>> 0).toString(16);
     }
 
     /*---------------------------------------------------------------------------------*/
@@ -157,6 +158,17 @@
         );
     }
 
+    /*--------------------------------------------------------------------------------*/
+    const sortObject = (obj) => {
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(sortObject);
+
+        return Object.keys(obj).sort().reduce((acc, key) => {
+            acc[key] = sortObject(obj[key]);
+            return acc;
+        }, {});
+    };
+
     /*---------------------------------------------------------------------------------*/
     const defaultFileName = (prefix = 'webRotas', extension = 'json') => {
         const timestamp = getTimeStamp('yyyy.mm.dd_THH.MM.SS');
@@ -165,7 +177,7 @@
 
     /*---------------------------------------------------------------------------------*/
     function strcmp(a, b) {
-        return JSON.stringify(a, Object.keys(a).sort()) === JSON.stringify(b, Object.keys(b).sort());
+        return JSON.stringify(sortObject(a)) === JSON.stringify(sortObject(b));
     }
 
     /*---------------------------------------------------------------------------------*/
