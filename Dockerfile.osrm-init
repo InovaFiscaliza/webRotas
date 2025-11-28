@@ -1,19 +1,15 @@
-FROM python:3.13-slim-bookworm
+FROM ghcr.io/project-osrm/osrm-backend:latest
 
-# Install required tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    docker.io \
+# Install required tools for preprocessing
+RUN apk add --no-cache \
+    bash \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates
 
-# Set working directory
-WORKDIR /app
+WORKDIR /data
 
-# Copy the preprocessing script
-COPY scripts/osrm-preprocessing.py /app/osrm-preprocessing.py
+# Create preprocessing script
+COPY scripts/osrm-init-entrypoint.sh /usr/local/bin/osrm-init
+RUN chmod +x /usr/local/bin/osrm-init
 
-# Make it executable
-RUN chmod +x /app/osrm-preprocessing.py
-
-# Run the preprocessing script
-ENTRYPOINT ["/app/osrm-preprocessing.py"]
+CMD ["/usr/local/bin/osrm-init"]

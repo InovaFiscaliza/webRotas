@@ -8,7 +8,6 @@ services:
       - OSRM_DATA=/data
     volumes:
       - ${OSRM_DATA}:/data
-      - /var/run/docker.sock:/var/run/docker.sock:rw
     # Init services should exit after completion
     restart: no
     # Limit resource usage for init task
