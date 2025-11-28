@@ -159,3 +159,170 @@ Gera uma rota em torno de pontos regularmente distribuídos em forma de grade de
 
 #### ARQUIVOS DE TESTES
 Na pasta `tests` há diversos tipos de exemplos de requisições
+
+## INSTALAÇÃO E EXECUÇÃO
+
+O webRotas oferece três opções de instalação e execução, cada uma com diferentes características e capacidades de roteamento.
+
+Importante: As opções 1 e 2 NÃO incluem o contêiner OSRM. Nesses modos, a aplicação ficará limitada a consultas na API Pública do OpenStreetMap, o que pode resultar em rotas menos otimizadas e sujeitas a limites de uso. Para habilitar o OSRM local e obter desempenho/qualidade superiores, utilize a opção 3 (Docker Compose).
+
+### Opção 1: Instalação local para desenvolvimento (uv)
+
+Ideal para desenvolvimento, testes e depuração.
+
+1) Instale o uv
+
+```bash
+# Linux/macOS
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+irm https://astral.sh/uv/install.ps1 | iex
+```
+
+Verifique:
+```bash
+uv --version
+```
+
+2) Clone o repositório
+```bash
+git clone https://github.com/InovaFiscaliza/webRotas.git
+cd webRotas
+```
+
+3) Sincronize o ambiente
+```bash
+uv sync
+# Para desenvolvimento (inclui dependências de teste)
+uv sync --dev
+```
+
+4) Execute o servidor FastAPI
+```bash
+uv run --directory src uvicorn webrotas.main:app --host 127.0.0.1 --port 5002
+# Alternativa
+uv run src/webrotas/main.py --port 5002
+```
+
+Acesse:
+- App: http://127.0.0.1:5002
+- Docs (Swagger): http://127.0.0.1:5002/docs
+- ReDoc: http://127.0.0.1:5002/redoc
+
+
+Testes:
+```bash
+uv run pytest tests/
+uv run pytest tests/test_fastapi.py
+uv run python tests/test_fastapi.py
+uv run python tests/test_logging.py
+```
+
+Limitação desta opção: sem contêiner OSRM, a aplicação depende da API Pública do OSM.
+
+### Opção 2: Construir e executar a imagem Docker (sem OSRM)
+
+Ideal para empacotar e rodar apenas a API FastAPI em um contêiner.
+
+1) Build da imagem
+```bash
+docker build -t webrotas:latest .
+```
+
+2) Run do contêiner
+```bash
+docker run -d \
+  --name webrotas \
+  -p 5002:5002 \
+  -e PYTHONUNBUFFERED=1 \
+  webrotas:latest
+# (Opcional) Limites de recursos
+# --memory=4g --cpus=4
+```
+
+Acesse:
+- App: http://localhost:5002
+- Docs: http://localhost:5002/docs
+
+Logs e parada:
+```bash
+docker logs -f webrotas
+docker stop webrotas && docker rm webrotas
+```
+
+Limitação desta opção: sem contêiner OSRM, a aplicação depende da API Pública do OSM.
+
+### Opção 3: Docker Compose (recomendado, com OSRM)
+
+Implantação completa com OSRM local e pré-processamento automatizado dos dados OSM.
+
+Pré-requisitos:
+- Docker e Docker Compose v2+
+- ~40GB livres em disco (dados + preprocessing)
+- Recomendado: 32GB RAM
+
+1) Configure variáveis de ambiente (.env)
+```bash
+# Diretório para dados do OSRM
+OSRM_DATA=/caminho/para/osrm-data
+
+# Limites (opcionais)
+OSRM_PREP MEMORY_LIMIT=32g
+OSRM_PREP_CPU_LIMIT=8
+OSRM_MEMORY_LIMIT=16g
+OSRM_CPUS_LIMIT=4.0
+APP_MEMORY_LIMIT=4g
+APP_CPUS_LIMIT=4.0
+```
+Exemplo criando o diretório dentro do projeto:
+```bash
+mkdir -p ./osrm-data
+# no .env
+OSRM_DATA=$(pwd)/osrm-data
+```
+
+2) Suba a stack
+```bash
+docker-compose up -d --build
+```
+Ordem de inicialização:
+1. osrm-init: baixa dados do Brasil (se necessário, via MD5) e executa osrm-extract/partition/customize
+2. osrm: sobe o roteador em http://localhost:5000
+3. webrotas: sobe a API em http://localhost:5002
+
+Em execuções futuras (com cache válido), o preprocessing é pulado automaticamente.
+
+3) Acesso e operação
+- App: http://localhost:5002
+- OSRM: http://localhost:5000
+- Docs: http://localhost:5002/docs
+
+Monitorar e gerenciar:
+```bash
+# Logs
+docker-compose logs -f
+# Logs individuais
+docker-compose logs -f osrm-init
+docker-compose logs -f osrm
+docker-compose logs -f webrotas
+# Status
+docker-compose ps
+# Parar/destruir
+docker-compose stop
+docker-compose down
+# Remover tudo (incl. volumes)
+docker-compose down -v
+```
+
+Dados OSRM:
+```bash
+# Tamanho dos dados
+du -sh $OSRM_DATA
+# Arquivos gerados
+ls -lh $OSRM_DATA/
+# Reprocessar do zero (apaga dados)
+rm -rf $OSRM_DATA/*
+# próxima execução fará novo download/preprocessamento
+docker-compose up -d --build
+```

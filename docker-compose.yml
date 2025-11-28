@@ -15,8 +15,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${INIT_MEMORY_LIMIT:-32g}
-          cpus: ${OSRM_PREP_LIMIT:-8.0}
+          memory: ${OSRM_PREP MEMORY_LIMIT:-32g}
+          cpus: ${OSRM_PREP_CPU_LIMIT:-8.0}
 
 
   osrm:
