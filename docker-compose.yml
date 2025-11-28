@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.osrm-init
     container_name: osrm-init
     environment:
-      - OSRM_DATA=${OSRM_DATA:-/data}
+      - OSRM_DATA=/data
     volumes:
       - ${OSRM_DATA}:/data
       - /var/run/docker.sock:/var/run/docker.sock:rw
@@ -15,7 +15,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${OSRM_PREP MEMORY_LIMIT:-32g}
+          memory: ${OSRM_PREP_MEMORY_LIMIT:-32g}
           cpus: ${OSRM_PREP_CPU_LIMIT:-8.0}
 
 
@@ -31,6 +31,12 @@ services:
     depends_on:
       osrm-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/route/v1/driving/0,0;1,1?steps=true"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
