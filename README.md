@@ -10,36 +10,152 @@ O webRotas é uma ferramenta de gerenciamento de rotas de veículos utilizada em
 
 <img width="2802" height="1872" alt="webRotas" src="https://github.com/user-attachments/assets/652c51fb-bf4d-4546-bb4d-18b0bfd44dc4" />
 
-#### REQUISITOS
-- Windows 10 1709 (build 16299) ou posterior
-- PowerShell 5.1 ou posterior
-- WinGet 1.10 ou posterior
-- Recursos de virtualização habilitados (veja [documentação do Subsistema Linux do Windows](https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature))
-- 16GB of RAM
-- 10GB de espaço livre em disco
-- Conexão de internet
 
-Devido à necessidade de uso de recurso de virtualização, esta solução usualmente não será compatível com máquinas virtuais, a menos que estas tenham sido excepcionalmente configuradas para permitir o uso de virtualização.
+#### TIPOS DE REQUISIÇÕES
+O webRotas aceita três tipos principais de requisições, cada uma gerando rotas através de estratégias distintas. Todas as requisições devem seguir o formato JSON e conter os campos obrigatórios: `type`, `origin` e `parameters`.
 
-#### EXECUÇÃO NO AMBIENTE DO VSCODE
-Caso o aplicativo seja executado diretamente no VSCODE, é necessário:  
-1. Clonar o presente repositório.
-2. Instalar as dependências, executando o comando a seguir.  
+##### 1. Tipo "shortest" - Rota entre Pontos Específicos
+Gera uma rota otimizada passando pelos pontos de interesse definidos explicitamente (waypoints). Ideal para inspecionar locais específicos como estações de telecomunicações.
+
+**Campos obrigatórios:**
+- `type`: "shortest"
+- `origin`: Ponto de partida com latitude, longitude e descrição
+- `parameters.waypoints`: Array de pontos a serem visitados
+
+**Exemplo de requisição:**
+```json
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -22.902368,
+        "lng": -43.174200,
+        "description": "Anatel-RJ"
+    },
+    "parameters": {
+        "waypoints": [
+            {
+                "lat": -22.510099,
+                "lng": -43.175840,
+                "description": "Petrópolis"
+            },
+            {
+                "lat": -22.417852,
+                "lng": -42.973280,
+                "description": "Teresópolis"
+            },
+            {
+                "lat": -22.281154,
+                "lng": -42.532454,
+                "description": "Nova Friburgo"
+            }
+        ]
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}
 ```
-uv sync
+
+##### 2. Tipo "circle" - Rota em Padrão Circular
+Gera uma rota em torno de um ponto central com pontos de interesse distribuídos circularmente. Útil para cobertura sistemática em torno de uma localização central.
+
+**Campos obrigatórios:**
+- `type`: "circle"
+- `origin`: Ponto de partida com latitude, longitude e descrição
+- `parameters.centerPoint`: Ponto central (latitude e longitude)
+- `parameters.radius`: Raio em quilômetros
+- `parameters.totalWaypoints`: Quantidade de pontos na distribuição circular
+
+**Exemplo de requisição:**
+```json
+{
+    "type": "circle",
+    "origin": {
+        "lat": -22.902368,
+        "lng": -43.174200,
+        "description": "Anatel-RJ"
+    },
+    "parameters": {
+        "centerPoint": {
+            "lat": -22.910555,
+            "lng": -43.163606
+        },
+        "radius": 10,
+        "totalWaypoints": 21
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}
 ```
 
-3. Download do arquivo [shapefiles.zip](https://anatel365.sharepoint.com/:f:/s/InovaFiscaliza/Et9ttcdpValOquc5FpKLd0IB7U8CJa1T6ZYuPMZ68mrenw?e=FEHZWH), descompactá-lo e mover os arquivos no formato .parquet para a raiz da pasta **.\src\resources**.
-4. Executa-se o arquivo **.\src\backend\webdir\server.py**, o que iniciará o servidor do webRotas.
-5. Em um navegador, abre-se a url do servidor (http://127.0.0.1:5002/webRotas, por exemplo), respeitando o protocolo, endereço e porta.
+##### 3. Tipo "grid" - Rota em Padrão de Grade
+Gera uma rota em torno de pontos regularmente distribuídos em forma de grade dentro de uma localidade. Ideal para inspeção sistemática de uma região urbana.
 
-Informações complementares na página de [instalação](./Install/README.md).
+**Campos obrigatórios:**
+- `type`: "grid"
+- `origin`: Ponto de partida com latitude, longitude e descrição
+- `parameters.city`: Nome da cidade
+- `parameters.state`: Sigla do estado (UF)
+- `parameters.scope`: "Location" para área urbana ou "City" para cidade inteira
+- `parameters.pointDistance`: Distância em metros entre os pontos da grade
+
+**Exemplo de requisição:**
+```json
+{
+    "type": "grid",
+    "origin": {
+        "lat": -22.902368,
+        "lng": -43.174200,
+        "description": "Anatel-RJ"
+    },
+    "parameters": {
+        "city": "Rio de Janeiro",
+        "state": "RJ",
+        "scope": "Location",
+        "pointDistance": 10000
+    },
+    "avoidZones": [],
+    "criterion": "duration"
+}
+```
+
+#### CAMPOS OPCIONAIS
+
+**avoidZones**: Array de zonas a serem evitadas na rota. Cada zona é um polígono definido por coordenadas.
+
+```json
+"avoidZones": [
+    {
+        "name": "Parque da Cidade",
+        "coord": [
+            [-22.920469, -43.093928],
+            [-22.921399, -43.088298],
+            [-22.923394, -43.082380],
+            [-22.929908, -43.078627]
+        ]
+    }
+]
+```
+
+**criterion**: Critério de otimização da rota (padrão: "duration")
+- "duration": Otimiza pelo tempo de viagem
+- "distance": Otimiza pela distância total
+
+**closed**: Indica se a rota será fechada ou não, caso `true` é definida o origem com ponto final da rota
+- "true": "Fecha" a rota, i.e. define a origem como ponto final também
+- "false": Faz o roteamento normal com os pontos definidos na requisição, sem fechar a rota
+
+**endpoint**: Ponto final opcional (_Esse ponto final deve ser necessariamente um dos pontos da rota e não um novo ponto)
+```json
+"endpoint": 
+    {
+        "description": "Parque da Cidade",
+        "lat": -22.920469, 
+        "lng": -43.093928,
+            
+    }
+```
+
+
 
 #### ARQUIVOS DE TESTES
-Na pasta **.\tests** consta mais de 10 arquivos de testes, como:
-- Requisições iniciais no formato .json ("request_circle (Rio de Janeiro-RJ).json", "request_grid (Goiânia-GO).json" e "request_shortest (RR).json", por exemplo);
-- Respostas do servidor no formato .json ("webRotas_2025.08.19_T08.50.47.json").
-
-Ambos os tipos de arquivos são importados na GUI usando o botão de importação, localizado no toolbar.
-
-Por fim, cabe observar que na pasta **.\src\backend\webdir\logs** ficam armazenados logs para depuração.
+Na pasta `tests` há diversos tipos de exemplos de requisições

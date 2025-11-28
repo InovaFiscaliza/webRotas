@@ -1,22 +1,23 @@
 services:
-  webrotas:
-    build: .
-    container_name: webrotas
-    restart: always
-    ports:
-      - "5002:5002"
-    depends_on:
-      - osrm
+  osrm-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.osrm-init
+    container_name: osrm-init
     environment:
-      - PYTHONUNBUFFERED=1
+      - OSRM_DATA=${OSRM_DATA:-/data}
     volumes:
       - ${OSRM_DATA}:/data
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    # Init services should exit after completion
+    restart: no
+    # Limit resource usage for init task
     deploy:
       resources:
         limits:
-          memory: ${APP_MEMORY_LIMIT:-4g}
-          cpus: ${APP_CPUS_LIMIT:-4.0}
+          memory: ${INIT_MEMORY_LIMIT:-32g}
+          cpus: ${OSRM_PREP_LIMIT:-8.0}
+
 
   osrm:
     image: ghcr.io/project-osrm/osrm-backend:latest
@@ -27,9 +28,32 @@ services:
     volumes:
       - ${OSRM_DATA}:/data
       - ${OSRM_DATA}/profiles:/profiles:ro
+    depends_on:
+      osrm-init:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
           memory: ${OSRM_MEMORY_LIMIT:-16g}
           cpus: ${OSRM_CPUS_LIMIT:-4.0}
     command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/region.osrm"
+
+  webrotas:
+    build: .
+    container_name: webrotas
+    restart: always
+    ports:
+      - "5002:5002"
+    depends_on:
+      osrm:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ${OSRM_DATA}:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      resources:
+        limits:
+          memory: ${APP_MEMORY_LIMIT:-4g}
+          cpus: ${APP_CPUS_LIMIT:-4.0}

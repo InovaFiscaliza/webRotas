@@ -1,0 +1,19 @@
+FROM python:3.13-slim-bookworm
+
+# Install required tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    docker.io \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy the preprocessing script
+COPY scripts/osrm-preprocessing.py /app/osrm-preprocessing.py
+
+# Make it executable
+RUN chmod +x /app/osrm-preprocessing.py
+
+# Run the preprocessing script
+ENTRYPOINT ["/app/osrm-preprocessing.py"]
