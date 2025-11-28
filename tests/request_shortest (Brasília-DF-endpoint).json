@@ -33,6 +33,10 @@
         }
     ]
     },
-    "criterion": "distance",
-    "closed": true
+    "criterion": "duration",
+    "endpoint": {
+            "lat": -15.795200,
+            "lng": -47.869800,
+            "description": "Esplanada dos Ministérios"
+        }
 }
