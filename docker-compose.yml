@@ -1,23 +1,4 @@
 services:
-  osrm-init:
-    build:
-      context: .
-      dockerfile: Dockerfile.osrm-init
-    container_name: osrm-init
-    environment:
-      - OSRM_DATA=/data
-    volumes:
-      - ${OSRM_DATA}:/data
-    # Init services should exit after completion
-    restart: no
-    # Limit resource usage for init task
-    deploy:
-      resources:
-        limits:
-          memory: ${OSRM_PREP_MEMORY_LIMIT:-32g}
-          cpus: ${OSRM_PREP_CPU_LIMIT:-8.0}
-
-
   osrm:
     image: ghcr.io/project-osrm/osrm-backend:latest
     container_name: osrm
@@ -27,9 +8,6 @@ services:
     volumes:
       - ${OSRM_DATA}:/data
       - ${OSRM_DATA}/profiles:/profiles:ro
-    depends_on:
-      osrm-init:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/route/v1/driving/0,0;1,1?steps=true"]
       interval: 30s
@@ -41,7 +19,7 @@ services:
         limits:
           memory: ${OSRM_MEMORY_LIMIT:-16g}
           cpus: ${OSRM_CPUS_LIMIT:-4.0}
-    command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/region.osrm"
+    command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/brazil-latest.osrm"
 
   webrotas:
     build: .

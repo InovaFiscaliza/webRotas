@@ -11,12 +11,14 @@ This script:
 import os
 import sys
 import hashlib
-import subprocess
 import urllib.request
 from pathlib import Path
 from typing import Optional
 from datetime import timedelta
 from time import time
+
+import docker
+from docker.errors import ContainerError
 
 
 def print_section(title: str) -> None:
@@ -96,40 +98,44 @@ def download_with_progress(url: str, dest: str) -> bool:
 
 
 def run_docker_command(
-    command: list, data_dir: str, command_name: str = ""
+    image: str, command: list, data_dir: str, command_name: str = ""
 ) -> tuple[bool, float]:
-    """Run a Docker command with error handling and time tracking.
+    """Run a Docker command using Docker API with error handling and time tracking.
 
     Returns:
         tuple[bool, float]: (success, duration_in_seconds)
     """
     try:
-        env = os.environ.copy()
-        env["OSRM_DATA"] = data_dir
+        client = docker.from_env()
 
-        print_step(f"Running: {' '.join(command)}")
+        print_step(f"Running: {' '.join([image] + command)}")
         start_time = time()
-        result = subprocess.run(command, env=env, check=False, capture_output=False)
-        duration = time() - start_time
 
-        if result.returncode != 0:
-            print(
-                f"✗ Command failed with return code {result.returncode}",
-                file=sys.stderr,
-            )
-            return False, duration
+        client.containers.run(
+            image,
+            command,
+            volumes={data_dir: {"bind": "/data", "mode": "rw"}},
+            remove=True,
+            stdout=True,
+            stderr=True,
+        )
+
+        duration = time() - start_time
 
         if command_name:
             print(f"✓ {command_name} completed in {format_duration(duration)}")
-        return True, duration
+    except ContainerError as e:
+    except docker.errors.ContainerError as e:
+        print(f"✗ Container failed: {e}", file=sys.stderr)
+        return False, 0.0
     except Exception as e:
-        print(f"✗ Error running command: {e}", file=sys.stderr)
+        print(f"✗ Error running Docker command: {e}", file=sys.stderr)
         return False, 0.0
 
 
 def main() -> int:
     # """Main execution flow."""
-    # print_section("OSRM Data Preprocessing")
+    print_section("OSRM Data Preprocessing")
 
     # # Configuration
     osrm_data = os.environ.get("OSRM_DATA")
@@ -145,7 +151,6 @@ def main() -> int:
     )
     pbf_url = "https://download.geofabrik.de/south-america/brazil-latest.osm.pbf"
     pbf_file = osrm_data / "brazil-latest.osm.pbf"
-    region_file = osrm_data / "region.osm.pbf"
     md5_file = osrm_data / "brazil-latest.osm.pbf.md5"
 
     # Step 1: Fetch remote MD5
@@ -159,14 +164,14 @@ def main() -> int:
     print_step("Checking local file")
     local_md5 = get_local_md5(str(pbf_file)) if pbf_file.exists() else None
 
-    if local_md5:
+    if local_md5 is not None:
         print(f"  Local MD5:  {local_md5}")
     else:
         print("  Local file not found")
 
     # Step 3: Compare and decide
     print_section("Step 2: Validation")
-    if local_md5 and local_md5.lower() == remote_md5.lower():
+    if local_md5 is not None and local_md5.lower() == remote_md5.lower():
         print("✓ Files are up-to-date! Preprocessing already complete.")
         print(f"  Using existing: {pbf_file}")
         return 0
@@ -174,15 +179,15 @@ def main() -> int:
         print("✗ Files differ or local file missing. Downloading latest version...")
 
         print_section("Step 3: Downloading data")
-        if not download_with_progress(pbf_url, str(region_file)):
+        if not download_with_progress(pbf_url, str(pbf_file)):
             return 1
 
         # Verify downloaded file
         print_section("Step 4: Verifying download")
         print_step("Calculating MD5 of downloaded file")
-        new_md5 = get_local_md5(str(region_file))
+        new_md5 = get_local_md5(str(pbf_file))
 
-        if not new_md5:
+        if new_md5 is None:
             print("✗ Failed to calculate MD5 of downloaded file", file=sys.stderr)
             return 1
 
@@ -200,83 +205,39 @@ def main() -> int:
     # Step 5: Run OSRM preprocessing
     print_section("Step 5: OSRM Preprocessing")
 
+    image = "ghcr.io/project-osrm/osrm-backend:latest"
     commands = [
         (
             [
-                "docker",
-                "run",
-                "--rm",
-                "-t",
-                "-v",
-                f"{osrm_data}:/data",
-                "ghcr.io/project-osrm/osrm-backend:latest",
                 "osrm-extract",
                 "-p",
-                "/data/profiles/car_avoid.lua",
-                "/data/region.osm.pbf",
+                "/data/profiles/car.lua",
+                f"/data/{pbf_file.name}",
             ],
             "osrm-extract",
         ),
-        (
-            [
-                "docker",
-                "run",
-                "--rm",
-                "-t",
-                "-v",
-                f"{osrm_data}:/data",
-                "ghcr.io/project-osrm/osrm-backend:latest",
-                "osrm-partition",
-                "/data/region.osrm",
-            ],
-            "osrm-partition",
-        ),
-        (
-            [
-                "docker",
-                "run",
-                "--rm",
-                "-t",
-                "-v",
-                f"{osrm_data}:/data",
-                "ghcr.io/project-osrm/osrm-backend:latest",
-                "osrm-customize",
-                "/data/region.osrm",
-            ],
-            "osrm-customize",
-        ),
-        (
-            [
-                "docker",
-                "restart",
-                "osrm",
-            ],
-            "osrm-restart",
-        ),
+        (["osrm-partition", "/data/brazil-latest.osrm"], "osrm-partition"),
+        (["osrm-customize", "/data/brazil-latest.osrm"], "osrm-customize"),
     ]
 
     total_time = 0.0
     for i, (cmd, cmd_name) in enumerate(commands, 1):
         print(f"\nCommand {i}/{len(commands)}:")
-        success, duration = run_docker_command(cmd, str(osrm_data), cmd_name)
+        success, duration = run_docker_command(image, cmd, str(osrm_data), cmd_name)
         if not success:
             print(f"\n✗ Preprocessing failed at command {i}", file=sys.stderr)
             return 1
         total_time += duration
         print(f"  Command {i} ({cmd_name}) completed in {format_duration(duration)}")
 
-    # Step 6: Rename region.osm files back to brazil-latest.osm
-    print_section("Step 6: Finalizing preprocessing")
+    # Restart osrm container separately
+    print(f"\nCommand {len(commands) + 1}/{len(commands) + 1}:")
     try:
-        for pattern in ["region.osm", "region.osm.*"]:
-            for file in osrm_data.glob(pattern):
-                new_name = file.name.replace("region.osm", "brazil-latest.osm")
-                new_path = osrm_data / new_name
-                print_step(f"Renaming {file.name} to {new_name}")
-                file.rename(new_path)
-                print(f"  ✓ {new_name}")
+        client = docker.from_env()
+        client.containers.get("osrm").restart()
+        print("✓ osrm container restarted")
     except Exception as e:
-        print(f"✗ Error renaming files: {e}", file=sys.stderr)
+        print(f"✗ Failed to restart osrm container: {e}", file=sys.stderr)
         return 1
 
     print_section(
