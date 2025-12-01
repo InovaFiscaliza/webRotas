@@ -1,14 +1,10 @@
 services:
   osrm:
-    image: ghcr.io/project-osrm/osrm-backend:latest
+    image: ghcr.io/inovafiscaliza/osrm-brazil:v6.0.0 # Container with the full preprocessed osrm data embedded
     container_name: osrm
-    env_file: .env
     restart: always
     ports:
       - 5000:5000
-    volumes:
-      - ${OSRM_DATA}:/data
-      - ${OSRM_DATA}/profiles:/profiles:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/route/v1/driving/0,0;1,1?steps=true"]
       interval: 30s
@@ -21,6 +17,7 @@ services:
           memory: ${OSRM_MEMORY_LIMIT:-16g}
           cpus: ${OSRM_CPUS_LIMIT:-4.0}
     command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/brazil-latest.osrm"
+  
 
   webrotas:
     build: .
@@ -34,6 +31,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
+      - ${OSRM_DATA}:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
     deploy:
       resources:
