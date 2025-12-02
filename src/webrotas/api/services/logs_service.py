@@ -11,11 +11,11 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 from webrotas.config.constants import LOGS_PATH
 from webrotas.config.logging_config import get_logger
-from webrotas.infrastructure.docker import (
-    get_docker_client,
-    ContainerNotFoundError,
-    DockerClientError,
-)
+# from webrotas.infrastructure.docker import (
+#     get_docker_client,
+#     ContainerNotFoundError,
+#     DockerClientError,
+# )
 
 logger = get_logger(__name__)
 
@@ -109,95 +109,95 @@ def get_app_logs(
         return {"status": "error", "message": str(e), "logs": []}
 
 
-def get_container_logs(
-    container_name: str = "osrm",
-    tail: int = 100,
-) -> Dict[str, Any]:
-    """
-    Retrieve container logs using Docker API.
+# def get_container_logs(
+#     container_name: str = "osrm",
+#     tail: int = 100,
+# ) -> Dict[str, Any]:
+#     """
+#     Retrieve container logs using Docker API.
 
-    Args:
-        container_name: Name of the container (default: 'osrm')
-        tail: Number of most recent log lines to return
+#     Args:
+#         container_name: Name of the container (default: 'osrm')
+#         tail: Number of most recent log lines to return
 
-    Returns:
-        Dictionary containing container logs and status
-    """
-    try:
-        docker_client = get_docker_client()
-        
-        # Try to get logs from the container
-        logs = docker_client.get_container_logs(container_name, tail=tail)
-        
-        # Parse log lines
-        log_lines = [
-            {"content": line.rstrip()} for line in logs.split("\n") if line.strip()
-        ]
-        
-        return {
-            "status": "success",
-            "container_name": container_name,
-            "logs": log_lines,
-            "count": len(log_lines),
-            "tail": tail,
-        }
-    
-    except ContainerNotFoundError:
-        logger.warning(f"Container '{container_name}' not found")
-        return {
-            "status": "warning",
-            "message": f"Container '{container_name}' not found. Ensure the container is running.",
-            "container_name": container_name,
-            "logs": [],
-            "tail": tail,
-        }
-    
-    except DockerClientError as e:
-        logger.error(f"Docker client error: {e}")
-        return {
-            "status": "error",
-            "message": f"Failed to retrieve container logs: {str(e)}",
-            "container_name": container_name,
-            "logs": [],
-        }
-    
-    except Exception as e:
-        logger.error(f"Unexpected error retrieving container logs: {e}", exc_info=True)
-        return {
-            "status": "error",
-            "message": f"Unexpected error: {str(e)}",
-            "container_name": container_name,
-            "logs": [],
-        }
+#     Returns:
+#         Dictionary containing container logs and status
+#     """
+#     try:
+#         docker_client = get_docker_client()
+
+#         # Try to get logs from the container
+#         logs = docker_client.get_container_logs(container_name, tail=tail)
+
+#         # Parse log lines
+#         log_lines = [
+#             {"content": line.rstrip()} for line in logs.split("\n") if line.strip()
+#         ]
+
+#         return {
+#             "status": "success",
+#             "container_name": container_name,
+#             "logs": log_lines,
+#             "count": len(log_lines),
+#             "tail": tail,
+#         }
+
+#     except ContainerNotFoundError:
+#         logger.warning(f"Container '{container_name}' not found")
+#         return {
+#             "status": "warning",
+#             "message": f"Container '{container_name}' not found. Ensure the container is running.",
+#             "container_name": container_name,
+#             "logs": [],
+#             "tail": tail,
+#         }
+
+#     except DockerClientError as e:
+#         logger.error(f"Docker client error: {e}")
+#         return {
+#             "status": "error",
+#             "message": f"Failed to retrieve container logs: {str(e)}",
+#             "container_name": container_name,
+#             "logs": [],
+#         }
+
+#     except Exception as e:
+#         logger.error(f"Unexpected error retrieving container logs: {e}", exc_info=True)
+#         return {
+#             "status": "error",
+#             "message": f"Unexpected error: {str(e)}",
+#             "container_name": container_name,
+#             "logs": [],
+#         }
 
 
-def get_combined_logs(
-    app_limit: int = 50,
-    container_tail: int = 50,
-    container_name: str = "osrm",
-) -> Dict[str, Any]:
-    """
-    Retrieve both application and container logs in a unified response.
+# def get_combined_logs(
+#     app_limit: int = 50,
+#     container_tail: int = 50,
+#     container_name: str = "osrm",
+# ) -> Dict[str, Any]:
+#     """
+#     Retrieve both application and container logs in a unified response.
 
-    Args:
-        app_limit: Maximum number of application log lines
-        container_tail: Maximum number of container log lines
-        container_name: Name of the container
+#     Args:
+#         app_limit: Maximum number of application log lines
+#         container_tail: Maximum number of container log lines
+#         container_name: Name of the container
 
-    Returns:
-        Dictionary containing both app and container logs
-    """
-    app_logs = get_app_logs(limit=app_limit)
-    container_logs = get_container_logs(
-        container_name=container_name, tail=container_tail
-    )
+#     Returns:
+#         Dictionary containing both app and container logs
+#     """
+#     app_logs = get_app_logs(limit=app_limit)
+#     container_logs = get_container_logs(
+#         container_name=container_name, tail=container_tail
+#     )
 
-    return {
-        "status": "success",
-        "timestamp": datetime.utcnow().isoformat(),
-        "app_logs": app_logs,
-        "container_logs": container_logs,
-    }
+#     return {
+#         "status": "success",
+#         "timestamp": datetime.utcnow().isoformat(),
+#         "app_logs": app_logs,
+#         "container_logs": container_logs,
+#     }
 
 
 def get_log_files_info() -> Dict[str, Any]:

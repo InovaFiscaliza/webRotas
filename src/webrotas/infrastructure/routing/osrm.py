@@ -1,9 +1,5 @@
 import asyncio
-import json
-import os
-from dataclasses import dataclass
 import math
-from pathlib import Path
 from typing import List, Tuple, Iterable, Dict, Any, Optional
 from fastapi import HTTPException
 
@@ -21,8 +17,6 @@ from webrotas.infrastructure.routing.matrix_builder import IterativeMatrixBuilde
 from webrotas.config.server_hosts import get_osrm_url
 from webrotas.utils.converters.geojson import avoid_zones_to_geojson
 
-from webrotas.utils.converters.lua import write_lua_zones_file
-from webrotas.utils.versioning.version_manager import save_version
 
 
 # Initialize logging at module level
@@ -42,32 +36,32 @@ ALTERNATIVES = 3
 # Configuration
 # ============================================================================
 
-OSRM_PROFILE = os.getenv("OSRM_PROFILE", "/profiles/car_avoid.lua")
-PBF_NAME = os.getenv("PBF_NAME", "region.osm.pbf")
-OSRM_BASE = os.getenv("OSRM_BASE", "region")
-AVOIDZONES_TOKEN = os.getenv("AVOIDZONES_TOKEN", "default-token")
-OSRM_DATA_DIR = Path(os.getenv("OSRM_DATA", "/data"))
-OSM_PBF_URL = os.getenv("OSM_PBF_URL", "")
+# OSRM_PROFILE = os.getenv("OSRM_PROFILE", "/profiles/car_avoid.lua")
+# PBF_NAME = os.getenv("PBF_NAME", "region.osm.pbf")
+# OSRM_BASE = os.getenv("OSRM_BASE", "region")
+# AVOIDZONES_TOKEN = os.getenv("AVOIDZONES_TOKEN", "default-token")
+# OSRM_DATA_DIR = Path(os.getenv("OSRM_DATA", "/data"))
+# OSM_PBF_URL = os.getenv("OSM_PBF_URL", "")
 
 # OSRM server URL for routing requests
-OSRM_URL = os.getenv("OSRM_URL", "http://localhost:5000")
+# OSRM_URL = os.getenv("OSRM_URL", "http://localhost:5000")
 
 # Docker resource limits for OSRM preprocessing
-DOCKER_MEMORY_LIMIT = os.getenv("DOCKER_MEMORY_LIMIT", "16g")
-DOCKER_CPUS_LIMIT = float(os.getenv("DOCKER_CPUS_LIMIT", "4.0"))
+# DOCKER_MEMORY_LIMIT = os.getenv("DOCKER_MEMORY_LIMIT", "16g")
+# DOCKER_CPUS_LIMIT = float(os.getenv("DOCKER_CPUS_LIMIT", "4.0"))
 
 # History and state directories
-HISTORY_DIR = OSRM_DATA_DIR / "avoidzones_history"
-LATEST_POLYGONS = OSRM_DATA_DIR / "latest_avoidzones.geojson"
-LUA_ZONES_FILE = OSRM_DATA_DIR / "profiles" / "avoid_zones_data.lua"
+# HISTORY_DIR = OSRM_DATA_DIR / "avoidzones_history"
+# LATEST_POLYGONS = OSRM_DATA_DIR / "latest_avoidzones.geojson"
+# LUA_ZONES_FILE = OSRM_DATA_DIR / "profiles" / "avoid_zones_data.lua"
 
-HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+# HISTORY_DIR.mkdir(parents=True, exist_ok=True)
 
 
-@dataclass
-class UserData:
-    OSMRport: int = 5000
-    ssid: str | None = None
+# @dataclass
+# class UserData:
+#     OSMRport: int = 5000
+#     ssid: str | None = None
 
 
 # ============================================================================
@@ -75,41 +69,41 @@ class UserData:
 # ============================================================================
 
 
-def process_avoidzones(geojson: dict) -> None:
-    """
-    Process avoid zones:
-    1. Save the geojson to history (with deduplication)
-    2. Convert polygons to Lua format
-    3. Start PBF reprocessing in background thread (non-blocking)
+# def process_avoidzones(geojson: dict) -> None:
+#     """
+#     Process avoid zones:
+#     1. Save the geojson to history (with deduplication)
+#     2. Convert polygons to Lua format
+#     3. Start PBF reprocessing in background thread (non-blocking)
 
-    Returns the version identifier (e.g., "v5") of the configuration,
-    which may be an existing duplicate or a newly created version.
-    PBF reprocessing happens in the background for new versions.
-    """
-    # Validate GeoJSON
-    if geojson.get("type") != "FeatureCollection":
-        raise ValueError("Expected FeatureCollection")
+#     Returns the version identifier (e.g., "v5") of the configuration,
+#     which may be an existing duplicate or a newly created version.
+#     PBF reprocessing happens in the background for new versions.
+#     """
+#     # Validate GeoJSON
+#     if geojson.get("type") != "FeatureCollection":
+#         raise ValueError("Expected FeatureCollection")
 
-    # Save to history with deduplication
-    version_filename, is_new_version = save_version(
-        geojson, HISTORY_DIR, check_duplicates=True
-    )
-    logger.info(f"Saved avoidzones version: {version_filename} (new={is_new_version})")
+#     # Save to history with deduplication
+#     version_filename, is_new_version = save_version(
+#         geojson, HISTORY_DIR, check_duplicates=True
+#     )
+#     logger.info(f"Saved avoidzones version: {version_filename} (new={is_new_version})")
 
-    # Save as latest
-    LATEST_POLYGONS.write_text(json.dumps(geojson, indent=2), encoding="utf-8")
-    logger.info(f"Saved as latest polygons: {LATEST_POLYGONS}")
+#     # Save as latest
+#     LATEST_POLYGONS.write_text(json.dumps(geojson, indent=2), encoding="utf-8")
+#     logger.info(f"Saved as latest polygons: {LATEST_POLYGONS}")
 
-    # Convert to Lua format
-    try:
-        logger.info("Converting polygons to Lua format...")
-        if write_lua_zones_file(LATEST_POLYGONS, LUA_ZONES_FILE):
-            logger.info(f"Lua zones file written to {LUA_ZONES_FILE}")
-        else:
-            logger.warning("Failed to write Lua zones file, continuing anyway")
-    except Exception as e:
-        logger.error(f"Failed to convert polygons to Lua: {e}")
-        logger.warning("Continuing despite Lua conversion error")
+#     # Convert to Lua format
+#     try:
+#         logger.info("Converting polygons to Lua format...")
+#         if write_lua_zones_file(LATEST_POLYGONS, LUA_ZONES_FILE):
+#             logger.info(f"Lua zones file written to {LUA_ZONES_FILE}")
+#         else:
+#             logger.warning("Failed to write Lua zones file, continuing anyway")
+#     except Exception as e:
+#         logger.error(f"Failed to convert polygons to Lua: {e}")
+#         logger.warning("Continuing despite Lua conversion error")
 
 
 def load_spatial_index(geojson: Dict[str, Any]) -> tuple[List, Optional[STRtree]]:
@@ -1127,11 +1121,11 @@ async def get_osrm_matrix_from_local_container(coords):
         if not coords or len(coords) < 2:
             raise ValueError("Need at least 2 coordinates for routing")
 
-        # Set up user data for container interface
-        if not hasattr(UserData, "ssid") or UserData.ssid is None:
-            import uuid
+        # # Set up user data for container interface
+        # if not hasattr(UserData, "ssid") or UserData.ssid is None:
+        #     import uuid
 
-            UserData.ssid = str(uuid.uuid4())[:8]
+        #     UserData.ssid = str(uuid.uuid4())[:8]
 
         # Make request to local container
         coord_str = ";".join(f"{c['lng']},{c['lat']}" for c in coords)

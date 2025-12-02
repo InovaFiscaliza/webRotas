@@ -17,7 +17,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Copy project files
 COPY pyproject.toml uv.lock ./
 COPY src/ ./src/
-COPY resources/ ./resources/
 COPY README.md README.md
 
 RUN --mount=type=cache,target=/root/.cache/uv \

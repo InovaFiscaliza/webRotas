@@ -30,9 +30,6 @@ services:
         condition: service_started
     environment:
       - PYTHONUNBUFFERED=1
-    volumes:
-      - ${OSRM_DATA}:/data
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     deploy:
       resources:
         limits:
