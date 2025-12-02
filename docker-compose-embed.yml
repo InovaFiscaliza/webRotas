@@ -20,7 +20,7 @@ services:
   
 
   webrotas:
-    build: .
+    image: ghcr.io/inovafiscaliza/webrotas:v0.0.1
     container_name: webrotas
     restart: always
     ports:

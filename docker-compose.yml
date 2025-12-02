@@ -23,7 +23,7 @@ services:
     command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/brazil-latest.osrm"
 
   webrotas:
-    build: .
+    image: ghcr.io/inovafiscaliza/webrotas:v0.0.1
     container_name: webrotas
     restart: always
     ports:
