@@ -10,7 +10,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from webrotas.api_routing import get_osrm_route, request_osrm
+from webrotas.infrastructure.routing.osrm import get_osrm_route, request_osrm
 from webrotas.domain.routing.alternatives import get_alternatives_for_multipoint_route
 
 

@@ -95,6 +95,8 @@
 
             const map = window.L.map('document', { 
                 zoomControl: false,
+                rotate: true,
+                bearing: 0
             }).setView(center, zoom);
 
             basemapList[basemapSelection].addTo(map);
@@ -207,7 +209,7 @@
             
             const panel = this.createElement('div', {
                 id: 'panel',
-                classList: ['grid']                
+                classList: ['grid', 'panel-on']                
             }, container);
 
             Object.assign(panel.style, { 
@@ -602,9 +604,17 @@
                     height: '100%', 
                     backgroundImage: 'url(images/import.png)'
                 },
+                eventListeners: {
+                    keydown: (event) => {
+                        if (![" ", "Enter"].includes(event.key)) return;
+                        const input = window.document.getElementById('toolbarImportInput');
+                        input.click();
+                    }
+                },
                 dataset: { 
                     tooltip: 'Importa arquivo de configuração (.json)' 
                 },
+                tabIndex: 0
             }, toolbar);
 
             const input = this.createElement('input', {
@@ -916,21 +926,24 @@
 
             routing.forEach((routingEl, index1) => {
                 routingEl.response.routes.forEach((routeEl, index2) => {
-                    const htmlEl = this.createElement('li', {
+                    const el = this.createElement('li', {
                         innerHTML: textResolver(routeEl, index1, index2),
                         eventListeners: eventListeners,
                         dataset: { index: JSON.stringify([index1, index2]) }
                     }, parentElement);
 
+                    el.tabIndex = 0;
+
                     if (index1 === selectedIndex[0] && index2 === selectedIndex[1]) {
-                        htmlEl.classList.add('selected');
+                        el.classList.add('selected');
+                        el.focus();
                     }
                 })
             });
         }
 
         /*---------------------------------------------------------------------------------*/
-        static createTextList(parentElement, textList, textResolver, eventListeners, selectedIndex=-1) {
+        static createTextList(parentElement, textList, textResolver, eventListeners, selectedIndex=-1, focusable=false) {
             parentElement.innerHTML = '';
 
             textList.forEach((element, index) => {
@@ -939,6 +952,10 @@
                     value: index,
                     eventListeners: eventListeners
                 }, parentElement);
+
+                if (focusable) {
+                    el.tabIndex = 0;
+                }
 
                 if (index === selectedIndex) {
                     el.classList.add('selected');
@@ -976,7 +993,7 @@
                 radio.style.marginRight = '5px';
 
                 radio.addEventListener('change', () => {
-                    window.app.mapContext.settings.exportFile.selected = option;
+                    window.app.mapContext.settings[type].selected = option;
                 });
     
                 label.appendChild(radio);

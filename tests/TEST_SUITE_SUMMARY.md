@@ -188,25 +188,6 @@ All test files follow the standard webRotas JSON request format with the followi
 4. **Performance**: Monitor performance variations across different regions and route complexities
 5. **Edge Cases**: Test with various pointDistance values to identify optimal spacing
 
-## Integration with CI/CD
-
-These test files can be integrated into automated testing workflows:
-```bash
-# Run all shortest route tests
-for file in tests/request_shortest*.json; do
-    uv run src/ucli/webrota_client.py "$file"
-done
-
-# Run all circle route tests
-for file in tests/request_circle*.json; do
-    uv run src/ucli/webrota_client.py "$file"
-done
-
-# Run all grid route tests
-for file in tests/request_grid*.json; do
-    uv run src/ucli/webrota_client.py "$file"
-done
-```
 
 ## Notes
 

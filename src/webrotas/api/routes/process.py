@@ -25,7 +25,7 @@ router = APIRouter(tags=["routing"])
 )
 async def process(
     session_id: str = Query(
-        ..., alias="sessionId", description="Unique session identifier"
+        None, alias="sessionId", description="Unique session identifier"
     ),
     request_data: dict = Body(...),
 ) -> JSONResponse:
@@ -39,11 +39,12 @@ async def process(
     - `criterion` (optional): Routing criterion (distance, duration, or ordered)
     - `avoidZones` (optional): Geographic zones to avoid
     """
-    # Validate session_id
-    if not session_id:
-        from webrotas.core.exceptions import MissingSessionIdError
 
-        raise MissingSessionIdError()
+    # Generate session_id if not provided
+    if session_id is None:
+        import uuid
+
+        session_id = str(uuid.uuid4())
 
     # Validate request structure
     await validate_request_structure(request_data)

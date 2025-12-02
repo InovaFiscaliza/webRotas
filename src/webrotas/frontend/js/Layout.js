@@ -87,8 +87,34 @@
                                     </div>`
                         },
                         {
-                            click:      (event) => window.app.modules.Callbacks.onRouteListSelectionChanged(event),
-                            mouseover:  (event) => window.app.modules.Callbacks.onHighlightTextListItem(event),
+                            click: (event) => window.app.modules.Callbacks.onRouteListSelectionChanged(event),
+                            keydown: (event) => {
+                                if (!["ArrowUp", "ArrowDown", " ", "Enter"].includes(event.key)) return;
+
+                                const current = event.target.closest("li");
+                                if (!current) return;
+
+                                let nextItem;
+
+                                switch (event.key) {
+                                    case " ":
+                                    case "Enter":
+                                        nextItem = current;
+                                        break;
+                                    case "ArrowUp":
+                                        nextItem = current.previousElementSibling;
+                                        break;
+                                    case "ArrowDown":
+                                        nextItem = current.nextElementSibling;
+                                        break;
+                                }
+
+                                if (nextItem) {
+                                    nextItem.focus();
+                                    nextItem.click();
+                                }
+                            },
+                            mouseover: (event) => window.app.modules.Callbacks.onHighlightTextListItem(event),
                             mouseleave: (event) => window.app.modules.Callbacks.onHighlightTextListItem(event)
                         },
                         [index1, index2]
@@ -195,11 +221,12 @@
                         'routeListDelBtn',
                         'toolbarExportBtn',
                         'toolbarPositionSlider',
-                        'toolbarLocationBtn',
-                        'toolbarOrientationBtn'
+                        'toolbarLocationBtn'
                     ]);
-                    const htmlElArray = Object.values(htmlEl);                    
+                    const htmlElArray = Object.values(htmlEl);
                     this.toggleEnabled(htmlElArray, true);
+
+                    this.updateControlState('geolocationMode');
 
                     const htmlEditModeBtnElArray = [window.document.getElementById('routeListEditModeBtn')];
                     this.toggleEnabled(htmlEditModeBtnElArray, (window.location.protocol === "file:") ? false : true);
@@ -228,10 +255,39 @@
 
                     let ids = {
                         created: route.created,
-                        cacheId: routing.cacheId,
                         routeId: route.routeId || "n/a"
                     };
                     htmlEl.routeIds.textContent = JSON.stringify(ids, null, 1);
+                    break;
+                }
+
+                case 'geolocationMode': {
+                    const geolocation = window.app.mapContext.settings.geolocation;
+                    const orientation = window.app.mapContext.settings.orientation;
+                    
+                    const htmlEl = this.getDOMElements([
+                        'toolbarLocationBtn',
+                        'toolbarOrientationBtn'
+                    ]);
+
+                    switch (geolocation.status) {
+                        case 'off': {
+                            htmlEl.toolbarLocationBtn.style.backgroundImage = geolocation.icon.off;
+                            this.toggleEnabled([htmlEl.toolbarOrientationBtn], false);
+
+                            if (orientation.status !== 'north') {
+                                orientation.status = 'north';
+                                htmlEl.toolbarOrientationBtn.style.backgroundImage = orientation.icon.on;
+                            }
+                            break;
+                        }
+                        case 'on': {
+                            htmlEl.toolbarLocationBtn.style.backgroundImage = geolocation.icon.on;
+                            this.toggleEnabled([htmlEl.toolbarOrientationBtn], true);
+                            break;   
+                        }
+                    }
+
                     break;
                 }
 
@@ -261,6 +317,12 @@
                     this.toggleEnabled([htmlEl.routeListConfirmBtn, htmlEl.routeListCancelBtn], editionMode);
 
                     this.toggleEnabled([htmlEl.routeListAddBtn, htmlEl.routeListDelBtn, htmlEl.routeList], !editionMode);
+                    if (!editionMode) {
+                        htmlEl.routeList.querySelectorAll('li').forEach(li => li.tabIndex = 0);
+                    } else {
+                        htmlEl.routeList.querySelectorAll('li').forEach(li => li.tabIndex = -1);
+                    }
+
                     this.toggleEnabled([htmlEl.initialPointBtn, htmlEl.routeListMoveUpBtn, htmlEl.routeListMoveDownBtn], editionMode);
                     [htmlEl.initialPointLatitude, htmlEl.initialPointLongitude, htmlEl.initialPointDescription].forEach(item => { 
                         item.disabled = !editionMode; 

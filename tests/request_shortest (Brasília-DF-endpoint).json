@@ -1,0 +1,42 @@
+{
+    "type": "shortest",
+    "origin": {
+        "lat": -15.747942,
+        "lng": -47.889822,
+        "description": "Anatel-DF"
+    },
+    "parameters": {
+        "waypoints": [{
+            "lat": -15.793889,
+            "lng": -47.879540,
+            "description": "Esplanada dos Ministérios"
+        },
+        {
+            "lat": -15.792890,
+            "lng": -47.870520,
+            "description": "Esplanada dos Ministérios"
+        },
+        {
+            "lat": -15.793500,
+            "lng": -47.868900,
+            "description": "Esplanada dos Ministérios"
+        },
+        {
+            "lat": -15.795200,
+            "lng": -47.869800,
+            "description": "Esplanada dos Ministérios"
+        },
+        {
+            "lat": -15.794890,
+            "lng": -47.871200,
+            "description": "Esplanada dos Ministérios"
+        }
+    ]
+    },
+    "criterion": "duration",
+    "endpoint": {
+            "lat": -15.795200,
+            "lng": -47.869800,
+            "description": "Esplanada dos Ministérios"
+        }
+}

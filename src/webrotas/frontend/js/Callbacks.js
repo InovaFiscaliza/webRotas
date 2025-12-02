@@ -102,7 +102,7 @@
                                 callback: () => {
                                     try {
                                         const token  = window.app.modules.Utils.uuid();
-                                        const url    = `${app.server.url}/webRotas/index.html?token=${token}`;
+                                        const url    = `${app.server.url}?token=${token}`;
                                         const newWin = window.open(url, '_blank');
                                         setTimeout(() => newWin.postMessage({ 
                                             type: "handshake", 
@@ -193,6 +193,7 @@
 
             if (!context) {
                 context = window.app.modules.Components.createContextMenu();
+                window.app.mapContextMenu.handle = context;
             }
 
             const { lat, lng } = event.latlng;
@@ -203,17 +204,10 @@
 
             window.document.getElementById('contextMenuCoords').textContent = `Coordenadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
-            map.on('mousedown', removeContextMenu);
-            map.on('zoomstart', removeContextMenu);
-            map.on('resize',    removeContextMenu);
+            map.on('mousedown', window.app.mapContextMenu.remove);
+            map.on('zoomstart', window.app.mapContextMenu.remove);
+            map.on('resize',    window.app.mapContextMenu.remove);
             window.L.DomEvent.disableClickPropagation(context);
-
-            function removeContextMenu() {
-                context.remove();
-                map.off('mousedown', removeContextMenu);
-                map.off('zoomstart', removeContextMenu);
-                map.off('resize',    removeContextMenu);
-            }
         }
 
         /*---------------------------------------------------------------------------------*/
@@ -231,14 +225,7 @@
             switch (event.target.id) {
                 case 'contextMenuCoords':
                     const coordsToCopy = `${lat}, ${lng}`;
-
-                    navigator.clipboard.writeText(coordsToCopy)
-                        .then(() => {
-                            new DialogBox(`Coordenadas copiadas para a área de transferência: ${coordsToCopy}`, 'info');
-                        })
-                        .catch((ME) => {
-                            new DialogBox(`${ME.message}`, 'error');
-                        });
+                    navigator.clipboard.writeText(coordsToCopy);
                     break;
 
                 case 'contextMenuStreetView':
@@ -278,14 +265,17 @@
                     break;
 
                 case 'contextMenuUpdateVehicle':
-                    console.log('contextMenuUpdateVehicle');
-                    /*
-                    const vehicleCoords = contextMenu.querySelector('#coords').textContent.match(/-?\d+\.\d+/g);
-                    const [vehicleLat, vehicleLng] = vehicleCoords;
-                    window.app.modules.Plot.updateVehiclePosition(vehicleLat, vehicleLng);
-                    */
+                    const pos = {
+                        coords: {
+                            latitude: parseFloat(lat),
+                            longitude: parseFloat(lng),
+                            heading: null
+                        }
+                    };
+                    this.updateGeoLocationPosition(pos);
                     break;
             }
+            window.app.mapContextMenu.remove();
         }
 
         /*---------------------------------------------------------------------------------*/
@@ -295,7 +285,7 @@
                 navegador. Consequentemente, não existe o objeto "L.Marker".
 
                 Posteriormente à criação, ou atualização, do marcador, avalia-se
-                se heading retornado é válido, girando o marcado (caso mapa orientado
+                se heading retornado é válido, girando o marcador (caso mapa orientado
                 ao norte) ou o próprio mapa (caso mapa orientado ao heading).
 
                 Por fim, atualiza rota para o próximo ponto, além de trocar o ícone
@@ -308,29 +298,19 @@
 
             window.app.mapContext.settings.geolocation.lastPosition = position;
             const { latitude, longitude, heading } = position.coords;
+            window.app.mapContext.settings.orientation.lastHeading = heading;
             
-            if (window.app.plotHandle.geolocation === null) {
-                window.app.model.plot.createMarker('geolocation', latitude, longitude)
+            if (!window.app.mapContext.layers.currentPosition.handle) {
+                window.app.modules.Plot.create('currentPosition', { lat: latitude, lng: longitude })
             } else {
-                window.app.plotHandle.geolocation.setLatLng([latitude, longitude]);
+                window.app.mapContext.layers.currentPosition.handle[0].setLatLng([latitude, longitude]);
             }
 
-            window.app.modules.Plot.setView('center', [latitude, longitude]);
-
-            if (heading !== null) {
-                window.app.mapContext.settings.orientation.lastHeading = heading;
-
-                if (window.app.mapContext.settings.orientation.status) {
-                    window.app.mapContext.settings.geolocation.setRotationAngle(heading);
-                } else {
-                    let mapContainer = document.getElementById('document');
-                    mapContainer.style.transform = `rotate(${heading}deg) scale(1.0) `;
-                    mapContainer.style.transformOrigin = 'center'; 
-                }            
+            if (window.app.mapContext.settings.orientation.status === 'north') {
+                window.app.modules.Plot.setView('zoom');
+            } else {
+                window.app.modules.Plot.setView('center');
             }
-
-            calculateRouteToNextWayPoint(latitude, longitude); // GetRouteCarFromHere
-            checkIfNearSomeWayPoint(latitude, longitude); // DesabilitaMarquerNoGPSRaioDaEstacao
         }
 
 
@@ -413,9 +393,7 @@
                             type: 'ordered',
                             origin,
                             parameters: {
-                                routeId, 
-                                cacheId: currentResponse.cacheId,
-                                boundingBox: currentResponse.boundingBox,
+                                routeId,
                                 waypoints: waypointList
                             },
                             avoidZones: currentRequest.avoidZones,
@@ -472,12 +450,17 @@
                     if (criterion) {
                         createCustomRoute(criterion)
                     } else {
-                        const criterionButtonGroup = window.app.modules.Components.createBasicSelector('criterion');
+                        let criterionButtonGroup = window.app.modules.Components.createBasicSelector('criterion');
+                        criterionButtonGroup.insertAdjacentHTML("afterbegin", "Por ter sido evidenciada alteração tanto na origem quanto na ordem de visitação dos pontos, é necessário escolher o critério para a criação da rota customizada:<br><br>");
+
                         new DialogBox(criterionButtonGroup, 'question', [{ text: 'OK', callback: () => {
                             const popup = window.document.querySelector('.selector-popup');
                             const selected = popup.querySelector('input[type="radio"]:checked').value;
                             createCustomRoute(selected)
                         }, focus: true }]);
+
+                        const selected = window.app.mapContext.settings.criterion.selected;
+                        criterionButtonGroup.querySelector(`input[value="${selected}"]`).focus();
                     }
                     break;
                 }
@@ -612,18 +595,14 @@
 
         /*---------------------------------------------------------------------------------*/
         static onRouteListSelectionChanged(event) {
-            const { htmlRouteElChildren, currentSelection, index1 } = window.app.modules.Layout.findSelectedRoute();
-            const currentRouting = window.app.routingContext[index1];
+            const { htmlRouteElChildren, currentSelection } = window.app.modules.Layout.findSelectedRoute();
 
             if (currentSelection !== event.target) {
                 const [index1, index2] = JSON.parse(event.target.dataset.index);
-                const routing = window.app.routingContext[index1];
-                const isSameCacheId = currentRouting.response.cacheId === routing.response.cacheId;
-                
                 htmlRouteElChildren.forEach(item => item.classList.toggle('selected', item === event.target));
                 
                 window.app.modules.Layout.controller('routeSelected', index1, index2);
-                window.app.modules.Plot.controller(isSameCacheId ? 'update' : 'draw', index1, index2);
+                window.app.modules.Plot.controller('draw', index1, index2);
             }
         }
 
@@ -757,6 +736,17 @@
                                         throw new Error(`Esta é a versão <i>offline</i> do webRotas, executada via <b>${protocol}</b>.<br><br>
                                                         Recursos que dependem de comunicação com o servidor foram removidos ou desativados.`);
                                     }
+
+                                    const requestId = window.app.modules.Utils.hash(returnedData);
+                                    const [isAlreadyHandled, index1, index2] = window.app.modules.Model.isRequestAlreadyHandled(requestId);
+                                    if (isAlreadyHandled) {
+                                        const selectedRouteElement = window.document.getElementById("routeList").querySelector(`li[data-index='[${index1},${index2}]']`);
+                                        this.onRouteListSelectionChanged({ target: selectedRouteElement });
+                                        selectedRouteElement.focus();
+                                        return;
+                                    }
+
+                                    returnedData.requestId = requestId;
                                     window.app.modules.Communication.computeRoute(returnedData);
 
                                 } else if (expectedKeys.routing.every(key => key in returnedData)) {
@@ -768,6 +758,7 @@
                                     throw new Error('Unexpected file content');
                                 }
                             } catch (ME) {
+                                console.log(ME);
                                 new DialogBox(ME.message, 'error');
                             }                            
                         })
@@ -778,7 +769,9 @@
                 }
 
                 case 'toolbarExportBtn': {
-                    const exportButtonGroup = window.app.modules.Components.createBasicSelector('exportFile');
+                    let exportButtonGroup = window.app.modules.Components.createBasicSelector('exportFile');
+                    exportButtonGroup.insertAdjacentHTML("afterbegin", "Selecione o formato de exportação: JSON (todas as rotas), KML (rota selecionada) ou HTML+JS+CSS (versão estática do webRotas).<br><br>");
+
                     new DialogBox(exportButtonGroup, 'question', [{ text: 'OK', callback: () => {
                         const popup = window.document.querySelector('.selector-popup');
                         const selected = popup.querySelector('input[type="radio"]:checked').value;
@@ -803,6 +796,9 @@
                             }
                         }
                     }, focus: true }]);
+
+                    const selected = window.app.mapContext.settings.exportFile.selected;
+                    exportButtonGroup.querySelector(`input[value="${selected}"]`).focus();
                     break;
                 }
 
@@ -829,60 +825,69 @@
                 }
 
                 case 'toolbarLocationBtn': {
-                    const currentGeolocationStatus = window.app.mapContext.settings.geolocation.status;
+                    window.app.mapContext.settings.geolocation.lastPosition = null;
 
-                    if (currentGeolocationStatus === 'on') {
+                    if (window.app.mapContext.settings.geolocation.status === 'on') {
                         window.app.mapContext.settings.geolocation.status = 'off';
-                        event.target.style.backgroundImage = window.app.mapContext.settings.geolocation.icon.off;
-                    } else {
-                        window.app.mapContext.settings.geolocation.status = 'on';
-                        event.target.style.backgroundImage = window.app.mapContext.settings.geolocation.icon.on;
-                    }
-    
-                    new DialogBox('Ainda pendente de implementação...', 'warning'); 
+                        window.app.modules.Layout.updateControlState('geolocationMode');
 
-                    /*
-                    try {
-                        AtualizaGpsTimer(gpsAtivado);
-                    } catch (ME) {
-                        alert(ME.message);
+                        if (window.app.mapContext.settings.geolocation.navWatch) {
+                            navigator.geolocation.clearWatch(window.app.mapContext.settings.geolocation.navWatch);
+                            window.app.mapContext.settings.geolocation.navWatch = null;
+                        }
+
+                        if (window.app.mapContext.layers.currentPosition.handle) {
+                            window.app.mapContext.layers.currentPosition.handle.forEach(marker => marker.remove());
+                            window.app.mapContext.layers.currentPosition.handle = null;
+                        }
+
+                        window.app.modules.Plot.setView('zoom');
+
+                    } else {
+                        navigator.geolocation.getCurrentPosition(
+                            pos => {
+                                this.updateGeoLocationPosition(pos);
+                                
+                                window.app.mapContext.settings.geolocation.navWatch = navigator.geolocation.watchPosition(
+                                    pos => this.updateGeoLocationPosition(pos),
+                                    err => console.error(err),
+                                    { 
+                                        enableHighAccuracy: true 
+                                    }
+                                );
+
+                                window.app.mapContext.settings.geolocation.status = 'on';
+                                window.app.modules.Layout.updateControlState('geolocationMode');
+                            },
+                            (err) => console.warn(`Geolocation error: ${err.message}`),
+                            { 
+                                enableHighAccuracy: true, 
+                                maximumAge: 0, 
+                                timeout: 10000 
+                            }
+                        );                        
                     }
-                    */
                     break;
                 }
 
                 case 'toolbarOrientationBtn': {
-                    const currentOrientationStatus = window.app.mapContext.settings.orientation.status;
+                    const orientation = window.app.mapContext.settings.orientation;
 
-                    if (currentOrientationStatus === 'north') {
-                        window.app.mapContext.settings.orientation.status = 'car-heading';
-                        event.target.style.backgroundImage = window.app.mapContext.settings.orientation.icon.off;
-                    } else {
-                        window.app.mapContext.settings.orientation.status = 'north';
-                        event.target.style.backgroundImage = window.app.mapContext.settings.orientation.icon.on;
-                    }
-
-                    new DialogBox('Ainda pendente de implementação...</p>', 'warning'); 
-
-                    /*
-                    window.app.mapContext.settings.orientation.status = !window.app.mapContext.settings.orientation.status;
-
-                    let btn = document.getElementById('orientation');
-                    let src = window.app.mapContext.settings.orientation.status ? window.app.mapContext.settings.orientation.icon.on : window.app.mapContext.settings.orientation.icon.off;
-                    btn.style.backgroundImage = `url("${src}")`;
-
-                    try {
-                        if (window.app.mapContext.settings.orientation.status) {
-                            RodaMapaPorCss(0);
-                            window.app.plotHandle.geolocation.setRotationAngle(heading);
-                        } else {
-                            RodaMapaPorCss(-heading);
-                            gpsMarker.setRotationAngle(0);
+                    switch (orientation.status) {
+                        case 'north': {
+                            orientation.status = 'car-heading';
+                            event.target.style.backgroundImage = orientation.icon.off;
+                            window.app.modules.Plot.setView('center');
+                            break;
                         }
-                    } catch (ME) {
-                        alert(ME.message);
+
+                        case 'car-heading': {
+                            orientation.status = 'north';
+                            event.target.style.backgroundImage = orientation.icon.on;
+                            window.app.modules.Plot.setView('zoom');
+                            break;
+                        }
                     }
-                    */
                     break;
                 }
 
@@ -893,15 +898,21 @@
 
                 case 'toolbarBasemapsBtn': {
                     const radioButtonGroup = window.app.modules.Components.createBasemapSelector();
+                    radioButtonGroup.insertAdjacentHTML("afterbegin", "Selecione o <i>basemap</i>.<br><br>");
+
                     new DialogBox(radioButtonGroup, 'question', []);
+
+                    const selected = window.app.mapContext.settings.basemap;
+                    radioButtonGroup.querySelector(`input[value="${selected}"]`).focus();
                     break;
                 }
 
                 case 'toolbarInitialZoomBtn': {
-                    const { currentRoute } = window.app.modules.Layout.findSelectedRoute();
-                    currentRoute 
-                    ? window.app.modules.Plot.setView('zoom', [...currentRoute.waypoints, currentRoute.origin])
-                    : window.app.modules.Plot.setView('center', window.app.mapContext.settings.position.default.center, window.app.mapContext.settings.position.default.zoom);
+                    if (window.app.mapContext.settings.orientation.status === 'north') {
+                        window.app.modules.Plot.setView('zoom');
+                    } else {
+                        window.app.modules.Plot.setView('center');
+                    }
                     break;
                 }
 

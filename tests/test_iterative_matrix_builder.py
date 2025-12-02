@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-webrotas.infrastructure.routing.matrix_builder import (
+from webrotas.infrastructure.routing.matrix_builder import (
     IterativeMatrixBuilder,
     RequestBatch,
     PUBLIC_API_BATCH_SIZE,

@@ -49,6 +49,11 @@ class DialogBox {
         `;
 
         this.handle.querySelector(".dialog-box-popup-close-btn").onclick = () => this.close();
+        this.handle.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                this.close();
+            }
+        });
         
         let container = this.handle.querySelector(".dialog-box-popup-text");
         if (typeof dialogContent === 'string') {

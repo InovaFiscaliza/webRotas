@@ -18,6 +18,7 @@
             switch (type) {
                 case 'clearAll': {
                     this.remove('allLayers');
+                    this.setView('zoom');
                     break;
                 }
 
@@ -49,7 +50,6 @@
                                 this.create('avoidZones',           avoidZones);
                             }
 
-                            this.create('boundingBox',              routing.response.boundingBox);
                             this.create('locationLimits',           routing.response.location.limits);
                             this.create('locationUrbanAreas',       routing.response.location.urbanAreas);
                             this.create('locationUrbanCommunities', routing.response.location.urbanCommunities);
@@ -73,16 +73,23 @@
                   //this.create('routeMidpoint',            route.midpoint);
                     this.create('routeOrigin',              route.origin);
                     this.create('waypoints',                route.waypoints);
-                    this.setView('zoom',                    [...route.waypoints, route.origin])                    
+                    
+                    const lastPosition = window.app.mapContext.settings.geolocation.lastPosition
+                    if (lastPosition) {
+                        const { latitude, longitude } = window.app.mapContext.settings.geolocation.lastPosition.coords;
+                        window.app.modules.Plot.create('currentPosition', { lat: latitude, lng: longitude })
+                    }
+
+                    this.setView('zoom');
                     break;
                 }
 
                 case 'updateCurrentLeg': {
                     const returnedData = args[0];
 
-                    this.update('currentLeg',               returnedData);
-                    this.update('currentPosition',          returnedData);
-                    this.setView('center',                  returnedData)
+                    this.update('currentLeg',      returnedData);
+                    this.update('currentPosition', returnedData);
+                    this.setView('center',         returnedData)
                     break;
                 }
             }
@@ -115,7 +122,7 @@
 
                     geoData.forEach((element, index) => {
                         let marker;
-                        let lat, lng, elevation;
+                        let lat, lng, elevation, interactive;
                         let icon, color, radius;
 
                         if (Array.isArray(element)) {
@@ -125,6 +132,11 @@
                         }
                         coords = [lat, lng];
                         elevation = ![null, -9999].includes(elevation) ? elevation : -9999;
+
+                        ( { interactive } = options );
+                        if (interactive === null || interactive === undefined) {
+                            interactive = true;
+                        }
 
                         switch (options.iconType) {
                             case 'file':
@@ -158,7 +170,7 @@
                                 });
                         }
 
-                        marker = window.L.marker(coords, { icon }).addTo(map);
+                        marker = window.L.marker(coords, { icon, interactive }).addTo(map);
                         if (color) {
                             marker.options.color = color.pin;
                         }
@@ -168,26 +180,28 @@
                             eventos: mouseover e click (ambos definidos em "Tooltip.js"), além
                             de dblclick, definido aqui.
                         */
-                        marker.on('dblclick', () => {
-                            marker.setOpacity((marker.options.opacity === 1) ? 0.35 : 1);
-                        })
-                        window.L.DomEvent.on(marker, 'dblclick', window.L.DomEvent.stopPropagation);
+                       if (interactive) {
+                            marker.on('dblclick', () => {
+                                marker.setOpacity((marker.options.opacity === 1) ? 0.35 : 1);
+                            })
+                            window.L.DomEvent.on(marker, 'dblclick', window.L.DomEvent.stopPropagation);
 
-                        if (options.iconTooltip.status) {
-                            let textResolver = options.iconTooltip.textResolver;
-                            if (textResolver === 'default' || typeof textResolver !== 'function') {
-                                textResolver = window.app.mapContext.settings.tooltip.textResolver;
-                            }
-                            const text = textResolver(element);
-                            
-                            let offsetResolver = options.iconTooltip.offsetResolver;
-                            if (offsetResolver === 'default' || typeof offsetResolver !== 'function') {
-                              offsetResolver = window.app.mapContext.settings.tooltip.offsetResolver;
-                            }
+                            if (options.iconTooltip.status) {
+                                let textResolver = options.iconTooltip.textResolver;
+                                if (textResolver === 'default' || typeof textResolver !== 'function') {
+                                    textResolver = window.app.mapContext.settings.tooltip.textResolver;
+                                }
+                                const text = textResolver(element);
+                                
+                                let offsetResolver = options.iconTooltip.offsetResolver;
+                                if (offsetResolver === 'default' || typeof offsetResolver !== 'function') {
+                                offsetResolver = window.app.mapContext.settings.tooltip.offsetResolver;
+                                }
 
-                            const direction = window.app.mapContext.settings.tooltip.direction;
-                            
-                            window.app.modules.Tooltip.bindLeafletTooltip(map, marker, coords, text, direction, offsetResolver);
+                                const direction = window.app.mapContext.settings.tooltip.direction;
+                                
+                                window.app.modules.Tooltip.bindLeafletTooltip(map, marker, coords, text, direction, offsetResolver);
+                            }
                         }
                         
                         handle.push(marker);
@@ -326,26 +340,53 @@
         }
 
         /*---------------------------------------------------------------------------------*/
-        static setView(operationType, geoData, ...args) {
+        static setView(operationType, ...args) {
             const map = window.app.map;
 
             switch (operationType) {
-                case 'zoom':
-                    if (!Array.isArray(geoData)) {
-                        geoData = [geoData];
+                case 'zoom': {
+                    const { currentRoute } = window.app.modules.Layout.findSelectedRoute();
+
+                    if (currentRoute) {
+                        const lastPosition = window.app.mapContext.settings.geolocation.lastPosition;
+                        const geoData = [...currentRoute.waypoints, currentRoute.origin, ...(lastPosition ? [{ lat: lastPosition.coords.latitude, lng: lastPosition.coords.longitude }] : [])];
+
+                        if (!Array.isArray(geoData)) {
+                            geoData = [geoData];
+                        }
+
+                        let coords = [];
+                        geoData.forEach(element => coords.push([element.lat, element.lng]));
+
+                        map.fitBounds(coords);
+                        window.app.mapContext.settings.position.current.center = map.getCenter();
+                        window.app.mapContext.settings.position.current.zoom   = map.getZoom();
+                    } else {
+                        const { center, zoom } = window.app.mapContext.settings.position.default;
+                        map.setView(center, zoom);
                     }
 
-                    let coords = [];
-                    geoData.forEach(element => coords.push([element.lat, element.lng]));
-
-                    map.fitBounds(coords);
-                    window.app.mapContext.settings.position.current.center = map.getCenter();
-                    window.app.mapContext.settings.position.current.zoom   = map.getZoom();
+                    if (window.app.map.getBearing() !== 0) {
+                        map.setBearing(0);
+                    }
                     break;
+                }
 
-                case 'center':
-                    map.setView(geoData, args[0]);
+                case 'center': {
+                    const lastPosition = window.app.mapContext.settings.geolocation.lastPosition;
+                    const heading = window.app.mapContext.settings.orientation.lastHeading;
+
+                    if (lastPosition) {
+                        const { latitude, longitude, heading } = window.app.mapContext.settings.geolocation.lastPosition.coords;
+                        const { zoomLevel } = window.app.mapContext.settings.orientation;
+                        map.setView( { lat: latitude, lng: longitude }, zoomLevel);
+                    }
+
+                    if (heading !== null) {
+                        map.setBearing(heading);
+                    }
                     break;
+                }
             }
         }
     }

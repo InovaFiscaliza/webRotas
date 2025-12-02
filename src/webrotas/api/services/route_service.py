@@ -35,14 +35,14 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
         elif request_type == "ordered":
             route_id = parameters["routeId"]
             # Note: cached request lookup not implemented - async eliminates need
-            is_new_request = True
+            is_new_request = False
         else:
             raise ValueError(f"Unknown request type: {request_type}")
 
         status = (
             "[webRotas] Created new request"
             if is_new_request
-            else "Using existing request"
+            else "[webRotas] Created new custom route request"
         )
         print(
             f'{status} routeId="{route_id}" '
@@ -79,8 +79,6 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
                 )
             case "ordered":
                 await processor.process_ordered(
-                    parameters["cacheId"],
-                    parameters["boundingBox"],
                     parameters["waypoints"],
                 )
 

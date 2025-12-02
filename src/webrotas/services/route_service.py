@@ -79,7 +79,6 @@ async def process_route(data: Dict[str, Any], session_id: str) -> Dict[str, Any]
                 )
             case "ordered":
                 await processor.process_ordered(
-                    parameters["cacheId"],
                     parameters["boundingBox"],
                     parameters["waypoints"],
                 )

@@ -14,7 +14,7 @@ KEYS_PARAMETERS = {
     "shortest": {"waypoints"},
     "circle": {"centerPoint", "radius", "totalWaypoints"},
     "grid": {"city", "state", "scope", "pointDistance"},
-    "ordered": {"routeId", "cacheId", "boundingBox", "waypoints"},
+    "ordered": {"routeId", "waypoints"},
 }
 
 # Valid request types

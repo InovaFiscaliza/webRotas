@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim AS builder
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
 # Disable Python downloads, because we want to use the system interpreter
@@ -17,13 +17,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Copy project files
 COPY pyproject.toml uv.lock ./
 COPY src/ ./src/
-COPY resources/ ./resources/
 COPY README.md README.md
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
-FROM python:3.11-slim-bookworm
+FROM python:3.13-slim-bookworm
 
 # Setup a non-root user
 RUN groupadd --system --gid 999 nonroot \

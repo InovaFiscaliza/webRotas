@@ -13,7 +13,6 @@ Strategy:
 """
 
 import asyncio
-import logging
 from typing import List, Dict, Tuple, Any, Optional
 
 from webrotas.config.logging_config import get_logger

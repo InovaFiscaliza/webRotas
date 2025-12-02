@@ -1,8 +1,7 @@
-import hashlib
 import json
 import math
 import uuid
-from dataclasses import dataclass
+import logging
 from datetime import datetime
 
 import numpy as np
@@ -15,16 +14,15 @@ from webrotas.infrastructure.geospatial.shapefiles import (
     FiltrarAreasUrbanizadasPorMunicipio,
     FiltrarComunidadesBoundingBox,
 )
-from webrotas.infrastructure.routing.osrm import compute_bounding_box, calculate_optimal_route
+from webrotas.infrastructure.routing.osrm import (
+    compute_bounding_box,
+    calculate_optimal_route,
+    calculate_ordered_route,
+)
 from webrotas.infrastructure.elevation.service import enrich_waypoints_with_elevation
 from webrotas.config.server_hosts import get_webrotas_url
 
-
-@dataclass
-class UserData:
-    OSMRport: int = 5000
-    ssid: str | None = None
-
+logger = logging.getLogger(__name__)
 
 class RouteProcessor:
     """Processor for different route types (shortest, circle, grid, ordered).
@@ -60,9 +58,7 @@ class RouteProcessor:
         self.route_id = route_id or str(uuid.uuid4())
 
         # Route result fields (populated during processing)
-        self.cache_id = None  # Will be computed deterministically from request content for deduplication
         self.routing_area = None
-        self.bounding_box = None
         self.location_limits = None
         self.location_urban_areas = None
         self.location_urban_communities = None
@@ -70,6 +66,7 @@ class RouteProcessor:
         self.paths = None
         self.estimated_distance = None
         self.estimated_time = None
+        self.zones_hit = None
 
     async def process_shortest(
         self,
@@ -87,19 +84,31 @@ class RouteProcessor:
         routing_area, bounding_box = compute_routing_area(
             self.avoid_zones, self.origin, waypoints
         )
-        # si.PreparaServidorRoteamento(routing_area)
 
-        origin, waypoints, paths, estimated_time, estimated_distance = await (
-            calculate_optimal_route(
-                self.origin, waypoints, self.criterion, self.avoid_zones
-            )
+        # Extract endpoint and closed from request if available
+        endpoint = self.request.get("endpoint") if self.request else None
+        closed = self.request.get("closed", False) if self.request else False
+
+        (
+            origin,
+            waypoints,
+            paths,
+            estimated_time,
+            estimated_distance,
+            zones_hit,
+        ) = await calculate_optimal_route(
+            self.origin,
+            waypoints,
+            self.criterion,
+            self.avoid_zones,
+            endpoint=endpoint,
+            closed=closed,
         )
 
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
         # Store results in instance for response generation
         self.routing_area = routing_area
-        self.bounding_box = bounding_box
         self.location_limits = location_limits
         self.location_urban_areas = location_urban_areas
         self.location_urban_communities = get_polyline_comunities(routing_area)
@@ -108,9 +117,7 @@ class RouteProcessor:
         self.paths = paths
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
-
-        # Compute cache_id based on routing parameters for deduplication
-        self._compute_cache_id()
+        self.zones_hit = zones_hit
 
     async def process_circle(
         self,
@@ -167,65 +174,77 @@ class RouteProcessor:
 
     async def process_ordered(
         self,
-        bounding_box,
         waypoints,
     ):
-        """Process ordered route with predefined cache and bounding box.
+        """Process ordered route - behavior depends on criterion.
+
+        - If criterion="ordered": Uses optimized route (skips matrix calculation and TSP)
+        - If criterion="distance" or "duration": Uses full optimization (recalculates order)
 
         Args:
-            cache_id: Cache identifier
-            bounding_box: Predefined bounding box
             waypoints: List of waypoints to visit
         """
-        # routing_area, bounding_box, cache_id = compute_routing_area(self.avoid_zones, self.origin, waypoints)
-        # si.PreparaServidorRoteamento(routing_area)
+        # Extract endpoint and closed from request if available
+        endpoint = self.request.get("endpoint") if self.request else None
+        closed = self.request.get("closed", False) if self.request else False
 
-        routing_area = []  # PENDENTE
-
-        origin, waypoints, paths, estimated_time, estimated_distance = await (
-            calculate_optimal_route(
-                self.origin, waypoints, self.criterion, self.avoid_zones
+        if self.criterion == "ordered":
+            # Optimized path: use waypoints in provided order, skip matrix/TSP
+            # For ordered criterion with closed or endpoint, adjust the coordinate list accordingly
+            coords_for_route = [self.origin] + waypoints
+            
+            if closed and len(coords_for_route) > 1:
+                # Ensure route ends at origin by adding it to the end if different
+                if coords_for_route[-1] != self.origin:
+                    coords_for_route.append(self.origin)
+            elif endpoint is not None:
+                # Ensure route ends at endpoint by moving it to the end
+                try:
+                    coords_for_route.remove(endpoint)
+                    coords_for_route.append(endpoint)
+                except (ValueError, KeyError):
+                    logger.warning("Endpoint not found in waypoints for ordered route")
+            
+            # Use adjusted coordinates for routing
+            adjusted_waypoints = coords_for_route[1:] if len(coords_for_route) > 1 else waypoints
+            
+            (
+                origin,
+                waypoints,
+                paths,
+                estimated_time,
+                estimated_distance,
+                zones_hit,
+            ) = await calculate_ordered_route(
+                self.origin, adjusted_waypoints, self.avoid_zones
             )
-        )
+        else:
+            # Standard path: calculate optimal order based on distance/duration criterion
+            (
+                origin,
+                waypoints,
+                paths,
+                estimated_time,
+                estimated_distance,
+                zones_hit,
+            ) = await calculate_optimal_route(
+                self.origin,
+                waypoints,
+                self.criterion,
+                self.avoid_zones,
+                endpoint=endpoint,
+                closed=closed,
+            )
+
         origin, waypoints = enrich_waypoints_with_elevation(origin, waypoints)
 
         # Store results in instance for response generation
-        self.routing_area = routing_area
-        self.bounding_box = bounding_box
         self.origin = origin
         self.waypoints = waypoints
         self.paths = paths
         self.estimated_distance = estimated_distance
         self.estimated_time = estimated_time
-
-        # Compute cache_id based on routing parameters for deduplication
-        self._compute_cache_id()
-
-    def _compute_cache_id(self):
-        """Compute cache_id deterministically for deduplication.
-
-        We hash the bounding_box and routing_area (which includes avoid_zones) so
-        that identical requests produce identical cacheIds. If data is missing,
-        fall back to a random UUID to avoid collisions.
-        """
-        try:
-            if not self.bounding_box or not self.routing_area:
-                self.cache_id = str(uuid.uuid4())
-                return
-
-            # Prepare a stable JSON payload (sorted keys) for hashing
-            cache_payload = {
-                "bounding_box": self.bounding_box,
-                "routing_area": self.routing_area,
-                "criterion": self.criterion,
-            }
-            payload_str = json.dumps(
-                cache_payload, sort_keys=True, separators=(",", ":")
-            )
-            self.cache_id = hashlib.sha256(payload_str.encode("utf-8")).hexdigest()[:12]
-        except Exception:
-            # In case of any unexpected serialization issues, ensure a value exists
-            self.cache_id = str(uuid.uuid4())
+        self.zones_hit = zones_hit
 
     @staticmethod
     def _generate_waypoints_in_radius(center_point, radius_km, total_waypoints):
@@ -269,8 +288,6 @@ class RouteProcessor:
                 {
                     "request": self.request,
                     "response": {
-                        "cacheId": self.cache_id,
-                        "boundingBox": self.bounding_box,
                         "location": {
                             "limits": self.location_limits,
                             "urbanAreas": self.location_urban_areas,
@@ -299,6 +316,7 @@ class RouteProcessor:
             "paths": self.paths,
             "estimatedDistance": self.estimated_distance,
             "estimatedTime": self.estimated_time,
+            "waypointsInAvoidZones": self.zones_hit,
         }
 
     @staticmethod
@@ -394,5 +412,4 @@ def get_polyline_comunities(regioes):
     Polylines are fetched directly from shapefiles on each request.
     """
     bounding_box = extrair_bounding_box_de_regioes(regioes)
-    polylinesComunidades = FiltrarComunidadesBoundingBox(bounding_box)
-    return polylinesComunidades
+    return FiltrarComunidadesBoundingBox(bounding_box)

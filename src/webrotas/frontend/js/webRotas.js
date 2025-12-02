@@ -29,14 +29,12 @@
       ├── routingContext[]
       │   ├── request         (conteúdo do arquivo ".json")
       │   └── response
-      │       ├── cacheId     (hash boundingBox+avoidZones)
-      │       ├── boundingBox
       │       ├── location
       │       │   ├── limits
       │       │   ├── urbanAreas
       │       │   └── urbanCommunities
       │       └── routes[]
-      │           ├── routeId (hash origin+waypoints)
+      │           ├── routeId
       │           ├── automatic
       |           ├── created
       │           ├── origin
@@ -48,7 +46,6 @@
       └── mapContext
           ├── layers
           │   ├── basemap
-          │   ├── boundingBox
           │   ├── avoidZones
           │   ├── locationLimits
           │   ├── locationUrbanAreas
@@ -109,15 +106,7 @@ async function loadScript(filename) {
         },
 
         server: {
-            url: (function() {
-                // Determine server URL based on current location
-                // Development: uses localhost
-                // Production/Containerized: uses hostname from window.location
-                const protocol = window.location.protocol;
-                const hostname = window.location.hostname;
-                const port = 5001; // webRotas server port
-                return `${protocol}//${hostname}:${port}`;
-            })(),
+            url: '',
             sessionId: '',
             status: (window.location.protocol === "file:") ? 'offline' : 'online',
             statusMonitor: {
@@ -132,7 +121,6 @@ async function loadScript(filename) {
         routingContext: [],
 
         map: null,
-
         mapContext: {
             layers: {
                 basemap: {
@@ -154,16 +142,6 @@ async function loadScript(filename) {
                         maxZoom: 19,
                         attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                     })
-                },
-                boundingBox: {
-                    handle: null,
-                    type: 'polygon',
-                    options: {
-                        weight: 1,
-                        color: 'rgba(0,255,0,0.5)',
-                        fillColor: 'rgba(0,255,0,0)',
-                        interactive: false
-                    }
                 },
                 avoidZones: {
                     handle: null,
@@ -288,7 +266,8 @@ async function loadScript(filename) {
                         },
                         iconUrl: 'images/car.png',
                         iconSize: [48, 48],
-                        iconAnchor: [12, 12]
+                        iconAnchor: [12, 12],
+                        interactive: false
                     }
                 },
                 currentLeg: {
@@ -326,6 +305,7 @@ async function loadScript(filename) {
                 orientation: {
                     status: 'north', // 'north' | 'car-heading'  
                     icon: { on: 'url(images/north.png)', off: 'url(images/car-heading.png)' },
+                    zoomLevel: 19,
                     lastHeading: 0
                 },
                 position: {
@@ -383,6 +363,19 @@ async function loadScript(filename) {
                 criterion: {
                     options: ["distance", "duration", "ordered"],
                     selected: "distance"
+                }
+            }
+        },
+        mapContextMenu: {
+            handle: null,
+            remove: () => {
+                if (window.app.mapContextMenu.handle) {
+                    window.app.mapContextMenu.handle.remove();
+                    window.app.mapContextMenu.handle = null;
+                    
+                    window.app.map.off('mousedown', window.app.mapContextMenu.remove);
+                    window.app.map.off('zoomstart', window.app.mapContextMenu.remove);
+                    window.app.map.off('resize',    window.app.mapContextMenu.remove);
                 }
             }
         }
