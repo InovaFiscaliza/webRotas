@@ -141,10 +141,10 @@ Gera uma rota em torno de pontos regularmente distribuídos em forma de grade de
 - "distance": Otimiza pela distância total
 
 **closed**: Indica se a rota será fechada ou não, caso `true` é definida o origem com ponto final da rota
-- "true": "Fecha" a rota, i.e. define a origem como ponto final também
+- "true": "Fecha" a rota, i.e. **adiciona a origem como ponto final também**
 - "false": Faz o roteamento normal com os pontos definidos na requisição, sem fechar a rota
 
-**endpoint**: Ponto final opcional (_Esse ponto final deve ser necessariamente um dos pontos da rota e não um novo ponto)
+**endpoint**: Ponto final opcional (_Esse ponto final deve ser necessariamente um dos pontos da rota e não um novo ponto_)
 ```json
 "endpoint": 
     {
@@ -154,6 +154,7 @@ Gera uma rota em torno de pontos regularmente distribuídos em forma de grade de
             
     }
 ```
+> ⚠️Somente uma das opções `"closed": "true"` OU `"endpoint": ...` é aceita, passar ambas chaves implica em erro.
 
 
 
